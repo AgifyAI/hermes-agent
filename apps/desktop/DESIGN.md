@@ -610,4 +610,4 @@ voice, queue, inline editing and floating composer retain their existing actions
 The HUD, navigation shell and other destinations keep their own styles.
 Custom chat fonts, theme-specific fonts, message bubble transparency and native
 glass remain effective. Browser touch controls retain their 44px targets.
-Inter is bundled with its SIL Open Font License in `src/fonts/Inter-LICENSE.txt`.
+Inter is bundled with its SIL Open Font License in `public/licenses/Inter-LICENSE.txt` (copied into Desktop builds).
