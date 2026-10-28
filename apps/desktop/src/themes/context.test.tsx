@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { $backendThemes, __resetBackendSkinSync, ingestBackendSkin } from './backend-sync'
 import { $chatFontFamily } from './chat-font'
 import { skinPref, ThemeProvider, useTheme } from './context'
-import { cyberpunkTheme, everforestTheme, midnightTheme } from './presets'
+import { cyberpunkTheme, DEFAULT_TYPOGRAPHY, everforestTheme, midnightTheme } from './presets'
 import type { DesktopTheme } from './types'
 import { installUserTheme } from './user-themes'
 
@@ -364,6 +364,7 @@ describe('ThemeProvider theme typography (#41766)', () => {
     const defaultFont = cssVar('--dt-chat-font-sans')
 
     expect(defaultFont).toContain('Inter Variable')
+    expect(defaultFont).toContain(DEFAULT_TYPOGRAPHY.fontSans)
     act(() => $chatFontFamily.set('OpenDyslexic'))
     expect(cssVar('--dt-chat-font-sans')).toBe(`'OpenDyslexic', ${defaultFont}`)
     act(() => $chatFontFamily.set(''))

@@ -1008,12 +1008,11 @@ export const esOverrides = {
       terminalFontPreview: 'Vista previa de glifos',
       terminalFontReset: 'Usar la predeterminada',
       chatFontTitle: 'Fuente del chat',
-      chatFontDesc:
-        'Elige una fuente instalada para el chat y el resto de la app. Útil para fuentes de lectura como OpenDyslexic; déjalo en blanco para usar la fuente del tema.',
+      chatFontDesc: 'Elige una fuente instalada para el chat y la aplicación. Deja el campo vacío para usar la fuente predeterminada de cada área.',
       chatFontPlaceholder: 'OpenDyslexic o una pila de fuentes CSS',
       chatFontPreview: 'Vista previa',
       chatFontSample: 'El veloz murciélago hindú comía feliz cardillo y kiwi. 0123456789',
-      chatFontReset: 'Usar la fuente del tema',
+      chatFontReset: 'Usar la fuente predeterminada',
       translucencyTitle: 'Translucidez de la ventana',
       translucencyDesc: 'Verás tu escritorio a través de toda la ventana. Solo macOS y Windows.',
       translucencyGlassDesc:

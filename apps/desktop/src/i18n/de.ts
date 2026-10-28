@@ -1005,12 +1005,11 @@ export const deOverrides = {
       terminalFontPreview: 'Glyph-Vorschau',
       terminalFontReset: 'Standard verwenden',
       chatFontTitle: 'Chat-Schrift',
-      chatFontDesc:
-        'Wählen Sie eine installierte Schrift für den Chat und den Rest der App. Praktisch für Lesbarkeitsschriften wie OpenDyslexic; lassen Sie das Feld leer, um die Schrift des Themes zu verwenden.',
+      chatFontDesc: 'Wähle eine installierte Schrift für Chat und App. Ein leeres Feld verwendet die Standardschrift des jeweiligen Bereichs.',
       chatFontPlaceholder: 'OpenDyslexic oder ein CSS-Font-Stack',
       chatFontPreview: 'Vorschau',
       chatFontSample: 'Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. 0123456789',
-      chatFontReset: 'Theme-Schrift verwenden',
+      chatFontReset: 'Standardschrift verwenden',
       translucencyTitle: 'Fenster-Transluzenz',
       translucencyDesc:
         'Sehen Sie Ihren Desktop durch das ganze Fenster hindurch, einschließlich Text. Für hell und dunkel separat abgestimmt.',

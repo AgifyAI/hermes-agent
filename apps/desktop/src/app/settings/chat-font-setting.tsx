@@ -143,10 +143,11 @@ export function ChatFontSetting() {
               {copy.chatFontReset}
             </Button>
           </div>
-          {/* Inherits --dt-font-sans, so it IS the live result, not a simulation. */}
+          {/* Preview the chat's default and custom face, including its glyph fallbacks. */}
           <div
             aria-label={copy.chatFontPreview}
             className="overflow-hidden px-1 py-2 text-sm text-(--ui-text-secondary)"
+            style={{ fontFamily: 'var(--dt-chat-font-sans)' }}
           >
             <span className="mr-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
               {copy.chatFontPreview}

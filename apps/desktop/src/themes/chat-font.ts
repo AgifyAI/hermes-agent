@@ -2,7 +2,7 @@ import { atom } from 'nanostores'
 
 import { DEFAULT_TYPOGRAPHY } from './presets'
 
-/** Families users ask for by name; the app face is otherwise whatever the theme declares. */
+/** Families users ask for by name; each surface otherwise uses its default face. */
 export const CHAT_FONT_SUGGESTIONS = [
   'OpenDyslexic',
   'Atkinson Hyperlegible',
@@ -15,7 +15,7 @@ export const CHAT_FONT_SUGGESTIONS = [
   'SF Pro Text'
 ] as const
 
-/** The profile-backed value as written in config.yaml. Empty means the theme's face. */
+/** The profile-backed value in config.yaml. Empty restores each surface's default face. */
 export const $chatFontFamily = atom('')
 
 export function normalizeChatFontFamily(value: unknown): string {
@@ -49,7 +49,7 @@ export function setChatFontFamilyFromConfig(value: unknown): void {
 /** The neutral chat uses Inter; a theme's explicit face remains its own. */
 export function resolveChatSurfaceFontFamily(value: unknown, themeFontSans: string): string {
   const fallback = themeFontSans === DEFAULT_TYPOGRAPHY.fontSans
-    ? "'Inter Variable', 'SF Pro Display', -apple-system, system-ui, sans-serif"
+    ? `'Inter Variable', ${themeFontSans}`
     : themeFontSans
 
   return resolveChatFontFamily(value, fallback)
