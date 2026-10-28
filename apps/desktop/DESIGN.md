@@ -608,5 +608,6 @@ adaptations, not measurements of Linear's enabled send button.
 The editor stays above its existing controls. The model picker, attachments,
 voice, queue, inline editing and floating composer retain their existing actions.
 The HUD, navigation shell and other destinations keep their own styles.
-Custom chat fonts, message bubble transparency and native glass remain effective.
+Custom chat fonts, theme-specific fonts, message bubble transparency and native
+glass remain effective. Browser touch controls retain their 44px targets.
 Inter is bundled with its SIL Open Font License in `src/fonts/Inter-LICENSE.txt`.

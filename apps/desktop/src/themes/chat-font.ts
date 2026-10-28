@@ -1,5 +1,7 @@
 import { atom } from 'nanostores'
 
+import { DEFAULT_TYPOGRAPHY } from './presets'
+
 /** Families users ask for by name; the app face is otherwise whatever the theme declares. */
 export const CHAT_FONT_SUGGESTIONS = [
   'OpenDyslexic',
@@ -42,4 +44,13 @@ export function resolveChatFontFamily(value: unknown, themeFontSans: string): st
 
 export function setChatFontFamilyFromConfig(value: unknown): void {
   $chatFontFamily.set(normalizeChatFontFamily(value))
+}
+
+/** The neutral chat uses Inter; a theme's explicit face remains its own. */
+export function resolveChatSurfaceFontFamily(value: unknown, themeFontSans: string): string {
+  const fallback = themeFontSans === DEFAULT_TYPOGRAPHY.fontSans
+    ? "'Inter Variable', 'SF Pro Display', -apple-system, system-ui, sans-serif"
+    : themeFontSans
+
+  return resolveChatFontFamily(value, fallback)
 }

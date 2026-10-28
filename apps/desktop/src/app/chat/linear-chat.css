@@ -51,6 +51,12 @@
   --ui-chat-surface-background: var(--chat-surface);
 }
 
+@media (hover: none), (pointer: coarse) {
+  html[data-hermes-desktop-host='browser'] .linear-chat {
+    --composer-control-primary-size: 2.75rem;
+  }
+}
+
 .dark .linear-chat {
   --chat-surface: #121213;
   --chat-input: #1c1c1d;

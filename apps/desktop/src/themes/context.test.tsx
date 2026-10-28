@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { $backendThemes, __resetBackendSkinSync, ingestBackendSkin } from './backend-sync'
 import { $chatFontFamily } from './chat-font'
 import { skinPref, ThemeProvider, useTheme } from './context'
-import { everforestTheme, midnightTheme } from './presets'
+import { cyberpunkTheme, everforestTheme, midnightTheme } from './presets'
 import type { DesktopTheme } from './types'
 import { installUserTheme } from './user-themes'
 
@@ -368,6 +368,18 @@ describe('ThemeProvider theme typography (#41766)', () => {
     expect(cssVar('--dt-chat-font-sans')).toBe(`'OpenDyslexic', ${defaultFont}`)
     act(() => $chatFontFamily.set(''))
     expect(cssVar('--dt-chat-font-sans')).toBe(defaultFont)
+  })
+
+  it('restores a theme-specific face after clearing the custom chat font', () => {
+    let ctx: ReturnType<typeof useTheme>
+    render(<ThemeProvider><ThemeProbe onReady={value => (ctx = value)} /></ThemeProvider>)
+
+    act(() => ctx!.setTheme('cyberpunk'))
+    expect(cssVar('--dt-chat-font-sans')).toBe(cyberpunkTheme.typography!.fontSans)
+    act(() => $chatFontFamily.set('Lexend'))
+    expect(cssVar('--dt-chat-font-sans')).toContain("'Lexend'")
+    act(() => $chatFontFamily.set(''))
+    expect(cssVar('--dt-chat-font-sans')).toBe(cyberpunkTheme.typography!.fontSans)
   })
 
   // The merged typography is DEFAULT ← nous ← theme, so a user theme that sets
