@@ -19,7 +19,6 @@
   --chat-accent: #5e6ad2;
   --chat-on-accent: #fff;
   --chat-shadow: 0 3px 6px -2px lch(0% 0 0 / 0.02), 0 1px 1px lch(0% 0 0 / 0.04);
-  --ui-chat-surface-background: var(--chat-surface);
   --ui-text-primary: var(--chat-text);
   --ui-text-secondary: var(--chat-muted);
   --ui-text-tertiary: var(--chat-muted);
@@ -28,7 +27,7 @@
   --dt-foreground: var(--chat-text);
   --dt-card: var(--chat-input);
   --dt-background: var(--chat-surface);
-  --dt-user-bubble: var(--chat-hover);
+  --dt-user-bubble: color-mix(in srgb, var(--chat-hover) var(--user-bubble-keep, 100%), transparent);
   --chrome-action-hover: var(--chat-hover);
   --conversation-text-base-size: 0.9375rem;
   --conversation-tool-base-size: 0.8125rem;
@@ -43,8 +42,13 @@
   --composer-surface-pad-y: 0.75rem;
   --composer-input-min-height: 3.5rem;
   --composer-shell-pad-block-end: 0.75rem;
-  font-family: 'Inter Variable', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--dt-chat-font-sans, 'Inter Variable', 'SF Pro Display', -apple-system, system-ui, sans-serif);
   color: var(--chat-text);
+}
+
+/* Glass surfaces inherit their existing field, raised-card or mask treatment. */
+:root:not([data-hermes-glass]) .linear-chat {
+  --ui-chat-surface-background: var(--chat-surface);
 }
 
 .dark .linear-chat {

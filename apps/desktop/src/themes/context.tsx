@@ -381,6 +381,10 @@ function applyTheme(theme: DesktopTheme, mode: 'light' | 'dark', chatFontFamily 
     // than leaving eight emerald spots fighting the theme.
     '--ui-success': harmonize('#10b981', midground, 0.25),
     '--dt-font-sans': resolveChatFontFamily(chatFontFamily, typo.fontSans),
+    '--dt-chat-font-sans': resolveChatFontFamily(
+      chatFontFamily,
+      "'Inter Variable', 'SF Pro Display', -apple-system, system-ui, sans-serif"
+    ),
     '--dt-font-mono': typo.fontMono,
     '--noise-opacity-mul': isDark ? 'calc(0.04 / 0.21)' : 'calc(0.34 / 0.21)'
   }

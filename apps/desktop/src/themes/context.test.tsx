@@ -2,6 +2,7 @@ import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { $backendThemes, __resetBackendSkinSync, ingestBackendSkin } from './backend-sync'
+import { $chatFontFamily } from './chat-font'
 import { skinPref, ThemeProvider, useTheme } from './context'
 import { everforestTheme, midnightTheme } from './presets'
 import type { DesktopTheme } from './types'
@@ -356,6 +357,17 @@ describe('ThemeProvider theme typography (#41766)', () => {
     window.localStorage.clear()
     __resetBackendSkinSync()
     cleanup()
+  })
+
+  it('applies a custom chat font live and restores the chat default when cleared', () => {
+    render(<ThemeProvider><div /></ThemeProvider>)
+    const defaultFont = cssVar('--dt-chat-font-sans')
+
+    expect(defaultFont).toContain('Inter Variable')
+    act(() => $chatFontFamily.set('OpenDyslexic'))
+    expect(cssVar('--dt-chat-font-sans')).toBe(`'OpenDyslexic', ${defaultFont}`)
+    act(() => $chatFontFamily.set(''))
+    expect(cssVar('--dt-chat-font-sans')).toBe(defaultFont)
   })
 
   // The merged typography is DEFAULT ← nous ← theme, so a user theme that sets
