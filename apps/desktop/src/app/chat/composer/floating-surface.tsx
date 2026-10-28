@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { hiddenPaneProps, usePaneGroup, usePaneVisible } from '@/components/pane-shell/pane-visibility'
 import { useStoreSelector } from '@/lib/use-session-slice'
 import { $composerPopout, $composerPopoutGesturesEnabled } from '@/store/composer-popout'
-import { isSecondaryWindow } from '@/store/windows'
+import { isHudWindow, isSecondaryWindow } from '@/store/windows'
 
 import { $floatingComposerOwner } from './floating-state'
 import { registerFloatingComposer } from './floating-target'
@@ -26,6 +26,11 @@ export function FloatingComposerSurface({ children }: ComposerSurfaceProps) {
   // Identity must exist before descendant layout effects publish measurements.
   const [host] = useState(() => {
     const element = document.createElement('div')
+
+    if (!isHudWindow()) {
+      element.className = 'linear-chat'
+    }
+
     element.dataset.composerOwner = id
     element.dataset.treeGroup = groupId
 
