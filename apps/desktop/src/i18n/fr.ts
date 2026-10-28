@@ -1011,12 +1011,11 @@ export const frOverrides = {
       terminalFontPreview: 'Aperçu des glyphes',
       terminalFontReset: 'Utiliser la valeur par défaut',
       chatFontTitle: 'Police de la conversation',
-      chatFontDesc:
-        "Choisissez une police installée pour la conversation et le reste de l'application. Pratique pour des polices plus lisibles comme OpenDyslexic ; laissez vide pour utiliser celle du thème.",
+      chatFontDesc: 'Choisissez une police installée pour le chat et l’application. Laissez ce champ vide pour utiliser la police par défaut de chaque zone.',
       chatFontPlaceholder: 'OpenDyslexic ou une pile de polices CSS',
       chatFontPreview: 'Aperçu',
       chatFontSample: 'Portez ce vieux whisky au juge blond qui fume. 0123456789',
-      chatFontReset: 'Utiliser la police du thème',
+      chatFontReset: 'Utiliser la police par défaut',
       translucencyTitle: 'Translucidité de la fenêtre',
       translucencyDesc: 'Voir votre bureau à travers toute la fenêtre. macOS et Windows uniquement.',
       translucencyGlassDesc:

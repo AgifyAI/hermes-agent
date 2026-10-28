@@ -1,0 +1,143 @@
+/* Linear Desktop, measured in Chrome DevTools on 2026-10-28.
+   Scoped to chat and its portaled composer; shell and HUD keep their own skin. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../../fonts/InterVariable.woff2') format('woff2');
+}
+
+.linear-chat {
+  --chat-surface: lch(97.94% 0.5 282);
+  --chat-input: lch(100% 0 282);
+  --chat-text: lch(20% 1 282);
+  --chat-muted: lch(40% 1 282);
+  --chat-placeholder: lch(64.64% 1.25 282);
+  --chat-border: lch(91.9% 0 282);
+  --chat-hover: lch(94.44% 0.5 282);
+  --chat-accent: #5e6ad2;
+  --chat-on-accent: #fff;
+  --chat-shadow: 0 3px 6px -2px lch(0% 0 0 / 0.02), 0 1px 1px lch(0% 0 0 / 0.04);
+  --ui-text-primary: var(--chat-text);
+  --ui-text-secondary: var(--chat-muted);
+  --ui-text-tertiary: var(--chat-muted);
+  --ui-stroke-secondary: var(--chat-border);
+  --ui-stroke-tertiary: var(--chat-border);
+  --dt-foreground: var(--chat-text);
+  --dt-card: var(--chat-input);
+  --dt-background: var(--chat-surface);
+  --dt-user-bubble: color-mix(in srgb, var(--chat-hover) var(--user-bubble-keep, 100%), transparent);
+  --chrome-action-hover: var(--chat-hover);
+  --conversation-text-base-size: 0.9375rem;
+  --conversation-tool-base-size: 0.8125rem;
+  --conversation-base-line-height: 1.5rem;
+  --conversation-turn-gap: 1rem;
+  --paragraph-gap: 0.75rem;
+  --message-text-indent: 0.625rem;
+  --composer-width: 51.3125rem;
+  --composer-control-primary-size: 1.5rem;
+  --composer-row-gap: 0.5rem;
+  --composer-surface-pad-x: 0.75rem;
+  --composer-surface-pad-y: 0.75rem;
+  --composer-input-min-height: 3.5rem;
+  --composer-shell-pad-block-end: 0.75rem;
+  font-family: var(--dt-chat-font-sans, var(--dt-font-sans));
+  color: var(--chat-text);
+}
+
+/* Glass surfaces inherit their existing field, raised-card or mask treatment. */
+:root:not([data-hermes-glass]) .linear-chat {
+  --ui-chat-surface-background: var(--chat-surface);
+}
+
+@media (hover: none), (pointer: coarse) {
+  html[data-hermes-desktop-host='browser'] .linear-chat {
+    --composer-control-primary-size: 2.75rem;
+  }
+}
+
+.dark .linear-chat {
+  --chat-surface: #121213;
+  --chat-input: #1c1c1d;
+  --chat-text: #e2e3e5;
+  --chat-muted: #97979a;
+  --chat-placeholder: #97979a;
+  --chat-border: #303033;
+  --chat-hover: #252627;
+  --chat-accent: #7170ff;
+  --chat-shadow: 0 4px 4px -1px #0000000a, 0 1px 1px #00000014;
+}
+
+.linear-chat [data-slot='composer-root'] {
+  --composer-fill: var(--chat-input);
+  border-radius: 10px;
+}
+
+.linear-chat [data-slot='composer-surface'] {
+  border-radius: 10px;
+  box-shadow: var(--chat-shadow);
+}
+
+.linear-chat [data-slot='composer-rich-input'] {
+  padding: 2px 6px;
+  font-weight: 450;
+  line-height: var(--conversation-line-height);
+}
+
+.linear-chat [data-slot='composer-rich-input']:is(:empty, [data-empty])::before {
+  color: var(--chat-placeholder) !important;
+}
+
+.linear-chat .composer-primary-action {
+  background: var(--chat-accent);
+  color: var(--chat-on-accent);
+}
+
+.linear-chat .composer-primary-action:hover {
+  background: color-mix(in srgb, var(--chat-accent) 90%, var(--chat-text));
+}
+
+.linear-chat .composer-primary-action:disabled {
+  background: var(--chat-input);
+  color: var(--chat-muted);
+  box-shadow: inset 0 0 0 1px var(--chat-border);
+}
+
+.linear-chat [data-slot='aui_thread-content'] {
+  padding-inline: 1rem;
+}
+
+.linear-chat [data-slot='aui_assistant-message-content'],
+.linear-chat [data-slot='aui_user-message-root'] {
+  font-weight: 450;
+  line-height: var(--conversation-line-height);
+  --human-msg-line-height: 1.6;
+}
+
+.linear-chat .composer-human-message {
+  border-color: var(--chat-border);
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.linear-chat [data-slot='aui_intro'] .wordmark {
+  font-family: inherit;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+  color: var(--chat-text);
+  mix-blend-mode: normal;
+}
+
+.linear-chat [data-slot='aui_intro'] .fit-text > :not([aria-hidden]) > * {
+  font-size: inherit;
+}
+
+.linear-chat [data-slot='aui_intro'] p:last-child {
+  margin-top: 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+}

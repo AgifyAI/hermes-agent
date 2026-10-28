@@ -29,7 +29,7 @@ import {
   localDisplaySkinName,
   localDisplaySkinProfile
 } from './backend-sync'
-import { $chatFontFamily, resolveChatFontFamily } from './chat-font'
+import { $chatFontFamily, resolveChatFontFamily, resolveChatSurfaceFontFamily } from './chat-font'
 import { harmonize, normalizeHex, readableInk } from './color'
 import { BUILTIN_THEME_LIST, DEFAULT_SKIN_NAME, DEFAULT_TYPOGRAPHY, nousTheme, RETIRED_SKINS } from './presets'
 import { $pendingModeApply } from './request'
@@ -381,6 +381,7 @@ function applyTheme(theme: DesktopTheme, mode: 'light' | 'dark', chatFontFamily 
     // than leaving eight emerald spots fighting the theme.
     '--ui-success': harmonize('#10b981', midground, 0.25),
     '--dt-font-sans': resolveChatFontFamily(chatFontFamily, typo.fontSans),
+    '--dt-chat-font-sans': resolveChatSurfaceFontFamily(chatFontFamily, typo.fontSans),
     '--dt-font-mono': typo.fontMono,
     '--noise-opacity-mul': isDark ? 'calc(0.04 / 0.21)' : 'calc(0.34 / 0.21)'
   }

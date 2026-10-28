@@ -594,3 +594,20 @@ The detailed state contract lives in the scoped
 - [ ] `cursor-pointer`, focus ring, and `Esc`-to-close behave?
 - [ ] Touched a primitive, token, or variant? Its named-contract entry in this
       file is updated in the same change.
+
+## Chat reference: Linear Desktop
+
+The conversation and its portaled composer use `app/chat/linear-chat.css`.
+The native Linear chat was inspected in Chrome DevTools on 2026-10-28:
+Inter Variable 4.1, 15px/24px body text at weight 450, 10px composer radius,
+12px composer padding, 24px controls, and a maximum conversation width of
+821px. Light surface, text, border and shadow values are measured LCH values.
+Dark colors adapt the shipped Linear dark surface palette; accent colors are
+adaptations, not measurements of Linear's enabled send button.
+
+The editor stays above its existing controls. The model picker, attachments,
+voice, queue, inline editing and floating composer retain their existing actions.
+The HUD, navigation shell and other destinations keep their own styles.
+Custom chat fonts, theme-specific fonts, message bubble transparency and native
+glass remain effective. Browser touch controls retain their 44px targets.
+Inter is bundled with its SIL Open Font License in `public/licenses/Inter-LICENSE.txt` (copied into Desktop builds).

@@ -52,7 +52,7 @@ import {
 import { $focusedStoredSessionId } from '@/store/session-focus'
 import { $sessionStates, sessionTileDelegate } from '@/store/session-states'
 import { $transcriptTailBySessionId, transcriptTailState } from '@/store/transcript-tail'
-import { isAuxiliaryWindow, isMainWindow } from '@/store/windows'
+import { isAuxiliaryWindow, isHudWindow, isMainWindow } from '@/store/windows'
 
 import { primaryRouteSelectedSessionId, routeSessionId } from '../routes'
 import { titlebarHeaderBaseClass, titlebarHeaderShadowClass, titlebarHeaderTitleClass } from '../shell/titlebar'
@@ -479,6 +479,11 @@ export const ChatView = memo(function ChatView(props: ChatViewProps) {
   )
 })
 
+const chatSurfaceClass = cn(
+  'relative isolate flex h-full min-w-0 flex-col overflow-hidden bg-(--ui-chat-surface-background)',
+  !isHudWindow() && 'linear-chat'
+)
+
 const ChatViewContent = memo(function ChatViewContent({
   className,
   gateway,
@@ -745,10 +750,7 @@ const ChatViewContent = memo(function ChatViewContent({
 
   return (
     <div
-      className={cn(
-        'relative isolate flex h-full min-w-0 flex-col overflow-hidden bg-(--ui-chat-surface-background)',
-        className
-      )}
+      className={cn(chatSurfaceClass, className)}
       data-chat-surface=""
       data-chat-unfocused={surfaceFocused || surfaceHovered ? undefined : ''}
       data-composer-surface-id={composerSurfaceId}
