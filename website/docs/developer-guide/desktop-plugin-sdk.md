@@ -246,7 +246,6 @@ Import the area constants from the SDK; each area has its own `data` payload.
 | Page header | `WORKSPACE_PAGE_HEADER_AREA` | `<WorkspacePageHeaderControl>` inside your page (inline in a split tile) |
 | ⌘K palette | `PALETTE_AREA` | `data: PaletteContribution` |
 | Keybind | `KEYBINDS_AREA` | `data: KeybindContribution` |
-| Theme | `THEMES_AREA` | `data` as a `DesktopTheme` |
 | Composer | `COMPOSER_AREAS.*` | render slots, or middleware / attachment providers |
 | Model menu rows | `MODEL_MENU_ROW_AREA` | `data: ModelMenuRowContribution` — a leading icon / trailing badge per model |
 | Kanban card badges | `KANBAN_CARD_AREAS.badges` | `data: KanbanCardBadgeContribution` — short text labels per card, painted by the board |
@@ -393,56 +392,24 @@ Settings, focus the composer), never dispatch a synthetic `KeyboardEvent` for it
 shortcut — the user may have rebound it. Call
 [`ctx.runAction(id)`](#run-app-actions) instead.
 
-### Themes
+### Appearance
 
-A theme contribution ships a full `DesktopTheme` as its `data` (name, label,
-colors, …). It appears in the theme picker like a built-in.
-
-```javascript
-import { THEMES_AREA } from '@hermes/plugin-sdk'
-
-ctx.register({ id: 'noir', area: THEMES_AREA, data: myDesktopTheme })
-```
-
-Registering a theme lists it; it does not select it. `useTheme()` reads the
-painted appearance (`theme`, `themeName`, `availableThemes`, `resolvedMode`) and
-changes it (`setTheme`, `setMode`, `previewTheme`) from a component:
+Hermes Desktop has one look, modelled on Linear, in light and dark; plugins do not
+register themes or tint it. `useTheme()` reads the light/dark/system choice
+(`mode`, and `resolvedMode` for what is painted) and changes it with
+`setMode`; outside a render, `requestMode(mode)` does the same. Style plugin
+surfaces with the `--linear-*` tokens (or the `--ui-*` / `--dt-*` aliases built
+on them) so they follow the mode.
 
 ```javascript
 import { Button, useTheme } from '@hermes/plugin-sdk'
 
-function ThemePicker() {
-  const { availableThemes, setTheme, themeName } = useTheme()
+function DarkToggle() {
+  const { resolvedMode, setMode } = useTheme()
 
-  return availableThemes.map(t => (
-    <Button key={t.name} disabled={t.name === themeName} onClick={() => setTheme(t.name)}>
-      {t.label}
-    </Button>
-  ))
+  return <Button onClick={() => setMode(resolvedMode === 'dark' ? 'light' : 'dark')}>Toggle</Button>
 }
 ```
-
-A switch driven by something other than a render — a gateway connecting, a
-socket event, any `host.onEvent` callback — has no component to hang the hook
-on. Use `requestTheme(name)` there. An unresolvable name is refused rather than
-coerced to the default skin, so the return value doubles as the availability
-check and a wrong name can never silently reset someone's appearance:
-
-```javascript
-import { host, requestTheme } from '@hermes/plugin-sdk'
-
-host.onEvent('gateway.ready', () => {
-  if (!requestTheme('noir')) {
-    host.notifyError('Connected, but the noir theme is not installed.')
-  }
-})
-```
-
-Both doors persist per profile, so a plugin-driven switch sticks exactly like a
-manual pick. To tint the *active* theme rather than replace it, use
-`setAccentOverride(hex)` and clear it in `ctx.onDispose` — the official
-[Accent Picker](https://github.com/NousResearch/hermes-official-plugins/tree/main/accent-picker)
-plugin is the worked example (it is also a complete, installable disk plugin).
 
 #### Styling the chat switch — `data-session-switching`
 
@@ -989,7 +956,7 @@ Migrations for the plugins that motivated this slot:
 * **hermes-appearance-hub** — mount its paper-texture / font / intro-copy
   controls as an `APPEARANCE_AREAS.extra` card instead of a status-bar menu
   that reaches into Settings; the settings *values* still go through
-  `host.settings` (allowlisted keys) and `THEMES_AREA`.
+  `host.settings` (allowlisted keys).
 
 ### Plugin settings pages (Settings → Plugins) {#plugin-settings-pages}
 
@@ -1907,10 +1874,10 @@ Deliberately **not** keys, and why:
 | Wanted | Use instead | Why not a raw key |
 |--------|-------------|-------------------|
 | keybind map (`hermes.desktop.keybinds`) | `KEYBINDS_AREA` contribution | a raw map write rebinds every other plugin's shortcuts; the area merges per plugin and is torn down with it |
-| active theme / mode record | `THEMES_AREA` (register a theme; the user selects it) | theme selection is per window/profile and arbitrated by the app, not a flat preference |
+| light/dark mode record | `useTheme().setMode` / `requestMode` | the mode is per profile and arbitrated by the app, not a flat preference |
 | `pluginDecisions` (desktop plugin on/off) | the app's Plugins tab (a read-only view is a separate SDK hook) | a plugin toggling another plugin's enable state is plugins interfering with each other |
 | chat / composer width, turn spacing, session-row geometry | nothing yet — these become keys only once they exist as core Appearance preferences (chat width: #55287) | layout is host-owned; a plugin-owned geometry contract would make every theme a layout contract |
-| `toolView.technical`, `embed-mode`, `titlebarAppActions`, `translucency.v2`, `user-bubble-transparency.v1`, `hermesDesktop.zoom.*` | follow-up keys after each store is audited | some drive the main process or window chrome; each needs its own guard and ownership review before it becomes plugin-writable |
+| `toolView.technical`, `embed-mode`, `titlebarAppActions`, `hermesDesktop.zoom.*` | follow-up keys after each store is audited | some drive the main process or window chrome; each needs its own guard and ownership review before it becomes plugin-writable |
 
 Migration — `hermes-appearance-hub`, which today does
 `localStorage.setItem('hermes.desktop.sessionListDensity', id)` followed by
@@ -2464,10 +2431,10 @@ pipeline as a trust boundary.
 |----------|---------|
 | Host | `host` (`.state.*`, `.settings`, `.notify`, `.notifyError`, `.navigate`, `.onEvent`, `.logs`, `.status`, `.restartGateway`, `.request`, `.composer`, `.spellcheck`, `.sessions`, `.skills`, `.toolsets`, `.profiles`, `.pluginDecisions`) |
 | Plugin contract | `HermesPlugin`, `PluginContext`, `PluginContribution`, `PluginStorage`, `PluginFiles`, `PluginFolder`, `PluginFileEntry`, `PluginFilesResult`, `PluginOs`, `PluginPet`, `PetSayOptions`, `PetMessageTone`, `PluginAppActionId`, `PluginAppActionInfo`, `PluginRunActionResult`, `PLUGIN_APP_ACTIONS`, `PluginRestOptions`, `PluginNativeNotificationInput`, `PluginNotificationAction`, `HermesOpenTarget`, `Contribution` |
-| Area constants | `PANES_AREA`, `ROUTES_AREA`, `SIDEBAR_NAV_AREA`, `STATUSBAR_AREAS`, `TITLEBAR_AREAS`, `WORKSPACE_PAGE_HEADER_AREA`, `PALETTE_AREA`, `KEYBINDS_AREA`, `THEMES_AREA`, `COMPOSER_AREAS`, `MODEL_MENU_ROW_AREA`, `KANBAN_CARD_AREAS`, `SESSION_ROW_AREAS`, `SIDEBAR_NAV_PREFS_AREA`, `APPEARANCE_AREAS`, `SETTINGS_PLUGINS_AREA` |
+| Area constants | `PANES_AREA`, `ROUTES_AREA`, `SIDEBAR_NAV_AREA`, `STATUSBAR_AREAS`, `TITLEBAR_AREAS`, `WORKSPACE_PAGE_HEADER_AREA`, `PALETTE_AREA`, `KEYBINDS_AREA`, `COMPOSER_AREAS`, `MODEL_MENU_ROW_AREA`, `KANBAN_CARD_AREAS`, `SESSION_ROW_AREAS`, `SIDEBAR_NAV_PREFS_AREA`, `APPEARANCE_AREAS`, `SETTINGS_PLUGINS_AREA` |
 | Area payloads | `PluginSettingsPage`, `PluginSettingsSubpage` (+ `pluginSettingsHref`), `RouteContribution`, `SidebarNavContribution`, `StatusbarItem`, `TitlebarTool`, `PaletteContribution`, `KeybindContribution`, `ComposerMiddleware`, `ComposerAttachmentProvider`, `ComposerContextMenuProvider` (+ `ComposerContextMenuItem`, `ComposerContextMenuContext`, `ComposerContextMenuAction`), `SessionRowSlotContribution`, `KanbanCardBadgeContribution` (+ `KanbanCard`, `KanbanCardBoard`, `KanbanCardBadge`, `KanbanCardBadgeTone`, `KANBAN_CARD_BADGE_HUES`, `KANBAN_CARD_BADGE_LIMITS`), `SidebarNavPrefsContribution` |
 | React / state | `useValue`, `atom`, `computed`, `useQuery`, `useMutation`, `useQueryClient`, `queryClient`, `Contribute`, `WorkspacePageHeaderControl` |
-| Theming | `useTheme`, `requestTheme`, `setAccentOverride`, `$accentOverride`, `retintTheme`, `themeHue`, `DesktopTheme`, `DesktopThemeColors`, plus OKLCH math (`hexToOklch`, `oklchToHex`, `oklchToSrgb255`, `mixOklab`, `maxChroma`, `hueDelta`, `normalizeHex`) and sRGB measures (`contrastRatio` — `number | null`, null for unparseable input — `readableOn`) |
+| Theming | `useTheme` (`mode`, `resolvedMode`, `setMode`), `requestMode`, plus OKLCH math (`hexToOklch`, `oklchToHex`, `oklchToSrgb255`, `mixOklab`, `maxChroma`, `hueDelta`, `normalizeHex`) and sRGB measures (`contrastRatio` — `number | null`, null for unparseable input — `readableOn`) |
 | UI kit | `Button`, `Input`, `Textarea`, `Select*`, `Switch`, `Checkbox`, `SegmentedControl`, `Tabs*`, `Dialog*`, `ConfirmDialog`, `DropdownMenu*`, `ContextMenu*`, `Popover*`, `Tip`/`Tooltip*`, `Badge`, `Kbd`/`KbdGroup`, `SearchField`, `ScrollArea`, `Separator`, `Skeleton`, `GlyphSpinner`, `Loader`, `EmptyState`, `ErrorState`, `CopyButton`, `StatusDot`, `LogView`, `Codicon`, `DecodeText`, `SandboxedFrame` |
 | Helpers | `cn`, `icons`, `haptic`, `useI18n`, `profileColor`, `profileColorSoft`, `relativeTime`, `fmtDateTime`, `fmtDayTime`, `coarseElapsed`, `evaluateRuntimeReadiness`, `catalogProviderMatches` |
 

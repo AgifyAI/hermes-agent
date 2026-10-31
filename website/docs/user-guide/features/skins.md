@@ -44,11 +44,7 @@ display:
 
 ### On the Desktop app
 
-The Desktop app lists your CLI skins next to its own themes in **Settings → Appearance**, with a few differences:
-
-- `default` (and `/skin default`) means the Desktop default theme, **Nous**. A stock `display.skin: default` therefore never repaints Desktop, and a runtime switch to `default` from the CLI/TUI or `config.yaml` moves a Desktop pick back to Nous.
-- The classic gold look is a separate Desktop theme named `classic` (**Classic Hermes**). Pick it in Appearance, or run `/skin classic`, `/skin gold` or `/skin hermes` in a Desktop chat. It follows the light/dark toggle: gold on navy in dark mode, the CLI's light-terminal goldenrod palette in light mode.
-- `classic` is a reserved Desktop theme name, like the other Desktop built-ins (`mono`, `slate`, …). A user skin file with one of those names keeps the Desktop palette there; its `customCSS` still applies.
+Skins style the terminal. The Desktop app has a single look, modelled on Linear, in light and dark (**Settings → Appearance → Theme**). It ignores `display.skin`, and `/skin` runs only in the CLI and TUI.
 
 ## Complete list of configurable keys
 
@@ -223,7 +219,7 @@ tool_prefix: "▏"
 
 ### Raw `customCSS`
 
-For selector-level styling that colors can't express — font sizes, spacing, pseudo-elements, animations — drop raw CSS into `customCSS`. The desktop app and web dashboard inject it as a `<style>` tag while the skin is active and remove it when you switch to a skin without it.
+For selector-level styling that colors can't express — font sizes, spacing, pseudo-elements, animations — drop raw CSS into `customCSS`. The web dashboard injects it as a `<style>` tag while the skin is active and removes it when you switch to a skin without it.
 
 ```yaml
 name: myskin
