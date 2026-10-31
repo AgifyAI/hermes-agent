@@ -586,10 +586,9 @@ export function TreeGroup({
   // drag start, so a locale-following pane reads its LOADED-locale label.
   const tabText = (paneId: string) => paneChrome(paneFor(paneId)).tabTitleText?.() ?? paneFor(paneId)?.title ?? paneId
 
-  // Collapse/restore a tool panel (or plain minimize elsewhere) — the header
-  // chevron, routed so ⌃`/the titlebar toggle stay truthful. The strip itself
-  // does not collapse: a tap on the header of a lone docked tile used to fold
-  // the zone and take the tab with it.
+  // Collapse/restore a tool panel (or plain minimize elsewhere) — the header chevron, routed so
+  // ⌃`/the titlebar toggle stay truthful. The strip itself does not collapse: a tap on the
+  // header of a lone docked tile used to fold the zone and take the tab with it.
   const toggleCollapse = () => (node.minimized ? restoreTreePane(activeId) : collapseTreePane(activeId))
 
   // Same menu on the header strip and the edit veil — one prop bag.
