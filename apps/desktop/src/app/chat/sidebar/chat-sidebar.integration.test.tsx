@@ -8,7 +8,7 @@ import { $layoutTree, noteActiveTreeGroup } from '@/components/pane-shell/tree/s
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { registry } from '@/contrib/registry'
 import { $connectionsRegistry } from '@/store/connection-registry-state'
-import { $sidebarMessagingOpenIds, setSidebarAgentsGrouped, setSidebarGrouping } from '@/store/layout'
+import { SESSION_SEARCH_FOCUS_EVENT, setSidebarAgentsGrouped, setSidebarGrouping } from '@/store/layout'
 import { $activeGatewayProfile, $profiles, setShowAllProfiles } from '@/store/profile'
 import { $projectScope, ALL_PROJECTS } from '@/store/project-scope'
 import { $projectTree } from '@/store/projects'
@@ -345,11 +345,10 @@ describe('ChatSidebar section labels', () => {
   })
 })
 
-describe('ChatSidebar empty-profile sections', () => {
-  // A profile with no normal sessions but messaging threads / cron jobs must
-  // still show them: the session area (and the sections inside it) is gated by
-  // showSessionSections, which used to key only on normal-session visibility
-  // and collapsed these profiles to the blank state (#63593).
+describe('ChatSidebar merged session sources', () => {
+  // A profile with no local chats but messaging threads must still show them:
+  // platform sessions are the same sessions in the same list, so there is no
+  // separate per-platform section and no blank state (#63593).
   const telegramThread = (id: string, last_active: number) =>
     makeSessionInfo({ connection_id: 'local', id, last_active, profile: 'default', source: 'telegram', title: id })
 
@@ -364,32 +363,54 @@ describe('ChatSidebar empty-profile sections', () => {
     $sessions.set([])
     $messagingSessions.set([telegramThread('tg-one', 60), telegramThread('tg-two', 30)])
     $messagingTruncated.set(false)
-    $sidebarMessagingOpenIds.set(['telegram'])
     $sessionsLoading.set(false)
   })
 
   afterEach(() => {
     cleanup()
     $messagingSessions.set([])
-    $sidebarMessagingOpenIds.set([])
     $sessions.set([])
+    $sessionsLoading.set(true)
+    $sessionsLoadError.set(false)
   })
 
-  it('shows the messaging section for a profile with no normal sessions', () => {
+  it("lists a profile's messaging threads in the one Sessions list", () => {
     const { container } = renderSidebar('/', 'chat')
 
-    // The Telegram platform section renders with its threads…
-    expect(screen.getAllByText('Telegram').length).toBeGreaterThan(0)
+    // The rows sit under Sessions like any chat — no platform heading.
+    expect(screen.getByText('Sessions')).toBeTruthy()
+    expect(screen.queryByText('Telegram')).toBeNull()
     expect(screen.getByText('tg-one')).toBeTruthy()
-    // …and the sidebar did not collapse to the blank state: the search field
-    // only renders inside the session area, so its presence proves the area
-    // (and the messaging sections inside it) rendered.
+    expect(screen.getByText('tg-two')).toBeTruthy()
+    // The search bar is not a permanent fixture any more: it stays closed
+    // until ⌘P asks for it.
+    expect(screen.queryByPlaceholderText('Search sessions…')).toBeNull()
+
+    // One recency-ordered list, newest first.
+    const rows = [...container.querySelectorAll<HTMLElement>('.group.row-hover')].map(row => row.textContent ?? '')
+
+    expect(rows[0]).toContain('tg-one')
+    expect(rows[1]).toContain('tg-two')
+  })
+
+  it('opens the session search bar from the focus-search event (⌘P)', () => {
+    renderSidebar('/', 'chat')
+
+    expect(screen.queryByPlaceholderText('Search sessions…')).toBeNull()
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(SESSION_SEARCH_FOCUS_EVENT))
+    })
+
     expect(screen.getByPlaceholderText('Search sessions…')).toBeTruthy()
+
+    fireEvent.keyDown(screen.getByPlaceholderText('Search sessions…'), { key: 'Escape' })
+
+    expect(screen.queryByPlaceholderText('Search sessions…')).toBeNull()
   })
 
   it('still shows the blank state when a profile has nothing at all', () => {
     $messagingSessions.set([])
-    $sidebarMessagingOpenIds.set([])
 
     // SidebarBlankState: a centered "No sessions yet" plus a "New project"
     // button, rendered INSTEAD of the whole session area (search included).
@@ -400,11 +421,11 @@ describe('ChatSidebar empty-profile sections', () => {
   })
 })
 
-describe('ChatSidebar messaging owners', () => {
+describe('ChatSidebar merged list ordering and owners', () => {
   const telegram = (id: string, profile: string, last_active: number) =>
     makeSessionInfo({ connection_id: 'local', id, last_active, profile, source: 'telegram', title: id })
 
-  // Newest first: the 3-row cap lets default-1, work-1 and default-2 through.
+  // Newest first: the local chat leads, then the platform threads interleave.
   const threads = [
     telegram('default-1', 'default', 50),
     telegram('work-1', 'work', 40),
@@ -419,13 +440,9 @@ describe('ChatSidebar messaging owners', () => {
     root = renderSidebar('/', 'chat').container
   }
 
-  const telegramGroups = () =>
-    [...root.querySelectorAll<HTMLElement>('[data-gateway-group]')].filter(node =>
-      node.dataset.gatewayGroup!.startsWith(JSON.stringify(['messaging:telegram']).slice(0, -1))
-    )
-
-  const titlesIn = (node: HTMLElement) =>
-    threads.map(thread => thread.id).filter(title => within(node).queryByText(title))
+  const rows = () => [...root.querySelectorAll<HTMLElement>('.group.row-hover')]
+  const row = (title: string) => screen.getByText(title).closest('.group.row-hover') as HTMLElement
+  const gatewayGroups = () => [...root.querySelectorAll<HTMLElement>('[data-gateway-group]')]
 
   beforeEach(() => {
     $connectionsRegistry.set({
@@ -443,7 +460,6 @@ describe('ChatSidebar messaging owners', () => {
     ])
     $messagingSessions.set(threads)
     $messagingTruncated.set(false)
-    $sidebarMessagingOpenIds.set(['telegram'])
   })
 
   afterEach(() => {
@@ -452,52 +468,60 @@ describe('ChatSidebar messaging owners', () => {
     setShowAllProfiles(false)
     $activeGatewayProfile.set('default')
     $gatewayGroupCollapsed.set([])
-    $sidebarMessagingOpenIds.set([])
     $messagingSessions.set([])
     $sessions.set([])
     $profiles.set([])
     $connectionsRegistry.set(null)
   })
 
-  it('groups the capped rows by owner, pages the platform as a whole, and keeps its own collapse keys', () => {
-    setSidebarGrouping('profile')
+  it('interleaves messaging threads with local sessions in one recency order', () => {
     mount()
 
-    const [defaultGroup, workGroup] = telegramGroups()
-
-    expect(telegramGroups()).toHaveLength(2)
-    expect(titlesIn(defaultGroup)).toEqual(['default-1', 'default-2'])
-    expect(titlesIn(workGroup)).toEqual(['work-1'])
-
-    fireEvent.click(screen.getByRole('button', { name: 'Load 2 more' }))
-
-    expect(titlesIn(telegramGroups()[0])).toEqual(['default-1', 'default-2', 'default-3'])
-    expect(titlesIn(telegramGroups()[1])).toEqual(['work-1', 'work-2'])
-    expect(screen.queryByRole('button', { name: /^Load \d+ more$/ })).toBeNull()
-
-    fireEvent.click(within(telegramGroups()[0]).getByRole('button', { name: 'Hide default sessions' }))
-
-    expect(screen.queryByText('default-1')).toBeNull()
-    expect(screen.getByText('desk')).toBeTruthy()
+    expect(screen.queryByText('Telegram')).toBeNull()
+    expect(rows().map(node => node.textContent)).toEqual([
+      expect.stringContaining('desk'),
+      expect.stringContaining('default-1'),
+      expect.stringContaining('default-2'),
+      expect.stringContaining('default-3')
+    ])
   })
 
-  it('tags rows with their profile under other groupings and stays flat when scoped to one profile', () => {
+  it('shows every profile flat when they are all on screen, and only the scoped one otherwise', () => {
     setShowAllProfiles(true)
     setSidebarGrouping('date')
     mount()
 
-    const row = (title: string) => screen.getByText(title).closest('.group.row-hover') as HTMLElement
-
-    expect(telegramGroups()).toHaveLength(0)
-    expect(within(row('work-1')).getByRole('img', { name: 'Profile: work' })).toBeTruthy()
+    expect(screen.getByText('work-1')).toBeTruthy()
+    expect(screen.getByText('default-1')).toBeTruthy()
+    // No per-platform headings or owner groups in the flat view.
+    expect(screen.queryByText('Telegram')).toBeNull()
 
     cleanup()
     setSidebarGrouping('profile')
     setShowAllProfiles(false)
     mount()
 
-    expect(telegramGroups()).toHaveLength(0)
     expect(screen.queryByText('work-1')).toBeNull()
     expect(within(row('default-1')).queryByRole('img', { name: /^Profile:/ })).toBeNull()
+  })
+
+  it('groups every source by owner once every profile is on screen', () => {
+    setSidebarGrouping('profile')
+    mount()
+
+    const groups = gatewayGroups()
+
+    expect(groups).toHaveLength(2)
+    expect(within(groups[0]).getByText('desk')).toBeTruthy()
+    expect(within(groups[0]).getByText('default-1')).toBeTruthy()
+    expect(within(groups[1]).getByText('work-1')).toBeTruthy()
+
+    // Collapsing one owner's group hides its platform rows AND its local chats,
+    // because they are all rows of the same list.
+    fireEvent.click(within(groups[0]).getByRole('button', { name: /^Hide .*default sessions$/ }))
+
+    expect(screen.queryByText('desk')).toBeNull()
+    expect(screen.queryByText('default-1')).toBeNull()
+    expect(screen.getByText('work-1')).toBeTruthy()
   })
 })

@@ -3692,11 +3692,8 @@ export const deOverrides = {
       ageMin: 'Min'
     },
     dateDivider: {
-      today: 'Heute früher',
-      yesterday: 'Gestern',
-      thisWeek: 'Diese Woche früher',
-      lastWeek: 'Letzte Woche',
-      thisMonth: 'Diesen Monat früher'
+      today: 'Heute',
+      yesterday: 'Gestern'
     },
     statusDivider: {
       working: 'In Arbeit',

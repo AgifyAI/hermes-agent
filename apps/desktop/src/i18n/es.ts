@@ -3681,11 +3681,8 @@ export const esOverrides = {
       ageMin: 'm'
     },
     dateDivider: {
-      today: 'Hoy, más temprano',
-      yesterday: 'Ayer',
-      thisWeek: 'Esta semana',
-      lastWeek: 'La semana pasada',
-      thisMonth: 'Este mes'
+      today: 'Hoy',
+      yesterday: 'Ayer'
     },
     statusDivider: {
       working: 'En progreso',

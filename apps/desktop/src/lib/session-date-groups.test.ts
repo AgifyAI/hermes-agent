@@ -5,7 +5,7 @@ import type { SessionInfo } from '@/types/hermes'
 import { makeSessionInfo } from '../test/session-info'
 
 import type { SidebarSessionEntry } from './session-branch-tree'
-import { groupEntriesByRecency, hideCollapsedGroupRows, toSessionRows } from './session-date-groups'
+import { groupEntriesByDay, groupEntriesByStatus, hideCollapsedGroupRows, toSessionRows } from './session-date-groups'
 
 const session = (id: string, overrides: Partial<SessionInfo> = {}): SessionInfo =>
   makeSessionInfo({ id, message_count: 1, source: 'cli', title: id, ...overrides })
@@ -13,194 +13,122 @@ const session = (id: string, overrides: Partial<SessionInfo> = {}): SessionInfo 
 const entry = (s: SessionInfo, branchStem?: string): SidebarSessionEntry =>
   branchStem ? { branchStem, session: s } : { session: s }
 
-// Fixed "now": Thursday 18 Jun 2026, local noon (15 Jun 2026 is a Monday).
-// All tests pin a Monday week start so calendar boundaries are deterministic.
+// Fixed "now": Thursday 18 Jun 2026, local noon. The sidebar's nominal day
+// starts at 4 AM local, so anything before that still belongs to yesterday.
 const NOW = new Date(2026, 5, 18, 12, 0, 0).getTime()
-const MONDAY = 1
 
 const at = (year: number, month: number, day: number, hour = 10, minute = 0): number =>
   Math.floor(new Date(year, month, day, hour, minute, 0).getTime() / 1000)
 
-const group = (entries: SidebarSessionEntry[], nowMs = NOW) => groupEntriesByRecency(entries, nowMs, MONDAY)
+const group = (entries: SidebarSessionEntry[], nowMs = NOW) => groupEntriesByDay(entries, nowMs)
 
-const dividerKeys = (rows: ReturnType<typeof groupEntriesByRecency>): string[] =>
+const burstOfTwo = (): SidebarSessionEntry[] => [
+  entry(session('fresh-a', { last_active: at(2026, 5, 18, 11) })),
+  entry(session('fresh-b', { last_active: at(2026, 5, 18, 10, 58) }))
+]
+
+const dividerKeys = (rows: ReturnType<typeof groupEntriesByDay>): string[] =>
   rows.flatMap(row => (row.kind === 'divider' ? [row.key] : []))
 
-describe('groupEntriesByRecency', () => {
-  it('limits complete Updated groups without splitting bursts or branch clusters', () => {
-    const burst = Array.from({ length: 11 }, (_, i) =>
-      entry(session(`burst-${i}`, { last_active: at(2026, 5, 18, 11) - i * 120 }))
-    )
-
-    const entries = [
-      ...burst,
-      entry(session('yesterday', { last_active: at(2026, 5, 17, 15) })),
-      entry(session('branch', { last_active: at(2026, 4, 1) }), '└'),
-      entry(session('older', { last_active: at(2026, 5, 16, 15) }))
-    ]
-
-    const full = group(entries)
-    const dividers = full.flatMap((row, index) => (row.kind === 'divider' ? [index] : []))
-    const limited = groupEntriesByRecency(entries, NOW, MONDAY, 2)
-
-    expect(limited).toEqual(full.slice(0, dividers[1]))
-    expect(limited.at(-1)).toMatchObject({ entry: { session: { id: 'branch' } } })
-    expect(groupEntriesByRecency(burst, NOW, MONDAY, 2)).toEqual(group(burst))
-    expect(groupEntriesByRecency([], NOW, MONDAY, 2)).toEqual([])
-  })
-
-  it('cuts the head after the most recent handful, then divides by coarse ranges', () => {
-    // The morning run (30m/30m/4h/30m gaps, then a 14h silence) is the
-    // unlabelled head; each older group gets one divider, coarsening with age.
+describe('groupEntriesByDay', () => {
+  it('leads with today unlabelled, then one collapsible section per earlier day', () => {
     const rows = group([
       entry(session('a', { last_active: at(2026, 5, 18, 11) })),
-      entry(session('b', { last_active: at(2026, 5, 18, 10, 30) })),
-      entry(session('c', { last_active: at(2026, 5, 18, 10) })),
-      entry(session('d', { last_active: at(2026, 5, 18, 6) })),
-      entry(session('e', { last_active: at(2026, 5, 18, 5, 30) })),
-      entry(session('f', { last_active: at(2026, 5, 17, 15) })), // yesterday
-      entry(session('g', { last_active: at(2026, 5, 16, 15) })), // Tue this week
-      entry(session('h', { last_active: at(2026, 5, 14) })), // Sun last week
-      entry(session('i', { last_active: at(2026, 5, 3) })), // earlier in June
-      entry(session('j', { last_active: at(2026, 4, 28) })), // May
-      entry(session('k', { last_active: at(2025, 11, 3) })) // December 2025
+      entry(session('b', { last_active: at(2026, 5, 18, 8) })),
+      entry(session('c', { last_active: at(2026, 5, 17, 15) })),
+      entry(session('d', { last_active: at(2026, 5, 17, 9) })),
+      entry(session('e', { last_active: at(2026, 5, 16, 15) })),
+      entry(session('f', { last_active: at(2026, 5, 2, 15) }))
     ])
 
-    expect(rows.slice(0, 5).every(row => row.kind === 'session')).toBe(true)
-    expect(rows[5]).toMatchObject({ key: 'yesterday', kind: 'divider' })
-    expect(dividerKeys(rows)).toEqual(['yesterday', 'this-week', 'last-week', 'this-month', 'm-2026-4', 'my-2025-11'])
+    expect(rows.slice(0, 2).every(row => row.kind === 'session')).toBe(true)
+    expect(dividerKeys(rows)).toEqual(['day:2026-06-17', 'day:2026-06-16', 'day:2026-06-02'])
   })
 
-  it('labels the rest of the current day "earlier today" past a real break', () => {
-    // Five rapid-fire sessions, a ~4h pause, then more of the same day.
+  it('emits no divider when everything is from today', () => {
     const rows = group([
       entry(session('a', { last_active: at(2026, 5, 18, 11) })),
-      entry(session('b', { last_active: at(2026, 5, 18, 10, 58) })),
-      entry(session('c', { last_active: at(2026, 5, 18, 10, 56) })),
-      entry(session('d', { last_active: at(2026, 5, 18, 10, 54) })),
-      entry(session('e', { last_active: at(2026, 5, 18, 10, 52) })),
-      entry(session('f', { last_active: at(2026, 5, 18, 7) })),
-      entry(session('g', { last_active: at(2026, 5, 18, 6, 58) }))
+      entry(session('b', { last_active: at(2026, 5, 18, 9) })),
+      entry(session('c', { last_active: at(2026, 5, 18, 5) }))
     ])
 
-    expect(rows.findIndex(row => row.kind === 'divider')).toBe(5)
-    expect(dividerKeys(rows)).toEqual(['today'])
+    expect(rows.every(row => row.kind === 'session')).toBe(true)
   })
 
-  it('never slices a rapid-fire burst mid-run', () => {
-    // Eleven sessions two minutes apart: no gap qualifies as a break, so the
-    // whole burst stays in the head and the divider lands after it.
-    const burst = Array.from({ length: 11 }, (_, i) =>
-      entry(session(`s${i}`, { last_active: at(2026, 5, 18, 11) - i * 120 }))
-    )
+  it('labels the first section when the newest session is not from today', () => {
+    // Nothing today: the list opens on yesterday, which stays a section so it
+    // reads as a day and can be collapsed.
+    const rows = group([
+      entry(session('a', { last_active: at(2026, 5, 17, 15) })),
+      entry(session('b', { last_active: at(2026, 5, 16, 15) }))
+    ])
 
-    const rows = group([...burst, entry(session('old', { last_active: at(2026, 5, 17, 15) }))])
-
-    expect(rows.findIndex(row => row.kind === 'divider')).toBe(11)
-    expect(dividerKeys(rows)).toEqual(['yesterday'])
+    expect(rows[0]).toMatchObject({ key: 'day:2026-06-17', kind: 'divider' })
+    expect(dividerKeys(rows)).toEqual(['day:2026-06-17', 'day:2026-06-16'])
   })
 
-  it('chains the head run across midnight', () => {
-    // Viewed at 00:58: tonight plus last evening is one run; yesterday's
-    // afternoon (a different nominal day) opens the labelled groups.
+  it('rolls the 4 AM boundary into the previous evening', () => {
+    // Viewed at 00:58: tonight plus last evening is one day; the afternoon
+    // before it opens the first section.
     const smallHours = new Date(2026, 5, 19, 0, 58).getTime()
 
     const rows = group(
       [
         entry(session('a', { last_active: at(2026, 5, 19, 0, 30) })),
         entry(session('b', { last_active: at(2026, 5, 18, 23, 50) })),
-        entry(session('c', { last_active: at(2026, 5, 18, 23, 20) })),
+        entry(session('c', { last_active: at(2026, 5, 18, 20) })),
         entry(session('d', { last_active: at(2026, 5, 17, 20) }))
       ],
       smallHours
     )
 
-    expect(rows.findIndex(row => row.kind === 'divider')).toBe(3)
-    expect(dividerKeys(rows)).toEqual(['yesterday'])
-  })
-
-  it('dissolves a stale head into its own calendar group (fuzzy merge)', () => {
-    // Newest session is 6 days old and the rows below it share its "last week"
-    // bucket: cutting there would strand near-identical neighbours around a
-    // divider, so no head is kept and the whole bucket leads unlabelled.
-    const rows = group([
-      entry(session('a', { last_active: at(2026, 5, 12) })),
-      entry(session('b', { last_active: at(2026, 5, 11, 15) })),
-      entry(session('c', { last_active: at(2026, 5, 11, 10) })),
-      entry(session('d', { last_active: at(2026, 5, 3) })),
-      entry(session('e', { last_active: at(2026, 4, 20) }))
-    ])
-
     expect(rows.slice(0, 3).every(row => row.kind === 'session')).toBe(true)
-    expect(dividerKeys(rows)).toEqual(['this-month', 'm-2026-4'])
+    expect(dividerKeys(rows)).toEqual(['day:2026-06-17'])
   })
 
-  it('keeps an isolated newest session as the head when its bucket differs', () => {
+  it('limits complete day sections without splitting bursts or branch clusters', () => {
+    const burst = [
+      entry(session('burst-0', { last_active: at(2026, 5, 18, 11) })),
+      entry(session('burst-1', { last_active: at(2026, 5, 18, 10, 58) }))
+    ]
+
+    const entries = [
+      ...burst,
+      entry(session('yesterday', { last_active: at(2026, 5, 17, 15) })),
+      entry(session('yesterday-2', { last_active: at(2026, 5, 17, 9) })),
+      entry(session('older', { last_active: at(2026, 5, 10, 9) }))
+    ]
+
+    // Two day sections total: today (unlabelled) + yesterday.
+    const limited = groupEntriesByDay(entries, NOW, 2)
+
+    expect(dividerKeys(limited)).toEqual(['day:2026-06-17'])
+    expect(limited.slice(0, 2).every(row => row.kind === 'session')).toBe(true)
+    expect(groupEntriesByDay(entries, NOW, 1)).toEqual(toSessionRows(burst))
+    expect(groupEntriesByDay([], NOW, 2)).toEqual([])
+  })
+
+  it('keeps a branch child inside its parent cluster instead of opening a section', () => {
+    const parent = session('parent', { last_active: at(2026, 5, 18, 9) })
+    const child = session('child', { last_active: at(2026, 5, 17, 9), parent_session_id: 'parent' })
+
+    const rows = group([...burstOfTwo(), entry(parent), entry(child, '└─ ')])
+
+    expect(dividerKeys(rows)).toEqual([])
+    expect(rows.at(-1)).toMatchObject({ entry: { session: { id: 'child' } } })
+  })
+
+  it('never emits the same day twice under a non-monotonic order', () => {
+    // Project lanes can hand over an out-of-order lane: a day divider is
+    // emitted once, and a later repeat of that day folds into the open group
+    // without a second heading.
     const rows = group([
-      entry(session('a', { last_active: at(2026, 5, 18, 9) })),
-      entry(session('b', { last_active: at(2026, 5, 17, 15) })),
-      entry(session('c', { last_active: at(2026, 5, 3) }))
+      entry(session('a', { last_active: at(2026, 5, 16) })),
+      entry(session('b', { last_active: at(2026, 5, 15) })),
+      entry(session('c', { last_active: at(2026, 5, 16) }))
     ])
 
-    expect(rows.findIndex(row => row.kind === 'divider')).toBe(1)
-    expect(dividerKeys(rows)).toEqual(['yesterday', 'this-month'])
-  })
-
-  it('emits no dividers when everything is one unbroken run', () => {
-    const rows = group([
-      entry(session('a', { last_active: at(2026, 5, 18, 11) })),
-      entry(session('b', { last_active: at(2026, 5, 18, 10, 50) })),
-      entry(session('c', { last_active: at(2026, 5, 18, 10, 40) }))
-    ])
-
-    expect(rows.every(row => row.kind === 'session')).toBe(true)
-  })
-
-  it('collapses a big gap straight to the next month/year (empty ranges omitted)', () => {
-    const rows = group([
-      entry(session('t', { last_active: at(2026, 5, 18, 11) })),
-      entry(session('t2', { last_active: at(2026, 5, 18, 10, 30) })),
-      entry(session('j1', { last_active: at(2026, 0, 5) })),
-      entry(session('j2', { last_active: at(2026, 0, 3) })),
-      entry(session('old', { last_active: at(2024, 2, 9) }))
-    ])
-
-    expect(dividerKeys(rows)).toEqual(['m-2026-0', 'my-2024-2'])
-  })
-
-  it('never labels the first rendered group, even when it is not recent', () => {
-    // Newest session is weeks old and alone in its month: it opens the list
-    // unlabelled; only the transitions below it are marked.
-    const rows = group([
-      entry(session('a', { last_active: at(2026, 4, 20) })),
-      entry(session('b', { last_active: at(2026, 2, 3) })),
-      entry(session('c', { last_active: at(2025, 11, 3) }))
-    ])
-
-    expect(rows[0]).toMatchObject({ kind: 'session' })
-    expect(dividerKeys(rows)).toEqual(['m-2026-2', 'my-2025-11'])
-  })
-
-  it('keeps branch children in their parent cluster without opening a new bucket', () => {
-    const parent = session('parent', { last_active: at(2026, 5, 18, 11) })
-    const child = session('child', { last_active: at(2024, 0, 1), parent_session_id: 'parent' })
-
-    const rows = group([entry(parent), entry(child, '└─ ')])
-
-    expect(rows).toEqual([
-      { entry: entry(parent), kind: 'session' },
-      { entry: entry(child, '└─ '), kind: 'session' }
-    ])
-  })
-
-  it('never emits a divider twice under a non-monotonic order', () => {
-    const rows = group([
-      entry(session('a', { last_active: at(2026, 5, 16) })), // head run
-      entry(session('b', { last_active: at(2026, 4, 5) })), // May — divider
-      entry(session('c', { last_active: at(2026, 5, 16) })) // head again — no repeat
-    ])
-
-    expect(dividerKeys(rows)).toEqual(['m-2026-4'])
+    expect(dividerKeys(rows)).toEqual(['day:2026-06-16', 'day:2026-06-15'])
   })
 
   it('falls back to started_at when last_active is missing', () => {
@@ -209,41 +137,65 @@ describe('groupEntriesByRecency', () => {
       entry(session('s', { last_active: 0, started_at: at(2026, 5, 10) }))
     ])
 
-    expect(dividerKeys(rows)).toEqual(['last-week'])
+    expect(dividerKeys(rows)).toEqual(['day:2026-06-10'])
+  })
+})
+
+describe('groupEntriesByStatus', () => {
+  it('splits the runs under their own labels, keeping branch children attached', () => {
+    const parent = session('parent')
+    const child = session('child')
+    const other = session('other')
+
+    const rows = groupEntriesByStatus(
+      [entry(parent), entry(child, '└─ '), entry(other)],
+      s => s.session.id === 'parent',
+      { working: 'Working', done: 'Done' }
+    )
+
+    expect(rows).toEqual([
+      { key: 'status:working', kind: 'divider', label: 'Working' },
+      { entry: entry(parent), kind: 'session' },
+      { entry: entry(child, '└─ '), kind: 'session' },
+      { key: 'status:done', kind: 'divider', label: 'Done' },
+      { entry: entry(other), kind: 'session' }
+    ])
   })
 })
 
 describe('hideCollapsedGroupRows', () => {
+  const dayRow = (day: number, key: string) => ({ day, key, kind: 'divider' as const })
+
   it('returns the same array when every group is open', () => {
     const rows = [
       { entry: entry(session('a')), kind: 'session' as const },
-      { key: 'yesterday', kind: 'divider' as const, label: 'Yesterday' },
+      dayRow(1, 'day:2026-06-17'),
       { entry: entry(session('b')), kind: 'session' as const }
     ]
 
     expect(hideCollapsedGroupRows(rows, () => true)).toBe(rows)
   })
 
-  it('keeps the divider and drops sessions under a closed group', () => {
+  it('keeps the divider and drops sessions under a closed day', () => {
     const rows = [
       { entry: entry(session('head')), kind: 'session' as const },
-      { key: 'yesterday', kind: 'divider' as const, label: 'Yesterday' },
+      dayRow(1, 'day:2026-06-17'),
       { entry: entry(session('y1')), kind: 'session' as const },
       { entry: entry(session('y2'), '└─ '), kind: 'session' as const },
-      { key: 'last-week', kind: 'divider' as const, label: 'Last week' },
-      { entry: entry(session('lw')), kind: 'session' as const }
+      dayRow(2, 'day:2026-06-16'),
+      { entry: entry(session('older')), kind: 'session' as const }
     ]
 
-    const visible = hideCollapsedGroupRows(rows, key => key !== 'yesterday')
+    const visible = hideCollapsedGroupRows(rows, key => key !== 'day:2026-06-17')
 
     expect(visible).toEqual([rows[0], rows[1], rows[4], rows[5]])
   })
 
-  it('never hides the unlabelled head above the first divider', () => {
+  it('never hides the unlabelled today section above the first divider', () => {
     const rows = [
       { entry: entry(session('a')), kind: 'session' as const },
       { entry: entry(session('b')), kind: 'session' as const },
-      { key: 'yesterday', kind: 'divider' as const, label: 'Yesterday' },
+      dayRow(1, 'day:2026-06-17'),
       { entry: entry(session('c')), kind: 'session' as const }
     ]
 
@@ -252,7 +204,7 @@ describe('hideCollapsedGroupRows', () => {
     expect(visible.map(row => (row.kind === 'session' ? row.entry.session.id : row.key))).toEqual([
       'a',
       'b',
-      'yesterday'
+      'day:2026-06-17'
     ])
   })
 })

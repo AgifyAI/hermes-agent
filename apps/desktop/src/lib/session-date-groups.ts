@@ -1,149 +1,75 @@
 import { type SidebarSessionEntry } from '@/lib/session-branch-tree'
-import { calendarBucket, HOUR, localeWeekStartDay, MINUTE, SECOND, type SessionBucket } from '@/lib/time'
+import { daySectionKey, nominalDayStart, SECOND } from '@/lib/time'
 
 // A flat list row is either a divider or a session entry. Interleaving these
 // lets the flat list (and the virtualizer) render separators inline without a
-// second layer of nesting. A divider either names a calendar bucket (resolved
-// against the locale's labels at render time) or carries its own label.
+// second layer of nesting. A divider either names a calendar day (resolved
+// against the locale's labels at render time, see sessionDayLabel) or carries
+// its own label (the WORKING / DONE runs).
 export type SidebarListRow =
-  | { bucket: SessionBucket; key: string; kind: 'divider' }
+  | { day: number; key: string; kind: 'divider' }
   | { entry: SidebarSessionEntry; kind: 'session' }
   | { key: string; kind: 'divider'; label: string }
 
 // The row's own age label reads from `last_active || started_at`; bucket off the
-// same value so a divider lines up with what the row actually shows.
+// same value so a day section lines up with what the row actually shows.
 const recencyMs = (entry: SidebarSessionEntry): number =>
   (entry.session.last_active || entry.session.started_at || 0) * SECOND
 
-// Aim the head at "the most recent handful". A break shorter than
-// MIN_RUN_BREAK_MS never counts as one — that would slice a rapid-fire burst —
-// and a silence longer than MAX_RUN_GAP_MS always ends the run: without that
-// bound a sparse list (a project lane) would chain weeks of stale sessions
-// into one giant "recent" head.
-const TARGET_HEAD_SESSIONS = 5
-const MIN_RUN_BREAK_MS = 30 * MINUTE
-const MAX_RUN_GAP_MS = 8 * HOUR
-
-// The unlabelled head is the newest run of sessions, cut at a *real* break in
-// activity. Candidate cut points are every gap of at least MIN_RUN_BREAK_MS
-// inside the contiguous run (gaps ≤ MAX_RUN_GAP_MS), plus the run's own end;
-// among them we pick the one whose head size lands closest (log-scale) to
-// TARGET_HEAD_SESSIONS. So the first divider shows up after roughly the most
-// recent five sessions — but only ever at a genuine pause, never mid-burst: a
-// truly unbroken run stays whole, and an isolated newest session stands alone.
-// Runs chain naturally across midnight.
+// One collapsible section per calendar day, in the order the entries arrive
+// (the caller sorts newest-first). Today's section is the unlabelled top of the
+// list — it can never be collapsed — so the first divider a user sees is always
+// an earlier day ("Yesterday", "Thursday 18 June", …). A day with no sessions
+// simply never emits a section. Branch children inherit their parent cluster's
+// day and never trigger a divider, so a parent→branches block never splits.
 //
-// Fuzzy-merge rule: when the cut falls at the run's end and the sessions just
-// below it share the head's calendar bucket, the head adds nothing — it's just
-// the top of that group. Dissolve it (the first-group rule keeps the top
-// unlabelled anyway) so a divider never strands near-identical neighbours,
-// e.g. a lone 6-day-old session above a "Last week" label.
-//
-// Returns the oldest timestamp (ms) still inside the head; -Infinity means the
-// whole list is one run, +Infinity means no head (calendar groups own it all).
-function headRunCutoffMs(entries: readonly SidebarSessionEntry[], nowMs: number, weekStartsOn: number): number {
-  const times = entries
-    .filter(entry => !entry.branchStem)
-    .map(recencyMs)
-    .sort((a, b) => b - a)
-
-  let bestIdx = -1
-  let bestScore = Number.POSITIVE_INFINITY
-  let runEnded = false
-
-  for (let i = 1; i < times.length; i++) {
-    const gap = times[i - 1] - times[i]
-    const endsRun = gap > MAX_RUN_GAP_MS
-
-    if (gap >= MIN_RUN_BREAK_MS || endsRun) {
-      // `i` sessions would sit above a cut at this gap.
-      const score = Math.abs(Math.log(i / TARGET_HEAD_SESSIONS))
-
-      if (score < bestScore) {
-        bestScore = score
-        bestIdx = i
-        runEnded = endsRun
-      }
-    }
-
-    if (endsRun) {
-      break
-    }
-  }
-
-  if (bestIdx === -1) {
-    return Number.NEGATIVE_INFINITY
-  }
-
-  if (runEnded) {
-    const headBucket = calendarBucket(times[0] / SECOND, nowMs, weekStartsOn)
-    const belowBucket = calendarBucket(times[bestIdx] / SECOND, nowMs, weekStartsOn)
-
-    if (headBucket.key === belowBucket.key) {
-      return Number.POSITIVE_INFINITY
-    }
-  }
-
-  return times[bestIdx - 1]
-}
-
-// Insert a date divider before each labelled group. The unlabelled head is the
-// newest run of sessions (see headRunCutoffMs); below it, groups are coarse
-// calendar ranges — earlier today → yesterday → earlier this week → last week
-// → earlier this month → month → month + year — one divider per range, never
-// one per day. Whatever group happens to render first is also never labelled.
-// Branch children inherit their parent cluster's group and never trigger a
-// divider, so a parent→branches block never splits.
-export function groupEntriesByRecency(
+// `maxGroups` limits how many day sections are rendered (project previews fold
+// the list down to the two most recent days). Entries past the limit are
+// dropped, exactly like the old bucket limit.
+export function groupEntriesByDay(
   entries: readonly SidebarSessionEntry[],
   nowMs = Date.now(),
-  weekStartsOn = localeWeekStartDay(),
   maxGroups = Number.POSITIVE_INFINITY
 ): SidebarListRow[] {
   const rows: SidebarListRow[] = []
   const emitted = new Set<string>()
-  const cutoff = headRunCutoffMs(entries, nowMs, weekStartsOn)
-  let lastKey: null | string = null
-  let groups = 1
+  const todayStart = nominalDayStart(nowMs)
+  let currentDay: null | number = null
+  let dayGroups = 0
 
   for (const entry of entries) {
-    // Nested branch rows travel with their parent cluster; they never open a new
-    // bucket or move the divider cursor.
+    // Nested branch rows travel with their parent cluster; they never open a
+    // new day or move the divider cursor.
     if (entry.branchStem) {
       rows.push({ entry, kind: 'session' })
 
       continue
     }
 
-    const ms = recencyMs(entry)
+    const day = nominalDayStart(recencyMs(entry))
 
-    // Head-run sessions are never labelled.
-    if (ms >= cutoff) {
-      rows.push({ entry, kind: 'session' })
-      lastKey = '__recent__'
+    if (day !== currentDay) {
+      currentDay = day
 
-      continue
-    }
+      if (dayGroups >= maxGroups) {
+        break
+      }
 
-    const bucket = calendarBucket(ms / SECOND, nowMs, weekStartsOn)
+      dayGroups++
 
-    if (bucket.key !== lastKey) {
-      lastKey = bucket.key
-      const alreadyEmitted = emitted.has(bucket.key)
+      const key = daySectionKey(day)
+      const alreadyEmitted = emitted.has(key)
 
-      // Mark it emitted even when skipped so a non-monotonic order (possible
-      // inside a project lane) can't later re-label it or collide React keys.
-      emitted.add(bucket.key)
+      // Mark it emitted even when skipped, so a non-monotonic order (possible
+      // inside a project lane) can't re-label the same day or collide React
+      // keys.
+      emitted.add(key)
 
-      // A divider only ever separates two groups — never label the very first
-      // rendered row, whatever group it belongs to.
-      if (rows.length > 0 && !alreadyEmitted) {
-        if (groups >= maxGroups) {
-          break
-        }
-
-        groups++
-        rows.push({ bucket, key: bucket.key, kind: 'divider' })
+      // The newest day on screen leads unlabelled by definition (there is
+      // nothing above it), and when that day is today it stays unlabelled —
+      // today is not a collapsible section. Any other day gets its heading.
+      if (!alreadyEmitted && (dayGroups > 1 || day !== todayStart)) {
+        rows.push({ day, key, kind: 'divider' })
       }
     }
 
@@ -188,8 +114,8 @@ export function toSessionRows(entries: readonly SidebarSessionEntry[]): SidebarL
 }
 
 /** Drop session rows that sit under a closed divider. The divider itself stays
- *  so the group can be opened again. Sessions above the first divider (the
- *  unlabelled head) are never gated. Returns the input array when nothing is
+ *  so the group can be opened again. Sessions above the first divider (today's
+ *  unlabelled section) are never gated. Returns the input array when nothing is
  *  hidden so callers keep a stable reference. */
 export function hideCollapsedGroupRows(
   rows: readonly SidebarListRow[],

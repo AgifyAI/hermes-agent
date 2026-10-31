@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  calendarBucket,
   DAY,
-  fmtMonth,
-  fmtMonthYear,
+  daySectionKey,
+  fmtDayHeading,
+  fmtDayHeadingYear,
   formatAgo,
   HOUR,
   MINUTE,
   nominalDayStart,
   SECOND,
-  sessionBucketLabel
+  sessionDayLabel
 } from './time'
 
 const labels = {
@@ -45,8 +45,8 @@ describe('formatAgo', () => {
 // Thursday 18 Jun 2026, local noon (15 Jun 2026 is a Monday).
 const THU_NOON = new Date(2026, 5, 18, 12, 0, 0).getTime()
 
-const secondsAt = (year: number, month: number, day: number, hour = 10) =>
-  Math.floor(new Date(year, month, day, hour, 0, 0).getTime() / 1000)
+const dayStartAt = (year: number, month: number, day: number, hour = 10) =>
+  nominalDayStart(new Date(year, month, day, hour, 0, 0).getTime())
 
 describe('nominalDayStart', () => {
   it('rolls the day boundary at 4 AM, not midnight', () => {
@@ -56,96 +56,43 @@ describe('nominalDayStart', () => {
   })
 })
 
-describe('calendarBucket', () => {
-  // Monday week start: the current week began Mon 15 Jun, last week is Jun 8-14.
-  const MONDAY = 1
+describe('sessionDayLabel', () => {
+  const dayLabels = { today: 'Today', yesterday: 'Yesterday' }
 
-  const kindAt = (year: number, month: number, day: number, hour = 10) =>
-    calendarBucket(secondsAt(year, month, day, hour), THU_NOON, MONDAY).kind
+  const labelAt = (year: number, month: number, day: number, hour = 10) =>
+    sessionDayLabel(dayStartAt(year, month, day, hour), dayLabels, THU_NOON)
 
-  it('buckets the current day (and, defensively, the future) as today', () => {
-    // The head run normally absorbs these; "Earlier today" covers the rest.
-    expect(kindAt(2026, 5, 18, 5)).toBe('today')
-    expect(kindAt(2026, 5, 18, 23)).toBe('today')
-    expect(kindAt(2026, 5, 19)).toBe('today')
+  it('translates today and yesterday', () => {
+    expect(labelAt(2026, 5, 18)).toBe('Today')
+    expect(labelAt(2026, 5, 17)).toBe('Yesterday')
   })
 
   it('assigns the small hours to the previous evening', () => {
-    // 1 AM today (before the 4 AM rollover) is part of yesterday's run.
-    expect(kindAt(2026, 5, 18, 1)).toBe('yesterday')
-
-    // And viewed at 00:58, last evening's sessions are still the current day.
+    // Viewed just after midnight, last evening's sessions are still "today".
     const smallHours = new Date(2026, 5, 19, 0, 58).getTime()
 
-    expect(calendarBucket(secondsAt(2026, 5, 18, 23), smallHours, MONDAY).kind).toBe('today')
-    expect(calendarBucket(secondsAt(2026, 5, 18, 10), smallHours, MONDAY).kind).toBe('today')
-    expect(calendarBucket(secondsAt(2026, 5, 17, 15), smallHours, MONDAY).kind).toBe('yesterday')
+    expect(sessionDayLabel(dayStartAt(2026, 5, 18, 23), dayLabels, smallHours)).toBe('Today')
+    expect(sessionDayLabel(dayStartAt(2026, 5, 17, 15), dayLabels, smallHours)).toBe('Yesterday')
   })
 
-  it('uses coarse, non-overlapping ranges that coarsen with age', () => {
-    expect(kindAt(2026, 5, 17)).toBe('yesterday')
-    expect(kindAt(2026, 5, 16)).toBe('thisWeek') // Tue this week
-    expect(kindAt(2026, 5, 15)).toBe('thisWeek') // Mon this week
-    expect(kindAt(2026, 5, 14)).toBe('lastWeek') // Sun last week
-    expect(kindAt(2026, 5, 8)).toBe('lastWeek') // Mon last week
-    expect(kindAt(2026, 5, 7)).toBe('thisMonth') // earlier in June
-    expect(kindAt(2026, 5, 1)).toBe('thisMonth')
-    expect(kindAt(2026, 4, 28)).toBe('month') // May, same year
-    expect(kindAt(2025, 11, 3)).toBe('monthYear') // December, prior year
-  })
+  it('formats older days via Intl, adding the year only when it differs', () => {
+    // Locale-agnostic contract: same-year days use fmtDayHeading, prior-year
+    // days fmtDayHeadingYear. Assert against the shared formatters instead of
+    // frozen en-US strings so the test passes under any host locale.
+    const sameYear = dayStartAt(2026, 5, 16)
 
-  it('respects a Sunday week start', () => {
-    // With the week starting Sun 14 Jun, that Sunday is this week, not last.
-    expect(calendarBucket(secondsAt(2026, 5, 14), THU_NOON, 0).kind).toBe('thisWeek')
-    expect(calendarBucket(secondsAt(2026, 5, 13), THU_NOON, 0).kind).toBe('lastWeek')
-  })
+    expect(sessionDayLabel(sameYear, dayLabels, THU_NOON)).toBe(fmtDayHeading.format(sameYear))
 
-  it('keys same-month sessions together and disambiguates across years', () => {
-    expect(calendarBucket(secondsAt(2026, 2, 3), THU_NOON, MONDAY).key).toBe('m-2026-2')
-    expect(calendarBucket(secondsAt(2026, 2, 20), THU_NOON, MONDAY).key).toBe('m-2026-2')
-    expect(calendarBucket(secondsAt(2025, 2, 3), THU_NOON, MONDAY).key).toBe('my-2025-2')
+    const priorYear = dayStartAt(2025, 11, 3)
+
+    expect(sessionDayLabel(priorYear, dayLabels, THU_NOON)).toBe(fmtDayHeadingYear.format(priorYear))
   })
 })
 
-describe('sessionBucketLabel', () => {
-  const labels = {
-    lastWeek: 'Last week',
-    thisMonth: 'Earlier this month',
-    thisWeek: 'Earlier this week',
-    today: 'Earlier today',
-    yesterday: 'Yesterday'
-  }
-
-  const labelAt = (year: number, month: number, day: number) =>
-    sessionBucketLabel(calendarBucket(secondsAt(year, month, day), THU_NOON, 1), labels)
-
-  it('uses fixed labels for the relative buckets', () => {
-    expect(labelAt(2026, 5, 18)).toBe('Earlier today')
-    expect(labelAt(2026, 5, 17)).toBe('Yesterday')
-    expect(labelAt(2026, 5, 16)).toBe('Earlier this week')
-    expect(labelAt(2026, 5, 10)).toBe('Last week')
-    expect(labelAt(2026, 5, 2)).toBe('Earlier this month')
-  })
-
-  it('formats month (same year) and month + year (prior year) via Intl', () => {
-    // Locale-agnostic contract: same-year month buckets render via fmtMonth,
-    // prior-year buckets via fmtMonthYear. Assert against the shared
-    // formatters instead of frozen en-US strings so the test passes under
-    // any host locale (the formatters intentionally use the runtime locale).
-    const monthBucket = calendarBucket(secondsAt(2026, 2, 3), THU_NOON, 1)
-
-    if (monthBucket.kind !== 'month') {
-      throw new Error(`expected month bucket, got ${monthBucket.kind}`)
-    }
-
-    expect(sessionBucketLabel(monthBucket, labels)).toBe(fmtMonth.format(monthBucket.at))
-
-    const monthYearBucket = calendarBucket(secondsAt(2025, 11, 3), THU_NOON, 1)
-
-    if (monthYearBucket.kind !== 'monthYear') {
-      throw new Error(`expected monthYear bucket, got ${monthYearBucket.kind}`)
-    }
-
-    expect(sessionBucketLabel(monthYearBucket, labels)).toBe(fmtMonthYear.format(monthYearBucket.at))
+describe('daySectionKey', () => {
+  it('keys each nominal day once, zero-padded, ignoring the time of day', () => {
+    expect(daySectionKey(dayStartAt(2026, 5, 18, 5))).toBe('day:2026-06-18')
+    expect(daySectionKey(dayStartAt(2026, 5, 18, 22))).toBe('day:2026-06-18')
+    expect(daySectionKey(dayStartAt(2026, 11, 3))).toBe('day:2026-12-03')
   })
 })

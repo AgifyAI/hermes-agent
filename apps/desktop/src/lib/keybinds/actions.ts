@@ -126,7 +126,9 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   { id: 'session.next', category: 'session', defaults: ['ctrl+tab', 'ctrl+pagedown'] },
   { id: 'session.prev', category: 'session', defaults: ['ctrl+shift+tab', 'ctrl+pageup'] },
   ...SESSION_SLOT_ACTIONS,
-  { id: 'session.focusSearch', category: 'session', defaults: ['mod+shift+f'] },
+  // ⌘P / Ctrl+P is the conventional "search this app's documents" chord: it
+  // opens the sessions search bar. The older chord stays as a second binding.
+  { id: 'session.focusSearch', category: 'session', defaults: ['mod+p', 'mod+shift+f'] },
   { id: 'session.togglePin', category: 'session', defaults: [] },
   { id: 'conversation.scrollPageUp', category: 'session', defaults: ['pageup'] },
   { id: 'conversation.scrollPageDown', category: 'session', defaults: ['pagedown'] },
@@ -144,7 +146,7 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   { id: 'workspace.openFolder', category: 'session', defaults: ['mod+o'] },
 
   // ── Navigation ───────────────────────────────────────────────────────────
-  { id: 'nav.commandPalette', category: 'navigation', defaults: ['mod+k', 'mod+p'] },
+  { id: 'nav.commandPalette', category: 'navigation', defaults: ['mod+k'] },
   { id: 'nav.commandCenter', category: 'navigation', defaults: ['mod+.'] },
   { id: 'nav.settings', category: 'navigation', defaults: ['mod+,'] },
   { id: 'nav.profiles', category: 'navigation', defaults: [] },

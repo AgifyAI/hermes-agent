@@ -12,13 +12,13 @@ import type { SessionInfo } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { flattenSessionsWithBranches } from '@/lib/session-branch-tree'
 import {
-  groupEntriesByRecency,
+  groupEntriesByDay,
   groupEntriesByStatus,
   hideCollapsedGroupRows,
   type SidebarListRow,
   toSessionRows
 } from '@/lib/session-date-groups'
-import { sessionBucketLabel } from '@/lib/time'
+import { sessionDayLabel } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import {
   $sidebarListGroupIds,
@@ -126,8 +126,6 @@ interface SidebarSessionsSectionProps {
   headerAction?: React.ReactNode
   footer?: React.ReactNode
   groups?: SidebarSessionGroup[]
-  // Owner groups inside a messaging platform: the section's footer pages them.
-  embeddedGroups?: boolean
   tree?: SidebarWorkspaceTree[]
   // Project overview: when present, render a drill-in list of project rows
   // instead of sessions. Clicking a row enters that project (onEnterProject),
@@ -176,11 +174,12 @@ interface SidebarSessionsSectionProps {
   // lists (Pinned / search results) in the All-profiles view, where no group
   // header communicates ownership (#66003).
   showProfileTags?: boolean
-  // Which dividers to fold into the flat list: `date` gives the chronological
-  // "Yesterday" / "Last week" separators (flat recents + entered-project lanes),
-  // `status` splits into WORKING / DONE under the same separators. `none` for
-  // pinned, messaging groups, and the project overview, where the order isn't
-  // strictly by recency so a bucket would be misleading.
+  // Which dividers to fold into the flat list: `date` gives the collapsible
+  // one-section-per-day headings (flat recents + entered-project lanes), with
+  // today left unlabelled at the top; `status` splits into WORKING / DONE under
+  // the same headings. `none` for pinned, owner groups, and the project
+  // overview, where the order isn't strictly by recency so a day section would
+  // be misleading.
   grouping?: 'date' | 'none' | 'status'
   // Keep the caller's row order instead of re-sorting by group recency
   // (defaults to `pinned`, the only pre-ordered caller). The search results
@@ -190,7 +189,7 @@ interface SidebarSessionsSectionProps {
   // Inbox style: render every flat session row as a three-line card (project ·
   // age / title / model · size). A render variant that composes with whichever
   // grouping is active — the flat recents list opts in; dense tree surfaces
-  // (pinned, projects, messaging) keep the one-line row.
+  // (pinned, projects, owner groups) keep the one-line row.
   card?: boolean
 }
 
@@ -216,7 +215,6 @@ export function SidebarSessionsSection({
   headerAction,
   footer,
   groups,
-  embeddedGroups = false,
   projectOverview,
   projectOverviewPreviews,
   projectOverviewHidden,
@@ -360,12 +358,13 @@ export function SidebarSessionsSection({
         return renderRow(row.entry.session, draggable, row.entry.branchStem)
       }
 
-      const label = 'label' in row ? row.label : sessionBucketLabel(row.bucket, dividerLabels)
+      const label = 'label' in row ? row.label : sessionDayLabel(row.day, dividerLabels)
       const open = dividerToggle.open(row.key)
 
       return (
         <SidebarDateDivider
           action={action}
+          centered={'day' in row}
           key={row.key}
           label={label}
           toggle={{
@@ -390,9 +389,8 @@ export function SidebarSessionsSection({
   // together. Compute boundaries from the whole pool, just like Updated.
   const renderPreviewRows = useCallback(
     (items: SessionInfo[], projectId: string) => {
-      const rows = groupEntriesByRecency(
+      const rows = groupEntriesByDay(
         flattenSessionsWithBranches(items),
-        undefined,
         undefined,
         showAllSessions ? Infinity : 2
       ).map(row => (row.kind === 'divider' ? { ...row, key: `project:${projectId}:${row.key}` } : row))
@@ -411,7 +409,7 @@ export function SidebarSessionsSection({
     (items: SessionInfo[]) => {
       const entries = flattenSessionsWithBranches(items)
 
-      const rows = grouping === 'date' ? groupEntriesByRecency(entries) : toSessionRows(entries)
+      const rows = grouping === 'date' ? groupEntriesByDay(entries) : toSessionRows(entries)
 
       return hideCollapsedGroupRows(rows, isListGroupOpen).map(row => renderListRow(row, false))
     },
@@ -425,7 +423,7 @@ export function SidebarSessionsSection({
   const flatRows: SidebarListRow[] = useMemo(() => {
     const rows =
       grouping === 'date'
-        ? groupEntriesByRecency(displayEntries)
+        ? groupEntriesByDay(displayEntries)
         : grouping === 'status'
           ? groupEntriesByStatus(
               displayEntries,
@@ -437,7 +435,7 @@ export function SidebarSessionsSection({
     return manualOrderIds?.length ? orderRowsWithinGroups(rows, manualOrderIds) : rows
   }, [grouping, displayEntries, dotStates, manualOrderIds, statusDividerLabels])
 
-  // Closed date/status buckets keep their divider and drop the sessions under
+  // Closed day/status sections keep their divider and drop the sessions under
   // it. Same array when nothing is collapsed so the virtualizer's rows ref
   // stays stable across parent re-renders.
   const visibleRows = useMemo(() => hideCollapsedGroupRows(flatRows, isListGroupOpen), [flatRows, isListGroupOpen])
@@ -562,7 +560,6 @@ export function SidebarSessionsSection({
   } else if (groups?.length && groups.every(group => group.mode === 'profile' && group.profile)) {
     inner = (
       <GatewayProfileGroups
-        embedded={embeddedGroups}
         groups={groups}
         onNewSessionSplit={onNewSessionSplit}
         renderRows={renderRows}

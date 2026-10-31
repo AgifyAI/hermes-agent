@@ -2236,11 +2236,8 @@ export const jaOverrides = {
       ageMin: '分'
     },
     dateDivider: {
-      today: '今日の早い時間',
-      yesterday: '昨日',
-      thisWeek: '今週',
-      lastWeek: '先週',
-      thisMonth: '今月'
+      today: '今日',
+      yesterday: '昨日'
     },
     statusDivider: {
       working: '実行中',

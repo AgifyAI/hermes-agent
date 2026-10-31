@@ -48,13 +48,6 @@ vi.mock('@/i18n', () => ({
       desktop: {},
       sidebar: {
         dateDivider: {
-          earlier: 'Earlier',
-          earlierThisMonth: 'Earlier this month',
-          lastMonth: 'Last month',
-          lastWeek: 'Last week',
-          older: 'Older',
-          thisMonth: 'This month',
-          thisWeek: 'This week',
           today: 'Today',
           yesterday: 'Yesterday'
         },
@@ -551,9 +544,8 @@ describe('project-associated new-session drag sources', () => {
 })
 
 describe('flat-list date-divider new-session drag source', () => {
-  // Five fresh sessions, then a genuine 3-day pause: `groupEntriesByRecency`
-  // cuts the run right there, so the flat list renders exactly one divider
-  // below the head.
+  // Five fresh sessions, then a 3-day pause: `groupEntriesByDay` opens exactly
+  // one day section below today's unlabelled rows.
   const datedSessions = (): SessionInfo[] => {
     const now = Math.floor(Date.now() / 1000)
 

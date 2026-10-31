@@ -2868,12 +2868,11 @@ catalog: CatalogTranslations
       ageHour: string
       ageMin: string
     }
+    // One section per day: today leads unlabelled, yesterday is translated,
+    // every older day is formatted with Intl (time.ts fmtDayHeading).
     dateDivider: {
       today: string
       yesterday: string
-      thisWeek: string
-      lastWeek: string
-      thisMonth: string
     }
     statusDivider: {
       working: string

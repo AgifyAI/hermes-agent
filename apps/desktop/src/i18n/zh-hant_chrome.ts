@@ -232,11 +232,8 @@ export const zhHantChrome = {
       ageMin: '分'
     },
     dateDivider: {
-      today: '今天稍早',
-      yesterday: '昨天',
-      thisWeek: '本週',
-      lastWeek: '上週',
-      thisMonth: '本月'
+      today: '今天',
+      yesterday: '昨天'
     },
     statusDivider: {
       working: '進行中',

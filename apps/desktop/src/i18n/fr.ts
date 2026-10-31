@@ -3699,10 +3699,7 @@ export const frOverrides = {
     },
     dateDivider: {
       today: "Aujourd'hui",
-      yesterday: 'Hier',
-      thisWeek: 'Plus tôt cette semaine',
-      lastWeek: 'La semaine dernière',
-      thisMonth: 'Plus tôt ce mois'
+      yesterday: 'Hier'
     },
     statusDivider: {
       working: 'En cours',

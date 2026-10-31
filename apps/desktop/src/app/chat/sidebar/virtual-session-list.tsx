@@ -8,7 +8,7 @@ import { type FC, useEffect, useRef } from 'react'
 import type { SessionInfo } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { type SidebarListRow } from '@/lib/session-date-groups'
-import { sessionBucketLabel } from '@/lib/time'
+import { sessionDayLabel } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { sessionPinId } from '@/store/session'
 import { $sessionListDensity } from '@/store/session-list-density'
@@ -134,13 +134,14 @@ export const VirtualSessionList: FC<VirtualSessionListProps> = ({
 
     // Dividers are non-sortable, self-measured rows interleaved with sessions.
     if (row.kind === 'divider') {
-      const label = 'label' in row ? row.label : sessionBucketLabel(row.bucket, dividerLabels)
+      const label = 'label' in row ? row.label : sessionDayLabel(row.day, dividerLabels)
       const open = dividerToggle?.open(row.key) ?? true
 
       return (
         <div data-index={virtualItem.index} key={row.key} ref={virtualizer.measureElement} style={itemStyle}>
           <SidebarDateDivider
             action={dividerAction}
+            centered={'day' in row}
             label={label}
             toggle={
               dividerToggle

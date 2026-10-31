@@ -2494,11 +2494,8 @@ export const ruOverrides = {
       ageMin: 'м'
     },
     dateDivider: {
-      today: 'Ранее сегодня',
-      yesterday: 'Вчера',
-      thisWeek: 'Ранее на этой неделе',
-      lastWeek: 'На прошлой неделе',
-      thisMonth: 'Ранее в этом месяце'
+      today: 'Сегодня',
+      yesterday: 'Вчера'
     },
     statusDivider: {
       working: 'Работает',

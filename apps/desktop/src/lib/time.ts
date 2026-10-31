@@ -28,10 +28,20 @@ export const fmtFullDateTime = new Intl.DateTimeFormat(undefined, { dateStyle: '
 // Date only, "5 Jun 2026" (starmap tooltip).
 export const fmtDate = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
-// Month name alone / with year — session-list date-bucket dividers ("September",
-// "September 2025").
-export const fmtMonth = new Intl.DateTimeFormat(undefined, { month: 'long' })
-export const fmtMonthYear = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' })
+// Weekday + day + month — the sessions sidebar's day-section heading ("Thursday
+// 18 June"). A second formatter adds the year once a day is not in the current
+// one; Intl resolves both from the runtime locale.
+export const fmtDayHeading = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  weekday: 'long'
+})
+export const fmtDayHeadingYear = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  weekday: 'long',
+  year: 'numeric'
+})
 
 // ── Relative time ──────────────────────────────────────────────────────────
 const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' })
@@ -58,29 +68,6 @@ export function relativeTime(targetMs: number, nowMs = Date.now()): string {
   return rtf.format(sign * Math.round(abs / DAY), 'day')
 }
 
-// A dated divider bucket below the sidebar's unlabelled "recent" head cluster
-// (see session-date-groups.ts for the clustering). Buckets are coarse,
-// non-overlapping calendar ranges — one divider per *cluster* of activity,
-// never one per day, and never a rolling window like "previous 7 days" that
-// semantically overlaps the groups above it. `kind` drives the label; `at` is
-// the session's nominal day start (ms) for month formatting.
-export type SessionBucketKind = 'lastWeek' | 'month' | 'monthYear' | 'thisMonth' | 'thisWeek' | 'today' | 'yesterday'
-
-export interface SessionBucket {
-  at: number
-  key: string
-  kind: SessionBucketKind
-}
-
-// Fixed divider labels, resolved from i18n (month labels come from Intl).
-export interface SessionBucketLabels {
-  lastWeek: string
-  thisMonth: string
-  thisWeek: string
-  today: string
-  yesterday: string
-}
-
 export const startOfLocalDay = (ms: number): number => {
   const d = new Date(ms)
 
@@ -97,101 +84,43 @@ export const DAY_ROLLOVER_HOUR = 4
 // rollover: Saturday 1 AM → start of Friday.
 export const nominalDayStart = (ms: number): number => startOfLocalDay(ms - DAY_ROLLOVER_HOUR * HOUR)
 
-// Locale-aware first day of week in JS getDay() convention (0=Sun … 6=Sat).
-// Intl.Locale weekInfo reports 1=Mon … 7=Sun; unsupported → Monday.
-export function localeWeekStartDay(): number {
-  try {
-    const locale = new Intl.Locale(new Intl.DateTimeFormat().resolvedOptions().locale)
-    const withWeekInfo = locale as { getWeekInfo?: () => { firstDay?: number }; weekInfo?: { firstDay?: number } }
-    const firstDay = (withWeekInfo.getWeekInfo?.() ?? withWeekInfo.weekInfo)?.firstDay
+// Stable section id for one nominal day: the same day always collapses under
+// the same key, across reloads and across the two render paths.
+export function daySectionKey(dayStart: number): string {
+  const d = new Date(dayStart)
+  const month = `${d.getMonth() + 1}`.padStart(2, '0')
+  const date = `${d.getDate()}`.padStart(2, '0')
 
-    return typeof firstDay === 'number' ? firstDay % 7 : 1
-  } catch {
-    return 1
-  }
+  return `day:${d.getFullYear()}-${month}-${date}`
 }
 
-// Start of the local calendar week containing `ms` (DST-safe Date field math).
-export function startOfLocalWeek(ms: number, weekStartsOn: number): number {
-  const d = new Date(startOfLocalDay(ms))
-  const back = (d.getDay() - weekStartsOn + 7) % 7
-
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - back).getTime()
+// Fixed day-section labels, resolved from i18n. Every other day is formatted
+// by Intl (see fmtDayHeading).
+export interface SessionDayLabels {
+  today: string
+  yesterday: string
 }
 
-// Coarse calendar bucket for a Unix-seconds timestamp. Granularity coarsens
-// with age: earlier today → yesterday → earlier this week → last week →
-// earlier this month → month → month + year. Empty ranges simply never emit a
-// bucket, so a sparse tail jumps straight to its month or month-year. The
-// newest run of sessions never reaches here (it is the unlabelled head — see
-// session-date-groups.ts), which is what makes "Earlier today" truthful.
-export function calendarBucket(
-  seconds: number,
-  nowMs = Date.now(),
-  weekStartsOn = localeWeekStartDay()
-): SessionBucket {
-  const nominal = nominalDayStart(seconds * SECOND)
-  const todayNominal = nominalDayStart(nowMs)
-  const dayDiff = Math.round((todayNominal - nominal) / DAY)
+// Localized heading for one day section. `dayStart` is a `nominalDayStart()`
+// value. Today and yesterday get their translated label; an older day reads as
+// its weekday + date, with the year once it isn't the current one. Today is
+// normally the unlabelled top of the list — the label is only needed when the
+// list isn't sorted newest-first (project lanes) and today appears mid-list.
+export function sessionDayLabel(dayStart: number, labels: SessionDayLabels, nowMs = Date.now()): string {
+  const todayStart = nominalDayStart(nowMs)
+  const dayDiff = Math.round((todayStart - dayStart) / DAY)
 
   if (dayDiff <= 0) {
-    return { at: nominal, key: 'today', kind: 'today' }
+    return labels.today
   }
 
   if (dayDiff === 1) {
-    return { at: nominal, key: 'yesterday', kind: 'yesterday' }
+    return labels.yesterday
   }
 
-  const weekStart = startOfLocalWeek(todayNominal, weekStartsOn)
+  const sameYear = new Date(dayStart).getFullYear() === new Date(todayStart).getFullYear()
 
-  if (nominal >= weekStart) {
-    return { at: nominal, key: 'this-week', kind: 'thisWeek' }
-  }
-
-  const ws = new Date(weekStart)
-
-  if (nominal >= new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() - 7).getTime()) {
-    return { at: nominal, key: 'last-week', kind: 'lastWeek' }
-  }
-
-  const d = new Date(nominal)
-  const now = new Date(todayNominal)
-  const sameYear = d.getFullYear() === now.getFullYear()
-
-  if (sameYear && d.getMonth() === now.getMonth()) {
-    return { at: nominal, key: 'this-month', kind: 'thisMonth' }
-  }
-
-  const ym = `${d.getFullYear()}-${d.getMonth()}`
-
-  return sameYear ? { at: nominal, key: `m-${ym}`, kind: 'month' } : { at: nominal, key: `my-${ym}`, kind: 'monthYear' }
-}
-
-// Localized divider label for a bucket: fixed relative strings from i18n,
-// Intl-formatted month / month-year for the rest.
-export function sessionBucketLabel(bucket: SessionBucket, labels: SessionBucketLabels): string {
-  switch (bucket.kind) {
-    case 'today':
-      return labels.today
-
-    case 'yesterday':
-      return labels.yesterday
-
-    case 'thisWeek':
-      return labels.thisWeek
-
-    case 'lastWeek':
-      return labels.lastWeek
-
-    case 'thisMonth':
-      return labels.thisMonth
-
-    case 'month':
-      return fmtMonth.format(bucket.at)
-
-    case 'monthYear':
-      return fmtMonthYear.format(bucket.at)
-  }
+  return (sameYear ? fmtDayHeading : fmtDayHeadingYear).format(dayStart)
 }
 
 export type ElapsedUnit = 'day' | 'hour' | 'minute' | 'second'
