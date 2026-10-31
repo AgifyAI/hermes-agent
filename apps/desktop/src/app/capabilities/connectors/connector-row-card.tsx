@@ -82,7 +82,7 @@ export function ConnectorRowCard({
       className={cn(
         'relative flex items-center gap-3 rounded-lg border p-3 transition-colors duration-500 hover:transition-none',
         selected
-          ? 'border-(--theme-primary) bg-(--ui-row-active-background)'
+          ? 'border-(--linear-accent) bg-(--ui-row-active-background)'
           : 'border-(--ui-stroke-quaternary) bg-(--ui-bg-elevated) hover:bg-(--chrome-action-hover)'
       )}
       data-connector={card.slug}

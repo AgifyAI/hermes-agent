@@ -164,7 +164,7 @@ export function StarMap({
   const themeEpoch = useThemeEpoch()
   // Memory's swatch color — the same complementary-of-primary the canvas uses,
   // so the legend matches the rendered diamonds exactly.
-  const [memoryColor, setMemoryColor] = useState('var(--theme-secondary)')
+  const [memoryColor, setMemoryColor] = useState('var(--linear-cyan)')
 
   // Time scrubber: reveal 1 = the whole map (idle default); lower values hide
   // not-yet-reached nodes so playing/scrubbing "builds it up". revealRef feeds
@@ -473,7 +473,7 @@ export function StarMap({
     return () => window.removeEventListener('keydown', onKey)
   }, [onTogglePlay])
 
-  // Recompute the legend's memory swatch from the live --theme-primary (matches
+  // Recompute the legend's memory swatch from the live --linear-accent (matches
   // the canvas), re-running on theme change and once the canvas is mounted.
   useEffect(() => {
     const el = canvasRef.current ?? wrapRef.current
@@ -483,7 +483,7 @@ export function StarMap({
     }
 
     const style = getComputedStyle(el)
-    const val = style.getPropertyValue('--theme-primary').trim()
+    const val = style.getPropertyValue('--linear-accent').trim()
 
     if (val) {
       const bgVal =
@@ -980,7 +980,7 @@ export function StarMap({
       {/* Legend — bottom-left, one entry per line like a conventional key. */}
       <div className="pointer-events-none absolute bottom-2 left-2 flex flex-col gap-1 text-[0.62rem] text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2 rounded-full bg-[var(--theme-primary)]/80" /> skill
+          <span className="inline-block size-2 rounded-full bg-[var(--linear-accent)]/80" /> skill
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2 rotate-45" style={{ backgroundColor: memoryColor }} /> memory

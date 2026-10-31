@@ -42,7 +42,7 @@
 }
 
 .thread-timeline-tick[aria-current='location'] [data-slot='timeline-bar'] {
-  background: var(--theme-primary);
+  background: var(--linear-accent);
   opacity: 1;
 }
 

@@ -518,7 +518,7 @@ function DirtyFooter({
       className="flex shrink-0 items-center gap-2.5 border-t border-(--ui-stroke-tertiary) bg-(--ui-bg-chrome) px-3.5 py-2"
       data-slot="tools-dirty-footer"
     >
-      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--theme-primary)" />
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--linear-accent)" />
       <span className="min-w-0 flex-1 truncate text-xs text-(--ui-text-primary)">
         {copy.footerDirty(counts.off, counts.backOn)}
       </span>

@@ -113,7 +113,7 @@ export function computePalette(canvas: HTMLCanvasElement): Palette {
   const fg = resolveRgb(style.color)
   const darkTheme = luminance(fg.r, fg.g, fg.b) > 0.55
   const base: Rgb = darkTheme ? { b: 255, g: 255, r: 255 } : { b: 0, g: 0, r: 0 }
-  const primary = resolveRgb(style.getPropertyValue('--theme-primary').trim() || style.color)
+  const primary = resolveRgb(style.getPropertyValue('--linear-accent').trim() || style.color)
 
   const bg = resolveRgb(
     style.getPropertyValue('--background').trim() ||

@@ -102,7 +102,7 @@ function buildStars(axis: TimeAxis): Star[] {
 // in StarMap drives it with zero per-frame JS.
 export const Timeline = memo(function Timeline({
   axis,
-  memoryColor = 'var(--theme-secondary)',
+  memoryColor = 'var(--linear-cyan)',
   onScrub,
   onTogglePlay,
   playing,
@@ -178,7 +178,7 @@ export const Timeline = memo(function Timeline({
     }
   }
 
-  const colorFor = (kind: Star['kind']) => (kind === 'skill' ? 'var(--theme-primary)' : memoryColor)
+  const colorFor = (kind: Star['kind']) => (kind === 'skill' ? 'var(--linear-accent)' : memoryColor)
 
   return (
     <div className="pointer-events-auto flex w-[28rem] max-w-full items-center gap-3 [-webkit-app-region:no-drag]">
@@ -263,7 +263,7 @@ export const Timeline = memo(function Timeline({
         <div aria-hidden className="absolute inset-0">
           {ringStops.map((stop, i) => (
             <div
-              className={`pointer-events-none absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--theme-primary)] ${INACTIVE_MARKER_CLASS}`}
+              className={`pointer-events-none absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--linear-accent)] ${INACTIVE_MARKER_CLASS}`}
               key={i}
               ref={el => {
                 if (el) {
