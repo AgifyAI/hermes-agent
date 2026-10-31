@@ -191,6 +191,12 @@ interface SidebarSessionsSectionProps {
   // grouping is active — the flat recents list opts in; dense tree surfaces
   // (pinned, projects, owner groups) keep the one-line row.
   card?: boolean
+  // Day sections start folded. The Previous sessions list opens every earlier
+  // day collapsed; the section that holds today's chats never has day dividers.
+  daySectionsDefaultClosed?: boolean
+  // Long lists normally virtualize into their own bounded scroller. Sections
+  // that flow inside the page's single scroll (Previous sessions) opt out.
+  virtualize?: boolean
 }
 
 export function SidebarSessionsSection({
@@ -237,7 +243,9 @@ export function SidebarSessionsSection({
   showProfileTags = false,
   grouping = 'none',
   preserveOrder = pinned,
-  card = false
+  card = false,
+  daySectionsDefaultClosed = false,
+  virtualize = true
 }: SidebarSessionsSectionProps) {
   const { t } = useI18n()
   const showAllSessions = useStore($sidebarShowAllSessions)
@@ -245,7 +253,13 @@ export function SidebarSessionsSection({
   const statusDividerLabels = t.sidebar.statusDivider
   const dotStates = useStore($sessionDotStateById)
   const nodeOpen = useStore($sidebarWorkspaceNodeOpen)
-  const isListGroupOpen = useCallback((key: string) => nodeOpen[listGroupNodeId(key)] ?? true, [nodeOpen])
+
+  const isListGroupOpen = useCallback(
+    (key: string) =>
+      nodeOpen[listGroupNodeId(key)] ?? !(daySectionsDefaultClosed && key.startsWith('day:')),
+    [daySectionsDefaultClosed, nodeOpen]
+  )
+
   const sectionOpen = collapsible ? open : true
   const hasGroupedSessions = Boolean(groups?.some(group => group.sessions.length > 0))
   // A defined project list is itself content (even an empty project should
@@ -345,7 +359,10 @@ export function SidebarSessionsSection({
   const dividerToggle = useMemo(
     () => ({
       ariaLabel: (label: string, open: boolean) => t.sidebar.projects.toggle(label, !open),
-      onToggle: (key: string) => toggleWorkspaceNodeCollapsed(listGroupNodeId(key)),
+      // Pass the resolved open state as the default: a day section starts
+      // folded, so the naive `!workspaceNodeOpen(id, true)` would fold it again
+      // on the first click instead of opening it.
+      onToggle: (key: string) => toggleWorkspaceNodeCollapsed(listGroupNodeId(key), isListGroupOpen(key)),
       open: isListGroupOpen
     }),
     [isListGroupOpen, t]
@@ -364,7 +381,6 @@ export function SidebarSessionsSection({
       return (
         <SidebarDateDivider
           action={action}
-          centered={'day' in row}
           key={row.key}
           label={label}
           toggle={{
@@ -468,6 +484,7 @@ export function SidebarSessionsSection({
   // measure against, and Pinned deliberately has none — however many chats you
   // pin, all of them render and the sidebar's own scroll carries the length.
   const flatVirtualized =
+    virtualize &&
     !pinned &&
     !showEmptyState &&
     !groups?.length &&

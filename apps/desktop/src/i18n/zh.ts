@@ -369,6 +369,8 @@ export const zhOverrides = {
       'session.slot.8': '切换到最近会话 8',
       'session.slot.9': '切换到最近会话 9',
       'session.focusSearch': '搜索会话',
+      'session.rename': '重命名对话',
+      'view.reload': '重新加载窗口',
       'session.togglePin': '固定/取消固定当前会话',
       'session.archive': '归档当前会话',
       'conversation.scrollPageUp': '向上翻动一页会话',
@@ -719,7 +721,7 @@ export const zhOverrides = {
       uiScaleDesc: (percent: number) =>
         `缩放整个应用的文字和界面。也可使用 Cmd/Ctrl 加 +、- 或 0 调整。当前：${percent}%`,
       sessionDensityTitle: '会话列表密度',
-      sessionDensityDesc: '选择侧边栏会话标题下方显示的信息量。',
+      sessionDensityDesc: '选择每条会话行占用的垂直空间。',
       sessionDensityCompact: '紧凑',
       sessionDensityComfortable: '舒适',
       sessionDensityDetailed: '详细',
@@ -3152,6 +3154,8 @@ export const zhOverrides = {
       ageHour: '时',
       ageMin: '分'
     },
+    previousSessions: '之前的会话',
+    noSessionsToday: '今天还没有会话',
     dateDivider: {
       today: '今天',
       yesterday: '昨天'

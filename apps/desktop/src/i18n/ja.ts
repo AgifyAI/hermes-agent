@@ -506,7 +506,7 @@ export const jaOverrides = {
       uiScaleDesc: (percent: number) =>
         `アプリ全体の文字と UI を拡大縮小します。Cmd/Ctrl と +、-、0 でも変更できます。現在: ${percent}%`,
       sessionDensityTitle: 'セッションリストの密度',
-      sessionDensityDesc: 'サイドバーのセッションタイトルの下に表示する情報量を選びます。',
+      sessionDensityDesc: '各セッション行の縦方向の間隔を選びます。',
       sessionDensityCompact: 'コンパクト',
       sessionDensityComfortable: '標準',
       sessionDensityDetailed: '詳細',
@@ -2235,6 +2235,8 @@ export const jaOverrides = {
       ageHour: '時間',
       ageMin: '分'
     },
+    previousSessions: '過去のセッション',
+    noSessionsToday: '今日のセッションはまだありません',
     dateDivider: {
       today: '今日',
       yesterday: '昨日'

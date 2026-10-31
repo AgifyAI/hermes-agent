@@ -141,7 +141,6 @@ export const VirtualSessionList: FC<VirtualSessionListProps> = ({
         <div data-index={virtualItem.index} key={row.key} ref={virtualizer.measureElement} style={itemStyle}>
           <SidebarDateDivider
             action={dividerAction}
-            centered={'day' in row}
             label={label}
             toggle={
               dividerToggle

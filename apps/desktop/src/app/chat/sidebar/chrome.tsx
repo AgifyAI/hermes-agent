@@ -122,16 +122,12 @@ export function SidebarRowNest({ className, ...props }: React.ComponentProps<'di
  */
 export function SidebarDateDivider({
   action,
-  centered = false,
   className,
   label,
   toggle,
   ...props
 }: React.ComponentProps<'div'> & {
   action?: React.ReactNode
-  // Day sections centre their caption over the rows they head. Status runs
-  // ("Working" / "Done") stay left-aligned with the list's other captions.
-  centered?: boolean
   label: string
   toggle?: { ariaLabel: string; onToggle: () => void; open: boolean }
 }) {
@@ -143,22 +139,12 @@ export function SidebarDateDivider({
     // group/workspace: a divider heads a group the same way a repo header does,
     // so it borrows the header's hover-revealed "+" verbatim. The label alone
     // groups the rows — no timeline rule; Linear's list headers are quiet text.
-    <div
-      className={cn(
-        'group/workspace flex select-none items-center gap-2 px-2 pb-0.5 pt-2',
-        centered && 'relative',
-        className
-      )}
-      {...props}
-    >
+    <div className={cn('group/workspace flex select-none items-center gap-2 px-2 pb-0.5 pt-2', className)} {...props}>
       {toggle ? (
         <button
           aria-expanded={toggle.open}
           aria-label={toggle.ariaLabel}
-          className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 bg-transparent',
-            centered ? 'justify-center' : 'text-left'
-          )}
+          className="flex min-w-0 flex-1 items-center gap-1.5 bg-transparent text-left"
           onClick={toggle.onToggle}
           type="button"
         >
@@ -169,15 +155,9 @@ export function SidebarDateDivider({
           />
         </button>
       ) : (
-        <div className={cn('flex min-w-0 flex-1', centered && 'justify-center')}>{caption}</div>
+        <>{caption}</>
       )}
-      {/* The hover "+" must not pull a centred caption off-centre: outside the
-          flex flow when centred, it floats at the row's end. */}
-      {centered && action ? (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2">{action}</div>
-      ) : (
-        action
-      )}
+      {action}
     </div>
   )
 }

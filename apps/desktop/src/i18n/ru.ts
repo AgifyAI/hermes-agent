@@ -243,6 +243,8 @@ export const ruOverrides = {
       'session.slot.8': 'Переключить на недавний сеанс 8',
       'session.slot.9': 'Переключить на недавний сеанс 9',
       'session.focusSearch': 'Поиск по сеансам',
+      'session.rename': 'Переименовать беседу',
+      'view.reload': 'Перезагрузить окно',
       'session.togglePin': 'Закрепить / открепить текущий сеанс',
       'session.archive': 'В архив текущий сеанс',
       'conversation.scrollPageUp': 'Прокрутить диалог на страницу вверх',
@@ -486,7 +488,7 @@ export const ruOverrides = {
       uiScaleDesc: percent =>
         `Масштабирует текст и элементы управления во всём приложении. Также работает Cmd/Ctrl с +, − и 0. Сейчас: ${percent}%.`,
       sessionDensityTitle: 'Плотность списка сеансов',
-      sessionDensityDesc: 'Выберите, сколько контекста показывать под заголовками сеансов в боковой панели.',
+      sessionDensityDesc: 'Выберите, сколько места по вертикали занимает каждая строка сеанса.',
       sessionDensityCompact: 'Компактно',
       sessionDensityComfortable: 'Комфортно',
       sessionDensityDetailed: 'Подробно',
@@ -2493,6 +2495,8 @@ export const ruOverrides = {
       ageHour: 'ч',
       ageMin: 'м'
     },
+    previousSessions: 'Предыдущие сеансы',
+    noSessionsToday: 'Сегодня сеансов нет',
     dateDivider: {
       today: 'Сегодня',
       yesterday: 'Вчера'

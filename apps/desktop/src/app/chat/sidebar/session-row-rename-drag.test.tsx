@@ -12,14 +12,17 @@ import type * as GatewayStore from '@/store/gateway'
 import type * as ProjectsStore from '@/store/projects'
 import type * as SessionStore from '@/store/session'
 import type * as SessionColorStore from '@/store/session-color'
+import { $sessionRenameTarget } from '@/store/session-rename'
 import type * as SessionStatesStore from '@/store/session-states'
 import type * as WindowsStore from '@/store/windows'
 
 import { ReorderableList, useSortableBindings } from './reorderable-list'
+import { SessionRenameDialog } from './session-rename-dialog'
 import { SidebarSessionRow } from './session-row'
 
 afterEach(() => {
   cleanup()
+  $sessionRenameTarget.set(null)
   vi.clearAllMocks()
 })
 
@@ -260,9 +263,12 @@ function Host({ session }: { session: SessionInfo }) {
   )
 
   return (
-    <ReorderableList ids={[session.id]} onReorder={noop} sensors={sensors}>
-      <SortableRow session={session} />
-    </ReorderableList>
+    <>
+      <ReorderableList ids={[session.id]} onReorder={noop} sensors={sensors}>
+        <SortableRow session={session} />
+      </ReorderableList>
+      <SessionRenameDialog />
+    </>
   )
 }
 

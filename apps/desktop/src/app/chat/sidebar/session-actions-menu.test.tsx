@@ -3,10 +3,15 @@ import { atom } from 'nanostores'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { refreshProjectTree } from '@/store/projects'
+import { $sessionRenameTarget } from '@/store/session-rename'
 
 import { SessionActionsMenu, SessionContextMenu } from './session-actions-menu'
+import { SessionRenameDialog } from './session-rename-dialog'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  $sessionRenameTarget.set(null)
+})
 
 // Exercises the real SessionActionsMenu end-to-end (no DropdownMenu mock) so
 // a broken asChild composition on the kebab trigger fails here — the menu
@@ -119,11 +124,14 @@ vi.mock('@/store/windows', () => ({
 
 function renderMenu() {
   return render(
-    <SessionActionsMenu sessionId="s1" title="My session">
-      <button aria-label="Session actions" type="button">
-        ⋮
-      </button>
-    </SessionActionsMenu>
+    <>
+      <SessionActionsMenu sessionId="s1" title="My session">
+        <button aria-label="Session actions" type="button">
+          ⋮
+        </button>
+      </SessionActionsMenu>
+      <SessionRenameDialog />
+    </>
   )
 }
 
@@ -174,11 +182,14 @@ describe('SessionActionsMenu', () => {
     vi.mocked(renameSession).mockResolvedValue({ ok: true, title: 'Prep Butler' })
 
     render(
-      <SessionActionsMenu profile="personal" sessionId="s1" title="My session">
-        <button aria-label="Session actions" type="button">
-          ⋮
-        </button>
-      </SessionActionsMenu>
+      <>
+        <SessionActionsMenu profile="personal" sessionId="s1" title="My session">
+          <button aria-label="Session actions" type="button">
+            ⋮
+          </button>
+        </SessionActionsMenu>
+        <SessionRenameDialog />
+      </>
     )
 
     const trigger = screen.getByRole('button', { name: 'Session actions' })
@@ -356,11 +367,14 @@ describe('SessionActionsMenu', () => {
   // verbs whose result the user can observe.
   it('omits Rename (and never mounts its dialog) when renameable is false', async () => {
     const { unmount } = render(
-      <SessionContextMenu onDelete={vi.fn()} renameable={false} sessionId="bot-chat" title="Bot Chat">
-        <button aria-label="Session row" type="button">
-          Row
-        </button>
-      </SessionContextMenu>
+      <>
+        <SessionContextMenu onDelete={vi.fn()} renameable={false} sessionId="bot-chat" title="Bot Chat">
+          <button aria-label="Session row" type="button">
+            Row
+          </button>
+        </SessionContextMenu>
+        <SessionRenameDialog />
+      </>
     )
 
     const row = screen.getByRole('button', { name: 'Session row' })

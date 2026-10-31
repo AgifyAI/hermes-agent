@@ -25,8 +25,10 @@ import { useContributions } from '@/contrib/react/use-contributions'
 import { type SessionInfo, type SessionSearchResult } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { comboTokens } from '@/lib/keybinds/combo'
+import { flattenSessionsWithBranches } from '@/lib/session-branch-tree'
 import { sessionMatchesSearch } from '@/lib/session-search'
 import { normalizeSessionSource } from '@/lib/session-source'
+import { isTodayTimestamp } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { $activeConnectionId } from '@/store/connections'
 import { $cronJobs } from '@/store/cron'
@@ -183,6 +185,7 @@ import {
   SidebarStorageCorruptNotice
 } from './section-states'
 import { buildSessionByAnyId, resolvePinnedSessions } from './session-index'
+import { SessionRenameDialog } from './session-rename-dialog'
 import { SidebarSessionsSection, VIRTUALIZE_THRESHOLD } from './sessions-section'
 import { CONTEXT_SPLIT_KIT, SplitSubmenu } from './split-submenu'
 import { useEnteredProjectSessions } from './use-entered-project-sessions'
@@ -538,6 +541,9 @@ export function ChatSidebar({
   const [searchOpen, setSearchOpen] = useState(false)
   const [newSessionKbdFlash, setNewSessionKbdFlash] = useState(false)
   const [recentsLoadMorePending, setRecentsLoadMorePending] = useState(false)
+  // The "Previous sessions" parent section starts open so its day headings are
+  // visible; each day inside starts folded.
+  const [previousOpen, setPreviousOpen] = useState(true)
   // One footer button pages recents AND every messaging slice still truncated
   // on disk, so the merged list keeps growing as one list.
   const [flatLoadMorePending, setFlatLoadMorePending] = useState(false)
@@ -1345,6 +1351,37 @@ export function ChatSidebar({
   // parallel grouped view, not a filter on this one — nothing is hidden here.
   const displayAgentSessions = unpinnedAgentSessions
 
+  // In the flat chronological view, today is its own section ("Sessions") and
+  // every earlier day lives under a sibling "Previous sessions" parent. A day
+  // section is keyed by its nominal day (the 4 AM rollover), and a branch child
+  // always follows its parent's bucket so a cluster never splits across days.
+  const rankedGlobally = ordering === 'cost' || ordering === 'tokens'
+
+  const flatDateSplit =
+    !showArchived && !rankedGlobally && !worktreeGroupingActive && !inProject && grouping === 'date'
+
+  const { previousSessions, todaySessions } = useMemo(() => {
+    const today: SessionInfo[] = []
+    const previous: SessionInfo[] = []
+
+    if (!flatDateSplit) {
+      return { previousSessions: previous, todaySessions: displayAgentSessions }
+    }
+
+    let bucket = today
+
+    for (const entry of flattenSessionsWithBranches(displayAgentSessions)) {
+      if (!entry.branchStem) {
+        const stamp = entry.session.last_active || entry.session.started_at || 0
+        bucket = isTodayTimestamp(stamp) ? today : previous
+      }
+
+      bucket.push(entry.session)
+    }
+
+    return { previousSessions: previous, todaySessions: today }
+  }, [displayAgentSessions, flatDateSplit])
+
   // Pagination is scope-aware. In "All profiles" mode it tracks the global
   // unified set; scoped to one profile it tracks that profile's own truncation
   // flag — otherwise a huge default profile keeps "Load more" stuck on while
@@ -1425,6 +1462,12 @@ export function ChatSidebar({
 
   const hasMoreMessaging = messagingMorePlatforms.length > 0
 
+  // Profile marks are for the flat all-profiles list; a profile-grouped lane
+  // already names its owner in the header, so repeating it on every row is noise.
+  const showProfileTags = showAllProfiles && grouping !== 'profile'
+
+  const hasPreviousSessions = flatDateSplit && (previousSessions.length > 0 || hasMoreSessions || hasMoreMessaging)
+
   // Archived rows are excluded from the sessions query, so the view has to
   // fetch its own set.
   useEffect(() => {
@@ -1432,12 +1475,6 @@ export function ChatSidebar({
       void loadArchivedSessions()
     }
   }, [showArchived])
-
-  // Ranking by size is a question about the whole list ("what did I burn money
-  // on"), so it drops the calendar dividers and ranks globally — "Today" above
-  // the priciest session you have ever had would be a lie. Time- and
-  // state-based keys stay bucketed, where they read correctly per day.
-  const rankedGlobally = ordering === 'cost' || ordering === 'tokens'
 
   const displayAgentGroups = profileGroups
 
@@ -1464,7 +1501,7 @@ export function ChatSidebar({
     !displayAgentGroups?.length &&
     !projectOverview?.length &&
     !(inProject && enteredProjectContent) &&
-    displayAgentSessions.length >= VIRTUALIZE_THRESHOLD
+    (flatDateSplit ? todaySessions.length : displayAgentSessions.length) >= VIRTUALIZE_THRESHOLD
 
   // Keep the persisted parent + worktree orders reconciled with what's on screen:
   // freshly-seen repos/worktrees surface at the top, vanished ones drop out of
@@ -1546,6 +1583,19 @@ export function ChatSidebar({
         return session ? sessionPinId(session) : id
       })
     )
+
+  // The footer belongs to the part of the list that owns the tail: the
+  // Previous sessions section when today is split out, the single section
+  // otherwise.
+  const loadMoreFooter = !agentsGrouped && !showSessionSkeletons && (hasMoreSessions || hasMoreMessaging) ? (
+    <SidebarLoadMoreRow
+      loading={sessionsLoading || recentsLoadMorePending || flatLoadMorePending}
+      onClick={() => void onLoadMoreFlat()}
+      // The merged list is post-filtered, so a backend page size (50) is not a
+      // truthful "rows you'll see" count. Use the generic label over a fake N.
+      step={0}
+    />
+  ) : null
 
   return (
     <Sidebar
@@ -1752,7 +1802,7 @@ export function ChatSidebar({
                 preserveOrder
                 rootClassName="min-h-32 flex-1 overflow-hidden p-0"
                 sessions={searchResults}
-                showProfileTags={showAllProfiles}
+                showProfileTags={showProfileTags}
               />
             )}
 
@@ -1779,7 +1829,7 @@ export function ChatSidebar({
                 pinned
                 rootClassName="shrink-0 p-0 pb-1"
                 sessions={pinnedSessions}
-                showProfileTags={showAllProfiles}
+                showProfileTags={showProfileTags}
                 sortable={pinnedSessions.length > 1}
               />
             )}
@@ -1822,31 +1872,19 @@ export function ChatSidebar({
                           ? s.noFilterMatches
                           : pinnedSessions.length > 0
                             ? s.allPinned
-                            : s.noSessions}
+                            : flatDateSplit
+                              ? s.noSessionsToday
+                              : s.noSessions}
                     </div>
                   )
                 }
-                footer={
-                  // Hidden only when workspace-grouped — those groups page
-                  // themselves. Profile groups don't: this one footer pages the
-                  // merged list (recents + every truncated messaging platform).
-                  !agentsGrouped && !showSessionSkeletons && (hasMoreSessions || hasMoreMessaging) ? (
-                    <SidebarLoadMoreRow
-                      loading={sessionsLoading || recentsLoadMorePending || flatLoadMorePending}
-                      onClick={() => void onLoadMoreFlat()}
-                      // The merged list is post-filtered, so a backend page size
-                      // (50) is not a truthful "rows you'll see" count. Use the
-                      // generic label instead of a fake N.
-                      step={0}
-                    />
-                  ) : null
-                }
+                footer={flatDateSplit ? null : loadMoreFooter}
                 forceEmptyState={showSessionSkeletons}
                 // Archived is a plain list, and so is a magnitude-ranked one.
                 // Otherwise project lanes stay chronological whatever the flat
                 // list does — only the flat list can swap its day sections for
                 // WORKING / DONE.
-                grouping={showArchived || rankedGlobally ? 'none' : grouping === 'status' ? 'status' : 'date'}
+                grouping={flatDateSplit ? 'none' : showArchived || rankedGlobally ? 'none' : grouping === 'status' ? 'status' : 'date'}
                 groups={displayAgentGroups}
                 headerAction={
                   // One cluster, not a fragment: the header is justify-between,
@@ -1977,8 +2015,42 @@ export function ChatSidebar({
                   'min-h-32 flex-1 overflow-hidden p-0',
                   !recentsVirtualizes && 'compact:min-h-0 compact:flex-none compact:overflow-visible'
                 )}
-                sessions={displayAgentSessions}
-                sortable={!showAllProfiles && displayAgentSessions.length > 1}
+                sessions={flatDateSplit ? todaySessions : displayAgentSessions}
+                showProfileTags={showProfileTags}
+                sortable={
+                  !showAllProfiles && (flatDateSplit ? todaySessions.length : displayAgentSessions.length) > 1
+                }
+              />
+            )}
+
+            {hasPreviousSessions && (
+              <SidebarSessionsSection
+                activeSessionId={activeSidebarSessionId}
+                card={cardRows}
+                collapsible
+                contentClassName="flex flex-col gap-px pb-1.75"
+                daySectionsDefaultClosed
+                emptyState={null}
+                footer={loadMoreFooter}
+                grouping="date"
+                label={s.previousSessions}
+                manualOrderIds={agentOrderManual ? agentOrderIds : sortOrderIds}
+                onArchiveSession={onArchiveSession}
+                onBranchSession={onBranchSession}
+                onDeleteSession={onDeleteSession}
+                onNewSessionInWorkspace={onNewSessionInWorkspace}
+                onNewSessionSplit={onNewSessionSplit}
+                onResumeSession={onResumeSession}
+                onToggle={() => setPreviousOpen(open => !open)}
+                onTogglePin={pinSession}
+                onToggleUnread={toggleUnread}
+                open={previousOpen}
+                pinned={false}
+                rootClassName="shrink-0 p-0 pb-1"
+                sessions={previousSessions}
+                showProfileTags={showProfileTags}
+                sortable={false}
+                virtualize={false}
               />
             )}
 
@@ -2007,6 +2079,7 @@ export function ChatSidebar({
         )}
       </SidebarContent>
       <ProjectDialog />
+      <SessionRenameDialog />
       {/* One mount for the whole app. The header of WorktreeDialog tells why. */}
       <WorktreeDialog />
     </Sidebar>

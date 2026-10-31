@@ -129,6 +129,10 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // ⌘P / Ctrl+P is the conventional "search this app's documents" chord: it
   // opens the sessions search bar. The older chord stays as a second binding.
   { id: 'session.focusSearch', category: 'session', defaults: ['mod+p', 'mod+shift+f'] },
+  // ⌘R renames the focused conversation, like a file manager's Rename. The
+  // window's refresh chord moved to ⇧⌘R (`view.reload` / the View menu's
+  // forceReload role).
+  { id: 'session.rename', category: 'session', defaults: ['mod+r'] },
   { id: 'session.togglePin', category: 'session', defaults: [] },
   { id: 'conversation.scrollPageUp', category: 'session', defaults: ['pageup'] },
   { id: 'conversation.scrollPageDown', category: 'session', defaults: ['pagedown'] },
@@ -212,6 +216,9 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // fire from inside a textarea / contenteditable (matches browser behavior
   // so typing in the composer and pressing ⌘F focuses find, not 'f').
   { id: 'view.findInPage', category: 'view', defaults: ['mod+f'] },
+  // Whole-window refresh. macOS reaches Electron's forceReload menu role; the
+  // renderer binding covers Windows/Linux, where the app menu is null.
+  { id: 'view.reload', category: 'view', defaults: ['mod+shift+r'] },
   // ⌘G / ⌘⇧G step matches — the platform-standard find-next/find-previous
   // pair (Chrome, Safari, VS Code, and Claude Desktop all ship it). No
   // `defaults` here on purpose: ⌘G already belongs to `view.toggleReview`,

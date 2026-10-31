@@ -231,6 +231,8 @@ export const zhHantChrome = {
       ageHour: '時',
       ageMin: '分'
     },
+    previousSessions: '先前的會話',
+    noSessionsToday: '今天還沒有工作階段',
     dateDivider: {
       today: '今天',
       yesterday: '昨天'

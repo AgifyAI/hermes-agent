@@ -583,6 +583,8 @@ export const en: Translations = {
       'session.slot.8': 'Switch to recent session 8',
       'session.slot.9': 'Switch to recent session 9',
       'session.focusSearch': 'Search sessions',
+      'session.rename': 'Rename conversation',
+      'view.reload': 'Reload window',
       'session.togglePin': 'Pin / unpin current session',
       'session.archive': 'Archive current session',
       'conversation.scrollPageUp': 'Scroll conversation up one page',
@@ -958,7 +960,7 @@ export const en: Translations = {
       uiScaleDesc: (percent: number) =>
         `Scales text and controls across the whole app. Cmd/Ctrl with +, - and 0 also works. Current: ${percent}%.`,
       sessionDensityTitle: 'Session List Density',
-      sessionDensityDesc: 'Choose how much context appears beneath session titles in the sidebar.',
+      sessionDensityDesc: 'Choose how much vertical space each session row uses.',
       sessionDensityCompact: 'Compact',
       sessionDensityComfortable: 'Comfortable',
       sessionDensityDetailed: 'Detailed',
@@ -3255,6 +3257,8 @@ export const en: Translations = {
       ageHour: 'h',
       ageMin: 'm'
     },
+    previousSessions: 'Previous sessions',
+    noSessionsToday: 'No sessions today',
     dateDivider: {
       today: 'Today',
       yesterday: 'Yesterday'

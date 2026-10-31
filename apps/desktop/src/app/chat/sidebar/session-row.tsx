@@ -51,7 +51,6 @@ import {
 } from './chrome'
 import { shellOwnsPress } from './reorderable-list'
 import { SessionActionsMenu, SessionContextMenu } from './session-actions-menu'
-import { sessionRowDetails } from './session-row-details'
 import { resolveSessionRowClick } from './session-row-gesture'
 import { SessionRowSlot } from './session-row-slots'
 import { useProfilePrewarm } from './use-profile-prewarm'
@@ -154,11 +153,6 @@ function SidebarSessionRowImpl({
   const density = useStore($sessionListDensity)
   const fmt = t.sidebar
 
-  const details = sessionRowDetails(session, {
-    messageCount: fmt.messageCount,
-    toolCallCount: fmt.toolCallCount
-  })
-
   const timestamp = session.last_active || session.started_at
   const age = formatAge(timestamp, r)
   const timestampDate = new Date(timestamp * 1000)
@@ -173,7 +167,9 @@ function SidebarSessionRowImpl({
   const pinnedAge = rowMeta.includes('updated')
   // The default profile has no mark worth spending a row slot on — a chip on
   // every row that says "the normal one" is noise. Named profiles only.
-  const hasProfileTag = normalizeProfileKey(session.profile) !== 'default'
+  // In the all-profiles view every row is tagged, including `default` — the
+  // mark is the only way to tell whose conversation a row is at a glance.
+  const hasProfileTag = showProfile || normalizeProfileKey(session.profile) !== 'default'
   const pinnedProfile = hasProfileTag && rowMeta.includes('profile')
   // The branch's PR, if the row was asked to show one. A selector, not a plain
   // useStore: a repo's PRs land as a single map write, and only the rows on
@@ -570,29 +566,6 @@ function SidebarSessionRowImpl({
                         </SidebarRowLabel>
                       </OverflowTip>
                     </RowButton>
-                    {/* Session-list density (#68119): comfortable adds one
-                        deterministic metadata line; detailed adds the initial
-                        request preview. Compact keeps today's one-line row. */}
-                    {density !== 'compact' && details.metadata && (
-                      <span
-                        className={cn(
-                          'mt-0.5 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
-                          SIDEBAR_TRUNCATED_LEADING
-                        )}
-                      >
-                        {details.metadata}
-                      </span>
-                    )}
-                    {density === 'detailed' && details.preview && (
-                      <span
-                        className={cn(
-                          'mt-1 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
-                          SIDEBAR_TRUNCATED_LEADING
-                        )}
-                      >
-                        {details.preview}
-                      </span>
-                    )}
                   </span>
                   <SessionRowSlot area={SESSION_ROW_AREAS.trailing} sessionId={sessionPinId(session)} />
                 </>

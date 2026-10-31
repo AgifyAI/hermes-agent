@@ -2808,6 +2808,8 @@ catalog: CatalogTranslations
     projectEmpty: string
     projectLoadFailed: string
     noSessions: string
+    noSessionsToday: string
+    previousSessions: string
     storageCorrupt: {
       title: string
       body: (profiles: string) => string

@@ -587,6 +587,8 @@ export const deOverrides = {
       'session.slot.8': 'Zu letzter Session 8 wechseln',
       'session.slot.9': 'Zu letzter Session 9 wechseln',
       'session.focusSearch': 'Sessions durchsuchen',
+      'session.rename': 'Unterhaltung umbenennen',
+      'view.reload': 'Fenster neu laden',
       'session.togglePin': 'Aktuelle Session anheften / lösen',
       'session.archive': 'Aktuelle Session archivieren',
       'workspace.newWorktree': 'Neues Worktree',
@@ -983,7 +985,7 @@ export const deOverrides = {
       uiScaleDesc: (percent: number) =>
         `Skaliert Text und Bedienelemente in der gesamten App. Cmd/Ctrl mit +, - und 0 funktioniert ebenfalls. Aktuell: ${percent}%.`,
       sessionDensityTitle: 'Dichte der Session-Liste',
-      sessionDensityDesc: 'Wählen Sie, wie viel Kontext unter den Session-Titeln in der Seitenleiste erscheint.',
+      sessionDensityDesc: 'Lege fest, wie viel vertikaler Platz jede Session-Zeile einnimmt.',
       sessionDensityCompact: 'Kompakt',
       sessionDensityComfortable: 'Komfortabel',
       sessionDensityDetailed: 'Detailreich',
@@ -3691,6 +3693,8 @@ export const deOverrides = {
       ageHour: 'h',
       ageMin: 'Min'
     },
+    previousSessions: 'Frühere Sessions',
+    noSessionsToday: 'Heute noch keine Sessions',
     dateDivider: {
       today: 'Heute',
       yesterday: 'Gestern'

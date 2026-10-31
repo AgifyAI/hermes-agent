@@ -587,6 +587,8 @@ export const frOverrides = {
       'session.slot.8': 'Basculer vers la session récente 8',
       'session.slot.9': 'Basculer vers la session récente 9',
       'session.focusSearch': 'Rechercher des sessions',
+      'session.rename': 'Renommer la conversation',
+      'view.reload': 'Recharger la fenêtre',
       'session.togglePin': 'Épingler / désépingler la session actuelle',
       'session.archive': 'Archiver la session actuelle',
       'workspace.newWorktree': 'Nouveau worktree',
@@ -988,8 +990,7 @@ export const frOverrides = {
       uiScaleDesc: (percent: number) =>
         `Redimensionne le texte et les contrôles dans toute l'application. Cmd/Ctrl avec +, - et 0 fonctionne aussi. Actuel : ${percent}%.`,
       sessionDensityTitle: 'Densité de la liste des sessions',
-      sessionDensityDesc:
-        'Choisissez la quantité de contexte affichée sous les titres de session dans la barre latérale.',
+      sessionDensityDesc: 'Choisissez l’espace vertical occupé par chaque ligne de session.',
       sessionDensityCompact: 'Compacte',
       sessionDensityComfortable: 'Confortable',
       sessionDensityDetailed: 'Détaillée',
@@ -3697,6 +3698,8 @@ export const frOverrides = {
       ageHour: 'h',
       ageMin: 'm'
     },
+    previousSessions: 'Sessions précédentes',
+    noSessionsToday: 'Aucune session aujourd’hui',
     dateDivider: {
       today: "Aujourd'hui",
       yesterday: 'Hier'

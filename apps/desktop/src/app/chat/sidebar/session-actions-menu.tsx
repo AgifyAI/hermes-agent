@@ -17,141 +17,37 @@ import {
   type MenuKit,
   renderActionItem
 } from '@/components/ui/actions-menu'
-import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { ColorSwatches } from '@/components/ui/color-swatches'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CopyButton } from '@/components/ui/copy-button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { renameSession } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { ArchiveOff } from '@/lib/icons'
-import { isSubmitEnter } from '@/lib/ime'
 import { PROFILE_SWATCHES } from '@/lib/profile-color'
 import { exportSession } from '@/lib/session-export'
-import { activeGateway } from '@/store/gateway'
 import { notify, notifyError } from '@/store/notifications'
 import {
   $projectTree,
-  applyRenamedSessionTitle,
   moveSessionToProject,
   projectIdForCwd,
   projectRootCwd,
   refreshProjectTree
 } from '@/store/projects'
 import {
-  $activeSessionId,
   $connection,
   $selectedStoredSessionId,
   $sessions,
   $unreadFinishedSessionIds,
-  applySessionTitle,
   markSessionRead,
   sessionMatchesStoredId,
   sessionPinId
 } from '@/store/session'
 import { $sessionColorOverrides, setSessionColorOverride } from '@/store/session-color'
-import { ambientRequestFor } from '@/store/session-gone-latch'
-import {
-  $sessionStates,
-  $sessionTiles,
-  closeAllOpenSessionTiles,
-  requestForOwnedSession
-} from '@/store/session-states'
+import { requestSessionRename } from '@/store/session-rename'
+import { $sessionTiles, closeAllOpenSessionTiles } from '@/store/session-states'
 import { ackStoredSessionId } from '@/store/session-unread'
 import { canOpenSessionInTerminal, canOpenSessionWindow, openSessionInTerminal } from '@/store/windows'
-
-import type { SessionTitleResponse } from '../../types'
-
-// Rename a session, preferring the gateway's session.title RPC over REST.
-//
-// A freshly *branched* session (and any brand-new chat) lives only in the
-// gateway's in-memory _sessions map keyed by its RUNTIME id — no row is
-// persisted to state.db until the first turn. REST PATCH /api/sessions/{id}
-// resolves against the stored sessions table, so it 404s ("Session not found")
-// on these runtime-only sessions. The session.title RPC resolves the live
-// runtime session AND persists the row on demand, so it succeeds where REST
-// cannot. This mirrors the /title slash command's fix (use-prompt-actions.ts).
-//
-// We only take the RPC path for the ACTIVE/selected session: its runtime id is
-// known ($activeSessionId) and it lives on the active gateway, so there is no
-// profile-routing ambiguity. Every other row (already persisted, possibly on a
-// background profile) keeps the REST path, which handles profile scoping and a
-// non-empty title is required by the RPC (it rejects clears), so clears stay on
-// REST too.
-/** Resolve a live runtime id for a stored session id, from any surface that
- *  currently holds one — not just the selected-primary row.
- *
- *  A branched session opens as its own TAB and deliberately does NOT become the
- *  selected primary row, so `$selectedStoredSessionId`/`$activeSessionId` do not
- *  see it. Until its first turn it also has no persisted DB row, so a REST
- *  rename 404s "session not found". But the branch flow binds a runtime and
- *  stores it on the tile (`patchSessionTile(..., { runtimeId })`), and
- *  `$sessionStates` is keyed by runtime id with `storedSessionId` on each state.
- *  Consulting those lets the working `session.title` RPC path fire for a
- *  just-branched draft instead of falling through to a 404. (#70317) */
-function resolveRuntimeIdForStored(storedSessionId: string): null | string {
-  if (storedSessionId === $selectedStoredSessionId.get()) {
-    const active = $activeSessionId.get()
-
-    if (active) {
-      return active
-    }
-  }
-
-  const tileRuntimeId = $sessionTiles.get().find(tile => tile.storedSessionId === storedSessionId)?.runtimeId
-
-  if (tileRuntimeId) {
-    return tileRuntimeId
-  }
-
-  for (const [runtimeId, state] of Object.entries($sessionStates.get())) {
-    if (state.storedSessionId === storedSessionId) {
-      return runtimeId
-    }
-  }
-
-  return null
-}
-
-export async function renameSessionPreferringRpc(
-  storedSessionId: string,
-  title: string,
-  profile?: string
-): Promise<{ title?: string }> {
-  const resolvedProfile =
-    (profile ?? '').trim() ||
-    $sessions.get().find(s => sessionMatchesStoredId(s, storedSessionId))?.profile ||
-    undefined
-
-  const runtimeId = resolveRuntimeIdForStored(storedSessionId)
-  const gateway = activeGateway()
-
-  if (title && runtimeId && gateway) {
-    try {
-      // The runtime lives on its owner's backend; the ambient socket would
-      // refuse a secondary profile's session and drop us to REST.
-      const result = await requestForOwnedSession<SessionTitleResponse>(
-        runtimeId,
-        ambientRequestFor(gateway),
-        'session.title',
-        { session_id: runtimeId, title }
-      )
-
-      return { title: result?.title ?? title }
-    } catch (err) {
-      // Fall through to REST — e.g. the socket is mid-reconnect. REST still
-      // works for any session that already has a persisted row. Log so a
-      // genuine RPC-side failure (which then surfaces a REST 404 for the
-      // runtime id) is at least diagnosable instead of silently swallowed.
-      console.warn('session.title RPC rename failed; falling back to REST', err)
-    }
-  }
-
-  return renameSession(storedSessionId, title, resolvedProfile)
-}
 
 interface SessionActions {
   sessionId: string
@@ -278,14 +174,13 @@ function useSessionActions({
 }: SessionActions) {
   const { t } = useI18n()
   const r = t.sidebar.row
-  const [renameOpen, setRenameOpen] = useState(false)
-  // The rename item opens a Dialog. When a menu closes, Radix restores focus to
-  // its trigger — for a sidebar row that trigger is the row's own <button>, so
-  // focus lands there instead of the dialog's input: Space then activates the
-  // row (selecting the session) and the arrow keys move the list rather than
-  // the caret. Suppress that one restore so the dialog keeps focus; every other
-  // action leaves the restore alone (it's the correct behavior for them). Mirrors
-  // the project menu's appearance-popover guard.
+  // Rename opens the sidebar's single rename dialog (store-driven, so ⌘R can
+  // open the same one). When the menu closes, Radix restores focus to its
+  // trigger — for a sidebar row that trigger is the row's own <button>, so
+  // focus would land there instead of the dialog input: Space then activates
+  // the row and the arrow keys move the list rather than the caret. Suppress
+  // that one restore so the dialog keeps focus; every other action leaves the
+  // restore alone (it's the correct behavior for them).
   const suppressCloseFocusRef = useRef(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const tiles = useStore($sessionTiles)
@@ -374,7 +269,7 @@ function useSessionActions({
               triggerHaptic('selection')
               // Keep focus off the row trigger so it lands in the dialog input.
               suppressCloseFocusRef.current = true
-              setRenameOpen(true)
+              requestSessionRename({ profile, sessionId, title })
             }
           })
         ]
@@ -610,16 +505,6 @@ function useSessionActions({
     </>
   )
 
-  const renameDialog = renameable ? (
-    <RenameSessionDialog
-      currentTitle={title}
-      onOpenChange={setRenameOpen}
-      open={renameOpen}
-      profile={profile}
-      sessionId={sessionId}
-    />
-  ) : null
-
   // Consumed once per close: when rename was the action that closed the menu,
   // block Radix's focus-restore to the trigger so the dialog input keeps focus.
   const onCloseAutoFocus = (event: Event) => {
@@ -640,7 +525,7 @@ function useSessionActions({
     />
   )
 
-  return { deleteDialog, onCloseAutoFocus, renameDialog, renderItems }
+  return { deleteDialog, onCloseAutoFocus, renderItems }
 }
 
 interface DeleteSessionDialogProps {
@@ -681,7 +566,7 @@ interface SessionActionsMenuProps
 
 export function SessionActionsMenu({ children, align = 'end', sideOffset = 6, ...actions }: SessionActionsMenuProps) {
   const { t } = useI18n()
-  const { deleteDialog, onCloseAutoFocus, renameDialog, renderItems } = useSessionActions(actions)
+  const { deleteDialog, onCloseAutoFocus, renderItems } = useSessionActions(actions)
 
   return (
     <>
@@ -695,7 +580,6 @@ export function SessionActionsMenu({ children, align = 'end', sideOffset = 6, ..
       >
         {children}
       </ActionsMenu>
-      {renameDialog}
       {deleteDialog}
     </>
   )
@@ -707,7 +591,7 @@ interface SessionContextMenuProps extends SessionActions {
 
 export function SessionContextMenu({ children, ...actions }: SessionContextMenuProps) {
   const { t } = useI18n()
-  const { deleteDialog, onCloseAutoFocus, renameDialog, renderItems } = useSessionActions(actions)
+  const { deleteDialog, onCloseAutoFocus, renderItems } = useSessionActions(actions)
 
   return (
     <>
@@ -719,101 +603,7 @@ export function SessionContextMenu({ children, ...actions }: SessionContextMenuP
       >
         {children}
       </ActionsContextMenu>
-      {renameDialog}
       {deleteDialog}
     </>
-  )
-}
-
-interface RenameSessionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  sessionId: string
-  currentTitle: string
-  profile?: string
-}
-
-function RenameSessionDialog({ open, onOpenChange, sessionId, currentTitle, profile }: RenameSessionDialogProps) {
-  const { t } = useI18n()
-  const r = t.sidebar.row
-  const [value, setValue] = useState(currentTitle)
-  const [submitting, setSubmitting] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (open) {
-      setValue(currentTitle)
-      window.setTimeout(() => inputRef.current?.select(), 0)
-    }
-  }, [currentTitle, open])
-
-  const submit = async () => {
-    const next = value.trim()
-
-    if (!sessionId || submitting) {
-      return
-    }
-
-    if (next === currentTitle.trim()) {
-      onOpenChange(false)
-
-      return
-    }
-
-    setSubmitting(true)
-
-    try {
-      const targetProfile =
-        (profile ?? '').trim() || $sessions.get().find(s => sessionMatchesStoredId(s, sessionId))?.profile || undefined
-
-      const result = await renameSessionPreferringRpc(sessionId, next, targetProfile)
-      const finalTitle = result.title || next || ''
-      // One write, every list: patch the main store AND the project surfaces.
-      // Bare-id patching only the recents slice left project-scoped rows
-      // (overview previews, entered-project lanes) on the stale title until a
-      // profile switch forced a refetch (#123337).
-      applySessionTitle(sessionId, finalTitle || null)
-      applyRenamedSessionTitle(sessionId, finalTitle || null)
-      notify({ durationMs: 2_000, kind: 'success', message: r.renamed })
-      onOpenChange(false)
-    } catch (err) {
-      notifyError(err, r.renameFailed)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{r.renameTitle}</DialogTitle>
-        </DialogHeader>
-        <Input
-          autoFocus
-          disabled={submitting}
-          onChange={event => setValue(event.target.value)}
-          onKeyDown={event => {
-            if (isSubmitEnter(event)) {
-              event.preventDefault()
-              void submit()
-            } else if (event.key === 'Escape') {
-              onOpenChange(false)
-            }
-          }}
-          placeholder={r.untitledPlaceholder}
-          ref={inputRef}
-          value={value}
-        />
-        <DialogFooter>
-          <Button disabled={submitting} onClick={() => onOpenChange(false)} type="button" variant="ghost">
-            {t.common.cancel}
-          </Button>
-          <Button disabled={submitting} onClick={() => void submit()} type="button">
-            {t.common.save}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

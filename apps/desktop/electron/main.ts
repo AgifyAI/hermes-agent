@@ -6401,13 +6401,9 @@ function buildApplicationMenu() {
     label: 'View',
     submenu: [
       // Not `role: 'reload'`: that hard-reloads the RENDERER (every pane, the
-      // whole shell) and a focused in-app browser needs ⌘R to mean "reload
-      // this page", the way it does in every other browser. ⇧⌘R
-      // (`forceReload`) below stays the unconditional escape hatch.
-      //
-      // No accelerator: ⌘R is claimed in `installPreviewShortcut`, which works
-      // on every platform (this menu exists only on macOS). Declaring it here
-      // too would fire the item and the input hook for one keypress.
+      // whole shell). ⇧⌘R (`forceReload`) below is the whole-window refresh;
+      // ⌘R belongs to the renderer now (`session.rename`), so the preview
+      // reload is a click item only.
       { click: () => sendPreviewNavCommand('reload'), label: 'Reload' },
       { role: 'forceReload' },
       {
@@ -6560,15 +6556,6 @@ function installPreviewShortcut(window) {
       return
     }
 
-    // ⌘R rides here rather than on the View menu item for the same reason:
-    // the application menu only exists on macOS (it is set to null elsewhere,
-    // see #77845), so a menu accelerator would leave Windows and Linux with no
-    // way to reload a page at all. ⇧⌘R is left alone — that is `forceReload`,
-    // the unconditional whole-window escape hatch.
-    if (action === 'reload') {
-      event.preventDefault()
-      sendPreviewNavCommand('reload')
-    }
   })
 }
 

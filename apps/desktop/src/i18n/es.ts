@@ -590,6 +590,8 @@ export const esOverrides = {
       'session.slot.8': 'Cambiar a la sesión reciente 8',
       'session.slot.9': 'Cambiar a la sesión reciente 9',
       'session.focusSearch': 'Buscar sesiones',
+      'session.rename': 'Renombrar conversación',
+      'view.reload': 'Recargar ventana',
       'session.togglePin': 'Fijar / desfijar sesión actual',
       'session.archive': 'Archivar la sesión actual',
       'workspace.newWorktree': 'Nuevo worktree',
@@ -986,7 +988,7 @@ export const esOverrides = {
       uiScaleDesc: percent =>
         `Escala el texto y los controles de toda la app. También funciona Cmd/Ctrl con +, - y 0. Actual: ${percent}%.`,
       sessionDensityTitle: 'Densidad de la lista de sesiones',
-      sessionDensityDesc: 'Elige cuánto contexto aparece bajo los títulos de las sesiones en la barra lateral.',
+      sessionDensityDesc: 'Elige cuánto espacio vertical ocupa cada fila de sesión.',
       sessionDensityCompact: 'Compacta',
       sessionDensityComfortable: 'Cómoda',
       sessionDensityDetailed: 'Detallada',
@@ -3680,6 +3682,8 @@ export const esOverrides = {
       ageHour: 'h',
       ageMin: 'm'
     },
+    previousSessions: 'Sesiones anteriores',
+    noSessionsToday: 'Aún no hay sesiones hoy',
     dateDivider: {
       today: 'Hoy',
       yesterday: 'Ayer'

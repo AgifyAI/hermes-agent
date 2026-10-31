@@ -16,6 +16,7 @@ import {
 import { setWorkspaceScope } from '@/components/pane-shell/workspace-scope'
 import { onReleaseTypingFocus } from '@/components/ui/keyboard-first'
 import { translateNow } from '@/i18n/runtime'
+import { sessionTitle } from '@/lib/chat-runtime'
 import { findBarClaimsCombo } from '@/lib/find-in-page'
 import {
   contributedKeybindHandler,
@@ -67,12 +68,16 @@ import {
   $activeSessionId,
   $currentReasoningEffort,
   $defaultReasoningEffort,
+  $messagingSessions,
   $selectedStoredSessionId,
+  $sessions,
   markComposerSelectionManual,
+  sessionMatchesStoredId,
   setCurrentReasoningEffort,
   setModelPickerOpen
 } from '@/store/session'
 import { $focusedStoredSessionId } from '@/store/session-focus'
+import { requestSessionRename } from '@/store/session-rename'
 import { reopenLastClosedTile } from '@/store/session-states'
 import {
   $switcherOpen,
@@ -324,6 +329,26 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     ...sessionSlotHandlers,
     ...tabSlotHandlers,
     'session.focusSearch': requestSessionSearchFocus,
+    // ⌘R: rename the conversation the focused tab is showing. A draft or a
+    // tile that isn't the main selection still resolves through the focused
+    // stored id; nothing focused means nothing to rename.
+    'session.rename': () => {
+      const storedId = $focusedStoredSessionId.get()
+
+      if (!storedId) {
+        return
+      }
+
+      const session = [...$sessions.get(), ...$messagingSessions.get()].find(row =>
+        sessionMatchesStoredId(row, storedId)
+      )
+
+      if (!session) {
+        return
+      }
+
+      requestSessionRename({ profile: session.profile, sessionId: session.id, title: sessionTitle(session) })
+    },
     'session.togglePin': deps.toggleSelectedPin,
     'session.archive': deps.archiveSelectedSession,
     'conversation.scrollPageUp': () => requestThreadPageScroll(-1, $focusedStoredSessionId.get()),
@@ -346,6 +371,9 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'view.toggleRightSidebar': () => (layoutHasRightSide() ? toggleRightSide() : toggleTerminalPane()),
     'view.toggleReview': toggleReview,
     'view.toggleStatusbar': toggleStatusbarVisible,
+    // ⇧⌘R. macOS consumes this through the View menu's forceReload role; this
+    // handler is the Windows/Linux path, where the application menu is null.
+    'view.reload': () => window.location.reload(),
     'view.toggleProfileRail': toggleProfileRailVisible,
     'view.toggleSimpleMode': toggleSimpleMode,
     'view.toggleTabStrip': () => void toggleTargetZoneTabStrip(),
