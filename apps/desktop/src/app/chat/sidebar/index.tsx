@@ -31,16 +31,14 @@ import { normalizeSessionSource } from '@/lib/session-source'
 import { isTodayTimestamp } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { $activeConnectionId } from '@/store/connections'
-import { $cronJobs } from '@/store/cron'
 import { recordAction } from '@/store/desktop-metrics'
-import { $interfaceMode, $showsAdvancedChrome, shownInMode } from '@/store/interface-mode'
+import { $interfaceMode, shownInMode } from '@/store/interface-mode'
 import { $bindings } from '@/store/keybinds'
 import {
   $dismissedAutoProjectIds,
   $panesFlipped,
   $pinnedSessionIds,
   $sidebarCardRows,
-  $sidebarCronOpen,
   $sidebarFiltersActive,
   $sidebarGrouping,
   $sidebarOrdering,
@@ -62,7 +60,6 @@ import {
   pinSession,
   SESSION_SEARCH_FOCUS_EVENT,
   setPinnedSessionOrder,
-  setSidebarCronOpen,
   setSidebarPinsOpen,
   setSidebarProjectOrderIds,
   setSidebarRecentsOpen,
@@ -148,11 +145,16 @@ import type { SidebarNavItem } from '../../types'
 import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
 
 import { SidebarSectionAddButton } from './chrome'
-import { SidebarCronJobsSection } from './cron-jobs-section'
 import { SidebarFilterMenu } from './filter-menu'
 import { useGatewaySessionGroups } from './gateway-group-model'
 import { SidebarLoadMoreRow } from './load-more-row'
-import { orderByIds, reconcileOrderIds, resolveManualSessionOrderIds, sameIds } from './order'
+import {
+  mergeVisibleReorder,
+  orderByIds,
+  reconcileOrderIds,
+  resolveManualSessionOrderIds,
+  sameIds
+} from './order'
 import { filterSessionsByProfileScope } from './profile-scope'
 import { ProfileRail } from './profile-switcher'
 import { ProjectDialog } from './project-dialog'
@@ -220,8 +222,10 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     route: MESSAGING_ROUTE,
     keybindActionId: 'nav.messaging'
   },
-  // Artifacts and Scheduled jobs are outputs of running Hermes the developer
-  // way; Capabilities and Messaging are how anyone sets it up.
+  // Artifacts is an output of running Hermes the developer way; Capabilities
+  // and Messaging are how anyone sets it up. Scheduled jobs is a first-class
+  // page (jobs are managed there, not in a sidebar section), so it stays
+  // visible in both interface modes.
   {
     id: 'artifacts',
     label: '',
@@ -235,8 +239,7 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     label: '',
     icon: props => <Codicon name="watch" {...props} />,
     route: CRON_ROUTE,
-    keybindActionId: 'nav.cron',
-    tier: 'advanced'
+    keybindActionId: 'nav.cron'
   }
 ]
 
@@ -378,6 +381,9 @@ interface ChatSidebarProps extends React.ComponentProps<typeof Sidebar> {
    *  buttons), which land a fresh session exactly where it's dropped. The
    *  context-menu "Open in split" path passes just a `dir`. */
   onNewSessionSplit: NewSessionSplitHandler
+  // Kept for the shared action surface (command palette / statusbar / plugin
+  // contributions): the sidebar no longer reads these now that jobs are
+  // managed on the Scheduled jobs page.
   onManageCronJob: (jobId: string) => void
   onTriggerCronJob: (jobId: string) => Promise<void>
 }
@@ -393,9 +399,7 @@ export function ChatSidebar({
   onArchiveSession,
   onBranchSession,
   onNewSessionInWorkspace,
-  onNewSessionSplit,
-  onManageCronJob,
-  onTriggerCronJob
+  onNewSessionSplit
 }: ChatSidebarProps) {
   const { t } = useI18n()
   const s = t.sidebar
@@ -429,7 +433,6 @@ export function ChatSidebar({
   )
 
   const interfaceMode = useStore($interfaceMode)
-  const showsAdvancedChrome = useStore($showsAdvancedChrome)
 
   // Nav preferences (`sidebarNav.prefs` contributions): a plugin may hide rows
   // or re-order them. Merged here, at render, from the registry — so the
@@ -466,7 +469,6 @@ export function ChatSidebar({
   const unconfirmedPinWrites = useStore($unconfirmedPinWrites)
   const pinsOpen = useStore($sidebarPinsOpen)
   const agentsOpen = useStore($sidebarRecentsOpen)
-  const cronOpen = useStore($sidebarCronOpen)
   // The sidebar highlight tracks the FOCUSED session — the interacted tile's
   // tab, else the main selection — so it stays 1:1 with whatever tab is active.
   const selectedSessionId = useStore($focusedStoredSessionId)
@@ -474,7 +476,6 @@ export function ChatSidebar({
   const currentView = focusedSessionIsTile ? 'chat' : routeView
   const sessions = useStore($sessions)
   const cronSessions = useStore($cronSessions)
-  const cronJobs = useStore($cronJobs)
   const messagingSessions = useStore($messagingSessions)
   const messagingPlatformTotals = useStore($messagingPlatformTotals)
   const messagingTruncated = useStore($messagingTruncated)
@@ -1498,10 +1499,11 @@ export function ChatSidebar({
   // wrapper classes built for a virtualized list around a non-virtual one.
   // Entered-project content is the third prop that suppresses virtualization.
   const recentsVirtualizes =
+    !flatDateSplit &&
     !displayAgentGroups?.length &&
     !projectOverview?.length &&
     !(inProject && enteredProjectContent) &&
-    (flatDateSplit ? todaySessions.length : displayAgentSessions.length) >= VIRTUALIZE_THRESHOLD
+    displayAgentSessions.length >= VIRTUALIZE_THRESHOLD
 
   // Keep the persisted parent + worktree orders reconciled with what's on screen:
   // freshly-seen repos/worktrees surface at the top, vanished ones drop out of
@@ -1537,16 +1539,16 @@ export function ChatSidebar({
 
   // Filtered down to nothing still renders the section: the empty state is what
   // tells you the filter — not an empty account — is why the list is bare.
-  // Messaging threads and cron jobs live inside this area too: a profile whose
-  // only sessions are messaging threads (or that only has scheduled jobs) must
-  // not collapse the whole sidebar to the blank state (#63593).
+  // Messaging threads live inside this area too: a profile whose only sessions
+  // are messaging threads must not collapse the whole sidebar to the blank
+  // state (#63593). Scheduled jobs have their own page now, so they deliberately
+  // do not keep this area alive.
   const showSessionSections =
     showSessionSkeletons ||
     sessionsLoadError ||
     filtersActive ||
     mergedSessions.length > 0 ||
-    projectModel.length > 0 ||
-    (showsAdvancedChrome && cronJobs.length > 0)
+    projectModel.length > 0
 
   // The sidebar's session-area mode — exposed as data-attributes so custom
   // skins can target project mode (overview vs. entered), archived, or search
@@ -1565,8 +1567,15 @@ export function ChatSidebar({
   // Each reorderable list reports its OWN new id order; persisting is a direct,
   // typed write — no id-prefix sniffing to figure out which level moved.
   const reorderSessions = (ids: string[]) => {
+    // A drag in the split view only sees today's rows. Merge the new order into
+    // the full unpinned pool (in render order) so earlier days keep their saved
+    // intra-day rank instead of falling back to recency.
+    const pool = flattenSessionsWithBranches(unpinnedAgentSessions)
+      .filter(entry => !entry.branchStem)
+      .map(entry => entry.session.id)
+
     setSidebarSessionOrderManual(true)
-    setSidebarSessionOrderIds(ids)
+    setSidebarSessionOrderIds(mergeVisibleReorder(pool, ids))
   }
 
   // Persist the new project overview order (drag-to-reorder); orderByIds applies
@@ -1845,7 +1854,12 @@ export function ChatSidebar({
                 card={cardRows}
                 collapsible={!inProject}
                 contentClassName={cn(
-                  'flex min-h-0 flex-1 flex-col gap-px pb-1.75',
+                  'flex flex-col gap-px pb-1.75',
+                  // In the flat split, today's block is a FIT: it neither
+                  // shrinks nor owns a scroller, so an expanded Previous
+                  // sessions list below can never crop it. The shared outer
+                  // scroller carries the whole stack.
+                  !flatDateSplit && 'min-h-0 flex-1',
                   // The section is the ONE authority on whether the virtual
                   // list owns scrolling: it neutralizes this wrapper scroller
                   // itself (overflow-visible) when it virtualizes. Gating
@@ -1853,7 +1867,7 @@ export function ChatSidebar({
                   // two — a cached project tree flipped this side but not the
                   // section's, leaving the list with no scroller at all and
                   // the recents pane rendering blank under Updated grouping.
-                  SCROLL_Y,
+                  !flatDateSplit && SCROLL_Y,
                   // Flatten into the single scroll when compact — unless this is the
                   // virtualized long list, which must keep its own scroller.
                   !recentsVirtualizes && COMPACT_FLAT
@@ -2012,7 +2026,7 @@ export function ChatSidebar({
                 projectsLoading={worktreeGroupingActive ? projectTreeLoading : false}
                 removedSessionIds={inProject ? removedSessionIds : undefined}
                 rootClassName={cn(
-                  'min-h-32 flex-1 overflow-hidden p-0',
+                  flatDateSplit ? 'shrink-0 p-0' : 'min-h-32 flex-1 overflow-hidden p-0',
                   !recentsVirtualizes && 'compact:min-h-0 compact:flex-none compact:overflow-visible'
                 )}
                 sessions={flatDateSplit ? todaySessions : displayAgentSessions}
@@ -2020,6 +2034,7 @@ export function ChatSidebar({
                 sortable={
                   !showAllProfiles && (flatDateSplit ? todaySessions.length : displayAgentSessions.length) > 1
                 }
+                virtualize={!flatDateSplit}
               />
             )}
 
@@ -2031,7 +2046,7 @@ export function ChatSidebar({
                 contentClassName="flex flex-col gap-px pb-1.75"
                 daySectionsDefaultClosed
                 emptyState={null}
-                footer={loadMoreFooter}
+                footer={previousOpen ? loadMoreFooter : null}
                 grouping="date"
                 label={s.previousSessions}
                 manualOrderIds={agentOrderManual ? agentOrderIds : sortOrderIds}
@@ -2054,17 +2069,11 @@ export function ChatSidebar({
               />
             )}
 
-            {!trimmedQuery && !worktreeGroupingActive && showsAdvancedChrome && cronJobs.length > 0 && (
-              <SidebarCronJobsSection
-                jobs={cronJobs}
-                label={s.cronJobs}
-                onManageJob={onManageCronJob}
-                onOpenRun={onResumeSession}
-                onToggle={() => setSidebarCronOpen(!cronOpen)}
-                onTriggerJob={onTriggerCronJob}
-                open={cronOpen}
-              />
-            )}
+            {/* A collapsed Previous sessions section must not hide the only way
+                to page older sessions: the load-more row stays outside its fold. */}
+            {hasPreviousSessions && !previousOpen && loadMoreFooter ? (
+              <div className="shrink-0 px-2 pb-1">{loadMoreFooter}</div>
+            ) : null}
           </div>
         )}
 

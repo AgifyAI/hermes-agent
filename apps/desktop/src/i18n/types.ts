@@ -2635,6 +2635,7 @@ catalog: CatalogTranslations
     created: string
     updated: string
     failedLoad: string
+    failedRuns: string
     failedUpdate: string
     failedTrigger: string
     failedDelete: string

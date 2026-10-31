@@ -196,7 +196,8 @@ interface SidebarSessionsSectionProps {
   // day collapsed; the section that holds today's chats never has day dividers.
   daySectionsDefaultClosed?: boolean
   // Long lists normally virtualize into their own bounded scroller. Sections
-  // that flow inside the page's single scroll (Previous sessions) opt out.
+  // that flow inside the page's single scroll opt out: Previous sessions, and
+  // today's fit block in the split view (so it can never be squeezed).
   virtualize?: boolean
 }
 

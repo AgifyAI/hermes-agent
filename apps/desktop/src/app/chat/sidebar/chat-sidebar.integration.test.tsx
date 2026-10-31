@@ -437,6 +437,16 @@ describe('ChatSidebar merged session sources', () => {
     expect(screen.getByText('Previous sessions')).toBeTruthy()
     expect(screen.queryByText('Older chat')).toBeNull()
 
+    // The Sessions block is a FIT, not a flexible pane: it keeps its own
+    // height and owns no scroller, so an expanded Previous sessions list can
+    // never squeeze or crop it. The shared outer scroller carries the stack.
+    const sessionsGroup = screen.getByText('Sessions').closest('[data-slot="sidebar-group"]') as HTMLElement
+    const sessionsContent = sessionsGroup.querySelector('[data-slot="sidebar-group-content"]') as HTMLElement
+
+    expect(sessionsGroup.className).toContain('shrink-0')
+    expect(sessionsContent.className).not.toContain('overflow-y-auto')
+    expect(sessionsContent.className).not.toContain('flex-1')
+
     fireEvent.click(screen.getByRole('button', { name: /^Show .* sessions$/ }))
 
     expect(screen.getByText('Older chat')).toBeTruthy()

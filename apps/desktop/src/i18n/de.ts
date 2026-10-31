@@ -3451,6 +3451,7 @@ export const deOverrides = {
     created: 'Cron erstellt',
     updated: 'Cron aktualisiert',
     failedLoad: 'Cron-Jobs konnten nicht geladen werden',
+    failedRuns: 'Laufverlauf konnte nicht geladen werden',
     failedUpdate: 'Cron-Job konnte nicht aktualisiert werden',
     failedTrigger: 'Cron-Job konnte nicht ausgelöst werden',
     failedDelete: 'Cron-Job konnte nicht gelöscht werden',

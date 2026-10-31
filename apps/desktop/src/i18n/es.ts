@@ -3439,6 +3439,7 @@ export const esOverrides = {
     created: 'Cron creado',
     updated: 'Cron actualizado',
     failedLoad: 'No se pudieron cargar las tareas cron',
+    failedRuns: 'No se pudo cargar el historial de ejecuciones',
     failedUpdate: 'No se pudo actualizar la tarea cron',
     failedTrigger: 'No se pudo ejecutar la tarea cron',
     failedDelete: 'No se pudo eliminar la tarea cron',

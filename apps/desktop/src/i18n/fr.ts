@@ -3455,6 +3455,7 @@ export const frOverrides = {
     created: 'Cron créé',
     updated: 'Cron mis à jour',
     failedLoad: 'Échec du chargement des tâches cron',
+    failedRuns: "Échec du chargement de l'historique d'exécution",
     failedUpdate: 'Échec de la mise à jour de la tâche cron',
     failedTrigger: 'Échec du déclenchement de la tâche cron',
     failedDelete: 'Échec de la suppression de la tâche cron',
