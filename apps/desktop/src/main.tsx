@@ -8,10 +8,6 @@ import './lib/browser-desktop-bridge-install'
 import './store/active-work'
 // Side-effect: mirrors the machine's AC/battery state for poll demotion.
 import './store/power'
-// Side-effect: applies the persisted window translucency on load.
-import './store/translucency'
-// Side-effect: applies the persisted user-bubble transparency on load.
-import './store/user-bubble-transparency'
 // Side-effect: restores chat typography before the first conversation paints.
 import './store/chat-text-scale'
 // Side-effect: mirrors the keep-awake mode to main and listens for main's

@@ -156,7 +156,6 @@ interface SlashCommandDeps {
   createBackendSessionForSend: (preview?: string | null) => Promise<string | null>
   getRoutedStoredSessionId: () => null | string
   getRuntimeIdForStoredSession: (storedSessionId: string) => null | string
-  handleSkinCommand: (arg: string) => string
   handoffSession: (
     platform: string,
     options?: { onProgress?: (state: string) => void; sessionId?: string }
@@ -199,7 +198,6 @@ export function useSlashCommand(deps: SlashCommandDeps) {
     createBackendSessionForSend,
     getRoutedStoredSessionId,
     getRuntimeIdForStoredSession,
-    handleSkinCommand,
     handoffSession,
     openMemoryGraph,
     refreshSessions,
@@ -1196,20 +1194,6 @@ export function useSlashCommand(deps: SlashCommandDeps) {
             notifyError(err, copy.setProfileFailed)
           }
         },
-        skin: async ({ arg, command, recordInput, sessionHint }) => {
-          const sid = sessionHint || activeSessionIdRef.current
-          const message = handleSkinCommand(arg)
-
-          // No session to print into yet — surface it as a toast instead of
-          // spinning up a backend session just to change the theme.
-          if (!sid) {
-            notify({ kind: 'success', message })
-
-            return
-          }
-
-          appendSessionTextMessage(sid, 'system', recordInput ? slashStatusText(command, message) : message)
-        },
         // /title <name> renames via the gateway's session.title RPC — the same
         // path the TUI uses, NOT REST renameSession (which 404s on runtime ids)
         // nor the slash worker (whose DB write can silently fail). Bare /title
@@ -1516,8 +1500,7 @@ export function useSlashCommand(deps: SlashCommandDeps) {
       createBackendSessionForSend,
       getRoutedStoredSessionId,
       getRuntimeIdForStoredSession,
-      handleSkinCommand,
-      handoffSession,
+        handoffSession,
       openMemoryGraph,
       refreshSessions,
       ambientRequestGateway,

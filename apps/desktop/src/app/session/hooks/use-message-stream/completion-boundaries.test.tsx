@@ -70,7 +70,6 @@ function mount(rpc = requestGateway) {
       getRoutedStoredSessionId: () => STORED,
       getRuntimeIdForStoredSession: () => SID,
       getRouteToken: () => 'completion-route',
-      handleSkinCommand: () => '',
       openMemoryGraph: () => undefined,
       refreshSessions: noop,
       requestGateway: rpc,

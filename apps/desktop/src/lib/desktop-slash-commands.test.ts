@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   type CommandCatalogMeta,
   type CommandsCatalogLike,
-  desktopSkinSlashCompletions,
   type DesktopSlashArgumentMode,
   desktopSlashCommandArgumentMode,
   desktopSlashUnavailableMessage,
@@ -293,31 +292,6 @@ describe('desktop slash command curation', () => {
 
     expect(filtered.pairs?.map(([cmd]) => cmd)).toEqual(['/new', '/gif-search', '/ship-it'])
     expect(filtered.skill_count).toBe(2)
-  })
-
-  it('builds /skin completions from desktop themes', () => {
-    const completions = desktopSkinSlashCompletions(
-      [
-        { name: 'mono', label: 'Mono', description: 'Clean grayscale' },
-        { name: 'midnight', label: 'Midnight', description: 'Deep blue' },
-        { name: 'slate', label: 'Slate', description: 'Cool slate blue' }
-      ],
-      'mono',
-      'm'
-    )
-
-    expect(completions).toEqual([
-      {
-        text: '/skin mono',
-        display: '/skin mono',
-        meta: 'Mono (current) - Clean grayscale'
-      },
-      {
-        text: '/skin midnight',
-        display: '/skin midnight',
-        meta: 'Midnight - Deep blue'
-      }
-    ])
   })
 
   it('flags /model as a picker-owned command so the desktop opens the overlay', () => {

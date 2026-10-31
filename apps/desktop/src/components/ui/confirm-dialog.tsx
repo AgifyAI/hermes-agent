@@ -157,7 +157,7 @@ export function ConfirmDialog({
 
         {children}
         {error && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <div className="flex items-start gap-2 rounded-(--linear-radius-control) bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] px-3 py-2 text-xs text-(--linear-red)">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
             <span>{error}</span>
           </div>

@@ -39,7 +39,7 @@ function pickResting(id: string): ReadonlySet<string> {
 export function LayoutPickerCard({ onContinue }: LayoutPickerCardProps) {
   const { t } = useI18n()
   const copy = t.assistant.themePicker
-  const look = useLookPreview('layout', false)
+  const look = useLookPreview('layout')
   const staged = look.staged?.value ?? null
   const presets = useContributions(LAYOUTS_AREA)
   const activeId = useStore($activePresetId)

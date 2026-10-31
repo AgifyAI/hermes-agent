@@ -61,7 +61,6 @@ function mount() {
       getRoutedStoredSessionId: () => STORED,
       getRuntimeIdForStoredSession: () => SID,
       getRouteToken: () => 'race-route',
-      handleSkinCommand: () => '',
       openMemoryGraph: () => undefined,
       refreshSessions: noop,
       requestGateway,

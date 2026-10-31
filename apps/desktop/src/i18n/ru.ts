@@ -471,7 +471,7 @@ export const ruOverrides = {
       chatTextScaleDesc:
         'Масштабирует текст беседы и поле ввода относительно масштаба интерфейса. Размер боковых панелей и элементов управления не меняется.',
       title: 'Внешний вид',
-      intro: 'Только для приложения. Режим — это яркость, тема — палитра и оформление чата.',
+      intro: 'Только для десктопа. У Hermes один стиль в духе Linear — светлый и тёмный.',
       colorMode: 'Цветовой режим',
       colorModeDesc: 'Выберите фиксированный режим или позвольте Hermes следовать настройкам системы.',
       toolViewTitle: 'Отображение вызовов инструментов',
@@ -514,31 +514,8 @@ export const ruOverrides = {
       chatFontPreview: 'Предпросмотр',
       chatFontSample: 'Съешь же ещё этих мягких французских булок. 0123456789',
       chatFontReset: 'Стандартный шрифт',
-      translucencyTitle: 'Полупрозрачность окна',
-      translucencyDesc:
-        'Рабочий стол виден сквозь всё окно, включая текст. Отдельная настройка для светлой и тёмной тем.',
-      translucencyGlassDesc:
-        'Матовое стекло: рабочий стол виден как плавное размытие, а текст остаётся чётким. Отдельная настройка для светлой и тёмной тем.',
-      translucencyModeClear: 'Прозрачная',
-      translucencyModeGlass: 'Стекло',
-      translucencyTintTitle: 'Тон',
-      translucencyFadeTitle: 'Затухание',
-      translucencyFrostTitle: 'Матовость',
-      translucencyFrost: {
-        'under-window': 'Глубина',
-        popover: 'Мягкость',
-        titlebar: 'Яркость',
-        header: 'Отблеск'
-      },
-      translucencyScopeTitle: 'Область',
-      translucencyScope: {
-        window: 'Всё окно',
-        sidebar: 'Только боковая панель'
-      },
       backdropTitle: 'Фон чата',
       backdropDesc: 'Блёклый силуэт позади диалога.',
-      userBubbleTitle: 'Пузырь сообщения',
-      userBubbleDesc: 'Насколько прозрачны ваши сообщения. 0 — сплошная заливка, 100 — остаётся только контур.',
       textDirectionTitle: 'Направление текста',
       textDirectionDesc:
         'Как сообщения чата и поле ввода выбирают направление. «Авто» ориентируется на первую букву каждого абзаца; выберите направление, если смешанный текст выстраивается неправильно. Код всегда остаётся слева направо.',
@@ -570,19 +547,7 @@ export const ruOverrides = {
       productDesc: 'Дружелюбная активность инструментов с краткими сводками.',
       technical: 'Технический',
       technicalDesc: 'Показывать сырые аргументы/результаты инструментов и низкоуровневые детали.',
-      themeTitle: 'Тема',
-      themeDesc: 'Только палитры для приложения. Выбранный режим применяется поверх.',
-      themeProfileNote: profile => `Сохранено для профиля ${profile} — у каждого профиля своя тема.`,
-      installTitle: 'Установить из VS Code',
-      installDesc:
-        'Вставьте id расширения с Marketplace (напр. dracula-theme.theme-dracula), чтобы преобразовать его цветовую тему в палитру приложения.',
-      installPlaceholder: 'publisher.extension',
-      installButton: 'Установить',
-      installing: 'Установка…',
-      installError: 'Не удалось установить эту тему.',
-      installed: name => `Установлена «${name}».`,
-      removeTheme: 'Удалить тему',
-      importedBadge: 'Импортирована',
+      themeProfileNote: profile => `Сохранено для профиля ${profile} — у каждого профиля свой режим.`,
       pet: {
         title: 'Питомец',
         intro:
@@ -1618,7 +1583,6 @@ export const ruOverrides = {
     commandCenter: 'Командный центр',
     appearance: 'Внешний вид',
     settings: 'Настройки',
-    changeTheme: 'Сменить тему',
     changeColorMode: 'Сменить цветовой режим…',
     pets: {
       title: 'Питомцы',
@@ -1664,18 +1628,6 @@ export const ruOverrides = {
       referenceImageInvalid: 'Не удалось прочитать это изображение-референс. Попробуйте PNG, JPG, WebP или GIF.',
       adopt: 'Усыновить',
       startOver: 'Начать заново'
-    },
-    installTheme: {
-      title: 'Установить тему…',
-      pageTitle: 'Установка темы',
-      placeholder: 'Поиск в VS Code Marketplace...',
-      loading: 'Поиск в Marketplace...',
-      error: 'Не удалось подключиться к Marketplace.',
-      empty: 'Совпадающих тем нет.',
-      install: 'Установить',
-      installing: 'Установка...',
-      installed: 'Установлена',
-      installs: count => `${count} ${RU_NOUN(count, 'установка', 'установки', 'установок')}`
     },
     settingsFields: 'Поля настроек',
     mcpServers: 'MCP-серверы',

@@ -5,7 +5,7 @@ import { createClientSessionState } from '@/lib/chat-runtime'
 import type { ScopedServerRequest } from '@/store/gateway'
 import { resetServerRequestsForTests } from '@/store/server-requests'
 import { $themePicks, cancelThemePick, pickTheme } from '@/store/theme-pick'
-import { $pendingSkinApply } from '@/themes/backend-sync'
+import { $pendingModeApply } from '@/themes/request'
 
 import { handleServerRequest, type ServerRequestContext } from './server-requests'
 
@@ -38,7 +38,7 @@ describe('set_theme requests', () => {
 
   afterEach(() => {
     $themePicks.set({})
-    $pendingSkinApply.set(null)
+    $pendingModeApply.set(null)
     resetServerRequestsForTests()
   })
 
@@ -48,9 +48,9 @@ describe('set_theme requests', () => {
     expect($themePicks.get()['session-a']).toMatchObject({ picker: 'accent', requestId: 'srq-1' })
     expect(respond).not.toHaveBeenCalled()
 
-    expect(pickTheme('session-a', { accent: 'pink' })).toBe(true)
-    expect(respond).toHaveBeenCalledWith({ picked: { accent: 'pink' } })
-    expect($pendingSkinApply.get()).toBe('nous-accent-e0218a')
+    expect(pickTheme('session-a', { mode: 'dark' })).toBe(true)
+    expect(respond).toHaveBeenCalledWith({ picked: { mode: 'dark' } })
+    expect($pendingModeApply.get()).toBe('dark')
     expect($themePicks.get()['session-a']).toBeUndefined()
   })
 
@@ -62,8 +62,8 @@ describe('set_theme requests', () => {
   })
 
   it('applies values only in the window showing the chat, and nothing when one value is unknown', () => {
-    const elsewhere = deliver('theme.apply', { accent: 'violet', session_id: 'session-b' })
-    const onScreen = deliver('theme.apply', { accent: 'violet', layout: 'cockpit', session_id: 'session-a' })
+    const elsewhere = deliver('theme.apply', { mode: 'dark', session_id: 'session-b' })
+    const onScreen = deliver('theme.apply', { layout: 'cockpit', mode: 'dark', session_id: 'session-a' })
 
     expect(elsewhere.decline).toHaveBeenCalled()
     expect(elsewhere).not.toHaveBeenCalled()
@@ -71,6 +71,6 @@ describe('set_theme requests', () => {
       success: false,
       error: 'Unknown layout "cockpit".'
     })
-    expect($pendingSkinApply.get()).toBeNull()
+    expect($pendingModeApply.get()).toBeNull()
   })
 })

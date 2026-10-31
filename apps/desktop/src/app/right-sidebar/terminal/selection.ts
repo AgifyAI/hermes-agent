@@ -3,7 +3,6 @@ import type { CSSProperties } from 'react'
 
 import { isComposerChord } from '@/lib/keybinds/chords'
 import { isMacPlatform } from '@/lib/platform'
-import type { DesktopTerminalPalette } from '@/themes/types'
 
 // VS Code's default integrated-terminal palette (terminalColorRegistry.ts) — a
 // fixed table per theme type, not luminance-derived. Light/dark diverge on
@@ -56,31 +55,14 @@ const LIGHT_THEME: ITheme = {
   brightWhite: '#a5a5a5'
 }
 
-// Palette by painted mode, optionally overlaid with an imported theme's ANSI
-// palette (Solarized terminal for the Solarized skin, etc.). `palette` only
-// fills the slots it defines, so a partial import keeps the mode defaults for
-// the rest. `background` is a fallback only — withSurface swaps in the live skin
-// surface at runtime (keeping transparency); minimumContrastRatio keeps colors
-// crisp against it.
-export function terminalTheme(mode: 'light' | 'dark', palette?: DesktopTerminalPalette): ITheme {
-  const base = mode === 'dark' ? DARK_THEME : LIGHT_THEME
-
-  if (!palette) {
-    return base
-  }
-
-  const overlay = { ...base } as Record<string, string>
-
-  for (const [slot, value] of Object.entries(palette)) {
-    if (value) {
-      overlay[slot] = value
-    }
-  }
-
-  return overlay as ITheme
+// Palette by painted mode. `background` is a fallback only — withSurface swaps
+// in the live surface at runtime; minimumContrastRatio keeps colors crisp
+// against it.
+export function terminalTheme(mode: 'light' | 'dark'): ITheme {
+  return mode === 'dark' ? DARK_THEME : LIGHT_THEME
 }
 
-// Resolve --ui-terminal-surface-background (a color-mix on the skin seed) to a
+// Resolve --ui-terminal-surface-background (an LCH token) to a
 // concrete color for the WebGL renderer + contrast clamp. Custom props don't
 // resolve via getComputedStyle, so probe a real background-color. Read AFTER
 // applyTheme repaints (mount / rAF post-change) or it lags a frame behind.

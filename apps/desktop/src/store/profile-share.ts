@@ -3,11 +3,12 @@
  *
  * The archive is the CLI's own `hermes profile export` tar.gz (config, skills,
  * SOUL.md, cron — credentials always excluded), plus one desktop-only file at
- * the root: `desktop.json`, the appearance/interface overlay (skin + mode,
- * any user-theme definitions the skin needs, the profile rail color, and the
- * layout tree). A CLI import of the same archive simply carries the file
- * along; the desktop import applies it so the receiving user gets the whole
- * look — theme, layout, skills — as a ready-to-use profile.
+ * the root: `desktop.json`, the appearance/interface overlay (light/dark mode,
+ * the profile rail color, and the layout tree). A CLI import of the same
+ * archive simply carries the file along; the desktop import applies it so the
+ * receiving user gets the whole setup — mode, layout, skills — as a
+ * ready-to-use profile. Archives from desktops that still had skins carry
+ * `skin`/`themes` too; Hermes Desktop has one look now, so those are ignored.
  *
  * Paths, not bytes, cross the renderer↔backend boundary: the native save/open
  * dialogs and the backend share the filesystem for local and pooled backends.
@@ -18,10 +19,7 @@ import { $layoutTree, markActivePreset, persistTree } from '@/components/pane-sh
 import { exportProfileArchive, importProfileArchive } from '@/hermes'
 import { translateNow } from '@/i18n'
 import { dropBrowserProfilePrefs } from '@/lib/browser-profile-prefs'
-import { modePref, skinPref, type ThemeMode } from '@/themes/context'
-import { BUILTIN_THEMES } from '@/themes/presets'
-import type { DesktopTheme } from '@/themes/types'
-import { $userThemes, installUserTheme, resolveTheme } from '@/themes/user-themes'
+import { modePref, type ThemeMode } from '@/themes/context'
 import type { ProfileDesktopOverlay } from '@/types/hermes'
 
 import { notify, notifyError } from './notifications'
@@ -46,23 +44,10 @@ const OVERLAY_VERSION = 1
  */
 export function buildDesktopOverlay(profile: string): ProfileDesktopOverlay {
   const key = normalizeProfileKey(profile)
-  const skin = skinPref.resolve(key)
-  const mode = modePref.resolve(key)
-
-  // Bundle the full definition of any non-built-in theme the skin points at,
-  // so the receiver's picker can resolve it. Built-ins resolve by name.
-  const themes: Record<string, unknown> = {}
-  const userTheme = BUILTIN_THEMES[skin] ? undefined : $userThemes.get()[skin]
-
-  if (userTheme) {
-    themes[userTheme.name] = userTheme
-  }
 
   return {
     version: OVERLAY_VERSION,
-    skin,
-    mode,
-    ...(Object.keys(themes).length ? { themes } : {}),
+    mode: modePref.resolve(key),
     profileColor: $profileColors.get()[key] ?? null,
     layoutTree: $layoutTree.get()
   }
@@ -84,8 +69,8 @@ export async function exportProfileBundle(profile: string, output?: string): Pro
 const isThemeMode = (value: unknown): value is ThemeMode => value === 'light' || value === 'dark' || value === 'system'
 
 /**
- * Apply an imported overlay: install bundled themes, assign the new profile's
- * skin + mode + rail color, and (when present) adopt the sender's layout tree.
+ * Apply an imported overlay: assign the new profile's mode + rail color, and
+ * (when present) adopt the sender's layout tree.
  * Every step is independent and best-effort — a malformed half never blocks
  * the rest, and a missing overlay is a plain CLI-exported archive (no-op).
  */
@@ -96,32 +81,17 @@ export function applyDesktopOverlay(profile: string, overlay: null | ProfileDesk
 
   const key = normalizeProfileKey(profile)
 
-  // 1. Bundled theme definitions. installUserTheme validates shape and refuses
-  //    built-in collisions; a bad entry just doesn't install.
-  for (const theme of Object.values(overlay.themes ?? {})) {
-    try {
-      installUserTheme(theme as DesktopTheme)
-    } catch {
-      // Invalid/colliding theme — the skin assignment below falls back.
-    }
-  }
-
-  // 2. Appearance assignment for the new profile. Only assign a skin that
-  //    actually resolves so the pref never points at nothing.
-  if (typeof overlay.skin === 'string' && resolveTheme(overlay.skin)) {
-    skinPref.assign(key, overlay.skin)
-  }
-
+  // 1. Appearance mode for the new profile.
   if (isThemeMode(overlay.mode)) {
     modePref.assign(key, overlay.mode)
   }
 
-  // 3. Rail color.
+  // 2. Rail color.
   if (typeof overlay.profileColor === 'string' && overlay.profileColor) {
     setProfileColor(key, overlay.profileColor)
   }
 
-  // 4. Layout tree — global by design (one window layout). Normalize through
+  // 3. Layout tree — global by design (one window layout). Normalize through
   //    the same canonicalizer the boot load uses; a null result means the
   //    tree was junk, so the current layout stays.
   if (overlay.layoutTree != null && isLayoutNode(overlay.layoutTree)) {

@@ -27,7 +27,8 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       className={cn(
         controlVariants({ size }),
-        'flex items-center justify-between gap-2 whitespace-nowrap data-placeholder:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0',
+        // Linear's select button: no hairline, its own fill and hover, 8px radius.
+        'flex items-center justify-between gap-2 border-transparent bg-(--linear-bg-select) whitespace-nowrap hover:border-transparent hover:bg-(--linear-bg-select-hover) data-placeholder:text-(--linear-text-quaternary) [&_svg]:pointer-events-none [&_svg]:shrink-0',
         className
       )}
       data-slot="select-trigger"
@@ -35,7 +36,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <Codicon className="opacity-60" name="chevron-down" size="1rem" />
+        <Codicon className="-mr-1 text-(--linear-text-tertiary)" name="chevron-down" size="1rem" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -77,7 +78,7 @@ function SelectContent({
       >
         <SelectPrimitive.Viewport
           className={cn(
-            'dt-portal-scrollbar p-1',
+            'dt-portal-scrollbar p-1.5',
             position === 'popper' && 'w-full min-w-(--radix-select-trigger-width)'
           )}
         >
@@ -108,7 +109,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
       data-slot="select-item"
       {...props}
     >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center text-foreground">
+      <span className="absolute right-3 flex size-4 items-center justify-center text-(--linear-text-overlay)">
         <SelectPrimitive.ItemIndicator>
           <Codicon name="check" size="0.75rem" />
         </SelectPrimitive.ItemIndicator>
@@ -121,7 +122,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
 function SelectSeparator({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
   return (
     <SelectPrimitive.Separator
-      className={cn('-mx-1 my-1 h-px bg-(--ui-stroke-tertiary)', className)}
+      className={cn('-mx-1.5 my-1.5 h-px bg-(--linear-border-overlay)', className)}
       data-slot="select-separator"
       {...props}
     />

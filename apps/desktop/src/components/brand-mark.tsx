@@ -10,8 +10,8 @@ const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/
 // scripts/generate_icons.py from the girl SVGs + squircle backgrounds; size
 // via className (default size-14).
 export function BrandMark({ className, ...props }: React.ComponentProps<'span'>) {
-  const { renderedMode } = useTheme()
-  const dark = renderedMode === 'dark'
+  const { resolvedMode } = useTheme()
+  const dark = resolvedMode === 'dark'
 
   return (
     <span className={cn('inline-flex size-14 shrink-0 items-center justify-center', className)} {...props}>

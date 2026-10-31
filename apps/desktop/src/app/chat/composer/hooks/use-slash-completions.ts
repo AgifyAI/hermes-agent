@@ -7,9 +7,7 @@ import { useI18n } from '@/i18n'
 import { sessionTitle } from '@/lib/chat-runtime'
 import {
   type CommandsCatalogLike,
-  desktopSkinSlashCompletions,
   desktopSlashDescription,
-  type DesktopThemeCommandOption,
   filterDesktopCommandsCatalog,
   filterDesktopSubcommandCompletions,
   isDesktopSlashExtensionCommand,
@@ -73,12 +71,8 @@ export function useSlashCompletions(options: {
   sessionId?: string | null
   /** The tile's routed profile: scopes the palette while a draft has no session yet (#124651). */
   profile?: string | null
-  /** Desktop theme list — `/skin` is owned client-side, so its arg completions
-   *  come from here, not the backend (whose skin list is CLI/TUI-only). */
-  skinThemes?: DesktopThemeCommandOption[]
-  activeSkin?: string
 }): SlashCompletions {
-  const { gateway, sessionId, profile, skinThemes, activeSkin } = options
+  const { gateway, sessionId, profile } = options
   const { locale } = useI18n()
   const enabled = Boolean(gateway)
   const epoch = useStore($slashCompletionsEpoch)
@@ -124,23 +118,6 @@ export function useSlashCompletions(options: {
       }
 
       const text = `/${query}`
-
-      // The desktop owns /skin entirely (client-side theme context). Surface its
-      // theme list inside this single popover instead of a bespoke one, and skip
-      // the backend skin completions (which describe CLI/TUI skins that don't
-      // apply here). Matches once we're past `/skin ` into the arg stage.
-      const skinArg = /^\/skin\s+(.*)$/is.exec(text)
-
-      if (skinArg && skinThemes) {
-        const items = desktopSkinSlashCompletions(skinThemes, activeSkin ?? '', skinArg[1] ?? '').map(entry => ({
-          text: entry.text,
-          display: entry.display,
-          meta: entry.meta,
-          group: 'Themes'
-        }))
-
-        return { items, query }
-      }
 
       // /resume (and its aliases) completes recent sessions inline — the same
       // client-side list the picker overlay shows — instead of the backend
@@ -305,7 +282,7 @@ export function useSlashCompletions(options: {
         return { items: [], query }
       }
     },
-    [gateway, skinThemes, activeSkin, keysFor, sessionParams]
+    [gateway, keysFor, sessionParams]
   )
 
   const toItem = useCallback((entry: CompletionEntry, index: number): Unstable_TriggerItem => {
@@ -336,14 +313,14 @@ export function useSlashCompletions(options: {
     }
   }, [])
 
-  // Mirrors the fetcher's branching: the `/skin` and `/resume` arg stages are
+  // Mirrors the fetcher's branching: the `/resume` arg stage is
   // answered from client-side state, so they never wait on the network; every
   // other query is served from the completion cache when it's still warm.
   const isCached = useCallback(
     (query: string) => {
       const text = `/${query}`
 
-      if ((skinThemes && /^\/skin\s+/is.test(text)) || /^\/(?:resume|sessions|switch)\s+/is.test(text)) {
+      if (/^\/(?:resume|sessions|switch)\s+/is.test(text)) {
         return true
       }
 
@@ -351,7 +328,7 @@ export function useSlashCompletions(options: {
 
       return hasCachedSlashCompletion(query ? `slash:${scopeKey}:${text.toLowerCase()}` : catalogKey)
     },
-    [skinThemes, keysFor]
+    [keysFor]
   )
 
   const live = useLiveCompletionAdapter({ enabled, epoch: `${epoch}:${locale}`, fetcher, isCached, toItem })

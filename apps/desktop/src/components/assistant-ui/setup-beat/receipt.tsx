@@ -11,7 +11,6 @@ import { useI18n } from '@/i18n'
 import { connectorTitle } from '@/lib/connector-tools'
 import { cn } from '@/lib/utils'
 import type { SetupBeatAnswerFields, SetupBeatToolResult } from '@/store/setup-beat'
-import { accentName } from '@/themes/accents'
 
 export const SETUP_BEAT_SHELL_CLASS = cn(
   WIDGET_SHELL_CLASS,
@@ -57,8 +56,8 @@ export function setupBeatOutcome(result: SetupBeatToolResult): null | SetupBeatO
 
 interface AnswerNames {
   layout: (id: string) => string
+  mode: (mode: null | string | undefined) => string
   none: string
-  themeAccent: string
   tour: (answer: SetupBeatAnswerFields) => string
 }
 
@@ -72,7 +71,7 @@ export function useTourLabel(): (id: string) => string | undefined {
 function answerText(beat: SetupBeat, answer: SetupBeatAnswerFields, names: AnswerNames): string {
   switch (beat) {
     case 'theme':
-      return answer.accent ? accentName(answer.accent) : names.themeAccent
+      return names.mode(answer.mode)
 
     case 'layout':
       return names.layout(answer.layout ?? '')
@@ -122,8 +121,12 @@ function ReceiptLine({ outcome }: { outcome: Exclude<SetupBeatOutcome, { kind: '
     outcome.kind === 'answer'
       ? answerText(outcome.beat, outcome.answer, {
           layout,
+          // An older transcript's theme beat answered with an accent; it settles as "none chosen".
+          mode: mode =>
+            mode === 'light' || mode === 'dark' || mode === 'system'
+              ? t.settings.modeOptions[mode].label
+              : copy.noneChosen,
           none: copy.noneChosen,
-          themeAccent: themeCopy.themeAccent,
           tour: answer => tour(answer.tour ?? '') ?? answer.label ?? ''
         })
       : closed[outcome.kind]

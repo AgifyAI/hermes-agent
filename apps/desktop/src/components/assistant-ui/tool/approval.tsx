@@ -140,7 +140,6 @@ function ApprovalActivity({ floating, visible }: { floating: boolean; visible: b
           <div
             className={cn('mb-1 min-w-0', floating && 'rounded bg-(--ui-chat-surface-background)')}
             data-approval-activity=""
-            data-glass-opaque={floating ? '' : undefined}
             data-tool-summary=""
           >
             <ScaffoldRow

@@ -33,7 +33,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        'fixed inset-0 z-(--z-modal-backdrop) pointer-events-auto bg-black/22 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+        'fixed inset-0 z-(--z-modal-backdrop) pointer-events-auto bg-(--linear-scrim) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
         blur && 'backdrop-blur-[0.125rem]',
         className
       )}
@@ -50,9 +50,9 @@ type DialogBannerTone = 'error' | 'warn' | 'info'
 // background so it reads as part of the themed dialog — lifted 30% toward white
 // in light mode, deepened 20% toward black in dark mode.
 const DIALOG_BANNER_TONES: Record<DialogBannerTone, string> = {
-  error: 'bg-destructive/12 text-destructive',
-  warn: 'bg-primary/12 text-primary',
-  info: 'bg-[color-mix(in_srgb,var(--ui-chat-bubble-background),white_30%)] text-[color-mix(in_srgb,var(--ui-chat-bubble-background),black_60%)] dark:bg-[color-mix(in_srgb,var(--ui-chat-bubble-background),black_20%)] dark:text-[color-mix(in_srgb,var(--ui-chat-bubble-background),white_60%)]'
+  error: 'bg-[color-mix(in_srgb,var(--linear-red)_12%,transparent)] text-(--linear-red)',
+  warn: 'bg-[color-mix(in_srgb,var(--linear-accent)_12%,transparent)] text-(--linear-accent)',
+  info: 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)'
 }
 
 // Radix focuses the first focusable element inside Dialog.Content on open. In
@@ -79,8 +79,8 @@ function DialogCloseButton() {
     <DialogPrimitive.Close asChild data-slot="dialog-close-button">
       <Button
         aria-label={t.common.close}
-        className="absolute right-2.5 top-2.5 z-20 text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
-        size="icon-xs"
+        className="absolute right-2.5 top-2.5 z-20 text-(--linear-text-tertiary)"
+        size="icon"
         variant="ghost"
       >
         <X className="size-4" />
@@ -168,7 +168,7 @@ function DialogContent({
             // The same split as the plain variant. The shell must not clip,
             // because it crops the popovers that portal into it. The banner
             // below has its own `overflow-hidden`, which rounds its corners.
-            'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl bg-(--ui-chat-bubble-background) text-[length:var(--conversation-text-font-size)] text-foreground shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+            'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
             widthClass,
             layerClass,
             className,
@@ -183,7 +183,7 @@ function DialogContent({
         >
           <DialogPortalContainerContext.Provider value={contentNode}>
             {/* Scroll lives on an inner box so this shell keeps a painted bottom radius. */}
-            <div className="relative z-10 overflow-hidden rounded-xl border border-b-0 border-(--stroke-nous) bg-(--ui-chat-bubble-background)">
+            <div className="relative z-10 overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-b-0 border-(--stroke-nous) bg-(--linear-bg-card)">
               <div
                 className={cn(
                   'grid max-h-[calc(85vh-5rem)] min-h-0 grid-cols-[minmax(0,1fr)] gap-3 overflow-y-auto p-4',
@@ -197,7 +197,7 @@ function DialogContent({
               className={cn(
                 // Overlap by one corner radius so the white bottom lobes read clearly
                 // over the tint instead of meeting it on a straight seam.
-                'relative z-0 -mt-[var(--radius-xl)] overflow-hidden rounded-b-xl px-4 pb-2.5 pt-[calc(var(--radius-xl)+0.625rem)] text-center text-[length:var(--conversation-tool-font-size)] leading-relaxed shadow-[inset_0_7px_7px_-4px_rgb(0_0_0/0.28)]',
+                'relative z-0 -mt-(--linear-radius-modal) overflow-hidden rounded-b-(--linear-radius-modal) px-4 pb-2.5 pt-[calc(var(--linear-radius-modal)+0.625rem)] text-center text-[length:var(--conversation-tool-font-size)] leading-relaxed shadow-[inset_0_7px_7px_-4px_rgb(0_0_0/0.28)]',
                 DIALOG_BANNER_TONES[bannerTone]
               )}
               data-slot="dialog-banner"
@@ -224,7 +224,7 @@ function DialogContent({
           // a clipping ancestor crops them. The body box below owns the scroll,
           // so a tall dialog scrolls and a Select or Popover can still paint
           // past the edge of that box.
-          'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) text-[length:var(--conversation-text-font-size)] text-foreground shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) border-[0.5px] border-(--stroke-nous) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           widthClass,
           layerClass,
           className
@@ -292,7 +292,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       className={cn(
-        'text-[0.9375rem] font-semibold tracking-tight text-foreground',
+        'text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary)',
         Icon && 'flex items-center gap-2',
         className
       )}
@@ -309,7 +309,7 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
   return (
     <DialogPrimitive.Description
       className={cn(
-        'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)',
+        'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--linear-text-tertiary)',
         className
       )}
       data-slot="dialog-description"

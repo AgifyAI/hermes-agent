@@ -1,5 +1,4 @@
 import type { GatewayEvent } from '@hermes/shared'
-import type { HermesSkin } from '@hermes/shared/skin'
 
 import { invalidateContextBreakdown } from '@/app/shell/hooks/use-context-breakdown'
 import { eventSourceMatchesOwner, gatewayEventSource } from '@/lib/replay-gap-owner'
@@ -21,16 +20,10 @@ import { markRuntimeGone } from '@/store/runtime-gone'
 import { getSessionOwnerHint, knownSessionOwner, ownerLookupSessionRows, requestSessionResume } from '@/store/session'
 import type { SessionOwnerScope } from '@/store/session-request-router'
 import { $sessionTiles, dropSessionState, sessionTileDelegate, unbindTileRuntime } from '@/store/session-states'
-// Leaf import (not the `@/themes` barrel) to avoid pulling the ThemeProvider
-// module graph into the gateway event hot path.
-import { ingestBackendSkin } from '@/themes/backend-sync'
 
 import type { GatewayEventContext } from './types'
 
 function onGatewayReady(ready: GatewayEvent<'gateway.ready'>['payload'], activeSource: boolean): void {
-  // Seed the active skin into the desktop theme registry without applying,
-  // so a fresh connect never overrides the user's persisted desktop theme.
-  ingestBackendSkin(ready?.skin, { apply: false })
   // Backends with the change watcher broadcast pet/cron/sessions change
   // events; consumers demote their legacy polls to slow backstops.
   setChangeEventsAvailable(Boolean(ready?.change_events))
@@ -65,12 +58,8 @@ export function handleLifecycleEvent(ctx: GatewayEventContext): boolean {
   }
 
   if (event.type === 'skin.changed') {
-    // A runtime skin switch (Hermes activating an authored skin, or `/skin`
-    // on another surface). Only the active source+profile's change repaints.
-    if (fromActiveSource()) {
-      ingestBackendSkin(payload as HermesSkin | undefined, { apply: true })
-    }
-
+    // Skins style the CLI and TUI; Hermes Desktop keeps Linear's look, so a
+    // backend skin switch is consumed here and changes nothing on screen.
     return true
   }
 

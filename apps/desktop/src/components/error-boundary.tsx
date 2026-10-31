@@ -158,9 +158,6 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
   return (
     <div
       className="fixed inset-0 z-(--z-crash) grid place-items-center bg-(--ui-chat-surface-background) p-6"
-      // Masks a crashed app — must stay filled under window glass. Contract:
-      // `[data-glass-opaque]` in styles.css.
-      data-glass-opaque=""
     >
       <ErrorState
         className="w-full max-w-[28rem]"

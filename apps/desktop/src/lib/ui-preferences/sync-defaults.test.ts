@@ -17,7 +17,6 @@ import type { UiPreferencesBridge } from './sync'
 // config) is not the user's choice and must never reach the machine's store
 // ahead of the client that holds the real one (#145536 review), against the
 // real native writer on a real file.
-const TRANSLUCENCY = 'hermes.desktop.translucency.v2'
 const AUTO_SPEAK = 'hermes.desktop.autoSpeakReplies'
 const THEME = 'hermes-desktop-theme-v2'
 const KEYBINDS = 'hermes.desktop.keybinds'
@@ -106,20 +105,6 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) {
     fs.rmSync(dir, { force: true, recursive: true })
   }
-})
-
-it('a fresh browser’s translucency default never replaces native’s custom translucency', async () => {
-  const file = storeFile()
-  const browser = await load(file, async () => void (await import('@/store/translucency')))
-  browser.stop()
-
-  const custom = JSON.stringify({ mode: 'clear', base: { intensity: 61 }, light: {}, dark: {} })
-  becomeNative({ [TRANSLUCENCY]: custom })
-  const native = await load(file, async () => void (await import('@/store/translucency')))
-  native.stop()
-
-  expect(window.localStorage.getItem(TRANSLUCENCY)).toBe(custom)
-  expect(readUiPreferences(file).values[TRANSLUCENCY]).toBe(custom)
 })
 
 it('a fresh browser’s auto-speak migration never replaces native’s choice, across a browser reload too', async () => {

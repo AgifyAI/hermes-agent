@@ -38,7 +38,7 @@ function searchHoldsFocus(row: HTMLElement): boolean {
   )
 }
 
-const searchHoverClass = 'data-[highlighted]:bg-(--ui-control-active-background) data-[highlighted]:text-foreground'
+const searchHoverClass = 'data-[highlighted]:bg-(--linear-hover-overlay) data-[highlighted]:text-(--linear-text-overlay-strong)'
 
 type RowPointerHandlers = Pick<React.HTMLAttributes<HTMLDivElement>, 'onPointerLeave' | 'onPointerMove'>
 
@@ -198,11 +198,11 @@ function DropdownMenuSearch({
   const hoverSubmenus = React.useContext(HoverSubmenusContext)
 
   return (
-    <div className="px-2.5 py-1.5" data-slot="dropdown-menu-search">
+    <div className="px-2 pt-2.5 pb-[0.5625rem]" data-slot="dropdown-menu-search">
       <input
         autoFocus
         className={cn(
-          'h-4 w-full bg-transparent text-xs leading-none text-foreground placeholder:text-(--ui-text-tertiary) focus:outline-none',
+          'h-5 w-full bg-transparent text-[0.8125rem] leading-none text-(--linear-text-overlay) placeholder:text-(--linear-text-quaternary) focus:outline-none',
           className
         )}
         onChange={event => {
@@ -293,7 +293,7 @@ function DropdownMenuItem({
         menuItemClass,
         menuItemFocusClass,
         searchHoverClass,
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='text-'])]:text-(--ui-text-tertiary) data-[variant=destructive]:*:[svg]:text-destructive!",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-7 data-[variant=destructive]:text-(--linear-red) data-[variant=destructive]:focus:text-(--linear-red) [&_svg:not([class*='text-'])]:text-(--linear-text-tertiary) data-[variant=destructive]:*:[svg]:text-(--linear-red)!",
         className
       )}
       data-inset={inset}
@@ -328,7 +328,7 @@ function DropdownMenuCheckboxItem({
       {...hoverProps}
     >
       {children}
-      <DropdownMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-foreground">
+      <DropdownMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-(--linear-text-overlay)">
         <Codicon name="check" size="0.75rem" />
       </DropdownMenuPrimitive.ItemIndicator>
     </DropdownMenuPrimitive.CheckboxItem>
@@ -360,7 +360,7 @@ function DropdownMenuRadioItem({
       {...hoverProps}
     >
       {children}
-      <DropdownMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-foreground">
+      <DropdownMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-(--linear-text-overlay)">
         <Codicon name="check" size="0.75rem" />
       </DropdownMenuPrimitive.ItemIndicator>
     </DropdownMenuPrimitive.RadioItem>
@@ -387,7 +387,7 @@ function DropdownMenuLabel({
 function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   return (
     <DropdownMenuPrimitive.Separator
-      className={cn('-mx-1 my-1 h-px bg-(--ui-stroke-tertiary)', className)}
+      className={cn('-mx-1.5 my-1.5 h-px bg-(--linear-border-overlay)', className)}
       data-slot="dropdown-menu-separator"
       {...props}
     />
@@ -397,7 +397,7 @@ function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typ
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
-      className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+      className={cn('ml-auto text-[0.6875rem] font-medium text-(--linear-text-hint)', className)}
       data-slot="dropdown-menu-shortcut"
       {...props}
     />
@@ -457,7 +457,9 @@ function DropdownMenuSubTrigger({
     <DropdownMenuPrimitive.SubTrigger
       className={cn(
         searchHoverClass,
-        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs outline-hidden select-none focus:bg-(--ui-control-active-background) focus:text-foreground data-[inset]:pl-7 data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [&_svg:not([class*='text-'])]:text-(--ui-text-tertiary)",
+        menuItemClass,
+        menuItemFocusClass,
+        "cursor-pointer data-[inset]:pl-7 data-[state=open]:bg-(--linear-hover-overlay) data-[state=open]:text-(--linear-text-overlay-strong) [&_svg:not([class*='text-'])]:text-(--linear-text-tertiary)",
         className
       )}
       data-inset={inset}
@@ -466,7 +468,7 @@ function DropdownMenuSubTrigger({
       {...hoverProps}
     >
       {children}
-      {!hideChevron && <Codicon className="ml-auto text-(--ui-text-tertiary)" name="chevron-right" size="1rem" />}
+      {!hideChevron && <Codicon className="ml-auto text-(--linear-text-tertiary)" name="chevron-right" size="1rem" />}
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

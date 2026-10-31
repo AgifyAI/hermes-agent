@@ -85,9 +85,6 @@ export function UpdateHoldOverlay() {
       aria-labelledby={titleId}
       aria-modal="true"
       className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--ui-chat-surface-background) p-6"
-      // Masks the whole app while the boot is blocked — must stay filled under
-      // window glass. Contract: `[data-glass-opaque]` in styles.css.
-      data-glass-opaque=""
       data-testid="update-hold-overlay"
       role="alertdialog"
     >

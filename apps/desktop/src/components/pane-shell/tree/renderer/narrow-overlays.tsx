@@ -268,10 +268,6 @@ export function NarrowOverlays() {
               ? 'left-0 border-r border-(--ui-stroke-secondary)'
               : 'right-0 border-l border-(--ui-stroke-secondary)'
           )}
-          // Floats OVER the layout, so under glass its surface must mask the
-          // panes beneath it — a see-through overlay reads as text bleeding
-          // through text. Contract: `[data-glass-opaque]` in styles.css.
-          data-glass-opaque=""
           data-narrow-overlay={revealed.id}
           onMouseLeave={onMouseLeave}
           ref={overlayRef}

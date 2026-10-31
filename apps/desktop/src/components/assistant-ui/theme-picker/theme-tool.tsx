@@ -14,17 +14,15 @@ import { connectorText, recordOf } from '@/lib/connector-tools'
 import { cn } from '@/lib/utils'
 import type { AppliedAppearance } from '@/store/appearance-apply'
 import { $themePicks, cancelThemePick, pickTheme } from '@/store/theme-pick'
-import { useTheme } from '@/themes'
-import { accentName, resolveAccentPick } from '@/themes/accents'
 import type { ThemeMode } from '@/themes/context'
 
 import { CARD_LABEL_CLASS } from '../setup-beat/card-type'
 import { ToolFallback } from '../tool/fallback'
 import { TypedAnswer } from '../typed-answer'
 
-import { AccentPickerCard } from './accent-picker-card'
 import { setThemeCall } from './args'
 import { LayoutPickerCard } from './layout-picker-card'
+import { ModePickerCard } from './mode-picker-card'
 
 const SHELL_CLASS = cn(
   WIDGET_SHELL_CLASS,
@@ -37,13 +35,8 @@ const MODES: readonly ThemeMode[] = ['light', 'dark', 'system']
 function readValues(value: ToolCallMessagePart['result']): AppliedAppearance | null {
   const row = recordOf(value)
   const values: AppliedAppearance = {}
-  const accent = row.accent === null ? null : connectorText(row.accent)
   const mode = MODES.find(candidate => candidate === row.mode)
   const layout = connectorText(row.layout)
-
-  if (accent !== undefined) {
-    values.accent = accent
-  }
 
   if (mode) {
     values.mode = mode
@@ -60,7 +53,6 @@ function readValues(value: ToolCallMessagePart['result']): AppliedAppearance | n
 export function ThemeReceipt({ values }: { values: AppliedAppearance | null }) {
   const { t } = useI18n()
   const copy = t.assistant.themePicker
-  const { renderedMode } = useTheme()
   const presets = useContributions(LAYOUTS_AREA)
 
   if (!values) {
@@ -71,17 +63,8 @@ export function ThemeReceipt({ values }: { values: AppliedAppearance | null }) {
     )
   }
 
-  const dot = values.accent ? resolveAccentPick(values.accent, renderedMode === 'dark')?.hex : null
-
   return (
     <div className={cn(SHELL_CLASS, 'flex flex-wrap items-center gap-x-4 gap-y-1')} data-theme-settled="">
-      {values.accent !== undefined && (
-        <span className="flex items-center gap-1.5">
-          <span className="text-(--ui-text-tertiary)">{copy.accent}</span>
-          {dot && <span aria-hidden className="size-3 rounded-full" style={{ background: dot }} />}
-          <span>{values.accent === null ? copy.themeAccent : accentName(values.accent)}</span>
-        </span>
-      )}
       {values.mode && (
         <span className="flex items-center gap-1.5">
           <span className="text-(--ui-text-tertiary)">{copy.mode}</span>
@@ -147,7 +130,7 @@ export function ThemeTool(props: ToolCallMessagePartProps) {
   return (
     <div className={cn(SHELL_CLASS, 'grid gap-2')} data-theme-picker={picker}>
       <div className="flex items-center justify-between gap-2">
-        <span className={CARD_LABEL_CLASS}>{copy[picker]}</span>
+        <span className={CARD_LABEL_CLASS}>{picker === 'accent' ? copy.mode : copy.layout}</span>
         <button
           aria-label={copy.noPick}
           className="grid size-6 place-items-center rounded-md text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
@@ -157,10 +140,9 @@ export function ThemeTool(props: ToolCallMessagePartProps) {
           <Codicon name="close" size="0.8rem" />
         </button>
       </div>
+      {/* The look is Linear's alone, so the agent's accent card asks the one appearance question left. */}
       {picker === 'accent' ? (
-        <AccentPickerCard
-          onContinue={accent => answer({ accent }, () => pickTheme(sessionId, { accent: accent ?? 'theme' }))}
-        />
+        <ModePickerCard onPick={mode => answer({ mode }, () => pickTheme(sessionId, { mode }))} />
       ) : (
         <LayoutPickerCard onContinue={layout => answer({ layout }, () => pickTheme(sessionId, { layout }))} />
       )}

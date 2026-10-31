@@ -79,17 +79,8 @@ export function useTerminalSession({
   reviveBuffer,
   onShell
 }: UseTerminalSessionOptions) {
-  // Key off renderedMode (the painted surface type), not resolvedMode (the
-  // clicked switch) — a skin can keep a light surface in "dark" mode, and we
-  // must match the surface or the ANSI palette inverts against it. themeName
-  // re-resolves the canvas surface on skin switches (same mode, new tint).
-  const { renderedMode, theme, themeName } = useTheme()
-  // Adopt the skin's ANSI palette when it ships one (imported VS Code themes do),
-  // matched to the painted variant; built-in skins carry none, so the terminal
-  // keeps its VS Code defaults. withSurface still owns the background, so this
-  // never touches transparency.
-  const ansiPalette = renderedMode === 'dark' ? (theme.darkTerminal ?? theme.terminal) : theme.terminal
-  const activeTheme = useMemo(() => terminalTheme(renderedMode, ansiPalette), [renderedMode, ansiPalette])
+  const { resolvedMode } = useTheme()
+  const activeTheme = useMemo(() => terminalTheme(resolvedMode), [resolvedMode])
   const initialThemeRef = useRef(activeTheme)
   const hostRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<Terminal | null>(null)
@@ -534,7 +525,7 @@ export function useTerminalSession({
       return
     }
 
-    // Re-resolve the surface in a rAF: ThemeProvider's applyTheme repaints the
+    // Re-resolve the surface in a rAF: ThemeProvider's applyMode repaints the
     // CSS vars in a sibling effect that runs after this one, so reading now
     // would lag a mode behind. By the next frame the vars are current.
     const raf = requestAnimationFrame(() => {
@@ -548,7 +539,7 @@ export function useTerminalSession({
     })
 
     return () => cancelAnimationFrame(raf)
-  }, [activeTheme, themeName])
+  }, [activeTheme])
 
   // Expose this terminal's buffer to the agent's `read_terminal` tool, keyed by
   // id. The tab selection (setActiveTerminalId) decides which one it reads, so

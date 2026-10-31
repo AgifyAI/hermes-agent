@@ -971,8 +971,7 @@ export const frOverrides = {
       chatTextScaleDesc:
         'Ajuste le texte des conversations et de la saisie par rapport à l’échelle de l’interface. Les barres latérales et les contrôles gardent leur taille.',
       title: 'Apparence',
-      intro:
-        'Exclusif au desktop. Le mode contrôle la luminosité ; le thème contrôle la palette et le chrome de la conversation.',
+      intro: 'Desktop uniquement. Hermes a un seul style, calqué sur Linear, en clair et en sombre.',
       colorMode: 'Mode couleur',
       colorModeDesc: 'Choisissez un mode fixe ou laissez Hermes suivre le paramètre système.',
       toolViewTitle: "Affichage des appels d'outil",
@@ -1017,30 +1016,8 @@ export const frOverrides = {
       chatFontPreview: 'Aperçu',
       chatFontSample: 'Portez ce vieux whisky au juge blond qui fume. 0123456789',
       chatFontReset: 'Utiliser la police par défaut',
-      translucencyTitle: 'Translucidité de la fenêtre',
-      translucencyDesc: 'Voir votre bureau à travers toute la fenêtre. macOS et Windows uniquement.',
-      translucencyGlassDesc:
-        'Verre mat : le bureau reste visible à travers un flou uniforme tandis que le texte demeure net. macOS uniquement.',
-      translucencyModeClear: 'Transparent',
-      translucencyModeGlass: 'Verre',
-      translucencyTintTitle: 'Teinte',
-      translucencyFadeTitle: 'Atténuation',
-      translucencyFrostTitle: 'Givre',
-      translucencyFrost: {
-        'under-window': 'Profond',
-        popover: 'Doux',
-        titlebar: 'Clair',
-        header: 'Éclat'
-      },
-      translucencyScopeTitle: 'Zone',
-      translucencyScope: {
-        window: 'Fenêtre entière',
-        sidebar: 'Barre latérale uniquement'
-      },
       backdropTitle: 'Arrière-plan de la conversation',
       backdropDesc: "L'image de statue discrète derrière la conversation.",
-      userBubbleTitle: 'Bulle des messages',
-      userBubbleDesc: 'Transparence de vos messages : fond opaque à 0 ; seul le contour reste visible à 100.',
       textDirectionTitle: 'Sens du texte',
       textDirectionDesc:
         "Sens d'écriture des messages et du champ de saisie. Auto suit la première lettre de chaque paragraphe ; choisissez un sens quand un texte mixte s'aligne mal. Le code reste toujours de gauche à droite.",
@@ -1084,20 +1061,7 @@ export const frOverrides = {
       productDesc: 'Activité des outils lisible avec des résumés concis.',
       technical: 'Technique',
       technicalDesc: 'Inclure les arguments/résultats bruts des outils et les détails de bas niveau.',
-      themeTitle: 'Thème',
-      themeDesc: "Palettes desktop uniquement. Le mode sélectionné s'applique par-dessus.",
-      themeSearchPlaceholder: 'Rechercher dans vos thèmes ou sur le Marketplace VS Code…',
-      themeProfileNote: profile => `Enregistré pour le profil ${profile} — chaque profil conserve son propre thème.`,
-      installTitle: 'Installer depuis VS Code',
-      installDesc:
-        "Collez un identifiant d'extension Marketplace (ex. dracula-theme.theme-dracula) pour convertir son thème de couleur en palette desktop.",
-      installPlaceholder: 'éditeur.extension',
-      installButton: 'Installer',
-      installing: 'Installation…',
-      installError: "Impossible d'installer ce thème.",
-      installed: name => `« ${name} » installé.`,
-      removeTheme: 'Supprimer le thème',
-      importedBadge: 'Importé',
+      themeProfileNote: profile => `Enregistré pour le profil ${profile} — chaque profil conserve son propre mode.`,
       pet: {
         title: 'Animal de compagnie',
         intro:
@@ -2684,7 +2648,6 @@ export const frOverrides = {
     commandCenter: 'Centre de commandes',
     appearance: 'Apparence',
     settings: 'Paramètres',
-    changeTheme: 'Changer le thème',
     changeColorMode: 'Changer le mode couleur…',
     pets: {
       title: 'Animaux de compagnie',
@@ -2730,18 +2693,6 @@ export const frOverrides = {
       referenceImageInvalid: 'Impossible de lire cette image de référence. Essayez un PNG, JPG, WebP ou GIF.',
       adopt: 'Adopter',
       startOver: 'Recommencer'
-    },
-    installTheme: {
-      title: 'Installer un thème…',
-      pageTitle: 'Installer un thème',
-      placeholder: 'Rechercher dans le Marketplace VS Code…',
-      loading: 'Recherche dans le Marketplace...',
-      error: "Impossible d'atteindre le Marketplace.",
-      empty: 'Aucun thème correspondant.',
-      install: 'Installer',
-      installing: 'Installation...',
-      installed: 'Installé',
-      installs: count => `${count} installations`
     },
     settingsFields: 'Champs de paramètres',
     mcpServers: 'Serveurs MCP',

@@ -74,9 +74,6 @@ function BootFailureModal({
         <DialogPrimitive.Content aria-describedby={undefined} aria-modal="true" asChild ref={setContentNode}>
           <div
             className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--ui-chat-surface-background) p-6"
-            // Masks the whole app on boot failure — must stay filled under window
-            // glass. Contract: `[data-glass-opaque]` in styles.css.
-            data-glass-opaque=""
           >
             <DialogPortalContainerContext.Provider value={contentNode}>
               {title ? <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title> : null}

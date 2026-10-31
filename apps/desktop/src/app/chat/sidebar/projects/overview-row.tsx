@@ -241,7 +241,6 @@ export function ProjectOverviewRow({
         </>
       }
       className={cn(dragging && 'cursor-grabbing bg-(--ui-sidebar-surface-background)')}
-      data-glass-opaque={dragging ? '' : undefined}
       label={project.isAuto ? <Tip label={s.projects.autoDiscovered}>{labelLink}</Tip> : labelLink}
       lead={lead}
       // The label is grab surface too, not just the lead's grabber — the

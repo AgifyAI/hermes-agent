@@ -42,7 +42,6 @@ import { $botChatSessionIds, $sessionStates, $sessionTiles, isBotChatSession } f
 import { useForcedTextDirection } from '@/store/text-direction'
 import { $threadScrolledUpBySession } from '@/store/thread-scroll'
 import { $autoSpeakReplies } from '@/store/voice-prefs'
-import { useTheme } from '@/themes'
 
 import { AttachmentList } from './attachments'
 import { deriveBusySubmitState } from './busy-submit-state'
@@ -266,15 +265,12 @@ export function ChatBar({
     []
   )
 
-  const { availableThemes, themeName } = useTheme()
   const at = useAtCompletions({ gateway: gateway ?? null, sessionId: sessionId ?? null, cwd: cwd ?? null })
 
   const slash = useSlashCompletions({
-    activeSkin: themeName,
     gateway: gateway ?? null,
     profile: profile ?? null,
-    sessionId: sessionId ?? null,
-    skinThemes: availableThemes
+    sessionId: sessionId ?? null
   })
 
   const emoji = useEmojiCompletions()

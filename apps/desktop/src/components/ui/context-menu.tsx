@@ -4,6 +4,8 @@ import * as React from 'react'
 import { Codicon } from '@/components/ui/codicon'
 import { cn } from '@/lib/utils'
 
+import { menuItemClass, menuItemFocusClass, menuLabelClass, menuMotionClass, menuSurfaceClass } from './menu'
+
 function ContextMenu({ ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
@@ -32,7 +34,9 @@ function ContextMenuContent({ className, ...props }: React.ComponentProps<typeof
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
         className={cn(
-          'z-50 max-h-(--radix-context-menu-content-available-height) min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg border border-(--ui-stroke-secondary) bg-[color-mix(in_srgb,var(--ui-bg-elevated)_96%,transparent)] p-1 text-[length:var(--conversation-text-font-size)] text-popover-foreground shadow-md backdrop-blur-md data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          menuSurfaceClass,
+          menuMotionClass,
+          'z-50 max-h-(--radix-context-menu-content-available-height) min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-x-hidden overflow-y-auto',
           className
         )}
         data-slot="context-menu-content"
@@ -54,7 +58,9 @@ function ContextMenuItem({
   return (
     <ContextMenuPrimitive.Item
       className={cn(
-        "relative flex cursor-default items-center gap-2 rounded-md px-2 py-1 text-xs outline-hidden select-none focus:bg-(--ui-control-active-background) focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [&_svg:not([class*='text-'])]:text-(--ui-text-tertiary) data-[variant=destructive]:*:[svg]:text-destructive!",
+        menuItemClass,
+        menuItemFocusClass,
+        "cursor-default data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-7 data-[variant=destructive]:text-(--linear-red) data-[variant=destructive]:focus:text-(--linear-red) [&_svg:not([class*='text-'])]:text-(--linear-text-tertiary) data-[variant=destructive]:*:[svg]:text-(--linear-red)!",
         className
       )}
       data-inset={inset}
@@ -75,14 +81,16 @@ function ContextMenuCheckboxItem({
     <ContextMenuPrimitive.CheckboxItem
       checked={checked}
       className={cn(
-        "relative flex cursor-default items-center gap-2 rounded-md px-2 py-1 text-xs outline-hidden select-none focus:bg-(--ui-control-active-background) focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
+        menuItemClass,
+        menuItemFocusClass,
+        'cursor-default data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
       data-slot="context-menu-checkbox-item"
       {...props}
     >
       {children}
-      <ContextMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-foreground">
+      <ContextMenuPrimitive.ItemIndicator className="ml-auto flex items-center pl-2 text-(--linear-text-overlay)">
         <Codicon name="check" size="0.75rem" />
       </ContextMenuPrimitive.ItemIndicator>
     </ContextMenuPrimitive.CheckboxItem>
@@ -98,7 +106,7 @@ function ContextMenuLabel({
 }) {
   return (
     <ContextMenuPrimitive.Label
-      className={cn('px-2 py-1 text-xs font-medium text-(--ui-text-tertiary) data-[inset]:pl-7', className)}
+      className={cn(menuLabelClass, 'data-[inset]:pl-7', className)}
       data-inset={inset}
       data-slot="context-menu-label"
       {...props}
@@ -109,7 +117,7 @@ function ContextMenuLabel({
 function ContextMenuSeparator({ className, ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) {
   return (
     <ContextMenuPrimitive.Separator
-      className={cn('-mx-1 my-1 h-px bg-(--ui-stroke-tertiary)', className)}
+      className={cn('-mx-1.5 my-1.5 h-px bg-(--linear-border-overlay)', className)}
       data-slot="context-menu-separator"
       {...props}
     />
@@ -131,7 +139,9 @@ function ContextMenuSubTrigger({
   return (
     <ContextMenuPrimitive.SubTrigger
       className={cn(
-        "flex cursor-default items-center gap-2 rounded-md px-2 py-1 text-xs outline-hidden select-none focus:bg-(--ui-control-active-background) focus:text-foreground data-[inset]:pl-7 data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [&_svg:not([class*='text-'])]:text-(--ui-text-tertiary)",
+        menuItemClass,
+        menuItemFocusClass,
+        "cursor-default data-[inset]:pl-7 data-[state=open]:bg-(--linear-hover-overlay) data-[state=open]:text-(--linear-text-overlay-strong) [&_svg:not([class*='text-'])]:text-(--linear-text-tertiary)",
         className
       )}
       data-inset={inset}
@@ -139,7 +149,7 @@ function ContextMenuSubTrigger({
       {...props}
     >
       {children}
-      <Codicon className="ml-auto text-(--ui-text-tertiary)" name="chevron-right" size="1rem" />
+      <Codicon className="ml-auto text-(--linear-text-tertiary)" name="chevron-right" size="1rem" />
     </ContextMenuPrimitive.SubTrigger>
   )
 }
@@ -160,7 +170,9 @@ function ContextMenuSubContent({
         className={cn(
           // `max-h-80` (not the Radix available-height var, which is published
           // only on Content) so a long submenu scrolls instead of collapsing.
-          'dt-portal-scrollbar z-50 max-h-80 min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-y-auto rounded-lg border border-(--ui-stroke-secondary) bg-[color-mix(in_srgb,var(--ui-bg-elevated)_96%,transparent)] p-1 text-[length:var(--conversation-text-font-size)] text-popover-foreground shadow-md backdrop-blur-md data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          menuSurfaceClass,
+          menuMotionClass,
+          'z-50 max-h-80 min-w-36 origin-(--radix-context-menu-content-transform-origin) overflow-y-auto',
           className
         )}
         collisionPadding={collisionPadding}

@@ -819,11 +819,7 @@ export function ContribController() {
         <PluginPreviewConsentDialog />
         <div
           className="flex h-full min-h-0 w-screen flex-col bg-(--ui-bg-chrome) text-(--ui-text-primary)"
-          // Window-glass hook: this div and the sidebar-wrapper above it are
-          // the app shell's two full-window opaque painters; the
-          // [data-hermes-glass] rules in styles.css clear them so the tint
-          // painted by <body> is the only thing between the page and the
-          // vibrancy material.
+          // The app shell's full-window painter, alongside the sidebar wrapper.
           data-contrib-shell=""
           style={{ '--titlebar-height': '0px' } as CSSProperties}
         >

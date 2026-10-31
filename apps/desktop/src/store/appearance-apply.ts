@@ -1,21 +1,19 @@
 /**
- * What `set_theme` and its picker cards change: accent, light/dark mode and
- * layout preset, validated as a whole before anything is applied so an
- * unknown layout never leaves a new accent half-applied.
+ * What `set_theme` and its picker cards change: light/dark mode and layout
+ * preset, validated as a whole before anything is applied so an unknown
+ * layout never leaves a new mode half-applied.
  *
- * Accent persists through `persistAccent` and mode through `requestMode`
- * (both drained by the ThemeProvider); a layout applies through the same
- * registry the layout picker reads, switching Simple/Advanced to the preset's
- * tier first because Simple only shows its two sidebar presets.
+ * Hermes Desktop has one look (Linear's), so the only accent it accepts is
+ * `theme` — the look's own. Mode persists through `requestMode` (drained by
+ * the ThemeProvider); a layout applies through the same registry the layout
+ * picker reads, switching Simple/Advanced to the preset's tier first because
+ * Simple only shows its two sidebar presets.
  */
 
 import { isLayoutNode } from '@/components/pane-shell/tree/model'
 import { layoutPresetTier, LAYOUTS_AREA } from '@/components/pane-shell/tree/presets'
 import { registry } from '@/contrib/registry'
-import { matchesQuery } from '@/hooks/use-media-query'
-import { ACCENT_SWATCH_IDS, resolveAccentPick, type ResolvedAccent } from '@/themes/accents'
 import type { ThemeMode } from '@/themes/context'
-import { persistAccent } from '@/themes/persist-accent'
 import { requestMode } from '@/themes/request'
 
 import { $interfaceMode, setInterfaceMode } from './interface-mode'
@@ -23,15 +21,17 @@ import { applyDesktopLayoutPreset, openLayoutPickPanes } from './pane-focus'
 
 export const THEME_MODES: readonly ThemeMode[] = ['light', 'dark', 'system']
 
+/** The look's own accent: the one accent value there is. */
+const OWN_ACCENT = 'theme'
+
 export interface AppearanceValues {
   accent?: string
   layout?: string
   mode?: ThemeMode
 }
 
-/** What was applied, in the ids the agent reads: `accent` is a swatch id, `custom:#rrggbb`, or null for the theme's own. */
+/** What was applied, in the ids the agent reads. */
 export interface AppliedAppearance {
-  accent?: null | string
   layout?: string
   mode?: ThemeMode
 }
@@ -44,15 +44,6 @@ const listedLayoutIds = (): string[] =>
     .getArea(LAYOUTS_AREA)
     .filter(entry => isLayoutNode(entry.data))
     .map(entry => entry.id)
-
-// Mono is black on a light surface and white on a dark one: resolve against the surface the pick lands on.
-function paintsDark(mode: ThemeMode | undefined): boolean {
-  if (mode === 'system') {
-    return matchesQuery('(prefers-color-scheme: dark)')
-  }
-
-  return mode === undefined ? document.documentElement.classList.contains('dark') : mode === 'dark'
-}
 
 // The first-run demo layout is borrowed (components/onboarding/first-run/intro.ts registers this): a
 // committed layout ends it first, so a Simple/Advanced switch saves the user's own layout, not the demo.
@@ -82,13 +73,11 @@ export function applyAppearance(values: AppearanceValues): AppearanceAnswer {
     return { available: [...THEME_MODES], error: `Unknown mode "${values.mode}".`, success: false }
   }
 
-  let accent: ResolvedAccent | undefined
-
-  if (values.accent !== undefined) {
-    accent = resolveAccentPick(values.accent, paintsDark(values.mode))
-
-    if (!accent) {
-      return { available: [...ACCENT_SWATCH_IDS, 'theme'], error: `Unknown accent "${values.accent}".`, success: false }
+  if (values.accent !== undefined && values.accent !== OWN_ACCENT) {
+    return {
+      available: [OWN_ACCENT],
+      error: `Hermes Desktop has one look (Linear's) and no accent colours; "${values.accent}" cannot be applied.`,
+      success: false
     }
   }
 
@@ -101,11 +90,6 @@ export function applyAppearance(values: AppearanceValues): AppearanceAnswer {
   if (values.mode !== undefined) {
     requestMode(values.mode)
     applied.mode = values.mode
-  }
-
-  if (accent) {
-    persistAccent(accent.hex)
-    applied.accent = accent.id
   }
 
   if (values.layout !== undefined) {

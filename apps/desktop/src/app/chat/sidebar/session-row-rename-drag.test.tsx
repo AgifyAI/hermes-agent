@@ -338,7 +338,7 @@ describe('SidebarSessionRow drag and the rename dialog (portal press)', () => {
 
     expect(startSessionDrag).not.toHaveBeenCalled()
     expect(row.style.opacity).not.toBe(LIFTED_OPACITY)
-    expect(container.querySelector('[data-glass-opaque]')).toBeNull()
+    expect(container.querySelector('.cursor-grabbing')).toBeNull()
 
     fireEvent.pointerUp(doc, { clientX: 80, clientY: 20, isPrimary: true, pointerId: 1 })
 
@@ -391,7 +391,7 @@ describe('SidebarSessionRow drag and the rename dialog (portal press)', () => {
     // dnd-kit reorder arms (the row goes opaque, the grabber reports pressed).
     expect(startSessionDrag).toHaveBeenCalledTimes(1)
     expect(row.style.opacity).toBe(LIFTED_OPACITY)
-    expect(row.getAttribute('data-glass-opaque')).not.toBeNull()
+    expect(row.classList.contains('cursor-grabbing')).toBe(true)
     expect(container.querySelector('[data-reorder-handle][aria-pressed="true"]')).not.toBeNull()
 
     fireEvent.pointerUp(doc, { clientX: 20, clientY: 160, isPrimary: true, pointerId: 3 })

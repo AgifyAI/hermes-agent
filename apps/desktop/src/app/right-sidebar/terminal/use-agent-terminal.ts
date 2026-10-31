@@ -22,7 +22,7 @@ import { useTerminalFontController } from './use-terminal-font'
 // no input) fed live by the backend output stream, keyed by process id. Shares
 // the user terminal's look so the two read as one surface.
 export function useAgentTerminal({ active, id, procId }: { active: boolean; id: string; procId: string }) {
-  const { renderedMode, theme, themeName } = useTheme()
+  const { resolvedMode } = useTheme()
   const hostRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<Terminal | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
@@ -30,8 +30,7 @@ export function useAgentTerminal({ active, id, procId }: { active: boolean; id: 
   const { latestFontFamilyRef, mountedRef } = useTerminalFontController({ fitRef, termRef, webglRef })
 
   const surfaceTheme = () => {
-    const ansi = renderedMode === 'dark' ? (theme.darkTerminal ?? theme.terminal) : theme.terminal
-    const base = terminalTheme(renderedMode, ansi)
+    const base = terminalTheme(resolvedMode)
     // Fall back to the palette's own background, not white — a hardcoded
     // '#ffffff' flashes a white slab in dark mode whenever the probe can't read
     // the token (pre-paint mount). Same contract as the user terminal.
@@ -256,7 +255,7 @@ export function useAgentTerminal({ active, id, procId }: { active: boolean; id: 
 
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderedMode, themeName])
+  }, [resolvedMode])
 
   // A visibility:hidden xterm doesn't paint — refit + redraw on re-activation.
   useEffect(() => {

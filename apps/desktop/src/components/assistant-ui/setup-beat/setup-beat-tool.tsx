@@ -9,8 +9,8 @@ import { type ComponentType, type ReactNode, useState } from 'react'
 import { useSessionView } from '@/app/chat/session-view'
 import { CLARIFY_ICON_CLASS } from '@/components/assistant-ui/clarify/core/shell'
 import { ConnectorDirectoryCard } from '@/components/assistant-ui/connector-directory-card'
-import { AccentPickerCard } from '@/components/assistant-ui/theme-picker/accent-picker-card'
 import { LayoutPickerCard } from '@/components/assistant-ui/theme-picker/layout-picker-card'
+import { ModePickerCard } from '@/components/assistant-ui/theme-picker/mode-picker-card'
 import { LayoutDashboard, MessageQuestion, Palette, Plug } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { applyAppearance } from '@/store/appearance-apply'
@@ -50,11 +50,7 @@ function BeatBody({ answer, request }: { answer: (picks: SetupBeatAnswer) => boo
       )
 
     case 'theme':
-      return (
-        <AccentPickerCard
-          onContinue={accent => commit(applyAppearance({ accent: accent ?? 'theme' }).success, { accent })}
-        />
-      )
+      return <ModePickerCard onPick={mode => commit(applyAppearance({ mode }).success, { mode })} />
 
     case 'layout':
       return <LayoutPickerCard onContinue={layout => commit(applyAppearance({ layout }).success, { layout })} />
@@ -88,7 +84,7 @@ function BeatBody({ answer, request }: { answer: (picks: SetupBeatAnswer) => boo
   }
 }
 
-// The theme beat picks the accent, so it carries the accent's palette icon.
+// The theme beat picks light/dark/system, so it carries the palette icon.
 const BEAT_ICONS = {
   build: MessageQuestion,
   connectors: Plug,

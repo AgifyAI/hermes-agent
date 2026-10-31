@@ -376,13 +376,10 @@ function SidebarSessionRowImpl({
           // the title and the status dot down with it.
           openUnfocused && 'bg-(--ui-row-open-background)',
           liveTurn && 'text-foreground',
-          // Opaque surface while lifted so the dragged row erases what's under
-          // it (translucency let the rows below bleed through). data-glass-opaque
-          // keeps that true when window glass thins the field.
+          // Opaque surface while lifted so the dragged row erases what's under it.
           dragging && 'z-10 cursor-grabbing bg-(--ui-sidebar-surface-background)',
           className
         )}
-        data-glass-opaque={dragging ? '' : undefined}
         data-working={liveTurn ? 'true' : undefined}
         // The row runs BOTH drags off one press, and each declines outside its
         // own region — so no timing/arbitration rule is needed and neither can

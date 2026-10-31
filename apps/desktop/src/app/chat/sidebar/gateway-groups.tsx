@@ -260,7 +260,6 @@ function GatewayProfileGroup({
           </div>
         }
         className={cn(sortable.dragging && 'cursor-grabbing bg-(--ui-sidebar-surface-background)')}
-        data-glass-opaque={sortable.dragging ? '' : undefined}
         label={
           <SidebarRowLink aria-expanded={open} onClick={() => toggleGatewayGroup(group.id)}>
             {label}

@@ -13,7 +13,6 @@ export const arCommandCenter = {
     commandCenter: 'مركز الأوامر',
     appearance: 'المظهر',
     settings: 'الإعدادات',
-    changeTheme: 'تغيير الثيم',
     changeColorMode: 'تغيير نمط الألوان',
     pets: {
       title: 'الحيوانات الأليفة',
@@ -58,17 +57,6 @@ export const arCommandCenter = {
       referenceImageInvalid: 'تعذّرت قراءة صورة المرجع تلك. جرّب PNG أو JPG أو WebP أو GIF.',
       adopt: 'تبنّي',
       startOver: 'البدء من جديد'
-    },
-    installTheme: {
-      title: 'تثبيت سمة...',
-      placeholder: 'البحث في VS Code Marketplace...',
-      loading: 'جار البحث في Marketplace...',
-      error: 'تعذّر الوصول إلى Marketplace.',
-      empty: 'لا توجد سمات مطابقة.',
-      install: 'تثبيت',
-      installing: 'جار التثبيت...',
-      installed: 'مثبّت',
-      installs: count => `${count} عملية تثبيت`
     },
     settingsFields: 'حقول الإعدادات',
     mcpServers: 'خوادم MCP',

@@ -157,7 +157,6 @@ function Harness({ pendingScope, suspend, onSubmit }: HarnessProps) {
     createBackendSessionForSend: sessionActions.createBackendSessionForSend,
     getRoutedStoredSessionId: () => route,
     getRouteToken,
-    handleSkinCommand: () => '',
     openMemoryGraph: () => {},
     refreshSessions: async () => {},
     requestGateway: request,

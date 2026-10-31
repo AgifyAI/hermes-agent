@@ -98,7 +98,6 @@ import { $archivedSessions } from '@/store/sidebar-archive'
 import { $titlebarAppActionsSide, titlebarAppActionsClusterCounts } from '@/store/titlebar-app-actions'
 import { armWakeWord, stopClientCapture } from '@/store/wake-word'
 import { isAuxiliaryWindow, isBrowserWindow, isHudWindow, isMainWindow } from '@/store/windows'
-import { useSkinCommand } from '@/themes/use-skin-command'
 import type { SessionInfo } from '@/types/hermes'
 
 import { closeWorkspaceTab } from '../chat/close-tab'
@@ -692,7 +691,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     [branchCurrentSession, refreshSessions]
   )
 
-  const handleSkinCommand = useSkinCommand()
 
   const {
     cancelRun,
@@ -714,7 +712,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     getRoutedStoredSessionId,
     getRuntimeIdForStoredSession,
     getRouteToken,
-    handleSkinCommand,
     openMemoryGraph: openStarmap,
     refreshSessions,
     requestGateway,

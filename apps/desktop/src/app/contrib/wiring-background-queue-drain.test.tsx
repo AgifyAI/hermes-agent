@@ -125,7 +125,6 @@ vi.mock('./hooks/use-desktop-integrations', () => ({ useDesktopIntegrations: () 
 vi.mock('./hooks/use-pet-bridge', () => ({ usePetBridge: () => ({}) }))
 vi.mock('./hooks/use-quick-entry-bridge', () => ({ useQuickEntryBridge: () => ({}) }))
 vi.mock('./hooks/use-session-tile-delegate', () => ({ useSessionTileDelegate: () => ({}) }))
-vi.mock('@/themes/use-skin-command', () => ({ useSkinCommand: () => ({}) }))
 vi.mock('../hooks/use-config-record', () => ({ useHermesConfigRecord: () => ({}) }))
 vi.mock('./dev/credits-notice-demo', () => ({ installCreditsNoticeDemo: () => undefined }))
 vi.mock('@/store/wake-word', async importActual => ({

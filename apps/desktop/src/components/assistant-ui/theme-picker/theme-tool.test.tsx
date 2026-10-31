@@ -11,8 +11,8 @@ import { I18nProvider } from '@/i18n'
 import { $fileBrowserOpen } from '@/store/layout'
 import { rememberServerRequest, resetServerRequestsForTests } from '@/store/server-requests'
 import { $themePicks, parkThemePick } from '@/store/theme-pick'
-import { $accentOverride } from '@/themes/accent-override'
 import { ThemeProvider } from '@/themes/context'
+import { $pendingModeApply } from '@/themes/request'
 
 import { ThemeTool } from './theme-tool'
 
@@ -56,38 +56,21 @@ describe('ThemeTool', () => {
   afterEach(() => {
     cleanup()
     $themePicks.set({})
-    $accentOverride.set(null)
+    $pendingModeApply.set(null)
     $terminalTakeover.set(false)
     $fileBrowserOpen.set(false)
     resetServerRequestsForTests()
   })
 
-  it('previews a clicked swatch without answering, then Continue answers with the last one staged', () => {
+  it('asks the accent card question as light/dark/system, since the look is Linear only', () => {
     const respond = park('accent')
 
     renderRow({ args: { picker: 'accent' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Ultraviolet' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dark' }))
 
-    expect(respond).not.toHaveBeenCalled()
-    expect($accentOverride.get()).not.toBeNull()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-
-    expect(respond).toHaveBeenCalledWith({ picked: { accent: 'violet' } })
-    expect(screen.getByText('Ultraviolet').closest('[data-theme-settled]')).not.toBeNull()
-  })
-
-  it('puts the previous accent back when the card settles without a pick', async () => {
-    const respond = park('accent')
-
-    const { rerender } = renderRow({ args: { picker: 'accent' } })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Ultraviolet' }))
-    // The backend's cancel or timeout settles the row with a result and no pick.
-    rerender(row({ args: { picker: 'accent' }, result: { cancelled: true } }))
-
-    expect(respond).not.toHaveBeenCalled()
-    await waitFor(() => expect($accentOverride.get()).toBeNull())
+    expect(respond).toHaveBeenCalledWith({ picked: { mode: 'dark' } })
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+    expect(screen.getByText('Dark').closest('[data-theme-settled]')).not.toBeNull()
   })
 
   it('draws the layout card for a call made through the tool_call bridge', () => {
