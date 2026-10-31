@@ -80,7 +80,7 @@ function SidebarSectionHeader({
   )
 
   return (
-    <div className="group/section flex shrink-0 items-center justify-between gap-1 pb-1 pt-1.5">
+    <div className="group/section flex shrink-0 items-center justify-between gap-1 pb-1 pt-2">
       {collapsible ? (
         <button
           // min-w-0 lets the label truncate at narrow sidebar widths instead of

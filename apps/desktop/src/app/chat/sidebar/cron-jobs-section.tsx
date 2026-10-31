@@ -182,7 +182,7 @@ export function SidebarCronJobsSection({
 
   return (
     <SidebarGroup className="shrink-0 p-0 pb-1">
-      <div className="group/section flex shrink-0 items-center justify-between pb-1 pt-1.5">
+      <div className="group/section flex shrink-0 items-center justify-between pb-1 pt-2">
         <button
           className="group/section-label flex w-fit min-w-0 items-center gap-1 bg-transparent text-left leading-none"
           onClick={onToggle}

@@ -576,7 +576,7 @@ function SidebarSessionRowImpl({
                     {density !== 'compact' && details.metadata && (
                       <span
                         className={cn(
-                          'mt-0.5 block truncate text-[0.625rem] text-(--ui-text-tertiary)',
+                          'mt-0.5 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
                           SIDEBAR_TRUNCATED_LEADING
                         )}
                       >
@@ -586,7 +586,7 @@ function SidebarSessionRowImpl({
                     {density === 'detailed' && details.preview && (
                       <span
                         className={cn(
-                          'mt-1 block truncate text-[0.625rem] text-(--ui-text-quaternary)',
+                          'mt-1 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
                           SIDEBAR_TRUNCATED_LEADING
                         )}
                       >
@@ -645,7 +645,7 @@ function SidebarSessionRowImpl({
                   {session.preview && rowMeta.includes('preview') ? (
                     <span
                       className={cn(
-                        'min-w-0 truncate text-[0.625rem] text-(--ui-text-quaternary)',
+                        'min-w-0 truncate text-[0.6875rem] text-(--ui-text-tertiary)',
                         SIDEBAR_TRUNCATED_LEADING
                       )}
                     >
@@ -656,7 +656,7 @@ function SidebarSessionRowImpl({
                 {model || size || todoProgress ? (
                   <span
                     className={cn(
-                      'flex min-w-0 items-baseline gap-2 text-[0.625rem] text-(--ui-text-tertiary)',
+                      'flex min-w-0 items-baseline gap-2 text-[0.6875rem] text-(--ui-text-tertiary)',
                       SIDEBAR_TRUNCATED_LEADING
                     )}
                   >

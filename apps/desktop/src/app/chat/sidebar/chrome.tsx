@@ -132,16 +132,13 @@ export function SidebarDateDivider({
   toggle?: { ariaLabel: string; onToggle: () => void; open: boolean }
 }) {
   const caption = (
-    <span className="shrink-0 text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-(--ui-text-quaternary)">
-      {label}
-    </span>
+    <span className="shrink-0 text-xs font-medium tracking-normal text-(--ui-text-tertiary)">{label}</span>
   )
-
-  const rule = <span aria-hidden="true" className="h-px min-w-4 flex-1 bg-(--ui-stroke-tertiary)" />
 
   return (
     // group/workspace: a divider heads a group the same way a repo header does,
-    // so it borrows the header's hover-revealed "+" verbatim.
+    // so it borrows the header's hover-revealed "+" verbatim. The label alone
+    // groups the rows — no timeline rule; Linear's list headers are quiet text.
     <div className={cn('group/workspace flex select-none items-center gap-2 px-2 pb-0.5 pt-2', className)} {...props}>
       {toggle ? (
         <button
@@ -156,13 +153,9 @@ export function SidebarDateDivider({
             className="text-(--ui-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
             open={toggle.open}
           />
-          {rule}
         </button>
       ) : (
-        <>
-          {caption}
-          {rule}
-        </>
+        <>{caption}</>
       )}
       {action}
     </div>
