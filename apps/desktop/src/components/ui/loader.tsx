@@ -368,7 +368,7 @@ export function Loader({
     <div
       {...props}
       aria-label={props['aria-label'] ?? label}
-      className={cn('inline-grid size-10 place-items-center text-primary', className)}
+      className={cn('inline-grid size-10 place-items-center text-(--linear-accent)', className)}
       role={role}
     >
       <svg aria-hidden="true" className="size-full overflow-visible" fill="none" viewBox="0 0 100 100">
