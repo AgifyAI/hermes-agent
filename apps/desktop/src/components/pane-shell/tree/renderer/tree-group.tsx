@@ -608,7 +608,7 @@ export function TreeGroup({
 
   return (
     <div
-      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--ui-editor-surface-background)"
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--ui-sidebar-surface-background)"
       data-tree-group={node.id}
       data-window-top={topEdge || undefined}
       // Advertises the visible tab strip so panes can drop their own
@@ -931,6 +931,7 @@ export function TreeGroup({
       {(!node.minimized || mountedPanes.length > 0 || hostedPanes.length > 0) && (
         <PaneBody
           hidden={Boolean(node.minimized)}
+          panel={paneChrome(active).placement !== 'left'}
           wrap={
             !isEmpty
               ? body => (

@@ -421,7 +421,6 @@
        it, focus/open go full. Linear's field border is a solid hairline, so
        the knob is pinned to the measured border via --dt-input. */
     /* Hovered inactive tab: deepen it AWAY from the lighter active surface. */
-    --ui-tab-hover-darken: 2.5%;
     --dt-ring: var(--linear-focus);
     --dt-midground: var(--linear-accent);
     --dt-midground-foreground: var(--linear-on-accent);
@@ -607,7 +606,6 @@
     --ui-diff-remove-foreground: color-mix(in srgb, var(--ui-red) 62%, #fff);
     --composer-ring-strength: 1.3;
     --backdrop-invert-mul: 0;
-    --ui-tab-hover-darken: 6%;
   }
 
   * {
