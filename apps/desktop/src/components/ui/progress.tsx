@@ -49,14 +49,14 @@ export function Progress({
   ...props
 }: ProgressProps) {
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100)
-  const fillColor = destructive ? 'bg-destructive' : 'bg-primary'
+  const fillColor = destructive ? 'bg-(--linear-red)' : 'bg-(--linear-accent)'
 
   return (
     <div
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={indeterminate ? undefined : pct}
-      className={cn('relative w-full overflow-hidden rounded-full bg-muted', TRACK_HEIGHT[size], className)}
+      className={cn('relative w-full overflow-hidden rounded-full bg-(--linear-bg-tertiary)', TRACK_HEIGHT[size], className)}
       data-slot="progress"
       role="progressbar"
       {...props}

@@ -3,7 +3,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function TextTabMeta({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span className={cn('text-[0.72em] font-normal text-(--ui-text-tertiary)', className)} {...props} />
+  return <span className={cn('text-[0.72em] font-normal text-(--linear-text-tertiary)', className)} {...props} />
 }
 
 interface TextTabProps extends React.ComponentProps<'button'> {
@@ -14,8 +14,8 @@ function TextTab({ active = false, children, className, type = 'button', ...prop
   return (
     <button
       className={cn(
-        'group/text-tab inline-flex h-7 items-center gap-1 bg-transparent px-1 text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-tertiary) transition-colors hover:bg-transparent hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring disabled:pointer-events-none disabled:opacity-50',
-        active && 'text-foreground',
+        'group/text-tab inline-flex h-7 items-center gap-1 bg-transparent px-1 text-[length:var(--conversation-caption-font-size)] font-medium text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-transparent hover:text-(--linear-text-primary) focus-visible:text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:pointer-events-none disabled:opacity-60',
+        active && 'text-(--linear-text-primary)',
         className
       )}
       data-active={active}

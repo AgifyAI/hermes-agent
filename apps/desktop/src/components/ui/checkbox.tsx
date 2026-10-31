@@ -5,14 +5,14 @@ import { Codicon } from '@/components/ui/codicon'
 import { cn } from '@/lib/utils'
 
 const BOX =
-  'group peer size-4 shrink-0 rounded-sm border border-input shadow-xs outline-none transition-shadow data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground'
+  'group peer size-4 shrink-0 rounded-(--linear-radius-kbd) border border-(--linear-border-secondary) bg-(--linear-bg-input) outline-none transition-colors duration-(--linear-speed-quick) data-[state=checked]:border-(--linear-accent) data-[state=checked]:bg-(--linear-accent) data-[state=checked]:text-(--linear-on-accent) data-[state=indeterminate]:border-(--linear-accent) data-[state=indeterminate]:bg-(--linear-accent) data-[state=indeterminate]:text-(--linear-on-accent)'
 
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root
       className={cn(
         BOX,
-        'focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40',
+        'focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-(--linear-red)',
         className
       )}
       data-slot="checkbox"

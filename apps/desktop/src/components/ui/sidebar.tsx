@@ -440,18 +440,18 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm ring-sidebar-ring outline-hidden transition-[width,height,padding] group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+  'peer/menu-button flex w-full items-center gap-1.5 overflow-hidden rounded-(--linear-radius-control) pr-[0.5625rem] pl-2 text-left text-[0.8125rem] font-medium text-(--linear-text-sidebar) outline-hidden transition-[width,height,padding,background-color,color] duration-(--linear-speed-quick) group-data-[collapsible=icon]:size-7! group-data-[collapsible=icon]:p-1.5! hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary) focus-visible:bg-(--linear-hover-sidebar) focus-visible:text-(--linear-text-primary) focus-visible:ring-1 focus-visible:ring-(--linear-focus) active:bg-(--linear-active-sidebar) active:text-(--linear-text-primary) disabled:pointer-events-none disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60 data-[active=true]:bg-(--linear-active-sidebar) data-[active=true]:text-(--linear-text-primary) data-[state=open]:hover:bg-(--linear-hover-sidebar) data-[state=open]:hover:text-(--linear-text-primary) [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        default: '',
         outline:
-          'bg-background shadow-[0_0_0_0.0625rem_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_0.0625rem_hsl(var(--sidebar-accent))]'
+          'bg-(--linear-bg-input) shadow-[0_0_0_0.5px_var(--linear-border-secondary)] hover:shadow-[0_0_0_0.5px_var(--linear-border-tertiary)]'
       },
       size: {
-        default: 'h-8 text-sm',
-        sm: 'h-7 text-xs',
-        lg: 'h-12 text-sm group-data-[collapsible=icon]:p-0!'
+        default: 'h-7',
+        sm: 'h-6 text-xs',
+        lg: 'h-11 group-data-[collapsible=icon]:p-0!'
       }
     },
     defaultVariants: {

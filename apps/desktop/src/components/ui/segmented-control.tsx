@@ -35,7 +35,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        'inline-grid w-fit grid-flow-col gap-0.5 rounded-[5px] bg-(--ui-bg-tertiary) p-0.5',
+        'inline-grid w-fit grid-flow-col gap-1',
         sizing === 'equal' ? 'auto-cols-fr' : 'auto-cols-max',
         disabled && 'opacity-50',
         className
@@ -48,15 +48,18 @@ export function SegmentedControl<T extends string>({
           <button
             aria-pressed={active}
             className={cn(
-              'flex items-center justify-center gap-1 rounded-[3px] px-2.5 py-0.5 text-[0.6875rem] font-medium transition-colors hover:transition-none disabled:cursor-default',
-              active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              // Linear's segmented tabs: 28px pills, 12px/500.
+              'flex h-7 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors duration-(--linear-speed-quick) disabled:cursor-default',
+              active
+                ? 'bg-(--linear-segment-selected) text-(--linear-text-primary)'
+                : 'bg-(--linear-segment-rest) text-(--linear-text-tertiary) hover:text-(--linear-text-primary)'
             )}
             disabled={disabled}
             key={id}
             onClick={() => onChange(id)}
             type="button"
           >
-            {Icon && <Icon className="size-3" />}
+            {Icon && <Icon className="size-3.5" />}
             {label}
           </button>
         )

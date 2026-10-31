@@ -6,41 +6,33 @@ import { cn } from '@/lib/utils'
 
 const COMPACT_KEY = /^[\p{L}\p{N}⌘⌥⇧⌃↵⇥⌫↑↓←→@/?]$/u
 
-const kbdSurface = [
-  'border-[color-mix(in_srgb,var(--ui-stroke-secondary)_75%,transparent)]',
-  'bg-[color-mix(in_srgb,var(--ui-bg-elevated)_94%,var(--dt-foreground)_6%)]',
-  'text-[color-mix(in_srgb,var(--dt-foreground)_58%,transparent)]',
-  'shadow-[0_1px_0_0_color-mix(in_srgb,var(--ui-stroke-tertiary)_85%,transparent),0_1px_2px_0_color-mix(in_srgb,var(--dt-foreground)_7%,transparent)]'
-]
+// Linear's key cap (docs/linear-design-reference.md § Command palette): 17px,
+// 2px padding, 4px radius, a hairline and no fill, 11px Inter with the
+// cv08 + zero figures, in the hint colour.
+const kbdSurface = ['border-(--linear-border-kbd)', 'bg-transparent', 'text-(--linear-text-hint)']
 
 const kbdVariants = cva(
-  'inline-flex shrink-0 items-center justify-center border [font-family:var(--dt-font-kbd)] font-normal leading-none select-none',
+  "inline-flex shrink-0 items-center justify-center rounded-(--linear-radius-kbd) border-[0.5px] [font-family:var(--dt-font-kbd)] font-normal leading-none [font-feature-settings:'cv08','zero'] select-none",
   {
     variants: {
       variant: {
         default: kbdSurface,
-        ghost: [
-          ...kbdSurface,
-          'text-[color-mix(in_srgb,var(--dt-foreground)_38%,transparent)]',
-          'bg-[color-mix(in_srgb,var(--ui-bg-elevated)_72%,var(--dt-foreground)_3%)]',
-          'border-[color-mix(in_srgb,var(--ui-stroke-tertiary)_80%,transparent)]'
-        ],
+        ghost: [...kbdSurface, 'text-(--linear-text-quaternary)'],
         capturing: [
-          'border-[color-mix(in_srgb,var(--theme-primary)_50%,var(--ui-stroke-secondary))]',
-          'bg-[color-mix(in_srgb,var(--theme-primary)_10%,var(--ui-bg-elevated))]',
-          'text-[color-mix(in_srgb,var(--theme-primary)_88%,transparent)]',
-          'shadow-none'
+          'border-(--linear-accent)',
+          'bg-[color-mix(in_srgb,var(--linear-accent)_10%,transparent)]',
+          'text-(--linear-accent)'
         ],
+        // On a filled surface (the primary button): ink follows the host.
         inverted: [
           'border-[color-mix(in_srgb,currentColor_22%,transparent)]',
           'bg-[color-mix(in_srgb,currentColor_12%,transparent)]',
-          'text-[color-mix(in_srgb,currentColor_88%,transparent)]',
-          'shadow-[0_1px_0_0_color-mix(in_srgb,currentColor_18%,transparent)]'
+          'text-[color-mix(in_srgb,currentColor_88%,transparent)]'
         ]
       },
       size: {
-        sm: 'rounded-[0.2rem] text-[0.625rem]',
-        md: 'rounded-[0.25rem] text-[0.6875rem]'
+        sm: 'text-[0.625rem]',
+        md: 'text-[0.6875rem]'
       }
     },
     defaultVariants: {
@@ -54,10 +46,10 @@ function kbdShapeClass(label: string, size: 'sm' | 'md' | null | undefined): str
   const compact = COMPACT_KEY.test(label)
 
   if (size === 'sm') {
-    return compact ? 'size-[1.125rem] px-0' : 'h-[1.125rem] min-w-[1.125rem] px-1'
+    return compact ? 'size-4 px-0' : 'h-4 min-w-4 px-0.5'
   }
 
-  return compact ? 'size-[1.375rem] px-0' : 'h-[1.375rem] min-w-[1.375rem] px-1.5'
+  return compact ? 'size-[1.0625rem] px-0' : 'h-[1.0625rem] min-w-[1.0625rem] px-0.5'
 }
 
 interface KbdProps extends React.ComponentProps<'kbd'>, VariantProps<typeof kbdVariants> {}
