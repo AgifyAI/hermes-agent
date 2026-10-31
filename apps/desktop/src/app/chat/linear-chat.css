@@ -1,24 +1,19 @@
-/* Linear Desktop, measured in Chrome DevTools on 2026-10-28.
-   Scoped to chat and its portaled composer; shell and HUD keep their own skin. */
-@font-face {
-  font-family: 'Inter Variable';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('../../fonts/InterVariable.woff2') format('woff2');
-}
+/* Chat-only rules: Linear's issue view and comment composer, measured in the
+   Linear app's DevTools (docs/linear-design-reference.md). Colours come from the
+   global --linear-* layer in styles.css; a literal is a chat measurement that
+   has no global token. Scoped to chat and its portaled composer. */
 
 .linear-chat {
-  --chat-surface: lch(97.94% 0.5 282);
-  --chat-input: lch(100% 0 282);
-  --chat-text: lch(20% 1 282);
-  --chat-muted: lch(40% 1 282);
-  --chat-placeholder: lch(64.64% 1.25 282);
-  --chat-border: lch(91.9% 0 282);
-  --chat-hover: lch(94.44% 0.5 282);
-  --chat-accent: #5e6ad2;
-  --chat-on-accent: #fff;
-  --chat-shadow: 0 3px 6px -2px lch(0% 0 0 / 0.02), 0 1px 1px lch(0% 0 0 / 0.04);
+  --chat-surface: var(--linear-bg-panel);
+  --chat-input: var(--linear-bg-input);
+  --chat-text: var(--linear-text-overlay);
+  --chat-muted: var(--linear-text-hint);
+  --chat-placeholder: var(--linear-text-quaternary);
+  --chat-border: var(--linear-border-overlay);
+  --chat-hover: var(--linear-hover-row);
+  --chat-accent: var(--linear-accent);
+  --chat-on-accent: var(--linear-on-accent);
+  --chat-shadow: var(--linear-shadow-low);
   --ui-text-primary: var(--chat-text);
   --ui-text-secondary: var(--chat-muted);
   --ui-text-tertiary: var(--chat-muted);
@@ -27,7 +22,8 @@
   --dt-foreground: var(--chat-text);
   --dt-card: var(--chat-input);
   --dt-background: var(--chat-surface);
-  --dt-user-bubble: color-mix(in srgb, var(--chat-hover) var(--user-bubble-keep, 100%), transparent);
+  --dt-user-bubble: var(--chat-hover);
+  --ui-chat-surface-background: var(--chat-surface);
   --chrome-action-hover: var(--chat-hover);
   --conversation-text-base-size: 0.9375rem;
   --conversation-tool-base-size: 0.8125rem;
@@ -46,11 +42,6 @@
   color: var(--chat-text);
 }
 
-/* Glass surfaces inherit their existing field, raised-card or mask treatment. */
-:root:not([data-hermes-glass]) .linear-chat {
-  --ui-chat-surface-background: var(--chat-surface);
-}
-
 @media (hover: none), (pointer: coarse) {
   html[data-hermes-desktop-host='browser'] .linear-chat {
     --composer-control-primary-size: 2.75rem;
@@ -58,11 +49,7 @@
 }
 
 .dark .linear-chat {
-  --chat-surface: #121213;
-  --chat-input: #1c1c1d;
-  --chat-text: #e2e3e5;
-  --chat-muted: #97979a;
-  --chat-placeholder: #97979a;
+  --chat-placeholder: var(--linear-text-hint);
   --chat-border: #303033;
   --chat-hover: #252627;
   --chat-accent: #7170ff;
