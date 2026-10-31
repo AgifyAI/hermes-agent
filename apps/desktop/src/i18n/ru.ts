@@ -488,7 +488,7 @@ export const ruOverrides = {
       uiScaleDesc: percent =>
         `Масштабирует текст и элементы управления во всём приложении. Также работает Cmd/Ctrl с +, − и 0. Сейчас: ${percent}%.`,
       sessionDensityTitle: 'Плотность списка сеансов',
-      sessionDensityDesc: 'Выберите, сколько места по вертикали занимает каждая строка сеанса.',
+      sessionDensityDesc: 'Выберите, сколько места разделяет группы дней в боковой панели.',
       sessionDensityCompact: 'Компактно',
       sessionDensityComfortable: 'Комфортно',
       sessionDensityDetailed: 'Подробно',

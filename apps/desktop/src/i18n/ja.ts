@@ -506,7 +506,7 @@ export const jaOverrides = {
       uiScaleDesc: (percent: number) =>
         `アプリ全体の文字と UI を拡大縮小します。Cmd/Ctrl と +、-、0 でも変更できます。現在: ${percent}%`,
       sessionDensityTitle: 'セッションリストの密度',
-      sessionDensityDesc: '各セッション行の縦方向の間隔を選びます。',
+      sessionDensityDesc: 'サイドバーで日ごとのグループを区切る間隔を選びます。',
       sessionDensityCompact: 'コンパクト',
       sessionDensityComfortable: '標準',
       sessionDensityDetailed: '詳細',

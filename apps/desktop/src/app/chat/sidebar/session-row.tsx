@@ -32,7 +32,6 @@ import { $projects } from '@/store/projects'
 import { $pullRequestsByBranch, sessionPrKey } from '@/store/pull-requests'
 import { sessionPinId } from '@/store/session'
 import { $sessionDotStateById, hasLiveTurn, showsRunningArc } from '@/store/session-dot-state'
-import { $sessionListDensity } from '@/store/session-list-density'
 import { $openStoredSessionIds } from '@/store/session-states'
 import { sessionCostUsd } from '@/store/sidebar-archive'
 import { $todoProgressBySession } from '@/store/todos'
@@ -150,7 +149,6 @@ function SidebarSessionRowImpl({
   const r = t.sidebar.row
   const { cancelPrewarm, notePointerMove, startPrewarm } = useProfilePrewarm(session.profile)
   const title = sessionTitle(session)
-  const density = useStore($sessionListDensity)
   const fmt = t.sidebar
 
   const timestamp = session.last_active || session.started_at
@@ -372,8 +370,6 @@ function SidebarSessionRowImpl({
           card && SIDEBAR_ROW_CARD_MIN_H,
           // Density-aware minimum heights for the inline (non-card) row: the
           // metadata / preview lines below need the extra rows (#68119).
-          !card && density !== 'compact' && 'min-h-[2.75rem]',
-          !card && density === 'detailed' && 'min-h-[3.875rem]',
           isSelected && 'bg-(--ui-row-active-background)',
           // Open in another pane: the SAME band, just weaker. Its own mixed
           // token rather than row opacity — dimming the whole row would take
@@ -447,6 +443,9 @@ function SidebarSessionRowImpl({
             // buttons earn this from the base layer's interactive-control
             // rule, a div doesn't.
             'z-0 w-full cursor-pointer',
+            // The status dot already lives in a 14px lead cell; a 2px gap keeps
+            // the title close to it instead of the 6px row gap.
+            !card && 'gap-0.5',
             card && 'pr-0',
             branchStem && 'pl-3.5',
             // The card is a grid with ONE spacing knob: --card-gap. Every row

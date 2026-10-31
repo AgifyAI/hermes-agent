@@ -960,7 +960,7 @@ export const en: Translations = {
       uiScaleDesc: (percent: number) =>
         `Scales text and controls across the whole app. Cmd/Ctrl with +, - and 0 also works. Current: ${percent}%.`,
       sessionDensityTitle: 'Session List Density',
-      sessionDensityDesc: 'Choose how much vertical space each session row uses.',
+      sessionDensityDesc: 'Choose how much space separates the day groups in the sidebar.',
       sessionDensityCompact: 'Compact',
       sessionDensityComfortable: 'Comfortable',
       sessionDensityDetailed: 'Detailed',

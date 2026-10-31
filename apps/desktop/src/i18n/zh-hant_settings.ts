@@ -287,7 +287,7 @@ export const zhHantSettings = {
       uiScaleDesc: (percent: number) =>
         `縮放整個應用程式的文字與介面。也可使用 Cmd/Ctrl 加 +、- 或 0 調整。目前：${percent}%`,
       sessionDensityTitle: '工作階段列表密度',
-      sessionDensityDesc: '選擇側邊欄每個工作階段列所佔的垂直空間。',
+      sessionDensityDesc: '選擇側邊欄中各天分組之間的間距。',
       sessionDensityCompact: '緊湊',
       sessionDensityComfortable: '舒適',
       sessionDensityDetailed: '詳細',

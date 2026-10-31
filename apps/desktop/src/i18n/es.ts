@@ -988,7 +988,7 @@ export const esOverrides = {
       uiScaleDesc: percent =>
         `Escala el texto y los controles de toda la app. También funciona Cmd/Ctrl con +, - y 0. Actual: ${percent}%.`,
       sessionDensityTitle: 'Densidad de la lista de sesiones',
-      sessionDensityDesc: 'Elige cuánto espacio vertical ocupa cada fila de sesión.',
+      sessionDensityDesc: 'Elige cuánto espacio separa los grupos de días en la barra lateral.',
       sessionDensityCompact: 'Compacta',
       sessionDensityComfortable: 'Cómoda',
       sessionDensityDetailed: 'Detallada',

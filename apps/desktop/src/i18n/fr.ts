@@ -990,7 +990,7 @@ export const frOverrides = {
       uiScaleDesc: (percent: number) =>
         `Redimensionne le texte et les contrôles dans toute l'application. Cmd/Ctrl avec +, - et 0 fonctionne aussi. Actuel : ${percent}%.`,
       sessionDensityTitle: 'Densité de la liste des sessions',
-      sessionDensityDesc: 'Choisissez l’espace vertical occupé par chaque ligne de session.',
+      sessionDensityDesc: 'Choisissez l’espace qui sépare les groupes de jours dans la barre latérale.',
       sessionDensityCompact: 'Compacte',
       sessionDensityComfortable: 'Confortable',
       sessionDensityDetailed: 'Détaillée',

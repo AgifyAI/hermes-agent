@@ -985,7 +985,7 @@ export const deOverrides = {
       uiScaleDesc: (percent: number) =>
         `Skaliert Text und Bedienelemente in der gesamten App. Cmd/Ctrl mit +, - und 0 funktioniert ebenfalls. Aktuell: ${percent}%.`,
       sessionDensityTitle: 'Dichte der Session-Liste',
-      sessionDensityDesc: 'Lege fest, wie viel vertikaler Platz jede Session-Zeile einnimmt.',
+      sessionDensityDesc: 'Lege fest, wie viel Abstand zwischen den Tagesgruppen in der Seitenleiste liegt.',
       sessionDensityCompact: 'Kompakt',
       sessionDensityComfortable: 'Komfortabel',
       sessionDensityDetailed: 'Detailreich',

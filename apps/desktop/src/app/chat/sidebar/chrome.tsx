@@ -10,6 +10,7 @@ import { RowButton } from '@/components/ui/row-button'
 import { Tip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { $sidebarRowMeta } from '@/store/layout'
+import type { SessionListDensity } from '@/store/session-list-density'
 import type { TileDock } from '@/store/session-states'
 
 import {
@@ -120,15 +121,26 @@ export function SidebarRowNest({ className, ...props }: React.ComponentProps<'di
  * `toggle` is set the whole caption collapses the sessions beneath it, same
  * gesture as a repo header (the hover caret is the tell).
  */
+const DAY_HEADING_SPACING: Record<SessionListDensity, string> = {
+  compact: 'pt-3',
+  comfortable: 'pt-4',
+  detailed: 'pt-6'
+}
+
 export function SidebarDateDivider({
   action,
   className,
   label,
+  spacing = 'compact',
   toggle,
   ...props
 }: React.ComponentProps<'div'> & {
   action?: React.ReactNode
   label: string
+  // Top separation for a day heading. Status runs keep the default; day
+  // sections use the user's density preference, so the extra air sits between
+  // days instead of between the sessions inside one day.
+  spacing?: SessionListDensity
   toggle?: { ariaLabel: string; onToggle: () => void; open: boolean }
 }) {
   const caption = (
@@ -139,7 +151,14 @@ export function SidebarDateDivider({
     // group/workspace: a divider heads a group the same way a repo header does,
     // so it borrows the header's hover-revealed "+" verbatim. The label alone
     // groups the rows — no timeline rule; Linear's list headers are quiet text.
-    <div className={cn('group/workspace flex select-none items-center gap-2 px-2 pb-0.5 pt-2', className)} {...props}>
+    <div
+      className={cn(
+        'group/workspace flex select-none items-center gap-2 px-2 pb-0.5',
+        DAY_HEADING_SPACING[spacing],
+        className
+      )}
+      {...props}
+    >
       {toggle ? (
         <button
           aria-expanded={toggle.open}

@@ -29,6 +29,7 @@ import {
 } from '@/store/layout'
 import { sessionPinId } from '@/store/session'
 import { $sessionDotStateById, hasLiveTurn } from '@/store/session-dot-state'
+import { $sessionListDensity } from '@/store/session-list-density'
 
 import { SidebarDateDivider, SidebarSectionMeta } from './chrome'
 import { GatewayProfileGroups } from './gateway-groups'
@@ -252,6 +253,7 @@ export function SidebarSessionsSection({
   const dividerLabels = t.sidebar.dateDivider
   const statusDividerLabels = t.sidebar.statusDivider
   const dotStates = useStore($sessionDotStateById)
+  const density = useStore($sessionListDensity)
   const nodeOpen = useStore($sidebarWorkspaceNodeOpen)
 
   const isListGroupOpen = useCallback(
@@ -383,6 +385,7 @@ export function SidebarSessionsSection({
           action={action}
           key={row.key}
           label={label}
+          spacing={'day' in row ? density : 'compact'}
           toggle={{
             ariaLabel: dividerToggle.ariaLabel(label, open),
             onToggle: () => dividerToggle.onToggle(row.key),
@@ -391,7 +394,7 @@ export function SidebarSessionsSection({
         />
       )
     },
-    [dividerLabels, dividerToggle, renderRow]
+    [density, dividerLabels, dividerToggle, renderRow]
   )
 
   // Sessions inside repos/worktrees are date-ordered and static.

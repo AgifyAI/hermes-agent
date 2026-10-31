@@ -721,7 +721,7 @@ export const zhOverrides = {
       uiScaleDesc: (percent: number) =>
         `缩放整个应用的文字和界面。也可使用 Cmd/Ctrl 加 +、- 或 0 调整。当前：${percent}%`,
       sessionDensityTitle: '会话列表密度',
-      sessionDensityDesc: '选择每条会话行占用的垂直空间。',
+      sessionDensityDesc: '选择侧边栏中各天分组之间的间距。',
       sessionDensityCompact: '紧凑',
       sessionDensityComfortable: '舒适',
       sessionDensityDetailed: '详细',
