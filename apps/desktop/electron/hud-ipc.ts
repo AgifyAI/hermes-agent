@@ -7,7 +7,9 @@ import { type BrowserWindow, ipcMain, screen } from 'electron'
 import { createHudDragSession } from './hud-drag'
 import { normalizeHudResizeBounds } from './hud-geometry'
 import { hudWindowingView, resolveHudWindowing } from './hud-windowing'
-import { hudFrostFor, type TranslucencyState } from './translucency'
+
+/** The macOS material behind the HUD band while it shows. */
+const HUD_FROST_MATERIAL = 'under-window'
 
 function hudWindowing() {
   return resolveHudWindowing(process.platform, process.env, process.argv)
@@ -15,8 +17,6 @@ function hudWindowing() {
 
 export interface HudIpcDeps {
   isMac: boolean
-  /** Main's authoritative translucency state (Settings → Appearance). */
-  getTranslucencyState: () => TranslucencyState
   getHudWindow: () => BrowserWindow | null
   openHudWindow: (sessionId: null | string, profile: null | string) => void
   closeHudWindow: () => void
@@ -26,7 +26,6 @@ export interface HudIpcDeps {
 
 export function registerHudIpc({
   isMac,
-  getTranslucencyState,
   getHudWindow,
   openHudWindow,
   closeHudWindow,
@@ -72,10 +71,7 @@ export function registerHudIpc({
   })
 
   // Whether the band currently covers the window below the bar. The renderer
-  // is the only party that can know this (it measures the transcript), and it
-  // is half of the frost decision — the other half is the user's setting,
-  // which main owns. Latched so a Settings change can re-decide without
-  // waiting for the HUD to report again.
+  // is the only party that can know this (it measures the transcript).
   let bandShowing = false
   let applied: null | string = null
   let appliedTo: BrowserWindow | null = null
@@ -110,8 +106,10 @@ export function registerHudIpc({
       return
     }
 
-    const frost = hudFrostFor(getTranslucencyState(), bandShowing)
-    const signature = `${frost.vibrancy ?? 'off'}:${frost.backgroundMaterial}`
+    // One fixed material while the band shows, none otherwise: a transparent
+    // window has no opaque page to hide a resting material behind.
+    const vibrancy = bandShowing ? HUD_FROST_MATERIAL : null
+    const signature = vibrancy ?? 'off'
 
     if (applied === signature && appliedTo === hudWindow) {
       return
@@ -121,7 +119,7 @@ export function registerHudIpc({
     appliedTo = hudWindow
 
     if (isMac && typeof hudWindow.setVibrancy === 'function') {
-      hudWindow.setVibrancy(frost.vibrancy)
+      hudWindow.setVibrancy(vibrancy)
     }
 
     // Windows: never touch setBackgroundMaterial on the HUD. Live-verified on
@@ -297,7 +295,4 @@ export function registerHudIpc({
     return { ok: true }
   })
 
-  // Main re-applies the frost when the translucency SETTING changes, since the
-  // band's own report only fires when the band itself moves.
-  return { applyHudFrost }
 }

@@ -97,10 +97,6 @@ export const BROWSER_BRIDGE_STUBS = {
   sshResolveHost: async () => ({ hostname: null, identityFile: null, port: null, user: null }),
   stopFindInPage: async () => undefined,
   stopPreviewFileWatch: async () => true,
-  themes: {
-    fetchMarketplace: async (id: string) => ({ displayName: id, extensionId: id, themes: [] }),
-    searchMarketplace: async () => []
-  },
   uninstall: {
     openAppsSettings: async () => undefined,
     run: async () => ({ error: 'Run `hermes uninstall` on the server host', ok: false }),

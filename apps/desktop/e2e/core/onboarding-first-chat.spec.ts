@@ -59,21 +59,21 @@ test('onboarding (custom endpoint) then first chat renders exactly once', async 
     await test.step('first-run onboarding: custom endpoint', async () => {
       // The onboarding surface masks the whole app until it finishes.
       const openKeyForm = page
-        .locator('[data-glass-opaque]')
+        .locator('[data-onboarding-overlay]')
         .filter({ visible: true })
         .getByRole('button', { name: /api key/i })
 
       await expect(openKeyForm).toHaveCount(1, { timeout: 180_000 })
       await openKeyForm.click()
       await page
-        .locator('[data-glass-opaque]')
+        .locator('[data-onboarding-overlay]')
         .filter({ visible: true })
         .getByRole('button', { name: /custom endpoint/i })
         .click()
 
       // The endpoint URL is the form's only plain-text input (API keys are password inputs).
       const form = page
-        .locator('[data-glass-opaque]')
+        .locator('[data-onboarding-overlay]')
         .filter({ visible: true })
         .filter({ has: page.locator('input[type="text"]') })
 

@@ -4,24 +4,11 @@ import type { DesktopProfileRoute } from './desktop-profile'
 import type { HudModifierApi, HudModifierStatus } from './hud-modifier-types'
 import { customWindowControlsEnabled } from './window-controls'
 
-// Which translucency the OS can back. Asked synchronously because the renderer
-// needs it before its first paint, and answered by main because deciding it
-// needs `os.release()` — a sandboxed preload may only require electron, events,
-// timers and url, so importing node:os here throws before contextBridge runs
-// and takes the ENTIRE bridge down with it (window.hermesDesktop undefined =>
-// "Desktop IPC bridge is unavailable"). No reply means no glass, which degrades
-// to an ordinary opaque window rather than a page thinned over nothing.
-const translucencySupport = ipcRenderer.sendSync('hermes:translucency:support')
 const hudWindowing = ipcRenderer.sendSync('hermes:hud:windowing')
 const hudNativeDrag = hudWindowing?.nativeDrag === true
 
 const launchFlags: { localModels?: boolean; assumeFreshInstall?: boolean } | undefined =
   ipcRenderer.sendSync('hermes:feature-flags')
-
-// Local, sanitized skin payload for the first renderer theme paint. This does
-// not wait on `gateway.ready`, so an unreachable remote primary cannot force
-// the built-in palette over the skin configured on this machine.
-const localSkin = ipcRenderer.sendSync('hermes:skin:local')
 
 // This machine's UI preferences store (#145213), read before the first paint so
 // a preference set in another window or in this machine's Webapp paints at once.
@@ -30,15 +17,12 @@ const uiPreferencesSnapshot = ipcRenderer.sendSync('hermes:ui-preferences:snapsh
 import { unwrapExpectedNotFound } from './api-expected-404'
 
 contextBridge.exposeInMainWorld('hermesDesktop', {
-  glassSupported: translucencySupport?.glass === true,
-  translucencySupported: translucencySupport?.translucency === true,
   // Launch-flag fact: the app was started with --local, so the renderer may
   // show the local-models surfaces. Static for the window's lifetime.
   localModelsEnabled: launchFlags?.localModels === true,
   // Dev-only launch fact: an unpackaged app started with --fresh-install, so
   // onboarding treats this launch as a fresh install. Always false when packaged.
   assumeFreshInstall: launchFlags?.assumeFreshInstall === true,
-  localSkin: localSkin && typeof localSkin === 'object' ? localSkin : null,
   uiPreferences: {
     snapshot: uiPreferencesSnapshot && typeof uiPreferencesSnapshot === 'object' ? uiPreferencesSnapshot : null,
     read: () => ipcRenderer.invoke('hermes:ui-preferences:read'),
@@ -153,9 +137,8 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
     setWorkspaceTransfer: transferring => ipcRenderer.send('hermes:hud:workspace-transfer', transferring),
     setBounds: bounds => ipcRenderer.send('hermes:hud:set-bounds', bounds),
     resetLayout: () => ipcRenderer.invoke('hermes:hud:reset-layout'),
-    // Whether the band covers the window below the bar. Main pairs it with the
-    // user's translucency setting to decide the native frost (macOS vibrancy /
-    // Windows 11 DWM backdrop) — see hudFrostFor.
+    // Whether the band covers the window below the bar; main frosts the HUD
+    // (macOS vibrancy) only while it does — see hud-ipc.ts.
     setFrost: showing => ipcRenderer.invoke('hermes:hud:frost', showing),
     // The HUD tells main which session it is on; main hands that back to the
     // app window when the HUD closes, so the app can re-home onto it.
@@ -400,7 +383,6 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   setActiveWork: payload => ipcRenderer.send('hermes:active-work', payload),
   setTitleBarTheme: payload => ipcRenderer.send('hermes:titlebar-theme', payload),
   setNativeTheme: mode => ipcRenderer.send('hermes:native-theme', mode),
-  setTranslucency: payload => ipcRenderer.send('hermes:translucency', payload),
   setKeepAwake: mode => ipcRenderer.send('hermes:keep-awake', mode),
   // Once per computer, after a timed sleep interrupted a turn with keep-awake off.
   onKeepAwakeOffer: callback => {
@@ -715,10 +697,6 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
     setEnabled: (on, profile) => ipcRenderer.invoke('hermes:desktop-metrics:set-enabled', on, profile),
     takeRendererCrashes: () => ipcRenderer.invoke('hermes:desktop-metrics:crash:take'),
     ackRendererCrashes: sent => ipcRenderer.invoke('hermes:desktop-metrics:crash:ack', sent)
-  },
-  themes: {
-    fetchMarketplace: id => ipcRenderer.invoke('hermes:vscode-theme:fetch', id),
-    searchMarketplace: query => ipcRenderer.invoke('hermes:vscode-theme:search', query)
   },
   // Find-in-page (Ctrl/Cmd+F): delegates to Electron's
   // webContents.findInPage on the IPC sender's window so a Cmd+F pressed

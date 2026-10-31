@@ -5,7 +5,7 @@
  * agent runs keep going) while still letting the display dim. The renderer
  * owns the preference (persisted in localStorage) and mirrors it here over
  * IPC; the main process owns the one native blocker, same authority split as
- * translucency/zoom. Electron auto-releases the blocker on quit.
+ * zoom. Electron auto-releases the blocker on quit.
  *
  * No Node imports here: the renderer's store imports the modes from this file.
  * Main's controller, which persists to disk, is in keep-awake-controller.ts.
