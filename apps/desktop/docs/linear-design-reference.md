@@ -124,7 +124,10 @@ bg primary, 12px/450. Avatars 18px round.
 640px. Page title 24px/500. Section title 15px/500, padding `0 16px`, 16px above the card, 48px
 between sections. Card radius 10, card surface + card shadow (§4). Rows padding 16, gap 12, label
 13px/500 (L `lch(10% 0 282)`), description 12px/450 (L `lch(40% 1 282)`), gap 3px. Switch 30×20
-pill, accent when on. Select button 30px, padding `1px 28px 1px 10px`, radius 8, 13px, bg L
+pill, accent when on (hover = accent hover); off track L `lch(82.484% .054 282)` hover
+`lch(76.978% .076 282)`, D `lch(47.551% .913 272)` hover `lch(56.238% 1.008 272)`; thumb 14px
+round, inset 3px (left 3 → 13 when on), L `lch(100% 5 286.91)` D `lch(100% 5 288.421)`, no
+shadow; disabled opacity .5. Select button 30px, padding `1px 28px 1px 10px`, radius 8, 13px, bg L
 `lch(100% 0 282)` hover `lch(95.886% 0 282)`, D `lch(13.861% 1.139 272)`.
 
 **Text input.** 32px, padding `6px 12px`, radius 8, hairline border L `lch(86.5% 0 282)` D

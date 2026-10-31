@@ -246,6 +246,9 @@
     --linear-segment-rest: lch(99.997% 0.5 282);
     --linear-accent: lch(53% 52.26 286.91);
     --linear-accent-hover: lch(47% 50.26 286.91);
+    --linear-switch-off: lch(82.484% 0.054 281.837);
+    --linear-switch-off-hover: lch(76.978% 0.076 281.838);
+    --linear-switch-thumb: lch(100% 5 286.91);
     --linear-on-accent: lch(100% 5 286.91);
     --linear-focus: #6d78d5;
     --linear-selection: color-mix(in srgb, #5b5c5e 20%, transparent);
@@ -586,6 +589,9 @@
     --linear-segment-rest: lch(10.149% 0.593 272);
     --linear-accent: lch(47.918% 59.303 288.421);
     --linear-accent-hover: lch(52.418% 61.103 288.421);
+    --linear-switch-off: lch(47.551% 0.913 271.998);
+    --linear-switch-off-hover: lch(56.238% 1.008 271.999);
+    --linear-switch-thumb: lch(100% 5 288.421);
     --linear-scrollbar: lch(37.275% 1.2 272);
     --linear-scrollbar-hover: lch(37.275% 1.2 272);
     --linear-scrim: lch(0% 0 0 / 0.4);

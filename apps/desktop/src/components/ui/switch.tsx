@@ -5,8 +5,9 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const switchVariants = cva(
-  // Linear's switch: a 30×20 pill, accent when on.
-  'peer inline-flex shrink-0 items-center rounded-full bg-(--linear-bg-tertiary) p-0.5 transition-colors duration-(--linear-speed-quick) outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:cursor-not-allowed disabled:opacity-60 data-[state=checked]:bg-(--linear-accent)',
+  // Linear's switch (measured): a 30×20 pill, grey off, accent on, a 14px thumb
+  // inset 3px, no shadow; hover darkens the track, disabled halves the opacity.
+  'peer inline-flex shrink-0 items-center rounded-full bg-(--linear-switch-off) p-[0.1875rem] transition-colors duration-(--linear-speed-quick) outline-none hover:bg-(--linear-switch-off-hover) focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-(--linear-accent) data-[state=checked]:hover:bg-(--linear-accent-hover) disabled:hover:bg-(--linear-switch-off) disabled:data-[state=checked]:hover:bg-(--linear-accent)',
   {
     variants: {
       size: {
@@ -21,12 +22,12 @@ const switchVariants = cva(
 )
 
 const switchThumbVariants = cva(
-  'pointer-events-none block rounded-full bg-white shadow-(--linear-shadow-low) ring-0 transition-transform duration-(--linear-speed-quick) data-[state=unchecked]:translate-x-0',
+  'pointer-events-none block rounded-full bg-(--linear-switch-thumb) ring-0 transition-transform duration-(--linear-speed-quick) data-[state=unchecked]:translate-x-0',
   {
     variants: {
       size: {
-        default: 'size-4 data-[state=checked]:translate-x-2.5',
-        xs: 'size-3 data-[state=checked]:translate-x-2'
+        default: 'size-3.5 data-[state=checked]:translate-x-2.5',
+        xs: 'size-2.5 data-[state=checked]:translate-x-2'
       }
     },
     defaultVariants: {
