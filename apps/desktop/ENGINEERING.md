@@ -167,3 +167,29 @@ point (Billing, status chip, ready screen) opens the one free-tier sign-in dialo
 from the onboarding picker that moved apps shows the same result screen once onboarding leaves the
 screen (onboarding paints above every dialog). Never branch on
 provider display names: the picker row carries `free_tier_row`, status cards carry `free_tier`.
+
+## Iterate in the dev loop, not by reinstalling
+
+`apps/desktop` compiles into the installed `Hermes.app`: editing a file here
+changes nothing in the app the user opens. Do not answer a UI change by
+rebuilding and copying the bundle after every edit — that loop is slow and makes
+source edits look "missing" whenever the old build is opened.
+
+For any renderer work, use the documented dev loop:
+
+```bash
+# Quit the installed app first: it holds the single-instance lock.
+cd apps/desktop
+npm run dev
+```
+
+Vite serves this working tree and Electron loads it, so `src/` edits hot-reload
+in about a second. The dev window reuses the normal app data (connections,
+profiles, sessions), so it shows the same backend as the installed app. Changes
+under `electron/` (main process) need a dev restart; renderer changes do not.
+
+Only build and replace the installed bundle (`npm run build && npm run pack`,
+then copy `release/<platform>-<arch>/Hermes.app` over `/Applications/Hermes.app`
+with the app quit) when the user explicitly wants the installed app to carry the
+change. State plainly that without that step the installed app still runs the
+previous build.
