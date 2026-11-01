@@ -54,6 +54,7 @@ Close the copy and Vite straight after. `npm run pack` rebuilds the production b
 - `quick`, `overlay`, `wake` and `hud` are small or transparent windows. In the main window they look stretched, so judge the control, not the layout.
 - Clarify rows look dim in a forced state because no server request is open: that is the disabled style, not a contrast bug.
 - The isolated copy has no sessions and keeps the connecting overlay up. To reach a session menu there, call `setSidebarOpen(true)` from `store/layout.ts`, set `$sessions` from `store/session.ts` to one fake row, and hide `[class*="z-(--z-connecting)"]` with a style tag.
+- A menu or dialog that shows the page behind it may be losing to a global CSS rule. Read `getComputedStyle` on the surface and compare it with the reference, instead of trusting the class list.
 - Radix tabs and menus open on pointer events, so a DOM `.click()` returns true and changes nothing. Use a real click, and check the capture shows the state you asked for.
 - `npm run pack` leaves a production `dist/electron-main.mjs`, and the isolated copy then opens no debug port. Run `node scripts/bundle-electron-main.mjs --dev` first; the next pack rebuilds it.
 - A second instance on a copied user data folder has no remote sign-in. Do not copy the session to get around it: it can invalidate the user's real one.
