@@ -151,7 +151,7 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
           </div>
         </header>
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(17rem,0.85fr)_minmax(0,1.6fr)] border-t-[0.5px] border-(--linear-border-primary) max-[760px]:grid-cols-1">
-          <aside className={cn('flex min-h-0 flex-col bg-(--linear-bg-window)', selected && 'max-[760px]:hidden')}>
+          <aside className={cn('flex min-h-0 flex-col border-r-[0.5px] border-(--linear-border-primary)', selected && 'max-[760px]:hidden')}>
             <div className="flex flex-col gap-3 px-5 pt-5 pb-3">
               <SegmentedControl
                 onChange={value => {
