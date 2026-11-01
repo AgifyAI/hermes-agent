@@ -33,9 +33,10 @@ import { $connection } from '@/store/session'
 
 import { PluginInstallDetails } from './plugin-install-details'
 import { type InstallModalCopy, type ProbeResult, runPluginInstall } from './plugin-install-run'
+import { WARN_NOTICE_CLASS } from './primitives'
 import { usePluginProbe } from './use-plugin-probe'
 
-const CAPTION = 'text-[length:var(--conversation-caption-font-size)]'
+const CAPTION = 'text-xs'
 
 /** Close the dialog and land on the inventory (Capabilities → Plugins), unless the caller keeps the user in place. */
 function finishInstall(request: PluginInstallRequest, navigate: (to: string) => void): void {
@@ -78,13 +79,8 @@ function ProbeWarnings({ copy, probe }: { copy: InstallModalCopy; probe: null | 
   }
 
   return (
-    <div
-      className={cn(
-        CAPTION,
-        'flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-foreground'
-      )}
-    >
-      <AlertTriangle aria-hidden className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+    <div className={cn(CAPTION, 'flex items-start gap-2 px-3 py-2 text-(--linear-text-primary)', WARN_NOTICE_CLASS)}>
+      <AlertTriangle aria-hidden className="mt-0.5 size-3.5 shrink-0 text-(--linear-orange)" />
       <span>{warnings.join(' ')}</span>
     </div>
   )
@@ -208,7 +204,7 @@ function InstallHeader({
   return (
     <DialogHeader>
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-(--ui-bg-quinary) text-(--ui-text-secondary)">
+        <span className="grid size-9 shrink-0 place-items-center rounded-(--linear-radius-control) bg-(--linear-hover-control) text-(--linear-text-secondary)">
           <Puzzle className="size-4" />
         </span>
         <div className="min-w-0 space-y-1">
@@ -219,7 +215,7 @@ function InstallHeader({
             </Badge>
           </div>
           <DialogDescription>{request.summary || line}</DialogDescription>
-          {request.summary && <p className={cn(CAPTION, 'text-(--ui-text-secondary)')}>{line}</p>}
+          {request.summary && <p className={cn(CAPTION, 'text-(--linear-text-secondary)')}>{line}</p>}
         </div>
       </div>
     </DialogHeader>
@@ -241,7 +237,7 @@ function Disclosure({
     <div>
       <button
         aria-expanded={open}
-        className={cn(CAPTION, 'flex items-center gap-1.5 font-medium text-(--ui-text-secondary)')}
+        className={cn(CAPTION, 'flex items-center gap-1.5 font-medium text-(--linear-text-secondary)')}
         onClick={onToggle}
         type="button"
       >
@@ -393,12 +389,12 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
         </Disclosure>
 
         {failure && (
-          <p className={cn(CAPTION, 'text-destructive')} role="alert">
+          <p className={cn(CAPTION, 'text-(--linear-red)')} role="alert">
             {failure}
           </p>
         )}
         {installUncertain && (
-          <p className={cn(CAPTION, 'text-(--ui-text-secondary)')} role="status">
+          <p className={cn(CAPTION, 'text-(--linear-text-secondary)')} role="status">
             {m.installUncertain}
           </p>
         )}

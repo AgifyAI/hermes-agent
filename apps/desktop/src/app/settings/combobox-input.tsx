@@ -118,7 +118,7 @@ export function ComboboxInput({
           />
           <button
             aria-label={t.settings.config.showOptions}
-            className="absolute inset-y-0 right-1.5 flex items-center text-(--ui-text-tertiary) disabled:opacity-50"
+            className="absolute inset-y-0 right-1.5 flex items-center text-(--linear-text-tertiary) disabled:opacity-50"
             disabled={disabled}
             onClick={() => {
               openList(!expanded)

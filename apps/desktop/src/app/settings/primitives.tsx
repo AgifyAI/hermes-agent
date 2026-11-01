@@ -56,6 +56,10 @@ export function SettingsContent({ children, bare = false }: { children: ReactNod
   )
 }
 
+// A warning sitting among settings rows: orange hairline over a faint orange wash.
+export const WARN_NOTICE_CLASS =
+  'rounded-(--linear-radius-control) border-[0.5px] border-(--linear-orange) bg-[color-mix(in_srgb,var(--linear-orange)_12%,transparent)]'
+
 // Linear's settings card: one rounded surface per group of rows, rows split by
 // an inset hairline. Margins collapse in the page's block flow, so a card sits
 // 16px under its section title and 16px under a previous card. The hairline

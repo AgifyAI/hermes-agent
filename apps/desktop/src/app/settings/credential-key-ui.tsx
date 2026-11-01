@@ -88,7 +88,7 @@ export function KeyField({
   if (info.is_set && !editing) {
     return (
       <Input
-        className={cn(CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE, 'cursor-pointer text-muted-foreground')}
+        className={cn(CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE, 'cursor-pointer text-(--linear-text-tertiary)')}
         onFocus={startEdit}
         readOnly
         value={masked}
@@ -120,7 +120,7 @@ export function KeyField({
           {info.is_set && (
             <Button
               aria-label={t.settings.credentials.remove}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-(--linear-text-tertiary) hover:text-(--linear-red)"
               disabled={busy}
               onClick={() => void onClear(varKey, editKey)}
               size="icon-xs"
@@ -131,7 +131,7 @@ export function KeyField({
             </Button>
           )}
           {dirty && (
-            <Button className="h-8" disabled={busy} onClick={() => void onSave(varKey, editKey)} size="sm">
+            <Button disabled={busy} onClick={() => void onSave(varKey, editKey)} size="lg">
               {busy ? <Loader2 className="animate-spin" /> : <Save />}
               {busy ? t.settings.credentials.saving : t.common.save}
             </Button>
@@ -214,9 +214,7 @@ export function CredentialKeyCard({
             )}
           />
 
-          <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
-            {label}
-          </span>
+          <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
 
           {expandable && (
             <ChevronDown
@@ -242,11 +240,7 @@ export function CredentialKeyCard({
 
         {expandable && expanded && (
           <div className="grid gap-3 @lg:col-span-2" onClick={e => e.stopPropagation()}>
-            {description && (
-              <p className="text-xs text-(--linear-text-tertiary)">
-                {description}
-              </p>
-            )}
+            {description && <p className="text-xs text-(--linear-text-tertiary)">{description}</p>}
 
             {docsUrl && <CredentialDocsLink href={docsUrl} />}
           </div>
@@ -337,11 +331,7 @@ export function ProviderKeyRows({ expanded, group, onExpand, onToggle, rowProps 
 
         {expandable && expanded && (
           <div className="grid gap-3 @lg:col-span-2" onClick={e => e.stopPropagation()}>
-            {description && (
-              <p className="text-xs text-(--linear-text-tertiary)">
-                {description}
-              </p>
-            )}
+            {description && <p className="text-xs text-(--linear-text-tertiary)">{description}</p>}
 
             {group.advanced.map(([key, info]) => {
               const fieldLabel = isKeyVar(key, info)

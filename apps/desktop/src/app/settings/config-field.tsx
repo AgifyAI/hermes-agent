@@ -213,7 +213,7 @@ export function ConfigField({
   if (typeof value === 'object' && value !== null) {
     return wideRow(
       <Textarea
-        className={cn('min-h-28 resize-y bg-background font-mono', CONTROL_TEXT)}
+        className={cn('min-h-28 resize-y bg-(--linear-bg-input) font-mono', CONTROL_TEXT)}
         onChange={e => {
           try {
             onChange(JSON.parse(e.target.value))
@@ -233,7 +233,7 @@ export function ConfigField({
   return isLong
     ? wideRow(
         <Textarea
-          className={cn('min-h-24 resize-y bg-background', CONTROL_TEXT)}
+          className={cn('min-h-24 resize-y bg-(--linear-bg-input)', CONTROL_TEXT)}
           onChange={e => onChange(e.target.value)}
           placeholder={c.notSet}
           value={String(value ?? '')}

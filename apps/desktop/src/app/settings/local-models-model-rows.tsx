@@ -196,7 +196,7 @@ export function CatalogModelRow({ model, status, jobs }: CatalogModelRowProps): 
           <div className="mt-2 grid gap-1">
             <ProgressBar paused={dJob.status === 'paused'} percent={dJob.percent} />
 
-            <p className="text-[0.68rem] text-muted-foreground">{downloadStatusText(dJob, copy)}</p>
+            <p className="text-[0.6875rem] text-(--linear-text-tertiary)">{downloadStatusText(dJob, copy)}</p>
           </div>
         ) : undefined
       }
@@ -259,7 +259,7 @@ export function CatalogModelRow({ model, status, jobs }: CatalogModelRowProps): 
           </span>
 
           {isActive && !isLoaded && !isLoadingNow && status.server_running && (
-            <span className="mt-0.5 block text-(--ui-text-tertiary)">{copy.activeNotLoaded}</span>
+            <span className="mt-0.5 block text-(--linear-text-tertiary)">{copy.activeNotLoaded}</span>
           )}
         </>
       }
@@ -328,9 +328,9 @@ export function SideloadedModelRow({ model: m, status, jobs }: SideloadedModelRo
       description={<span>{copy.addedByYou}</span>}
       title={
         <span className="inline-flex items-center gap-2">
-          <span className="truncate font-mono text-[0.8rem]">{m.id}</span>
+          <span className="truncate font-mono text-[0.8125rem]">{m.id}</span>
 
-          <span className="text-[0.68rem] font-normal text-muted-foreground">{m.size_label}</span>
+          <span className="text-[0.6875rem] font-normal text-(--linear-text-tertiary)">{m.size_label}</span>
         </span>
       }
     />

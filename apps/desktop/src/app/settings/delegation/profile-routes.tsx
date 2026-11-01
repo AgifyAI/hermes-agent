@@ -7,7 +7,7 @@ import type { DelegationProfileRoutes, ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { isSubmitEnter } from '@/lib/ime'
 
-import { Pill, SectionHeading } from '../primitives'
+import { Pill, SectionHeading, SettingsCard } from '../primitives'
 
 import { describeProfileRoute, setDefaultProfileRoute, toggleProfileRoute } from './routes'
 import { saveProfileRoutes } from './routing-data'
@@ -30,33 +30,31 @@ export function ProfileRoutesEditor({ scope, routes, profiles }: ProfileRoutesEd
   return (
     <section data-slot="delegation-profile-routes">
       <SectionHeading title={r.profileRoutesTitle} />
-      <p className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {r.profileRoutesHint}
-      </p>
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{r.profileRoutesHint}</p>
       {profiles.length === 0 ? (
-        <p className="py-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {r.profileEmpty}
-        </p>
+        <p className="px-4 text-xs text-(--linear-text-tertiary)">{r.profileEmpty}</p>
       ) : (
-        <ul className="mt-2 grid">
-          {[...profiles, ...missing].map(name => {
-            const entry = routes.profiles.find(p => p.name === name)
+        <SettingsCard>
+          <ul className="grid">
+            {[...profiles, ...missing].map(name => {
+              const entry = routes.profiles.find(p => p.name === name)
 
-            return (
-              <ProfileRow
-                checked={Boolean(entry)}
-                description={entry?.description ?? ''}
-                isDefault={routes.default === name}
-                key={name}
-                label={missing.includes(name) ? r.profileMissing(name) : name}
-                name={name}
-                onDescribe={text => save(describeProfileRoute(routes, name, text))}
-                onMakeDefault={() => save(setDefaultProfileRoute(routes, name))}
-                onToggle={on => save(toggleProfileRoute(routes, name, on))}
-              />
-            )
-          })}
-        </ul>
+              return (
+                <ProfileRow
+                  checked={Boolean(entry)}
+                  description={entry?.description ?? ''}
+                  isDefault={routes.default === name}
+                  key={name}
+                  label={missing.includes(name) ? r.profileMissing(name) : name}
+                  name={name}
+                  onDescribe={text => save(describeProfileRoute(routes, name, text))}
+                  onMakeDefault={() => save(setDefaultProfileRoute(routes, name))}
+                  onToggle={on => save(toggleProfileRoute(routes, name, on))}
+                />
+              )
+            })}
+          </ul>
+        </SettingsCard>
       )}
     </section>
   )
@@ -97,10 +95,10 @@ function ProfileRow({
   }
 
   return (
-    <li className="grid min-h-12 grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_auto] items-center gap-3 border-t border-(--ui-stroke-tertiary) py-2 first:border-t-0">
+    <li className="grid min-h-12 grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_auto] items-center gap-3 border-t-[0.5px] border-(--linear-border-secondary) py-2 first:border-t-0">
       <label className="flex min-w-0 items-center gap-2.5" htmlFor={id}>
         <Checkbox checked={checked} id={id} onCheckedChange={value => onToggle(value === true)} />
-        <span className="truncate text-[length:var(--conversation-text-font-size)] text-foreground">{label}</span>
+        <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
       </label>
       {checked ? (
         <Input

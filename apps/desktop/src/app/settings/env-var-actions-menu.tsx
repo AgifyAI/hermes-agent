@@ -169,7 +169,7 @@ export function EnvVarActionsTrigger({
   return (
     <Button
       aria-label={copy.actions}
-      className={cn('text-muted-foreground hover:text-foreground', className)}
+      className={cn('text-(--linear-text-tertiary) hover:text-(--linear-text-primary)', className)}
       size="icon-sm"
       variant="ghost"
       {...props}

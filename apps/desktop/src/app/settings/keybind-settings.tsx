@@ -254,12 +254,13 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
 
   return (
     <div className={cn('group', KEYBIND_ROW_CLASS)}>
-      <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
-        {label}
-      </span>
+      <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
 
       {conflict && (
-        <span className="flex size-4 items-center justify-center text-(--linear-orange)" title={k.conflictWith(conflict)}>
+        <span
+          className="flex size-4 items-center justify-center text-(--linear-orange)"
+          title={k.conflictWith(conflict)}
+        >
           <Codicon name="warning" size="0.8125rem" />
         </span>
       )}
@@ -268,7 +269,7 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
       <Tip label={k.rebind}>
         <button
           aria-label={k.rebind}
-          className="flex shrink-0 items-center gap-1 rounded-lg outline-none"
+          className="flex shrink-0 items-center gap-1 rounded-(--linear-radius-control) outline-none"
           onClick={() => (capturing ? endCapture() : beginCapture(action.id))}
           type="button"
         >

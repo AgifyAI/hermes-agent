@@ -14,9 +14,7 @@ export function RowValue({ onAction, row }: { onAction?: () => void; row: Billin
   return (
     <>
       {row.value && (
-        <span className="min-w-0 truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-          {row.value}
-        </span>
+        <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{row.value}</span>
       )}
       {row.pill && <Pill tone={row.pill.tone}>{row.pill.label}</Pill>}
       {row.secondaryPill && <Pill>{row.secondaryPill}</Pill>}

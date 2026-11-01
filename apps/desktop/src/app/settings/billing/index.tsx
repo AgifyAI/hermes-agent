@@ -64,7 +64,7 @@ function SummaryCard({ label, value, tone }: { label: string; tone?: 'muted' | '
       <div className="text-xs text-(--linear-text-tertiary)">{label}</div>
       <div
         className={cn(
-          'mt-1 min-w-0 truncate text-lg font-medium tabular-nums',
+          'mt-1 min-w-0 truncate text-[0.9375rem] font-medium tabular-nums',
           tone === 'primary'
             ? 'text-(--linear-green)'
             : tone === 'muted'
@@ -91,16 +91,11 @@ function NoticeCard({ notice }: { notice: BillingNoticeView }) {
       )}
     >
       <div
-        className={cn(
-          'text-[0.8125rem] font-medium',
-          warn ? 'text-(--linear-yellow)' : 'text-(--linear-text-primary)'
-        )}
+        className={cn('text-[0.8125rem] font-medium', warn ? 'text-(--linear-yellow)' : 'text-(--linear-text-primary)')}
       >
         {notice.title}
       </div>
-      <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">
-        {notice.message}
-      </div>
+      <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">{notice.message}</div>
       {notice.action &&
         (notice.action.onSelect ? (
           // In-app action (free-tier sign-in): a plain button, no external-link
@@ -130,9 +125,7 @@ function PaymentMethodAside({ row }: { row: BillingAccountRowView }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       {row.value && (
-        <span className="min-w-0 truncate text-xs font-normal text-(--linear-text-tertiary)">
-          {row.value}
-        </span>
+        <span className="min-w-0 truncate text-xs font-normal text-(--linear-text-tertiary)">{row.value}</span>
       )}
       {row.action && (
         <Button
@@ -161,11 +154,7 @@ function AccountRow({ billing, row }: { billing?: BillingStateResponse; row: Bil
   return (
     <ListRow
       action={<RowValue row={row} />}
-      below={
-        row.caption ? (
-          <div className="mt-1 text-xs text-(--linear-text-tertiary)">{row.caption}</div>
-        ) : undefined
-      }
+      below={row.caption ? <div className="mt-1 text-xs text-(--linear-text-tertiary)">{row.caption}</div> : undefined}
       description={row.description}
       key={row.id}
       title={row.title}
@@ -277,11 +266,7 @@ function BuyCreditsOutcome({
   const stepUp = useStepUpFlow()
 
   if (busy) {
-    return (
-      <div className="mt-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {b.buyCredits.processing}
-      </div>
-    )
+    return <div className="mt-2 text-xs text-(--linear-text-tertiary)">{b.buyCredits.processing}</div>
   }
 
   if (!outcome) {
@@ -290,7 +275,7 @@ function BuyCreditsOutcome({
 
   if (outcome.kind === 'success') {
     return (
-      <div className="mt-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="mt-2 text-xs text-(--linear-text-tertiary)">
         {b.buyCredits.added(formatMoney(outcome.amountUsd ?? amount))}
       </div>
     )
@@ -298,7 +283,7 @@ function BuyCreditsOutcome({
 
   if (outcome.kind === 'ambiguous') {
     return (
-      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-(--linear-text-tertiary)">
         <span>
           {outcome.title}: {outcome.message}
         </span>
@@ -315,7 +300,7 @@ function BuyCreditsOutcome({
   const portalUrl = outcome.action?.type === 'portal' ? outcome.action.url : undefined
 
   return (
-    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-(--linear-text-tertiary)">
       <span>
         {outcome.title}: {outcome.message}
       </span>
@@ -357,10 +342,10 @@ function UsageBar({ bar, fallbackLabel }: { bar?: BillingUsageRowView['bar']; fa
     resolvedBar.state === 'danger'
       ? undefined
       : resolvedBar.state === 'warn'
-        ? 'bg-(--ui-yellow)'
+        ? 'bg-(--linear-yellow)'
         : isOk
-          ? 'bg-(--ui-green)'
-          : 'bg-muted-foreground/45'
+          ? 'bg-(--linear-green)'
+          : 'bg-(--linear-text-tertiary)/45'
 
   return (
     <Progress
@@ -417,15 +402,11 @@ function BillingFixtureSelect({
   const b = t.settings.billing
 
   return (
-    <div className="flex items-center gap-1.5 text-(--ui-text-tertiary)">
+    <div className="flex items-center gap-1.5 text-(--linear-text-tertiary)">
       <Wrench className="size-3.5 shrink-0" />
       <span className="text-xs font-normal">{b.preview}</span>
       <Select onValueChange={value => onValueChange(value as BillingFixtureSelection)} value={value}>
-        <SelectTrigger
-          aria-label="Billing preview fixture (dev only)"
-          className="h-7 w-36 border-dashed border-(--ui-stroke-secondary) bg-transparent px-2 text-xs font-normal text-(--ui-text-tertiary) shadow-none hover:bg-(--ui-bg-tertiary) focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=open]:bg-(--ui-bg-tertiary)"
-          size="sm"
-        >
+        <SelectTrigger aria-label="Billing preview fixture (dev only)" className="w-36" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent align="end">
@@ -564,7 +545,9 @@ function BillingSettingsContent({
           <SettingsCard>
             <CurrentPlanCard onViewPlans={() => setSubView('plans')} plan={view.plan} />
           </SettingsCard>
-          {view.planFootnote && <div className="mt-3 px-4 text-xs text-(--linear-text-tertiary)">{view.planFootnote}</div>}
+          {view.planFootnote && (
+            <div className="mt-3 px-4 text-xs text-(--linear-text-tertiary)">{view.planFootnote}</div>
+          )}
         </SettingsSection>
       )}
 
@@ -591,9 +574,7 @@ function BillingSettingsContent({
 
       {
         // no endpoint yet — NAS capability-board gap
-        FEATURE_BILLING_INVOICES ? (
-          <SectionHeading title={t.settings.billing.sections.invoices} />
-        ) : null
+        FEATURE_BILLING_INVOICES ? <SectionHeading title={t.settings.billing.sections.invoices} /> : null
       }
     </SettingsContent>
   )

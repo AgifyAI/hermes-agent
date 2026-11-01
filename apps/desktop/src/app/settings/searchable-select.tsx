@@ -91,7 +91,7 @@ export function SearchableSelect({
             // floors at the trigger width, inherits the squish (#99751).
             // Same min-width-floor convention as the model-settings selects.
             'min-w-44',
-            !value && 'text-muted-foreground'
+            !value && 'text-(--linear-text-tertiary)'
           )}
           data-slot="searchable-select-trigger"
           ref={triggerRef}

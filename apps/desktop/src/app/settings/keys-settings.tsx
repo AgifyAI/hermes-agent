@@ -7,7 +7,7 @@ import { $settingsRequestProfile } from '@/store/settings-scope'
 import { CredentialKeyCard, credentialPlaceholder, credentialRowLabel } from './credential-key-ui'
 import { useEnvCredentials } from './env-credentials'
 import { asText } from './helpers'
-import { SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
+import { EmptyState, SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
@@ -90,7 +90,7 @@ export function KeysSettings({ view }: KeysSettingsProps) {
             const label = credentialRowLabel(key, info)
 
             return (
-              <div className="scroll-mt-6 rounded-[6px]" id={credentialElementId(key)} key={key}>
+              <div className="scroll-mt-6 rounded-(--linear-radius-control)" id={credentialElementId(key)} key={key}>
                 <CredentialKeyCard
                   expanded={openKey === key}
                   info={info}
@@ -106,9 +106,7 @@ export function KeysSettings({ view }: KeysSettingsProps) {
           })}
         </SettingsCard>
       ) : (
-        <div className="rounded-(--linear-radius-card) border-[0.5px] border-dashed border-(--linear-border-tertiary) px-4 py-8 text-center text-xs text-(--linear-text-tertiary)">
-          {t.settings.keys.empty}
-        </div>
+        <EmptyState title={t.settings.keys.empty} />
       )}
     </SettingsContent>
   )

@@ -24,7 +24,7 @@ import { notify, notifyError } from '@/store/notifications'
 import { $connection } from '@/store/session'
 
 import { CONTROL_TEXT } from './constants'
-import { ListRow, Pill, SectionHeading, SettingsContent, SettingsSection, SettingsSkeleton } from './primitives'
+import { ListRow, Pill, SectionHeading, SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 
 const RESTART_POLL_MS = 1500
 const RESTART_TIMEOUT_MS = 90_000
@@ -76,7 +76,7 @@ function appliesConfig(status: WebAccessStatus): boolean {
 /** Poll until the restarted gateway applies the saved config. Start, Stop and Restart all wait here:
  *  until the old gateway exits it still answers with what it served before. */
 async function waitForRestart(): Promise<WebAccessStatus> {
-  for (const deadline = Date.now() + RESTART_TIMEOUT_MS; Date.now() < deadline; ) {
+  for (const deadline = Date.now() + RESTART_TIMEOUT_MS; Date.now() < deadline;) {
     await new Promise(resolve => setTimeout(resolve, RESTART_POLL_MS))
     // The backend answering this may be the gateway being restarted.
     const status = await getWebAccessStatus().catch(() => null)
@@ -188,9 +188,13 @@ function WebAccessForm({ queryKey, status, w }: FormProps): ReactElement {
 
   return (
     <SettingsContent>
-      <SectionHeading page title={w.title} />
-      <p className="px-4 text-xs text-(--linear-text-tertiary)">{w.intro}</p>
-      <SettingsSection aside={<Pill tone={phase === 'serving' ? 'success' : 'muted'}>{pillLabel(phase, busy, w)}</Pill>} title={w.title}>
+      <SectionHeading
+        aside={<Pill tone={phase === 'serving' ? 'success' : 'muted'}>{pillLabel(phase, busy, w)}</Pill>}
+        page
+        title={w.title}
+      />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{w.intro}</p>
+      <SettingsCard>
         {/* A web app served on this computer only has no network address to choose until it stops. */}
         {status.mode !== 'local' && (
           <WhereRow
@@ -217,9 +221,17 @@ function WebAccessForm({ queryKey, status, w }: FormProps): ReactElement {
             </Button>
           }
           description={describe(phase, status, w)}
-          title={phase === 'serving' ? <ExternalLink href={url} native showExternalIcon>{url}</ExternalLink> : url || w.title}
+          title={
+            phase === 'serving' ? (
+              <ExternalLink href={url} native showExternalIcon>
+                {url}
+              </ExternalLink>
+            ) : (
+              url || w.title
+            )
+          }
         />
-      </SettingsSection>
+      </SettingsCard>
     </SettingsContent>
   )
 }

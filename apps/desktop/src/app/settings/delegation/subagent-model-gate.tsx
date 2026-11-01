@@ -45,15 +45,14 @@ export function SubagentModelGate({ scope, children }: { scope: ProfileScope; ch
 
   return (
     <div data-slot="subagent-model-inactive">
-      <div className="mt-2 flex items-start gap-2.5 rounded-md bg-(--ui-bg-quaternary) px-3 py-2.5" role="note">
-        <Info className="mt-0.5 size-4 shrink-0 text-(--ui-text-tertiary)" />
+      <div
+        className="mb-4 flex items-start gap-2.5 rounded-(--linear-radius-control) bg-(--linear-hover-control) px-3 py-2.5"
+        role="note"
+      >
+        <Info className="mt-0.5 size-4 shrink-0 text-(--linear-text-tertiary)" />
         <div className="grid min-w-0 flex-1 gap-0.5">
-          <span className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-            {r.inactiveTitle}
-          </span>
-          <span className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {reason}
-          </span>
+          <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{r.inactiveTitle}</span>
+          <span className="text-xs text-(--linear-text-tertiary)">{reason}</span>
         </div>
         <Button onClick={() => void chooseDelegationMode(scope, 'default', r.modeFailed)} size="xs" variant="secondary">
           {r.useDefault}

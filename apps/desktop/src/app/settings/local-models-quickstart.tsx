@@ -39,19 +39,19 @@ export function LocalModelsQuickstart({
     <SettingsContent>
       <div className="flex min-h-[60dvh] items-center justify-center">
         <div className="w-full max-w-md text-center">
-          <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary/10">
+          <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-(--linear-radius-card) bg-(--linear-accent)/10">
             {qJob ? (
               qJob.status === 'paused' ? (
-                <Pause className="size-7 text-muted-foreground" />
+                <Pause className="size-7 text-(--linear-text-tertiary)" />
               ) : (
-                <Loader2 className="size-7 animate-spin text-primary" />
+                <Loader2 className="size-7 animate-spin text-(--linear-accent)" />
               )
             ) : (
-              <Cpu className="size-7 text-primary" />
+              <Cpu className="size-7 text-(--linear-accent)" />
             )}
           </div>
 
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">
             {qJob ? qJob.target : (heroModel?.display_name ?? '')}
           </h2>
 
@@ -62,7 +62,7 @@ export function LocalModelsQuickstart({
                   the composer drops speed/ETA when bytes aren't moving —
                   showing a stale rate across a stage hand-off would read as
                   progress loss. A paused job keeps its frozen counter. */}
-              <p className="mt-2 min-h-10 text-[0.8rem] leading-5 text-muted-foreground">
+              <p className="mt-2 min-h-10 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
                 {downloadStatusText(qJob, copy)}
               </p>
 
@@ -82,15 +82,15 @@ export function LocalModelsQuickstart({
                 {stages.map((label, i) => (
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1.5 text-[0.72rem]',
-                      i < stageIndex && 'text-(--ui-text-tertiary)',
-                      i === stageIndex && 'font-medium text-foreground',
-                      i > stageIndex && 'text-(--ui-text-tertiary) opacity-60'
+                      'inline-flex items-center gap-1.5 text-xs',
+                      i < stageIndex && 'text-(--linear-text-tertiary)',
+                      i === stageIndex && 'font-medium text-(--linear-text-primary)',
+                      i > stageIndex && 'text-(--linear-text-tertiary) opacity-60'
                     )}
                     key={label}
                   >
                     {i < stageIndex ? (
-                      <CheckCircle2 className="size-3.5 text-primary" />
+                      <CheckCircle2 className="size-3.5 text-(--linear-accent)" />
                     ) : i === stageIndex ? (
                       <Loader2 className="size-3.5 animate-spin" />
                     ) : (
@@ -103,7 +103,7 @@ export function LocalModelsQuickstart({
             </>
           ) : heroModel ? (
             <>
-              <p className="mt-2 text-[0.8rem] leading-5 text-muted-foreground">
+              <p className="mt-2 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
                 {heroModel.downloaded
                   ? copy.quickstartDetailReady(heroModel.display_name)
                   : copy.quickstartDetail(heroModel.display_name, heroModel.size_label)}
@@ -122,7 +122,7 @@ export function LocalModelsQuickstart({
           ) : null}
 
           {lastError?.kind === 'quickstart' && !qJob && (
-            <p className="mt-4 text-[0.75rem] text-destructive">{lastError.error}</p>
+            <p className="mt-4 text-xs text-(--linear-red)">{lastError.error}</p>
           )}
         </div>
       </div>

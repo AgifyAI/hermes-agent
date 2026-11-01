@@ -9,7 +9,7 @@ import type { MemoryProviderField } from '@/types/hermes'
 import { CONTROL_TEXT } from '../constants'
 
 // Fade the placeholder well below set values so example text never reads as data.
-const FIELD_INPUT = `font-mono ${CONTROL_TEXT} placeholder:text-muted-foreground/45`
+const FIELD_INPUT = `font-mono ${CONTROL_TEXT} placeholder:text-(--linear-text-quaternary)`
 
 // Field label with an optional info tooltip, shared by the panel and modal rows.
 export function FieldTitle({ field }: { field: MemoryProviderField }) {
@@ -21,7 +21,7 @@ export function FieldTitle({ field }: { field: MemoryProviderField }) {
     <span className="inline-flex items-center gap-1.5">
       {field.label}
       <Tip className="max-w-60 font-normal leading-snug whitespace-normal" label={field.info}>
-        <Info aria-label={`About ${field.label}`} className="size-3.5 text-muted-foreground/70" />
+        <Info aria-label={`About ${field.label}`} className="size-3.5 text-(--linear-text-quaternary)" />
       </Tip>
     </span>
   )
@@ -108,8 +108,8 @@ export function FieldControl({
           value={value}
         />
         {field.is_set && (
-          <span className="inline-flex items-center gap-1 self-start font-mono text-[0.65rem] text-(--ui-text-tertiary)">
-            <Check className="size-3 text-(--ui-accent-secondary)" />
+          <span className="inline-flex items-center gap-1 self-start font-mono text-[0.6875rem] text-(--linear-text-tertiary)">
+            <Check className="size-3 text-(--linear-accent)" />
             set
           </span>
         )}

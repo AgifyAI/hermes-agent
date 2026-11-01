@@ -29,7 +29,15 @@ import { forgetSessionUnread } from '@/store/session-unread'
 import { listEveryArchivedSession } from '@/store/sidebar-archive'
 import type { HermesConfigRecord, SessionInfo } from '@/types/hermes'
 
-import { EmptyState, ListRow, SectionHeading, SettingsCard, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
+import {
+  EmptyState,
+  ListRow,
+  SectionHeading,
+  SettingsCard,
+  SettingsContent,
+  SettingsSkeleton,
+  ToggleRow
+} from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 import { useSettingDeepLink } from './use-setting-deep-link'
@@ -151,10 +159,7 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
 
       <AutoArchiveSetting />
 
-      <SectionHeading
-        meta={sessions.length ? String(sessions.length) : undefined}
-        title={s.archivedTitle}
-      />
+      <SectionHeading meta={sessions.length ? String(sessions.length) : undefined} title={s.archivedTitle} />
       <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.archivedIntro}</p>
 
       {sessions.length === 0 ? (
@@ -166,7 +171,11 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
             const busy = busyId === session.id
 
             return (
-              <div className="scroll-mt-6 rounded-lg" id={`archived-session-${session.id}`} key={session.id}>
+              <div
+                className="scroll-mt-6 rounded-(--linear-radius-control)"
+                id={`archived-session-${session.id}`}
+                key={session.id}
+              >
                 <ListRow
                   action={
                     <div className="flex items-center gap-1.5">
@@ -183,7 +192,7 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
                       <Tip label={s.deletePermanently}>
                         <Button
                           aria-label={s.deletePermanently}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-(--linear-text-tertiary) hover:text-(--linear-red)"
                           disabled={busy}
                           onClick={() => void remove(session)}
                           size="icon"
@@ -423,23 +432,23 @@ function DefaultProjectDirSetting() {
       <SectionHeading page title={s.defaultDirTitle} />
       <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.defaultDirDesc}</p>
       <SettingsCard>
-      <ListRow
-        action={
-          <div className="flex items-center gap-3">
-            <Button disabled={busy} onClick={() => void choose()} size="sm" type="button" variant="textStrong">
-              <FolderOpen className="size-3.5" />
-              <span>{dir ? s.change : s.choose}</span>
-            </Button>
-            {dir && (
-              <Button disabled={busy} onClick={() => void clear()} size="sm" type="button" variant="text">
-                {s.clear}
+        <ListRow
+          action={
+            <div className="flex items-center gap-3">
+              <Button disabled={busy} onClick={() => void choose()} size="sm" type="button" variant="textStrong">
+                <FolderOpen className="size-3.5" />
+                <span>{dir ? s.change : s.choose}</span>
               </Button>
-            )}
-          </div>
-        }
-        description={dir || s.defaultsTo(fallback || '~')}
-        title={dir ? dir : s.notSet}
-      />
+              {dir && (
+                <Button disabled={busy} onClick={() => void clear()} size="sm" type="button" variant="text">
+                  {s.clear}
+                </Button>
+              )}
+            </div>
+          }
+          description={dir || s.defaultsTo(fallback || '~')}
+          title={dir ? dir : s.notSet}
+        />
       </SettingsCard>
     </div>
   )

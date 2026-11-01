@@ -34,7 +34,7 @@ import { CustomEndpointsSettings } from './custom-endpoints-settings'
 import { SettingsCategoryHeading, useEnvCredentials } from './env-credentials'
 import { providerGroup, providerMeta, providerPriority } from './helpers'
 import { LocalModelsSettings } from './local-models-settings'
-import { SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
+import { Pill, SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
@@ -45,11 +45,7 @@ const canRunInTerminal = () => typeof window !== 'undefined' && Boolean(window.h
 // Parallel group headers ("Connected", "Other providers") so the expanded list
 // reads as its own section instead of bleeding into the connected group.
 function GroupLabel({ children }: { children: ReactNode }) {
-  return (
-    <p className="px-3 pt-3 pb-1 text-xs font-medium text-(--linear-text-tertiary)">
-      {children}
-    </p>
-  )
+  return <p className="px-3 pt-3 pb-1 text-xs font-medium text-(--linear-text-tertiary)">{children}</p>
 }
 
 // Sub-views surfaced as a sidebar subnav: account sign-in vs raw API keys.
@@ -205,37 +201,37 @@ function OAuthPicker({
       />
       <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{p.intro}</p>
       <SettingsCard className="p-1.5">
-      <div className="grid gap-0.5">
-      {featured && <FeaturedProviderRow onSelect={select} provider={featured} />}
-      {/* Slot #2 — the no-account path, matching onboarding. Behind the
+        <div className="grid gap-0.5">
+          {featured && <FeaturedProviderRow onSelect={select} provider={featured} />}
+          {/* Slot #2 — the no-account path, matching onboarding. Behind the
           --local launch flag like every local-models surface. */}
-      {$localModelsEnabled.get() && <LocalModelsProviderRow onClick={onWantLocalModels} />}
-      {connected.length > 0 && (
-        <>
-          <GroupLabel>{p.connected}</GroupLabel>
-          {connected.map(p => (
-            <ConnectedProviderRow
-              disconnecting={disconnecting === p.id}
-              key={p.id}
-              onDisconnect={onDisconnect}
-              onSelect={select}
-              onTerminalDisconnect={onTerminalDisconnect}
-              provider={p}
-            />
-          ))}
-        </>
-      )}
-      {showOthers && (
-        <>
-          {connected.length > 0 && <GroupLabel>{p.otherProviders}</GroupLabel>}
-          {others.map(p => (
-            <ProviderRow key={p.id} onSelect={select} provider={p} />
-          ))}
-          <FireworksProviderRow onClick={onWantApiKey} />
-          <OpenRouterProviderRow onClick={onWantApiKey} />
-        </>
-      )}
-      </div>
+          {$localModelsEnabled.get() && <LocalModelsProviderRow onClick={onWantLocalModels} />}
+          {connected.length > 0 && (
+            <>
+              <GroupLabel>{p.connected}</GroupLabel>
+              {connected.map(p => (
+                <ConnectedProviderRow
+                  disconnecting={disconnecting === p.id}
+                  key={p.id}
+                  onDisconnect={onDisconnect}
+                  onSelect={select}
+                  onTerminalDisconnect={onTerminalDisconnect}
+                  provider={p}
+                />
+              ))}
+            </>
+          )}
+          {showOthers && (
+            <>
+              {connected.length > 0 && <GroupLabel>{p.otherProviders}</GroupLabel>}
+              {others.map(p => (
+                <ProviderRow key={p.id} onSelect={select} provider={p} />
+              ))}
+              <FireworksProviderRow onClick={onWantApiKey} />
+              <OpenRouterProviderRow onClick={onWantApiKey} />
+            </>
+          )}
+        </div>
       </SettingsCard>
       {collapsible && (
         <Button
@@ -286,14 +282,14 @@ function ConnectedProviderRow({
       >
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--linear-accent)_12%,transparent)] px-2 py-0.5 text-xs font-medium text-(--linear-accent)">
+          <Pill className="shrink-0" tone="primary">
             <Check className="size-3" />
             {copy.connected}
-          </span>
+          </Pill>
         </div>
-        <p className="mt-1 text-xs leading-5 text-(--linear-text-tertiary)">{t.onboarding.flowSubtitles[provider.flow]}</p>
+        <p className="mt-[3px] text-xs text-(--linear-text-tertiary)">{t.onboarding.flowSubtitles[provider.flow]}</p>
         {showHint && (
-          <p className="mt-0.5 truncate text-[0.6875rem] leading-5 text-(--linear-text-quaternary)">
+          <p className="mt-[3px] truncate text-[0.6875rem] text-(--linear-text-quaternary)">
             {provider.flow === 'external' ? copy.removeExternalGeneric(title) : copy.removeKeyManaged(title)}
           </p>
         )}
@@ -565,7 +561,11 @@ export function ProvidersSettings({
             {visibleGroups.length > 0 ? (
               <SettingsCard>
                 {visibleGroups.map(group => (
-                  <div className="scroll-mt-6 rounded-[6px]" id={providerKeyElementId(group.name)} key={group.name}>
+                  <div
+                    className="scroll-mt-6 rounded-(--linear-radius-control)"
+                    id={providerKeyElementId(group.name)}
+                    key={group.name}
+                  >
                     <ProviderKeyRows
                       expanded={openProvider === group.name}
                       group={group}

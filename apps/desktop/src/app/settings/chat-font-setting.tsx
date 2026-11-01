@@ -135,7 +135,7 @@ export function ChatFontSetting() {
               options={CHAT_FONT_SUGGESTIONS}
               placeholder={copy.chatFontPlaceholder}
               renderOption={font => (
-                <span style={{ fontFamily: resolveChatFontFamily(font, 'var(--dt-font-sans)') }}>{font}</span>
+                <span style={{ fontFamily: resolveChatFontFamily(font, 'var(--linear-font-sans)') }}>{font}</span>
               )}
               value={value}
             />
@@ -146,12 +146,10 @@ export function ChatFontSetting() {
           {/* Preview the chat's default and custom face, including its glyph fallbacks. */}
           <div
             aria-label={copy.chatFontPreview}
-            className="overflow-hidden px-1 py-2 text-sm text-(--ui-text-secondary)"
+            className="overflow-hidden px-1 py-2 text-[0.8125rem] text-(--linear-text-secondary)"
             style={{ fontFamily: 'var(--dt-chat-font-sans)' }}
           >
-            <span className="mr-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-              {copy.chatFontPreview}
-            </span>
+            <span className="mr-2 text-xs text-(--linear-text-tertiary)">{copy.chatFontPreview}</span>
             <span>{copy.chatFontSample}</span>
           </div>
         </div>

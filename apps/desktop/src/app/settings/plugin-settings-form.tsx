@@ -226,7 +226,7 @@ function SecretControl({ disabled, field, id, onChange, raw, secretSetHint }: Co
 function JsonControl({ disabled, id, onChange, raw }: ControlProps) {
   return (
     <Textarea
-      className={cn('min-h-28 resize-y bg-background font-mono', CONTROL_TEXT)}
+      className={cn('min-h-28 resize-y bg-(--linear-bg-input) font-mono', CONTROL_TEXT)}
       disabled={disabled}
       id={id}
       onChange={e => onChange(e.currentTarget.value)}

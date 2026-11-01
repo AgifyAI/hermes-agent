@@ -512,7 +512,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   const searchPill = (
     <button
       className={cn(
-        'flex h-(--titlebar-control-height) items-center gap-1.5 rounded-full border border-(--ui-stroke-secondary) bg-(--ui-chat-surface-background) px-2.5 text-(--ui-text-tertiary) shadow-sm transition-all duration-200 ease-out hover:text-foreground motion-reduce:transition-none',
+        'flex h-(--titlebar-control-height) items-center gap-1.5 rounded-full border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-panel) px-2.5 text-(--linear-text-tertiary) shadow-(--linear-shadow-low) transition-all duration-200 ease-out hover:text-(--linear-text-primary) motion-reduce:transition-none',
         paletteOpen && 'pointer-events-none scale-110 opacity-0'
       )}
       onClick={() => {
@@ -547,7 +547,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
       </Tip>
       <Tip label={t.settings.resetToDefaults}>
         <OverlayIconButton
-          className="hover:text-destructive"
+          className="hover:text-(--linear-red)"
           onClick={() => {
             triggerHaptic('warning')
             void resetConfig()

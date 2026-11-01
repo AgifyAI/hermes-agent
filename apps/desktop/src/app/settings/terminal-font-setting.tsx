@@ -150,12 +150,10 @@ export function TerminalFontSetting() {
           </div>
           <div
             aria-label={copy.terminalFontPreview}
-            className="overflow-hidden px-1 py-2 text-sm text-(--ui-text-secondary)"
+            className="overflow-hidden px-1 py-2 text-[0.8125rem] text-(--linear-text-secondary)"
             style={{ fontFamily: previewFontFamily }}
           >
-            <span className="mr-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-              {copy.terminalFontPreview}
-            </span>
+            <span className="mr-2 text-xs text-(--linear-text-tertiary)">{copy.terminalFontPreview}</span>
             <span> ~/project git:main ❯</span>
           </div>
         </div>

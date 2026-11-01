@@ -466,7 +466,11 @@ describe('ConnectionsRegistrySection', () => {
     expect(screen.queryByText('Gateway 5')).toBeNull()
 
     fireEvent.change(search, { target: { value: '' } })
-    expect(search.closest<HTMLElement>('.border-t')?.style.minHeight).toBe('')
+
+    // Clearing the search leaves no ancestor pinned to the height of the filtered list.
+    for (let node = search.parentElement; node; node = node.parentElement) {
+      expect(node.style.minHeight).toBe('')
+    }
   })
 })
 

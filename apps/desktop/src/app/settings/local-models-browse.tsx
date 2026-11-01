@@ -202,7 +202,7 @@ export function LocalModelsBrowseSection(): ReactElement {
       }
       title={copy.browseTitle}
     >
-      <div className="py-4" id="local-model-browse">
+      <div className="grid gap-3 py-4" id="local-model-browse">
         <p className="text-xs text-(--linear-text-tertiary)">{copy.browseHint}</p>
 
         <SearchField
@@ -214,13 +214,13 @@ export function LocalModelsBrowseSection(): ReactElement {
         />
 
         {searching && (
-          <p className="flex items-center gap-2 text-[0.75rem] text-muted-foreground">
+          <p className="flex items-center gap-2 text-xs text-(--linear-text-tertiary)">
             <Loader2 className="size-3 animate-spin" />
             {copy.browseSearching}
           </p>
         )}
 
-        {error && <p className="text-[0.75rem] text-destructive">{error}</p>}
+        {error && <p className="text-xs text-(--linear-red)">{error}</p>}
 
         <div className="grid gap-1">
           {hits.map(hit => (
@@ -239,20 +239,20 @@ export function LocalModelsBrowseSection(): ReactElement {
                     {hit.gated ? ` · ${copy.browseGated}` : ''}
                   </span>
                 }
-                title={<span className="font-mono text-[0.8rem]">{hit.repo}</span>}
+                title={<span className="font-mono text-[0.8125rem]">{hit.repo}</span>}
               />
 
               {openRepo === hit.repo && (
-                <div className="ml-4 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-1.5 border-l border-(--ui-border) py-1 pl-3">
+                <div className="ml-4 grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-1.5 border-l-[0.5px] border-(--linear-border-secondary) py-1 pl-3">
                   {listing && (
-                    <p className="col-span-full flex items-center gap-2 py-1 text-[0.75rem] text-muted-foreground">
+                    <p className="col-span-full flex items-center gap-2 py-1 text-xs text-(--linear-text-tertiary)">
                       <Loader2 className="size-3 animate-spin" />
                       {copy.browseListing}
                     </p>
                   )}
 
                   {!listing && files.length === 0 && (
-                    <p className="col-span-full py-1 text-[0.75rem] text-muted-foreground">{copy.browseNoGguf}</p>
+                    <p className="col-span-full py-1 text-xs text-(--linear-text-tertiary)">{copy.browseNoGguf}</p>
                   )}
 
                   {files.map(group => {
@@ -261,23 +261,23 @@ export function LocalModelsBrowseSection(): ReactElement {
                     return (
                       <div
                         className={cn(
-                          'flex flex-col gap-1 rounded-md border border-(--ui-border) px-2.5 py-1.5',
+                          'flex flex-col gap-1 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2',
                           group.fit === 'too-big' && 'opacity-45'
                         )}
                         key={group.label}
                       >
                         <span className="flex w-full items-center justify-between gap-2">
-                          <span className="truncate font-mono text-[0.75rem]">
+                          <span className="truncate font-mono text-xs">
                             {group.label}
                             {group.paths.length > 1 ? ` ×${group.paths.length}` : ''}
                           </span>
 
                           <Button
                             aria-label={copy.browseDownloadAria.replace('{name}', group.label)}
-                            className="h-6 shrink-0 px-2"
+                            className="shrink-0"
                             disabled={group.fit === 'too-big' || Boolean(dJob)}
                             onClick={() => startBrowsedDownload(hit.repo, group)}
-                            size="sm"
+                            size="icon-xs"
                             variant="ghost"
                           >
                             {dJob ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
@@ -288,7 +288,7 @@ export function LocalModelsBrowseSection(): ReactElement {
                           <>
                             <ProgressBar paused={dJob.status === 'paused'} percent={dJob.percent} />
 
-                            <span className="text-[0.68rem] text-muted-foreground">
+                            <span className="text-[0.6875rem] text-(--linear-text-tertiary)">
                               {downloadStatusText(dJob, copy)}
                             </span>
 
@@ -307,7 +307,7 @@ export function LocalModelsBrowseSection(): ReactElement {
                                     : copy.browseFitUnknown}
                             </Pill>
 
-                            <span className="shrink-0 text-[0.7rem] text-muted-foreground">
+                            <span className="shrink-0 text-[0.6875rem] text-(--linear-text-tertiary)">
                               {gbLabel(group.total_bytes)}
                             </span>
                           </span>

@@ -393,7 +393,7 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                     {endpoint.source !== 'direct-config' && (
                       <Button
                         aria-label={t.settings.customEndpoints.deleteEndpoint}
-                        className="hover:text-destructive"
+                        className="hover:text-(--linear-red)"
                         disabled={deleting === endpoint.id}
                         onClick={() => void handleDelete(endpoint)}
                         size="icon-sm"
@@ -417,114 +417,114 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
         <section>
           <SectionHeading title={form.id ? ce.editTitle : ce.addTitle} />
           <SettingsCard className="py-4">
-          <div className="grid gap-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1.5 text-xs text-muted-foreground">
-                {ce.fields.name}
+            <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                  {ce.fields.name}
+                  <Input
+                    onChange={event => setForm(current => ({ ...current, name: event.target.value }))}
+                    placeholder={t.settings.customEndpoints.namePlaceholder}
+                    value={form.name}
+                  />
+                </label>
+                <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                  {ce.fields.providerId}
+                  <Input
+                    onChange={event => setForm(current => ({ ...current, id: event.target.value }))}
+                    placeholder="axet-proxy"
+                    value={form.id}
+                  />
+                </label>
+              </div>
+              <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                {ce.fields.endpointUrl}
                 <Input
-                  onChange={event => setForm(current => ({ ...current, name: event.target.value }))}
-                  placeholder={t.settings.customEndpoints.namePlaceholder}
-                  value={form.name}
+                  onChange={event => setForm(current => ({ ...current, baseUrl: event.target.value }))}
+                  placeholder="http://127.0.0.1:8081/v1"
+                  value={form.baseUrl}
                 />
               </label>
-              <label className="grid gap-1.5 text-xs text-muted-foreground">
-                {ce.fields.providerId}
+              <fieldset className="grid min-w-0 gap-1.5 text-xs text-(--linear-text-tertiary)">
+                <legend className="mb-1.5">{ce.apiMode}</legend>
+                <SegmentedControl
+                  className="w-full max-w-full"
+                  onChange={apiMode => setForm(current => ({ ...current, apiMode }))}
+                  options={apiModeOptions}
+                  value={form.apiMode}
+                />
+              </fieldset>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
+                <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                  {ce.fields.defaultModel}
+                  <ComboboxInput
+                    onChange={model => setForm(current => ({ ...current, model }))}
+                    options={allModelOptions}
+                    placeholder="gpt-5.4"
+                    value={form.model}
+                  />
+                </label>
+                <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                  {ce.fields.context}
+                  <Input
+                    inputMode="numeric"
+                    onChange={event => setForm(current => ({ ...current, contextLength: event.target.value }))}
+                    placeholder={t.settings.customEndpoints.contextPlaceholder}
+                    value={form.contextLength}
+                  />
+                </label>
+              </div>
+              <label className="grid gap-1.5 text-xs text-(--linear-text-tertiary)">
+                {ce.fields.apiKey}
                 <Input
-                  onChange={event => setForm(current => ({ ...current, id: event.target.value }))}
-                  placeholder="axet-proxy"
-                  value={form.id}
+                  onChange={event => setForm(current => ({ ...current, apiKey: event.target.value }))}
+                  placeholder={form.id ? ce.fields.apiKeyNewPlaceholder : ce.fields.apiKeyPlaceholder}
+                  type="password"
+                  value={form.apiKey}
                 />
               </label>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-(--linear-text-tertiary)">
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={form.makeDefault}
+                    onCheckedChange={checked => setForm(current => ({ ...current, makeDefault: checked === true }))}
+                  />
+                  {ce.fields.useNewChats}
+                </label>
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={form.discoverModels}
+                    onCheckedChange={checked => setForm(current => ({ ...current, discoverModels: checked === true }))}
+                  />
+                  {ce.fields.discoverModels}
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={testing || !form.baseUrl.trim()}
+                  onClick={() => void handleValidate()}
+                  variant="outline"
+                >
+                  {testing ? <Loader2 className="animate-spin" /> : <Zap />}
+                  {ce.test}
+                </Button>
+                <Button disabled={saving || !canSave} onClick={() => void handleSave()}>
+                  {saving ? <Loader2 className="animate-spin" /> : <Save />}
+                  {ce.save}
+                </Button>
+                <Button
+                  className={cn(!form.id && 'hidden')}
+                  onClick={() => {
+                    setForm(EMPTY_FORM)
+                    setDiscoveredModels([])
+                    setDiscoveredDetails([])
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  {ce.newEndpoint}
+                </Button>
+              </div>
             </div>
-            <label className="grid gap-1.5 text-xs text-muted-foreground">
-              {ce.fields.endpointUrl}
-              <Input
-                onChange={event => setForm(current => ({ ...current, baseUrl: event.target.value }))}
-                placeholder="http://127.0.0.1:8081/v1"
-                value={form.baseUrl}
-              />
-            </label>
-            <fieldset className="grid min-w-0 gap-1.5 text-xs text-muted-foreground">
-              <legend className="mb-1.5">{ce.apiMode}</legend>
-              <SegmentedControl
-                className="w-full max-w-full"
-                onChange={apiMode => setForm(current => ({ ...current, apiMode }))}
-                options={apiModeOptions}
-                value={form.apiMode}
-              />
-            </fieldset>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
-              <label className="grid gap-1.5 text-xs text-muted-foreground">
-                {ce.fields.defaultModel}
-                <ComboboxInput
-                  onChange={model => setForm(current => ({ ...current, model }))}
-                  options={allModelOptions}
-                  placeholder="gpt-5.4"
-                  value={form.model}
-                />
-              </label>
-              <label className="grid gap-1.5 text-xs text-muted-foreground">
-                {ce.fields.context}
-                <Input
-                  inputMode="numeric"
-                  onChange={event => setForm(current => ({ ...current, contextLength: event.target.value }))}
-                  placeholder={t.settings.customEndpoints.contextPlaceholder}
-                  value={form.contextLength}
-                />
-              </label>
-            </div>
-            <label className="grid gap-1.5 text-xs text-muted-foreground">
-              {ce.fields.apiKey}
-              <Input
-                onChange={event => setForm(current => ({ ...current, apiKey: event.target.value }))}
-                placeholder={form.id ? ce.fields.apiKeyNewPlaceholder : ce.fields.apiKeyPlaceholder}
-                type="password"
-                value={form.apiKey}
-              />
-            </label>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <label className="flex items-center gap-2">
-                <Checkbox
-                  checked={form.makeDefault}
-                  onCheckedChange={checked => setForm(current => ({ ...current, makeDefault: checked === true }))}
-                />
-                {ce.fields.useNewChats}
-              </label>
-              <label className="flex items-center gap-2">
-                <Checkbox
-                  checked={form.discoverModels}
-                  onCheckedChange={checked => setForm(current => ({ ...current, discoverModels: checked === true }))}
-                />
-                {ce.fields.discoverModels}
-              </label>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                disabled={testing || !form.baseUrl.trim()}
-                onClick={() => void handleValidate()}
-                variant="outline"
-              >
-                {testing ? <Loader2 className="animate-spin" /> : <Zap />}
-                {ce.test}
-              </Button>
-              <Button disabled={saving || !canSave} onClick={() => void handleSave()}>
-                {saving ? <Loader2 className="animate-spin" /> : <Save />}
-                {ce.save}
-              </Button>
-              <Button
-                className={cn(!form.id && 'hidden')}
-                onClick={() => {
-                  setForm(EMPTY_FORM)
-                  setDiscoveredModels([])
-                  setDiscoveredDetails([])
-                }}
-                type="button"
-                variant="ghost"
-              >
-                {ce.newEndpoint}
-              </Button>
-            </div>
-          </div>
           </SettingsCard>
         </section>
       </div>

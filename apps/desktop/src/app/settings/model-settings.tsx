@@ -49,13 +49,23 @@ import {
   AUX_FOLLOW_BASE,
   AuxFollowBaseButton,
   auxMainRoute,
+  type AuxTaskDraft,
+  AuxTaskDraftEditor,
   AuxTaskRouteSummary,
   useAuxTaskRows
 } from './aux-task-rows'
 import { CONTROL_TEXT } from './constants'
 import { getNested, setNested } from './helpers'
 import { ModelSelect, withActive } from './model-select'
-import { ListRow, ListRowSkeleton, Pill, SectionHeading, SectionHeadingSkeleton, SettingsCard } from './primitives'
+import {
+  ListRow,
+  ListRowSkeleton,
+  Pill,
+  SectionHeading,
+  SectionHeadingSkeleton,
+  SettingsCard,
+  WARN_NOTICE_CLASS
+} from './primitives'
 import { dismissStaleAux, readStaleAuxDismissal, staleAuxFingerprint } from './stale-aux-dismissal'
 
 // Skeleton mirror of the Model settings DOM so the page keeps its shape while
@@ -270,7 +280,12 @@ function StaleAuxWarning({ applying, onDismiss, onReset, slots, taskLabel }: Sta
   const names = slots.map(slot => taskLabel(slot.task)).join(', ')
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-orange) bg-[color-mix(in_srgb,var(--linear-orange)_12%,transparent)] px-3 py-2.5 text-[0.8125rem] text-(--linear-orange)">
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-2 px-3 py-2.5 text-[0.8125rem] text-(--linear-orange)',
+        WARN_NOTICE_CLASS
+      )}
+    >
       <AlertTriangle className="size-4 shrink-0" />
       <span className="grow font-medium">
         {m.staleAuxBefore(slots.length, names)}
@@ -299,6 +314,42 @@ interface ModelSettingsProps {
    *  Request-shaped on purpose — the API helpers treat `null` as "deliberately
    *  target the primary/default backend", so this prop never carries null. */
   scopeProfile?: string
+}
+
+function MainApiKeySetup({
+  activating,
+  draft,
+  keyEnv,
+  onActivate,
+  onDraftChange
+}: {
+  activating: boolean
+  draft: string
+  keyEnv?: null | string
+  onActivate: () => void
+  onDraftChange: (value: string) => void
+}) {
+  return (
+    <div className="grid w-full min-w-0 max-w-full @lg:w-64 justify-items-end gap-2">
+      <Input
+        autoComplete="off"
+        className={cn('min-w-0', CONTROL_TEXT)}
+        onChange={event => onDraftChange(event.target.value)}
+        onKeyDown={event => {
+          if (isSubmitEnter(event)) {
+            onActivate()
+          }
+        }}
+        placeholder={`Paste ${keyEnv ?? 'API key'}`}
+        type="password"
+        value={draft}
+      />
+      <Button disabled={!draft.trim() || activating} onClick={onActivate} size="sm">
+        {activating && <Loader2 className="size-3.5 animate-spin" />}
+        {activating ? 'Activating...' : 'Activate'}
+      </Button>
+    </div>
+  )
 }
 
 function MainModelDefaults({
@@ -409,7 +460,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
   const [applying, setApplying] = useState(false)
   const [editingAuxTask, setEditingAuxTask] = useState<null | string>(null)
 
-  const [auxDraft, setAuxDraft] = useState<{ model: string; provider: string; reasoningEffort: string }>({
+  const [auxDraft, setAuxDraft] = useState<AuxTaskDraft>({
     model: '',
     provider: '',
     reasoningEffort: '__inherit__'
@@ -1069,7 +1120,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
   }
 
   const errorNotice = error && (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-destructive">
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-(--linear-red)">
       <span>{error}</span>
       {skewRestart && (
         <Button disabled={restartingBackend} onClick={() => void recycleStaleBackend()} size="sm" variant="textStrong">
@@ -1081,7 +1132,12 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
   )
 
   const resetAuxButton = (
-    <Button disabled={!mainModel || applying} onClick={() => void resetAuxiliaryModels()} size="sm" variant="textStrong">
+    <Button
+      disabled={!mainModel || applying}
+      onClick={() => void resetAuxiliaryModels()}
+      size="sm"
+      variant="textStrong"
+    >
       {m.resetAllToMain}
     </Button>
   )
@@ -1120,29 +1176,13 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               action={
                 needsSetup ? (
                   setupIsApiKey ? (
-                    <div className="grid w-full min-w-0 max-w-full @lg:w-64 justify-items-end gap-2">
-                      <Input
-                        autoComplete="off"
-                        className={cn('min-w-0', CONTROL_TEXT)}
-                        onChange={event => setApiKeyDraft(event.target.value)}
-                        onKeyDown={event => {
-                          if (isSubmitEnter(event)) {
-                            void activateApiKeyProvider()
-                          }
-                        }}
-                        placeholder={`Paste ${selectedProviderRow?.key_env ?? 'API key'}`}
-                        type="password"
-                        value={apiKeyDraft}
-                      />
-                      <Button
-                        disabled={!apiKeyDraft.trim() || activating}
-                        onClick={() => void activateApiKeyProvider()}
-                        size="sm"
-                      >
-                        {activating && <Loader2 className="size-3.5 animate-spin" />}
-                        {activating ? 'Activating...' : 'Activate'}
-                      </Button>
-                    </div>
+                    <MainApiKeySetup
+                      activating={activating}
+                      draft={apiKeyDraft}
+                      keyEnv={selectedProviderRow?.key_env}
+                      onActivate={() => void activateApiKeyProvider()}
+                      onDraftChange={setApiKeyDraft}
+                    />
                   ) : (
                     <Button onClick={startProviderSetup} size="sm" variant="textStrong">
                       {m.setUpProvider(selectedProviderRow?.name ?? m.setupProviderFallback)}
@@ -1239,7 +1279,11 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               const isEditing = editingAuxTask === meta.key
 
               return (
-                <div className="scroll-mt-6 rounded-lg" id={`aux-task-${meta.key}`} key={meta.key}>
+                <div
+                  className="scroll-mt-6 rounded-(--linear-radius-control)"
+                  id={`aux-task-${meta.key}`}
+                  key={meta.key}
+                >
                   <ListRow
                     action={
                       !isEditing && (
@@ -1274,71 +1318,17 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                     }
                     below={
                       isEditing && (
-                        <div className="mt-2 grid gap-2 pt-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Select
-                              onValueChange={value => setAuxDraft(prev => ({ ...prev, provider: value, model: '' }))}
-                              value={findCatalogProvider(providers, auxDraft.provider)?.slug ?? auxDraft.provider}
-                            >
-                              <SelectTrigger
-                                aria-label={`${copy.label} provider`}
-                                className={cn('min-w-32', CONTROL_TEXT)}
-                              >
-                                <SelectValue placeholder={m.provider} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {providerOptions.map(provider => (
-                                  <SelectItem key={provider.slug || 'none'} value={provider.slug || 'none'}>
-                                    {provider.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <ModelSelect
-                              aria-label={`${copy.label} model`}
-                              className="min-w-48"
-                              models={auxDraftProviderModels}
-                              onValueChange={value => setAuxDraft(prev => ({ ...prev, model: value }))}
-                              provider={findCatalogProvider(providers, auxDraft.provider)}
-                              providerSlug={auxDraft.provider}
-                              value={auxDraft.model}
-                            />
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className="text-muted-foreground">{m.reasoning}</span>
-                            <Select
-                              onValueChange={value => setAuxDraft(prev => ({ ...prev, reasoningEffort: value }))}
-                              value={auxDraft.reasoningEffort}
-                            >
-                              <SelectTrigger
-                                aria-label={`${copy.label} reasoning effort`}
-                                className={cn('min-w-32', CONTROL_TEXT)}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__inherit__">{m.inheritMainEffort}</SelectItem>
-                                {REASONING_EFFORT_VALUES.map(value => (
-                                  <SelectItem key={value} value={value}>
-                                    {value === 'none' ? m.reasoningOff : t.shell.modelOptions[value]}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Button
-                              disabled={!auxDraft.provider || !auxDraft.model || applying}
-                              onClick={() => void applyAuxiliaryDraft(meta.key)}
-                              size="sm"
-                            >
-                              {applying ? m.applying : t.common.apply}
-                            </Button>
-                            <Button onClick={() => setEditingAuxTask(null)} size="sm" variant="ghost">
-                              {t.common.cancel}
-                            </Button>
-                          </div>
-                        </div>
+                        <AuxTaskDraftEditor
+                          applying={applying}
+                          draft={auxDraft}
+                          label={copy.label}
+                          models={auxDraftProviderModels}
+                          onApply={() => void applyAuxiliaryDraft(meta.key)}
+                          onCancel={() => setEditingAuxTask(null)}
+                          onDraftChange={setAuxDraft}
+                          providerOptions={providerOptions}
+                          providers={providers}
+                        />
                       )
                     }
                     description={

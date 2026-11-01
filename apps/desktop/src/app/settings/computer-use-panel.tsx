@@ -35,10 +35,10 @@ function GrantIcon({ granted }: { granted: boolean | null }) {
 
 function PermissionRow({ granted, label, hint }: { granted: boolean | null; label: string; hint: string }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background/55 p-2.5">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) p-3">
       <div className="min-w-0">
-        <span className="text-sm font-medium">{label}</span>
-        <p className="mt-0.5 text-[0.7rem] text-muted-foreground">{hint}</p>
+        <span className="text-[0.8125rem] font-medium">{label}</span>
+        <p className="mt-[3px] text-xs text-(--linear-text-tertiary)">{hint}</p>
       </div>
       <Pill tone={tone(granted)}>
         <GrantIcon granted={granted} />
@@ -137,7 +137,7 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 px-1 text-xs text-(--linear-text-tertiary)">
         <Loader2 className="size-3.5 animate-spin" />
         Checking Computer Use status…
       </div>
@@ -150,7 +150,7 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
 
   if (!status.platform_supported) {
     return (
-      <p className="px-1 text-xs text-muted-foreground">
+      <p className="px-1 text-xs text-(--linear-text-tertiary)">
         Computer Use isn&apos;t supported on this platform ({status.platform}).
       </p>
     )
@@ -158,7 +158,7 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
 
   if (!status.installed) {
     return (
-      <p className="px-1 text-xs text-muted-foreground">
+      <p className="px-1 text-xs text-(--linear-text-tertiary)">
         Install the cua-driver backend below to drive this machine.
         {status.can_grant && ' Then grant Accessibility and Screen Recording here.'}
       </p>
@@ -172,14 +172,14 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
         <div className="min-w-0">
           {status.can_grant ? (
-            <p className="text-[0.72rem] text-muted-foreground">
+            <p className="text-xs text-(--linear-text-tertiary)">
               Grants attach to CuaDriver&apos;s own identity (com.trycua.driver), not Hermes — so the dialog is
               attributed to the process that drives your Mac.
             </p>
           ) : (
-            <p className="text-[0.72rem] text-muted-foreground">{PLATFORM_NOTE[status.platform] ?? ''}</p>
+            <p className="text-xs text-(--linear-text-tertiary)">{PLATFORM_NOTE[status.platform] ?? ''}</p>
           )}
-          {status.version && <p className="text-[0.68rem] text-muted-foreground/80">{status.version}</p>}
+          {status.version && <p className="text-[0.6875rem] text-(--linear-text-tertiary)">{status.version}</p>}
         </div>
         <Button onClick={() => void refresh()} size="sm" variant="text">
           <RefreshCw className="size-3.5" />
@@ -201,8 +201,8 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
           />
         </>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background/55 p-2.5">
-          <span className="text-sm font-medium">{t.settings.computerUse.driverHealth}</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) p-3">
+          <span className="text-[0.8125rem] font-medium">{t.settings.computerUse.driverHealth}</span>
           <Pill tone={tone(status.ready)}>
             <GrantIcon granted={status.ready} />
             {status.ready === true ? 'Ready' : status.ready === false ? 'Not ready' : 'Unknown'}
@@ -211,21 +211,21 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
       )}
 
       {failingChecks.map(c => (
-        <p className="px-1 text-[0.7rem] text-muted-foreground" key={c.label}>
+        <p className="px-1 text-[0.6875rem] text-(--linear-text-tertiary)" key={c.label}>
           <AlertTriangle className="mr-1 inline size-3" />
           {c.label}: {c.message}
         </p>
       ))}
 
       {status.error && (
-        <p className="px-1 text-[0.7rem] text-muted-foreground">
+        <p className="px-1 text-[0.6875rem] text-(--linear-text-tertiary)">
           <AlertTriangle className="mr-1 inline size-3" />
           {status.error}
         </p>
       )}
 
       {status.ready ? (
-        <div className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 px-1 text-xs text-(--linear-text-tertiary)">
           <Check className="size-3.5" />
           Computer Use is ready. Ask the agent to capture an app and click around.
         </div>

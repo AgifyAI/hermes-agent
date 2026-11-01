@@ -530,7 +530,7 @@ function ConfigSettingsInner({
       ) : visibleFields.length === 0 ? null : (
         <SettingsCard>
           {visibleFields.map(([key, field]) => (
-            <div className="scroll-mt-6 rounded-lg" id={`setting-field-${key}`} key={key}>
+            <div className="scroll-mt-6 rounded-(--linear-radius-control)" id={`setting-field-${key}`} key={key}>
               {key === 'delegation.model' ? (
                 <SubagentModelGate scope={writeScope ?? scopeProfile}>
                   <DelegationRouteRow
