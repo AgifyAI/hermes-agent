@@ -145,6 +145,8 @@ transcript. If motion is masking latency, remove the motion, don't tune it.
 For renderer work run `npm run dev` (quit the installed app first: single-instance lock); `src/`
 edits hot-reload. Rebuild and replace `Hermes.app` only when the user asks. Long form: `ENGINEERING.md`.
 
+For any visible change, follow the skill `.agents/skills/hermes-desktop-ui`.
+
 ## Delivery in this fork (AgifyAI)
 
 No Linear ticket here (owner override). Branch + PR with `--repo AgifyAI/hermes-agent`, never on
