@@ -1521,8 +1521,8 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                           reference_models: prev.reference_models.filter((_, i) => i !== index)
                         }))
                       }
-                      size="sm"
-                      variant="ghost"
+                      size="inline"
+                      variant="text"
                     >
                       {t.common.remove}
                     </Button>

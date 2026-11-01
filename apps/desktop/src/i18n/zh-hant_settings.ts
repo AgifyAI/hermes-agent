@@ -637,7 +637,7 @@ export const zhHantSettings = {
       },
       stt: {
         enabled: '啟用本機或提供方支援的語音轉寫。',
-        echoTranscripts: '將語音訊息的原始 🎙️ 轉寫文字傳回聊天。',
+        echoTranscripts: '將語音訊息的原始轉寫文字傳回聊天。',
         elevenlabs: {
           languageCode: '可選的 ISO-639-3 語言代碼。留空讓 ElevenLabs 自動偵測。'
         }

@@ -8,6 +8,10 @@ import { cn } from '@/lib/utils'
 // Text+icon actions underline the label on hover, not the glyph.
 const TEXT_ACTION_ICON = '[&_.codicon]:no-underline [&_svg]:no-underline'
 
+// The one boxless text action: 12px/500 like every Linear button, quiet at rest,
+// underlined on hover only.
+const TEXT_ACTION = `rounded-none text-(--linear-text-tertiary) underline-offset-4 hover:text-(--linear-text-primary) hover:underline ${TEXT_ACTION_ICON}`
+
 // Linear's button family (docs/linear-design-reference.md § Buttons, Icon
 // button): every button is a pill, 12px/500, with no border and a 100ms colour
 // transition. Heights are fixed per size — 24 (chip, ghost), 28 (primary,
@@ -39,12 +43,10 @@ const buttonVariants = cva(
         floating:
           'bg-(--linear-bg-overlay) text-(--linear-text-secondary) shadow-[0_0_0_0.5px_var(--linear-border-overlay),var(--linear-shadow-menu)] hover:text-(--linear-text-primary)',
         link: `rounded-none text-(--linear-accent) underline-offset-4 decoration-current/20 hover:underline ${TEXT_ACTION_ICON}`,
-        // Boxless inline-text action (no bg/border). Quiet by default — reads as
-        // muted label text, underlines on hover (e.g. "Cancel", "Clear").
-        text: `rounded-none text-(--linear-text-tertiary) underline-offset-4 hover:text-(--linear-text-primary) hover:underline ${TEXT_ACTION_ICON}`,
-        // Emphasized inline-text action: bold + always-underlined link. Use for
-        // the actionable affordance in a row ("Change", "Set", "Open logs", …).
-        textStrong: `rounded-none font-semibold text-(--linear-text-tertiary) underline underline-offset-4 hover:text-(--linear-text-primary) ${TEXT_ACTION_ICON}`
+        // Boxless inline-text action (no bg/border), e.g. "Cancel", "Clear".
+        text: TEXT_ACTION,
+        // The same look, always flush with the text around it ("Change", "Open logs").
+        textStrong: TEXT_ACTION
       },
       size: {
         // Primary / toolbar: 28px, 10px sides (8px on the icon side).

@@ -181,7 +181,7 @@ function ModeOption({ routing, mode, selected, blocked, available, onChoose }: M
             'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border-[0.5px]',
             selected
               ? 'border-(--linear-accent) bg-(--linear-accent) text-(--linear-on-accent)'
-              : 'border-(--linear-border-tertiary) bg-(--linear-bg-input)',
+              : 'border-(--linear-border-input) bg-(--linear-bg-input)',
             !available && !selected && 'opacity-60'
           )}
         >

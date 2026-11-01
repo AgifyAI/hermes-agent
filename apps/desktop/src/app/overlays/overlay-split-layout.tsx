@@ -213,97 +213,102 @@ export function OverlayNav({
 
   return (
     <>
-      <OverlaySidebar className={RAIL_HIDDEN}>
+      <OverlaySidebar className={cn(RAIL_HIDDEN, 'overflow-hidden')}>
         {header}
-        {groups.map(group => {
-          const hasChildren = Boolean(group.children?.length)
-          const expanded = disclosures[group.id] ?? group.active
-          const childrenId = `${navId}-${group.id}`
+        {/* Only the links scroll; the header and footer stay put. The gutter is
+            always reserved and sits in the rail's right padding, so a page whose
+            links overflow keeps the same row width as one whose links fit. */}
+        <div className="scroll-fade-y -mr-2 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
+          {groups.map(group => {
+            const hasChildren = Boolean(group.children?.length)
+            const expanded = disclosures[group.id] ?? group.active
+            const childrenId = `${navId}-${group.id}`
 
-          return (
-            <Fragment key={group.id}>
-              {group.gapBefore && <div aria-hidden className="h-3" />}
-              <div className="relative">
-                <OverlayNavItem
-                  active={group.active}
-                  current={group.active && !group.children?.some(child => child.active)}
-                  icon={group.icon}
-                  id={group.id}
-                  label={group.label}
-                  onClick={() => {
-                    if (hasChildren) {
-                      setDisclosures(previous => {
-                        if (previous[group.id] !== false) {
-                          return previous
-                        }
+            return (
+              <Fragment key={group.id}>
+                {group.gapBefore && <div aria-hidden className="h-3 shrink-0" />}
+                <div className="relative">
+                  <OverlayNavItem
+                    active={group.active}
+                    current={group.active && !group.children?.some(child => child.active)}
+                    icon={group.icon}
+                    id={group.id}
+                    label={group.label}
+                    onClick={() => {
+                      if (hasChildren) {
+                        setDisclosures(previous => {
+                          if (previous[group.id] !== false) {
+                            return previous
+                          }
 
-                        const next = { ...previous }
-                        delete next[group.id]
+                          const next = { ...previous }
+                          delete next[group.id]
 
-                        return next
-                      })
-                    }
+                          return next
+                        })
+                      }
 
-                    group.onSelect()
-                  }}
-                  trailing={hasChildren ? <span aria-hidden className="w-4 shrink-0" /> : undefined}
-                />
-                {hasChildren && (
-                  <Button
-                    aria-controls={childrenId}
-                    aria-expanded={expanded}
-                    aria-label={`${expanded ? t.common.collapse : t.common.expand}: ${group.label}`}
-                    className="absolute right-0.5 top-1/2 -translate-y-1/2"
-                    data-tour={`nav-toggle-${group.id}`}
-                    onClick={() => setDisclosures(previous => ({ ...previous, [group.id]: !expanded }))}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <DisclosureCaret open={expanded} />
-                  </Button>
-                )}
-              </div>
-              {hasChildren && (
-                <div
-                  className={cn('ml-3.5 flex flex-col gap-0.5 pl-1.5', !expanded && 'hidden')}
-                  hidden={!expanded}
-                  id={childrenId}
-                >
-                  {group.children?.map(child => (
-                    <Fragment key={child.id}>
-                      <OverlayNavItem
-                        active={child.active}
-                        current={child.active && !child.children?.some(grandchild => grandchild.active)}
-                        icon={child.icon}
-                        id={child.id}
-                        label={child.label}
-                        nested
-                        onClick={child.onSelect}
-                      />
-                      {child.active && Boolean(child.children?.length) && (
-                        <div className="ml-3 flex flex-col gap-0.5 pl-1.5">
-                          {child.children?.map(grandchild => (
-                            <OverlayNavItem
-                              active={grandchild.active}
-                              icon={grandchild.icon}
-                              id={grandchild.id}
-                              key={grandchild.id}
-                              label={grandchild.label}
-                              nested
-                              onClick={grandchild.onSelect}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </Fragment>
-                  ))}
+                      group.onSelect()
+                    }}
+                    trailing={hasChildren ? <span aria-hidden className="w-4 shrink-0" /> : undefined}
+                  />
+                  {hasChildren && (
+                    <Button
+                      aria-controls={childrenId}
+                      aria-expanded={expanded}
+                      aria-label={`${expanded ? t.common.collapse : t.common.expand}: ${group.label}`}
+                      className="absolute right-0.5 top-1/2 -translate-y-1/2"
+                      data-tour={`nav-toggle-${group.id}`}
+                      onClick={() => setDisclosures(previous => ({ ...previous, [group.id]: !expanded }))}
+                      size="icon-xs"
+                      type="button"
+                      variant="ghost"
+                    >
+                      <DisclosureCaret open={expanded} />
+                    </Button>
+                  )}
                 </div>
-              )}
-            </Fragment>
-          )
-        })}
-        {footer && <div className="mt-auto flex items-center gap-1 pt-2">{footer}</div>}
+                {hasChildren && (
+                  <div
+                    className={cn('ml-3.5 flex flex-col gap-0.5 pl-1.5', !expanded && 'hidden')}
+                    hidden={!expanded}
+                    id={childrenId}
+                  >
+                    {group.children?.map(child => (
+                      <Fragment key={child.id}>
+                        <OverlayNavItem
+                          active={child.active}
+                          current={child.active && !child.children?.some(grandchild => grandchild.active)}
+                          icon={child.icon}
+                          id={child.id}
+                          label={child.label}
+                          nested
+                          onClick={child.onSelect}
+                        />
+                        {child.active && Boolean(child.children?.length) && (
+                          <div className="ml-3 flex flex-col gap-0.5 pl-1.5">
+                            {child.children?.map(grandchild => (
+                              <OverlayNavItem
+                                active={grandchild.active}
+                                icon={grandchild.icon}
+                                id={grandchild.id}
+                                key={grandchild.id}
+                                label={grandchild.label}
+                                nested
+                                onClick={grandchild.onSelect}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </Fragment>
+                    ))}
+                  </div>
+                )}
+              </Fragment>
+            )
+          })}
+        </div>
+        {footer && <div className="flex shrink-0 items-center gap-1 pt-2">{footer}</div>}
       </OverlaySidebar>
 
       {/* Narrow: the rail collapses to a dropdown row under the titlebar strip. */}

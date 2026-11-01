@@ -1,3 +1,4 @@
+import { BrandMark } from '@/components/brand-mark'
 import { Badge } from '@/components/ui/badge'
 import { RowButton } from '@/components/ui/row-button'
 import { useI18n } from '@/i18n'
@@ -17,8 +18,6 @@ const PROVIDER_ORDER: Record<string, number> = {
   anthropic: 5,
   'claude-code': 6
 }
-
-const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
 
 export const providerTitle = (p: OAuthProvider) => PROVIDER_DISPLAY_NAMES[p.id] ?? p.name
 const orderOf = (p: OAuthProvider) => PROVIDER_ORDER[p.id] ?? 99
@@ -45,7 +44,7 @@ export function FeaturedProviderRow({
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <img alt="" className="size-5 shrink-0 rounded" src={assetPath('apple-touch-icon.png')} />
+          <BrandMark className="size-5" />
           <span className="text-[0.8125rem] font-medium">
             {freeTier ? t.freeTier.providerRowTitle : providerTitle(provider)}
           </span>
