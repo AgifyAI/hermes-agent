@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
-import { Download, Loader2, PawPrint, Pencil, Trash2 } from '@/lib/icons'
+import { Download, Loader2, Pencil, Trash2 } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 import { selectableCardClass } from '@/lib/selectable-card'
 import { cn } from '@/lib/utils'
@@ -39,7 +39,7 @@ import {
 } from '@/store/pet-gallery'
 import { $gatewayState } from '@/store/session'
 
-import { ListRow, SectionHeading, ToggleRow } from './primitives'
+import { ListRow, SectionHeading, SettingsCard, ToggleRow } from './primitives'
 
 /**
  * Appearance opt-in for the floating petdex mascot. A thin view over the shared
@@ -117,18 +117,16 @@ export function PetSettings() {
 
   return (
     <div>
-      <SectionHeading icon={PawPrint} page title={copy.title} />
-      <p className="max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {copy.intro}
-      </p>
+      <SectionHeading page title={copy.title} />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{copy.intro}</p>
 
       {staleBackend && (
-        <p className="mt-2 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) px-3 py-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
+        <p className="mb-4 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2 text-xs text-(--linear-text-tertiary)">
           {copy.restartHint}
         </p>
       )}
 
-      <div className="mt-2">
+      <SettingsCard>
         <ToggleRow
           below={
             <>
@@ -276,7 +274,7 @@ export function PetSettings() {
                   step={0.05}
                   value={scale}
                 />
-                <span className="w-9 text-right text-[length:var(--conversation-caption-font-size)] tabular-nums text-(--ui-text-tertiary)">
+                <span className="w-9 text-right text-xs tabular-nums text-(--linear-text-tertiary)">
                   {`${Math.round(scale * 100)}%`}
                 </span>
               </div>
@@ -289,7 +287,7 @@ export function PetSettings() {
         {enabled && (
           <ToggleRow checked={roam} description={copy.roamDesc} label={copy.roamTitle} onChange={setPetRoam} />
         )}
-      </div>
+      </SettingsCard>
 
       <ConfirmDialog
         confirmLabel={copy.deleteConfirm}

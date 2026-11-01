@@ -14,7 +14,7 @@ import {
 } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
-import { Check, Globe, Loader2, Plus, Save, Trash2, Zap } from '@/lib/icons'
+import { Check, Loader2, Save, Trash2, Zap } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { confirm } from '@/store/confirm'
 import { notify, notifyError } from '@/store/notifications'
@@ -27,7 +27,7 @@ import type {
 } from '@/types/hermes'
 
 import { ComboboxInput } from './combobox-input'
-import { EmptyState, Pill, SectionHeading, SettingsContent, SettingsSkeleton } from './primitives'
+import { EmptyState, Pill, SectionHeading, SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 
 interface CustomEndpointsSettingsProps {
@@ -332,7 +332,7 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
   if (loading) {
     return (
       <SettingsContent>
-        <SettingsProfileScope className="mb-5" />
+        <SettingsProfileScope className="mb-8" />
         <SettingsSkeleton sections={[{ heading: true, rows: 3 }]} />
       </SettingsContent>
     )
@@ -343,16 +343,16 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
 
   return (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
-      <div className="space-y-6">
+      <SettingsProfileScope className="mb-8" />
+      <div className="space-y-12">
         <section>
-          <SectionHeading icon={Globe} meta={`${endpoints.length}`} page title={t.settings.customEndpoints.title} />
-          <div className="divide-y divide-border/40 rounded-md border border-border/50">
+          <SectionHeading meta={`${endpoints.length}`} page title={t.settings.customEndpoints.title} />
+          <SettingsCard>
             {endpoints.length ? (
               endpoints.map(endpoint => (
-                <div className="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center" key={endpoint.id}>
+                <div className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center" key={endpoint.id}>
                   <button
-                    className="min-w-0 text-left"
+                    className="min-w-0 cursor-pointer text-left"
                     onClick={() => {
                       setForm(formFromEndpoint(endpoint))
                       setDiscoveredModels(endpoint.models)
@@ -361,7 +361,9 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                     type="button"
                   >
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-sm font-medium">{endpoint.name}</span>
+                      <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
+                        {endpoint.name}
+                      </span>
                       {endpoint.is_current && (
                         <Pill tone="primary">
                           <Check className="size-3" />
@@ -370,10 +372,10 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                       )}
                       {endpoint.source === 'direct-config' && <Pill>config.yaml</Pill>}
                     </div>
-                    <div className="mt-1 truncate font-mono text-[0.7rem] text-muted-foreground">
+                    <div className="mt-[3px] truncate font-mono text-[0.6875rem] text-(--linear-text-tertiary)">
                       {endpoint.base_url}
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <div className="mt-[3px] flex flex-wrap gap-2 text-xs text-(--linear-text-tertiary)">
                       <span>{endpoint.model}</span>
                       {endpoint.has_api_key && <span>{endpoint.api_key_preview ?? ce.apiKeySet}</span>}
                     </div>
@@ -409,12 +411,13 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
                 title={t.settings.customEndpoints.emptyTitle}
               />
             )}
-          </div>
+          </SettingsCard>
         </section>
 
         <section>
-          <SectionHeading icon={Plus} title={form.id ? ce.editTitle : ce.addTitle} />
-          <div className="grid gap-3 rounded-md border border-border/50 p-3">
+          <SectionHeading title={form.id ? ce.editTitle : ce.addTitle} />
+          <SettingsCard className="py-4">
+          <div className="grid gap-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1.5 text-xs text-muted-foreground">
                 {ce.fields.name}
@@ -522,6 +525,7 @@ export function CustomEndpointsSettings({ onConfigSaved, onMainModelChanged }: C
               </Button>
             </div>
           </div>
+          </SettingsCard>
         </section>
       </div>
     </SettingsContent>

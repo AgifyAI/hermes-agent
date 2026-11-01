@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { memo, type ReactNode, useDeferredValue, useEffect, useRef, useState } from 'react'
+import { memo, type ReactNode, useDeferredValue, useEffect, useState } from 'react'
 
 import { PageLoader } from '@/components/page-loader'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,6 @@ import { CatalogDetailDialog } from './catalog-detail-dialog'
 import { CatalogDiscovery } from './catalog-discovery'
 import { CatalogFilterBar } from './catalog-filter-bar'
 import { CatalogListRow } from './catalog-list-row'
-import { CATALOG_POINTER_ENABLED, trackCatalogPointer } from './catalog-pointer'
 import {
   catalogCategories,
   type CatalogFacets,
@@ -236,18 +235,18 @@ function CatalogFilteredCards({
   onMore
 }: {
   entries: CatalogEntry[]
-  card: (entry: CatalogEntry, accentIndex: number) => ReactNode
+  card: (entry: CatalogEntry) => ReactNode
   more: boolean
   onMore: () => void
 }) {
-  const cards = entries.map((entry, index) => card(entry, index))
+  const cards = entries.map(entry => card(entry))
 
   return (
     <div className="catalog-filtered-results pt-(--capabilities-gap-lead) pb-2">
       {CATALOG_MASONRY ? (
-        <Masonry data-catalog-hover-group>{cards}</Masonry>
+        <Masonry>{cards}</Masonry>
       ) : (
-        <div className="catalog-grid" data-catalog-hover-group>
+        <div className="catalog-grid">
           {cards}
         </div>
       )}
@@ -362,9 +361,6 @@ export const CatalogBrowser = memo(function CatalogBrowser({
     setDetailOpen(true)
   }, [selectedEntryId])
 
-  const root = useRef<HTMLDivElement>(null)
-  useEffect(() => (CATALOG_POINTER_ENABLED && root.current ? trackCatalogPointer(root.current) : undefined), [])
-
   const entries = mergeInstalled(data ?? [], installedEntries ?? [], matchInstalled)
   const visible = isSuperseded ? entries.filter(entry => !isSuperseded(entry)) : entries
   const filtered = sortCatalog(filterCatalog(visible, facets, deferredQuery, isInstalled, kind), sort, kind)
@@ -411,9 +407,8 @@ export const CatalogBrowser = memo(function CatalogBrowser({
       />
     )
 
-  const card = (entry: CatalogEntry, accentIndex: number, variant: CatalogCardVariant = 'default', placement?: React.CSSProperties) => (
+  const card = (entry: CatalogEntry, variant: CatalogCardVariant = 'default', placement?: React.CSSProperties) => (
     <CatalogCard
-      accentIndex={accentIndex}
       action={entryAction(entry, variant === 'hero')}
       entry={entry}
       key={entry.id}
@@ -446,7 +441,7 @@ export const CatalogBrowser = memo(function CatalogBrowser({
   const filterKey = [facets.sources, facets.categories, facets.tags].map(list => list.join(',')).join(':')
 
   return (
-    <div className="@container/catalog flex h-full min-h-0 min-w-0" data-catalog={kind} ref={root}>
+    <div className="@container/catalog flex h-full min-h-0 min-w-0" data-catalog={kind}>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-catalog-results>
           {/* Search owns the header; kind-specific setup actions and the view toggle share the end slot. */}

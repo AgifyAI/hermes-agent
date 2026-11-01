@@ -12,7 +12,7 @@ import {
   sideloadLocalModel
 } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { Cpu, Download, FolderOpen, Loader2, Search } from '@/lib/icons'
+import { Cpu, Download, FolderOpen, Loader2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import {
   isCurrentLocalModelsOwner,
@@ -200,11 +200,10 @@ export function LocalModelsBrowseSection(): ReactElement {
           {copy.sideloadButton}
         </Button>
       }
-      icon={Search}
       title={copy.browseTitle}
     >
-      <div id="local-model-browse">
-        <p className="text-[0.75rem] text-muted-foreground">{copy.browseHint}</p>
+      <div className="py-4" id="local-model-browse">
+        <p className="text-xs text-(--linear-text-tertiary)">{copy.browseHint}</p>
 
         <SearchField
           containerClassName="w-full"

@@ -93,7 +93,7 @@ export function SharedMetricsSettings() {
   const sharing = consent?.send ?? false
 
   return (
-    <div className="grid gap-1" id="setting-shared-metrics">
+    <div id="setting-shared-metrics">
       <ToggleRow
         below={<DocsLink href={SHARED_METRICS_DOCS_URL}>{copy.whatIsCollected}</DocsLink>}
         checked={sharing}

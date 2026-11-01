@@ -35,10 +35,10 @@ export function PluginPageAccess({ plugin, pluginName }: PluginPageAccessProps) 
 
   return (
     <div
-      className="mt-1 flex flex-wrap items-center gap-1.5 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)"
+      className="mt-1 flex flex-wrap items-center gap-1.5 text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)"
       data-testid={`plugin-page-access-${pluginId}`}
     >
-      <span className="font-medium text-(--ui-text-secondary)">{copy.previewScriptAccessLabel}</span>
+      <span className="font-medium text-(--linear-text-secondary)">{copy.previewScriptAccessLabel}</span>
       {origins.length === 0 ? (
         <span>{copy.previewScriptAccessNone}</span>
       ) : (
@@ -47,7 +47,7 @@ export function PluginPageAccess({ plugin, pluginName }: PluginPageAccessProps) 
             <span>{origin}</span>
             <button
               aria-label={copy.previewScriptRevoke(origin)}
-              className="inline-flex size-4 items-center justify-center rounded-sm hover:bg-(--ui-control-hover-background) hover:text-foreground"
+              className="inline-flex size-4 items-center justify-center rounded-sm hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
               onClick={() => {
                 if (revokePreviewScript(pluginId, origin)) {
                   notify({ kind: 'info', message: copy.previewScriptRevoked(pluginName, origin) })

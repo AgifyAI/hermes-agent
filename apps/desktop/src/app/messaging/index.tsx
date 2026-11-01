@@ -5,13 +5,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageLoader } from '@/components/page-loader'
 import { StatusDot, type StatusTone } from '@/components/status-dot'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DisclosureCaret } from '@/components/ui/disclosure-caret'
 import { ErrorBanner } from '@/components/ui/error-state'
 import { Input } from '@/components/ui/input'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Switch } from '@/components/ui/switch'
-import { ResponsiveTabs } from '@/components/ui/tab-dropdown'
 import { Tip } from '@/components/ui/tooltip'
 import {
   approvePairing,
@@ -42,7 +43,7 @@ import { DetailColumn, ListColumn, MasterDetail } from '../master-detail'
 import { PageSearchShell } from '../page-search-shell'
 import { CREDENTIAL_CONTROL_CLASS } from '../settings/credential-key-ui'
 import { credentialPreview } from '../settings/helpers'
-import { ListRow } from '../settings/primitives'
+import { ListRow, SettingsCard, SettingsSection } from '../settings/primitives'
 import { SettingsProfileScope } from '../settings/profile-scope'
 import type { SetStatusbarItemGroup } from '../shell/statusbar-controls'
 
@@ -56,11 +57,12 @@ interface MessagingViewProps extends React.ComponentProps<'section'> {
 
 type EditMap = Record<string, Record<string, string>>
 
-const PILL_TONE: Record<StatusTone, string> = {
-  good: 'bg-primary/10 text-primary',
-  muted: 'bg-muted text-muted-foreground',
-  warn: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-  bad: 'bg-destructive/10 text-destructive'
+// Status tones on the shared Badge tints (accent / muted / orange / red).
+const PILL_TONE: Record<StatusTone, 'default' | 'destructive' | 'muted' | 'warn'> = {
+  good: 'default',
+  muted: 'muted',
+  warn: 'warn',
+  bad: 'destructive'
 }
 
 const stateLabel = (state: null | string | undefined, m: Translations['messaging']) =>
@@ -559,10 +561,10 @@ export function MessagingView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
       searchPlaceholder={m.search}
       searchTrailingAction={
         presentTones.length > 1 && (
-          <ResponsiveTabs
-            align="end"
-            onChange={id => handleStatusFilter(id as 'all' | StatusTone)}
-            tabs={(['all', ...presentTones] as const).map(id => ({ id, label: m.statusFilter[id] }))}
+          <SegmentedControl
+            onChange={id => handleStatusFilter(id)}
+            options={(['all', ...presentTones] as const).map(id => ({ id, label: m.statusFilter[id] }))}
+            sizing="content"
             value={activeStatusFilter}
           />
         )
@@ -575,11 +577,11 @@ export function MessagingView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
         <div className="flex h-full min-h-0 flex-col">
           {/* Which profile's gateway this page configures (hidden for
               single-profile users). */}
-          <SettingsProfileScope className="border-b border-(--ui-stroke-secondary) px-3 py-2" />
+          <SettingsProfileScope className="border-b-[0.5px] border-(--linear-border-secondary) px-3 py-2" />
           <div className="min-h-0 flex-1">
             <MasterDetail>
               <ListColumn>
-                <ul className="space-y-1">
+                <ul className="flex flex-col gap-px">
                   {visiblePlatforms.map(platform => (
                     <li key={platform.id}>
                       <PlatformRow
@@ -684,28 +686,25 @@ function PlatformRow({
   return (
     <button
       className={cn(
-        'row-hover flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:text-foreground',
-        active ? 'bg-(--ui-row-active-background) text-foreground' : 'text-(--ui-text-secondary)'
+        // Linear's nav row: 28px, radius 8, 8px left / 9px right, 13px/500.
+        'flex h-7 w-full cursor-pointer items-center gap-1.5 rounded-(--linear-radius-control) pr-[0.5625rem] pl-2 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        active
+          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
+          : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
       )}
       onClick={onSelect}
       type="button"
     >
-      <PlatformAvatar platformId={platform.id} platformName={platform.name} />
+      <PlatformAvatar className="size-4.5 rounded-(--linear-radius-kbd) text-[0.6875rem]" platformId={platform.id} platformName={platform.name} />
       <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-        <span className="truncate text-[length:var(--conversation-text-font-size)] font-normal">{platform.name}</span>
+        <span className="truncate">{platform.name}</span>
         <span className="flex shrink-0 items-center gap-1.5">
           {/* Someone is waiting to be let in — the only way this page tells
               you so before you open the platform. */}
           {pendingCount > 0 && (
-            <span
-              aria-label={t.messaging.pendingAria(pendingCount)}
-              className={cn(
-                'inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[0.66rem] font-medium tabular-nums',
-                PILL_TONE.warn
-              )}
-            >
+            <Badge aria-label={t.messaging.pendingAria(pendingCount)} className="min-w-4 justify-center tabular-nums" variant={PILL_TONE.warn}>
               {pendingCount}
-            </span>
+            </Badge>
           )}
           <StatusDot tone={platformStatusTone(platform)} />
         </span>
@@ -752,11 +751,11 @@ function PlatformDetail({
 
   return (
     <>
-      <header className="flex items-start gap-3">
-        <PlatformAvatar platformId={platform.id} platformName={platform.name} />
+      <header className="flex items-start gap-3 px-4">
+        <PlatformAvatar className="mt-1" platformId={platform.id} platformName={platform.name} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="min-w-0 truncate text-[0.9375rem] font-semibold tracking-tight">{platform.name}</h3>
+            <h3 className="min-w-0 truncate text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">{platform.name}</h3>
             <StatePill tone={platformStatusTone(platform)}>{stateLabel(platform.state, m)}</StatePill>
             {/* Resting states earn no pill — only actionable ones. */}
             {!platform.configured && <SetupPill active={false}>{m.needsSetup}</SetupPill>}
@@ -766,9 +765,7 @@ function PlatformDetail({
               <SetupPill active={false}>{m.gatewayStopped}</SetupPill>
             )}
           </div>
-          <p className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {platform.description}
-          </p>
+          <p className="mt-1 text-[0.8125rem] font-[450] text-(--linear-text-tertiary)">{platform.description}</p>
           <PlatformHint platform={platform} />
         </div>
       </header>
@@ -779,10 +776,8 @@ function PlatformDetail({
           waiting — an empty-state card here would be permanent chrome on a
           page that is usually about credentials, not approvals. */}
       {pending.length > 0 && (
-        <section>
-          <SectionTitle>{m.pendingRequests(pending.length)}</SectionTitle>
-          <div className="mt-1 grid gap-1">
-            {pending.map(user => {
+        <SettingsSection title={m.pendingRequests(pending.length)}>
+          {pending.map(user => {
               const busy = approving === pairingKey(user)
               const waited = typeof user.age_minutes === 'number' ? m.waitingSince(user.age_minutes) : null
 
@@ -806,15 +801,12 @@ function PlatformDetail({
                 />
               )
             })}
-          </div>
-        </section>
+        </SettingsSection>
       )}
 
       {approved.length > 0 && (
-        <section>
-          <SectionTitle>{m.approvedUsers(approved.length)}</SectionTitle>
-          <div className="mt-1 grid gap-1">
-            {approved.map(user => (
+        <SettingsSection title={m.approvedUsers(approved.length)}>
+          {approved.map(user => (
               <ListRow
                 action={
                   <Button
@@ -831,26 +823,19 @@ function PlatformDetail({
                 title={pairingLabel(user)}
               />
             ))}
-          </div>
-        </section>
+        </SettingsSection>
       )}
 
       {platform.id === 'telegram' && (
-        <section>
-          <SectionTitle>{m.telegramQr.quickSetup}</SectionTitle>
-          <div className="mt-3">
-            <TelegramQrSetup onApplied={onTelegramApplied} platform={platform} scopeProfile={scopeProfile} />
-          </div>
-        </section>
+        <SettingsSection card={false} title={m.telegramQr.quickSetup}>
+          <TelegramQrSetup onApplied={onTelegramApplied} platform={platform} scopeProfile={scopeProfile} />
+        </SettingsSection>
       )}
 
-      <section>
-        <SectionTitle>{m.getCredentials}</SectionTitle>
-        <p className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-          {introCopy(platform, m)}
-        </p>
+      <SettingsSection card={false} title={m.getCredentials}>
+        <p className="px-4 text-xs font-[450] text-(--linear-text-tertiary)">{introCopy(platform, m)}</p>
         {platform.docs_url && (
-          <div className="mt-3">
+          <div className="mt-3 px-4">
             <Button asChild size="sm" variant="textStrong">
               <a
                 href={platform.docs_url}
@@ -874,12 +859,10 @@ function PlatformDetail({
             </Button>
           </div>
         )}
-      </section>
+      </SettingsSection>
 
-      <section>
-        <SectionTitle>{m.required}</SectionTitle>
-        <div className="mt-3 grid gap-1">
-          {requiredFields.length > 0 ? (
+      <SettingsSection title={m.required}>
+        {requiredFields.length > 0 ? (
             requiredFields.map(field => (
               <MessagingField
                 edits={edits}
@@ -890,19 +873,14 @@ function PlatformDetail({
                 saving={saving}
               />
             ))
-          ) : (
-            <p className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-              {m.noTokenNeeded}
-            </p>
-          )}
-        </div>
-      </section>
+        ) : (
+          <p className="py-4 text-xs font-[450] text-(--linear-text-tertiary)">{m.noTokenNeeded}</p>
+        )}
+      </SettingsSection>
 
       {optionalFields.length > 0 && (
-        <section>
-          <SectionTitle>{m.recommended}</SectionTitle>
-          <div className="mt-3 grid gap-1">
-            {optionalFields.map(field => (
+        <SettingsSection title={m.recommended}>
+          {optionalFields.map(field => (
               <MessagingField
                 edits={edits}
                 field={field}
@@ -911,23 +889,23 @@ function PlatformDetail({
                 onEdit={onEdit}
                 saving={saving}
               />
-            ))}
-          </div>
-        </section>
+          ))}
+        </SettingsSection>
       )}
 
       {hiddenCount > 0 && (
-        <section>
+        <section className="not-first:mt-12">
           <button
-            className="flex w-full items-center justify-between gap-2 py-0.5 text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+            // Same type and inset as the section titles above; the caret discloses the card.
+            className="mb-4 flex w-full items-center justify-between gap-2 px-4 text-left text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)"
             onClick={() => setShowAdvanced(value => !value)}
             type="button"
           >
             <span>{m.advanced(hiddenCount)}</span>
-            <DisclosureCaret open={showAdvanced} size="0.875rem" />
+            <DisclosureCaret className="text-(--linear-icon)" open={showAdvanced} size="0.875rem" />
           </button>
           {showAdvanced && (
-            <div className="mt-3 grid gap-1">
+            <SettingsCard>
               {advancedFields.map(field => (
                 <MessagingField
                   edits={edits}
@@ -938,7 +916,7 @@ function PlatformDetail({
                   saving={saving}
                 />
               ))}
-            </div>
+            </SettingsCard>
           )}
         </section>
       )}
@@ -965,7 +943,7 @@ function PlatformActionBar({
 
   return (
     <>
-      <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+      <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-(--linear-text-secondary)">
         <Switch
           aria-label={platform.enabled ? m.disableAria(platform.name) : m.enableAria(platform.name)}
           checked={platform.enabled}
@@ -977,7 +955,7 @@ function PlatformActionBar({
       </label>
 
       <div className="ml-auto flex items-center gap-2">
-        {hasEdits && <span className="text-xs text-muted-foreground">{m.unsavedChanges}</span>}
+        {hasEdits && <span className="text-xs text-(--linear-text-tertiary)">{m.unsavedChanges}</span>}
         <Button disabled={!hasEdits || isSavingEnv} onClick={onSave} size="sm">
           <Save />
           {isSavingEnv ? m.saving : m.saveChanges}
@@ -1049,7 +1027,7 @@ function MessagingField({
     <>
       {field.url && (
         <Tip label={m.openDocs}>
-          <Button asChild className="size-8 shrink-0" variant="ghost">
+          <Button asChild size="icon-sm" variant="ghost">
             <a href={field.url} rel="noreferrer" target="_blank">
               <ExternalLink className="size-3.5" />
             </a>
@@ -1060,9 +1038,9 @@ function MessagingField({
       {field.is_set && !field.is_list && (
         <Tip label={m.clearField(field.key)}>
           <Button
-            className="size-8 shrink-0"
             disabled={saving === `clear:${field.key}`}
             onClick={() => onClear(field.key)}
+            size="icon-sm"
             variant="ghost"
           >
             <Trash2 className="size-3.5" />
@@ -1102,15 +1080,11 @@ function MessagingField({
       title={
         <span className="flex flex-wrap items-center gap-2">
           <label htmlFor={fieldId}>{copy.label}</label>
-          {field.is_set && <span className="text-[0.66rem] font-medium text-primary">{m.saved}</span>}
+          {field.is_set && <Badge variant="success">{m.saved}</Badge>}
         </span>
       }
     />
   )
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h4 className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{children}</h4>
 }
 
 function PlatformHint({ platform }: { platform: MessagingPlatformInfo }) {
@@ -1120,9 +1094,9 @@ function PlatformHint({ platform }: { platform: MessagingPlatformInfo }) {
   // /p/<profile>/: the state pill says connected, this line says where to point the client.
   if (platform.ingress_url) {
     return (
-      <p className="mt-2 text-xs leading-5 text-muted-foreground break-all">
+      <p className="mt-2 text-xs leading-5 font-[450] break-all text-(--linear-text-tertiary)">
         {t.messaging.sharedListenerUrl}{' '}
-        <code className="font-mono text-foreground" data-slot="ingress-url">
+        <code className="font-mono text-(--linear-text-primary)" data-slot="ingress-url">
           {platform.ingress_url}
         </code>
       </p>
@@ -1140,32 +1114,18 @@ function PlatformHint({ platform }: { platform: MessagingPlatformInfo }) {
         ? null
         : t.messaging.hintGatewayStopped
 
-  return hint ? <p className="mt-2 text-xs leading-5 text-muted-foreground">{hint}</p> : null
+  return hint ? <p className="mt-2 text-xs leading-5 font-[450] text-(--linear-text-tertiary)">{hint}</p> : null
 }
 
 function StatePill({ children, tone }: { children: string; tone: StatusTone }) {
   return (
-    <span
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.66rem] font-medium',
-        PILL_TONE[tone]
-      )}
-    >
+    <Badge className="gap-1.5" variant={PILL_TONE[tone]}>
       <StatusDot tone={tone} />
       {children}
-    </span>
+    </Badge>
   )
 }
 
 function SetupPill({ active, children }: { active: boolean; children: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[0.66rem] font-medium',
-        PILL_TONE[active ? 'good' : 'muted']
-      )}
-    >
-      {children}
-    </span>
-  )
+  return <Badge variant={PILL_TONE[active ? 'good' : 'muted']}>{children}</Badge>
 }

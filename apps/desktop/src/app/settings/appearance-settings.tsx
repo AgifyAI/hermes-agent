@@ -5,7 +5,6 @@ import { SegmentedControl } from '@/components/ui/segmented-control'
 import { saveHermesConfig } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
-import { Palette } from '@/lib/icons'
 import { $backdrop, setBackdrop } from '@/store/backdrop'
 import { $chatTextScale, CHAT_TEXT_SCALE_PRESETS, setChatTextScale } from '@/store/chat-text-scale'
 import { $composerPopoutGesturesEnabled, setComposerPopoutGesturesEnabled } from '@/store/composer-popout'
@@ -49,7 +48,7 @@ import { MODE_OPTIONS } from './constants'
 import { setNested } from './helpers'
 import { MinimizeToTraySetting } from './minimize-to-tray-setting'
 import { PetSettings } from './pet-settings'
-import { ListRow, RowFootnoteAction, SectionHeading, SettingsContent, ToggleRow } from './primitives'
+import { ListRow, RowFootnoteAction, SectionHeading, SettingsCard, SettingsContent, ToggleRow } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { TerminalFontSetting } from './terminal-font-setting'
 import { useSettingDeepLink } from './use-setting-deep-link'
@@ -215,14 +214,12 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
       <div>
         {subpage === undefined && (
           <>
-            <SectionHeading icon={Palette} title={a.title} />
-            <p className="max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-              {a.intro}
-            </p>
+            <SectionHeading title={a.title} />
+            <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{a.intro}</p>
           </>
         )}
 
-        <div className={subpage === undefined ? 'mt-2' : undefined}>
+        <SettingsCard>
           {show('general') && (
             <ListRow
               action={<LanguageSwitcher />}
@@ -244,7 +241,9 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
                   value={mode}
                 />
               }
-              description={showProfileNote ? `${a.colorModeDesc} ${a.themeProfileNote(activeProfileName)}` : a.colorModeDesc}
+              description={
+                showProfileNote ? `${a.colorModeDesc} ${a.themeProfileNote(activeProfileName)}` : a.colorModeDesc
+              }
               id={settingElementId(ids.theme)}
               title={a.colorMode}
             />
@@ -562,11 +561,11 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
               title={a.embedsTitle}
             />
           )}
-        </div>
+        </SettingsCard>
       </div>
 
       {show('pet') && (
-        <div className={subpage === undefined ? 'mt-6' : undefined} id={settingElementId(ids.pet)}>
+        <div className={subpage === undefined ? 'mt-12' : undefined} id={settingElementId(ids.pet)}>
           <PetSettings />
         </div>
       )}

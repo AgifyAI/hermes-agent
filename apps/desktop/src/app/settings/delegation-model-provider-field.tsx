@@ -39,7 +39,7 @@ interface DelegationModelProviderFieldProps {
   onChange: (next: DelegationModelProviderValue) => void
 }
 
-const ROW_CONTROL = 'w-full min-w-0 max-w-full @2xl:w-72'
+const ROW_CONTROL = 'w-full min-w-0 max-w-full @lg:w-64'
 
 /** A route draft belongs to the same immutable owner as the config that seeded it. */
 export function DelegationModelProviderField(props: DelegationModelProviderFieldProps) {

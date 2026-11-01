@@ -28,10 +28,12 @@ export function ScopeChip({ active, label, onSelect }: { active: boolean; label:
   return (
     <button
       className={cn(
-        'rounded-full border px-3 py-1 text-[length:var(--conversation-caption-font-size)] transition',
+        // Linear's property chip: 24px pill, 12px/500; the chosen profile takes
+        // the segmented-selected fill.
+        'h-6 cursor-pointer rounded-full border-[0.5px] px-2 text-xs font-medium transition-colors duration-(--linear-speed-quick)',
         active
-          ? 'border-(--ui-stroke-secondary) bg-(--ui-bg-tertiary) text-(--ui-text-primary)'
-          : 'border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover)'
+          ? 'border-(--linear-border-tertiary) bg-(--linear-segment-selected) text-(--linear-text-primary)'
+          : 'border-(--linear-border-secondary) bg-(--linear-bg-chip) text-(--linear-text-tertiary) hover:bg-(--linear-bg-chip-hover) hover:text-(--linear-text-primary)'
       )}
       onClick={onSelect}
       type="button"
@@ -72,7 +74,7 @@ export function SettingsProfileScope({ className }: { className?: string }) {
 
   return (
     <div className={cn('grid gap-2', className)}>
-      <div className="text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-secondary)">
+      <div className="text-xs font-medium text-(--linear-text-secondary)">
         {scope.appliesTo}
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -93,8 +95,8 @@ export function SettingsProfileScope({ className }: { className?: string }) {
       {override !== null || editingNonDefault ? (
         <p
           className={cn(
-            'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height)',
-            editingNonDefault ? 'font-medium text-(--ui-accent)' : 'text-(--ui-text-tertiary)'
+            'text-xs',
+            editingNonDefault ? 'font-medium text-(--linear-accent)' : 'text-(--linear-text-tertiary)'
           )}
           data-scope-loud={editingNonDefault ? 'true' : undefined}
           role="status"
@@ -125,7 +127,7 @@ export function ActiveProfileNote({ className }: { className?: string }) {
   return (
     <p
       className={cn(
-        'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)',
+        'text-xs text-(--linear-text-tertiary)',
         className
       )}
       role="status"

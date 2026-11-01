@@ -66,8 +66,9 @@ interface CreatedWebhook {
 // there is a single copyable-value chrome in this file.
 function CopyValueRow({ copyLabel, mono = true, value }: { copyLabel: string; mono?: boolean; value: string }) {
   return (
-    <div className="flex items-center gap-1 rounded bg-foreground/5 px-2.5 py-1.5 text-[0.7rem]">
-      <span className={cn('min-w-0 flex-1 truncate text-foreground/80', mono && 'font-mono')}>{value}</span>
+    // Linear's text input geometry (32px, radius 8, hairline, input fill), read-only.
+    <div className="flex h-8 items-center gap-1 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-input) bg-(--linear-bg-input) pr-0.5 pl-3 text-xs">
+      <span className={cn('min-w-0 flex-1 truncate text-(--linear-text-secondary)', mono && 'font-mono')}>{value}</span>
       <CopyButton appearance="icon" buttonSize="icon-sm" label={copyLabel} text={value} />
     </div>
   )
@@ -462,7 +463,7 @@ function ProfileOwnedWebhooksView({ backendProfile, onClose }: ProfileOwnedWebho
               {visible.map(sub => (
                 <PanelListRow
                   active={selectedSub?.name === sub.name}
-                  dotClassName={sub.enabled ? 'bg-emerald-500' : 'bg-muted-foreground/50'}
+                  dotClassName={sub.enabled ? 'bg-(--linear-green)' : 'bg-(--linear-text-quaternary)'}
                   key={sub.name}
                   menuItems={[
                     {
@@ -476,7 +477,7 @@ function ProfileOwnedWebhooksView({ backendProfile, onClose }: ProfileOwnedWebho
                   title={sub.name}
                 />
               ))}
-              {visible.length === 0 && <p className="px-2 py-4 text-center text-xs text-muted-foreground">{w.empty}</p>}
+              {visible.length === 0 && <p className="px-2 py-4 text-center text-xs text-(--linear-text-tertiary)">{w.empty}</p>}
               <PanelAddButton
                 label={w.newSubscription}
                 onClick={() => {
@@ -569,7 +570,7 @@ function ProfileOwnedWebhooksView({ backendProfile, onClose }: ProfileOwnedWebho
               <div className="grid items-start gap-4 sm:grid-cols-2">
                 <Field htmlFor="webhook-deliver" label={w.fieldDeliver}>
                   <Select onValueChange={setDeliver} value={deliver}>
-                    <SelectTrigger className="h-9 rounded-md" id="webhook-deliver">
+                    <SelectTrigger id="webhook-deliver">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -582,7 +583,7 @@ function ProfileOwnedWebhooksView({ backendProfile, onClose }: ProfileOwnedWebho
                   </Select>
                 </Field>
                 <Field htmlFor="webhook-deliver-only" label={w.fieldDeliverOnly}>
-                  <div className="flex h-9 items-center">
+                  <div className="flex h-8 items-center">
                     <Switch checked={deliverOnly} id="webhook-deliver-only" onCheckedChange={setDeliverOnly} />
                   </div>
                 </Field>
@@ -606,7 +607,7 @@ function ProfileOwnedWebhooksView({ backendProfile, onClose }: ProfileOwnedWebho
           pendingDelete ? (
             <>
               {w.deleteDescPrefix}
-              <span className="font-medium text-foreground">{pendingDelete}</span>
+              <span className="font-medium text-(--linear-text-primary)">{pendingDelete}</span>
               {w.deleteDescSuffix}
             </>
           ) : null
@@ -629,7 +630,7 @@ function WebhookDetail({ sub }: { sub: WebhookRoute }) {
     <PanelDetail>
       <header className="space-y-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h3 className="text-[0.95rem] font-semibold tracking-tight text-foreground">{sub.name}</h3>
+          <h3 className="text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">{sub.name}</h3>
           {sub.deliver_only && <PanelPill tone="warn">{w.deliverOnly}</PanelPill>}
         </div>
 
@@ -672,7 +673,7 @@ function WebhookDetail({ sub }: { sub: WebhookRoute }) {
       {sub.description ? (
         <div className="space-y-1.5">
           <PanelSectionLabel>{w.fieldDescription}</PanelSectionLabel>
-          <p className="text-xs leading-relaxed text-foreground/80">{sub.description}</p>
+          <p className="text-[0.8125rem] leading-relaxed font-[450] text-(--linear-text-secondary)">{sub.description}</p>
         </div>
       ) : null}
 

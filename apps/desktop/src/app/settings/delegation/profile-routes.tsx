@@ -5,7 +5,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import type { DelegationProfileRoutes, ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { Users } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 
 import { Pill, SectionHeading } from '../primitives'
@@ -30,7 +29,7 @@ export function ProfileRoutesEditor({ scope, routes, profiles }: ProfileRoutesEd
 
   return (
     <section data-slot="delegation-profile-routes">
-      <SectionHeading icon={Users} title={r.profileRoutesTitle} />
+      <SectionHeading title={r.profileRoutesTitle} />
       <p className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
         {r.profileRoutesHint}
       </p>

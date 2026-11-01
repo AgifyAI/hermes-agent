@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { triggerHaptic } from '@/lib/haptics'
-import type { IconComponent } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 import { PAGE_INSET_X } from '../layout-constants'
@@ -14,15 +13,75 @@ import { PAGE_INSET_X } from '../layout-constants'
 // The settings shell owns page titles; embedded callers retain their headings.
 export const SettingsBreadcrumbContext = createContext(false)
 
+// The page title the settings shell hands its active page. `SettingsContent`
+// renders it at the head of the column (Linear's Preferences title) and clears
+// it for anything nested, so an embedded page never repeats it.
+export const SettingsPageTitleContext = createContext<string | undefined>(undefined)
+
+// Rows inside a card pad all four sides like Linear's; flat rows keep their
+// vertical rhythm only.
+const SettingsCardContext = createContext(false)
+
+// A `bare` embed (the boot-failure recovery card) is already a card: settings
+// cards inside it stay flat instead of nesting one surface in another.
+const SettingsFlatContext = createContext(false)
+
+// Linear's settings content column: 640px, centred in the pane.
+export const SETTINGS_COLUMN = 'mx-auto w-full max-w-[40rem]'
+
 // `bare` drops the page gutters + tall bottom pad for embedding in a tighter
 // surface (e.g. the boot-failure recovery card owns its own padding).
 export function SettingsContent({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
+  const title = useContext(SettingsPageTitleContext)
+
+  const content = (
+    <SettingsPageTitleContext.Provider value={undefined}>
+      <div>{children}</div>
+    </SettingsPageTitleContext.Provider>
+  )
+
   return (
     <section className="min-h-0 overflow-hidden">
       <div className={cn('h-full min-h-0 overflow-y-auto', bare ? 'px-5 pb-6' : cn('pb-20', PAGE_INSET_X))}>
-        {children}
+        <div className={cn(!bare && SETTINGS_COLUMN)}>
+          {!bare && title && (
+            <h1 className="mb-8 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">
+              {title}
+            </h1>
+          )}
+          {bare ? <SettingsFlatContext.Provider value>{content}</SettingsFlatContext.Provider> : content}
+        </div>
       </div>
     </section>
+  )
+}
+
+// Linear's settings card: one rounded surface per group of rows, rows split by
+// an inset hairline. Margins collapse in the page's block flow, so a card sits
+// 16px under its section title and 16px under a previous card. The hairline
+// goes on every rendered row after the first, so a slot that renders nothing
+// (an empty wrapper, a hidden input) never doubles or strands a line.
+const CARD_SEPARATOR =
+  '[&>:not(:empty)~:not(:empty)]:border-t-[0.5px] [&>:not(:empty)~:not(:empty)]:border-(--linear-border-secondary)'
+
+export function SettingsCard({ children, className }: { children: ReactNode; className?: string }) {
+  if (useContext(SettingsFlatContext)) {
+    return <div className={className}>{children}</div>
+  }
+
+  return (
+    <SettingsCardContext.Provider value>
+      <div
+        className={cn(
+          'not-first:mt-4 rounded-(--linear-radius-card) bg-(--linear-bg-card) px-4 shadow-(--linear-shadow-card) empty:hidden',
+          CARD_SEPARATOR,
+          className
+        )}
+        data-slot="settings-card"
+      >
+        {children}
+      </div>
+    </SettingsCardContext.Provider>
   )
 }
 
@@ -50,9 +109,14 @@ export function Pill({
   )
 }
 
+// Linear's settings section title: 15px/500, inset 16px so it lines up with
+// the rows of the card under it, 16px above that card and 48px below the
+// previous section (block-flow margins collapse into exactly those gaps).
+const SECTION_HEADING_CLASS =
+  'not-first:mt-12 mb-4 flex min-h-[1.4375rem] items-center gap-2 px-4 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)'
+
 export function SectionHeading({
   aside,
-  icon: Icon,
   meta,
   page = false,
   title
@@ -60,7 +124,6 @@ export function SectionHeading({
   // Right-aligned trailing content on the heading row (e.g. a compact status +
   // action), so a single-item section needn't repeat its own label as a row.
   aside?: ReactNode
-  icon: IconComponent
   meta?: string
   page?: boolean
   title: string
@@ -73,77 +136,49 @@ export function SectionHeading({
   }
 
   return (
-    <div className="mb-2.5 flex items-center gap-2 pt-2 text-[length:var(--conversation-text-font-size)] font-medium">
-      {showTitle && (
-        <>
-          <Icon className="size-4 shrink-0 text-muted-foreground" />
-          <span>{title}</span>
-        </>
-      )}
+    <div className={SECTION_HEADING_CLASS}>
+      {showTitle && <h2 className="min-w-0 truncate font-medium">{title}</h2>}
       {meta && <Pill>{meta}</Pill>}
       {aside && <div className="ml-auto flex min-w-0 items-center">{aside}</div>}
     </div>
   )
 }
 
-// A titled section: heading + body with the shared vertical rhythm. Keeps the
-// heading and its content welded together so pages stop hand-rolling
-// `<div className="mb-…"><SectionHeading/>…</div>` at every call site.
+// A titled section: heading over one Linear card of rows. `card={false}` keeps
+// the body free-form (galleries, plan grids) under the same heading rhythm.
 export function SettingsSection({
   aside,
+  card = true,
   children,
-  icon,
   meta,
   title
 }: {
   aside?: ReactNode
+  card?: boolean
   children: ReactNode
-  icon: IconComponent
   meta?: string
   title: string
 }) {
   return (
-    <section className="mb-6">
-      <SectionHeading aside={aside} icon={icon} meta={meta} title={title} />
-      {children}
+    <section className="not-first:mt-12">
+      <SectionHeading aside={aside} meta={meta} title={title} />
+      {card ? <SettingsCard>{children}</SettingsCard> : children}
     </section>
-  )
-}
-
-export function NavLink({
-  icon: Icon,
-  label,
-  active,
-  onClick
-}: {
-  icon: IconComponent
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <Button
-      className={cn(
-        'flex min-h-7 w-full justify-start gap-2 rounded-md px-2 text-left text-[length:var(--conversation-text-font-size)] transition',
-        active
-          ? 'bg-(--ui-bg-tertiary) text-foreground'
-          : 'text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-foreground'
-      )}
-      onClick={onClick}
-      size="sm"
-      type="button"
-      variant="ghost"
-    >
-      <Icon className="size-4 shrink-0" />
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-    </Button>
   )
 }
 
 // The label/control split every settings-style row keys on. Rows that cannot
 // be a ListRow (expandable credential cards, the billing plan card with its
 // tier art) still lay out on these exact columns so their controls line up.
-export const LIST_ROW_COLUMNS = '@2xl:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)]'
+// Keyed on the row's own width (`@lg` = 32rem) so a row in the 640px column
+// keeps Linear's label-left / control-right split, the control at its own
+// width like Linear's (capped so a long value never starves the label).
+export const LIST_ROW_COLUMNS = '@lg:grid-cols-[minmax(0,1fr)_minmax(0,max-content)]'
+
+// Linear's row type: label 13px/500 primary, description 12px/450 tertiary 3px
+// under it.
+const ROW_LABEL_CLASS = 'text-[0.8125rem] leading-[1.2] font-medium text-(--linear-text-primary)'
+const ROW_DESCRIPTION_CLASS = 'mt-[3px] text-xs leading-[1.25] font-[450] text-(--linear-text-tertiary)'
 
 // The one settings row. `action` is the row's control: beside the label on a
 // wide pane, under the description on a narrow one — the row owns that
@@ -172,27 +207,25 @@ export function ListRow({
   wide?: boolean
   className?: string
 }) {
+  const inCard = useContext(SettingsCardContext)
+
   return (
     // Container-queried, not viewport-queried: the label/control split keys on
     // the row's own pane width, so a narrow detail column (messaging, split
-    // views) stacks instead of squishing the label against minmax(15rem,…).
+    // views) stacks instead of squishing the label against the control column.
     <div className={cn('@container', className)} data-tour={dataTour} id={id}>
-      <div className={cn('grid gap-3 py-3', !wide && [LIST_ROW_COLUMNS, '@2xl:items-center'])}>
+      <div className={cn('grid gap-3', inCard ? 'py-4' : 'py-3', !wide && [LIST_ROW_COLUMNS, '@lg:items-center'])}>
         <div className="min-w-0">
-          <div className="flex items-center justify-between gap-3 text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+          <div className={cn('flex items-center justify-between gap-3', ROW_LABEL_CLASS)}>
             <span className="min-w-0">{title}</span>
             {wide && action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
           </div>
-          {description && (
-            <div className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-              {description}
-            </div>
-          )}
-          {hint && <div className="mt-1 block font-mono text-[0.68rem] text-muted-foreground/45">{hint}</div>}
+          {description && <div className={ROW_DESCRIPTION_CLASS}>{description}</div>}
+          {hint && <div className="mt-1 block font-mono text-[0.6875rem] text-(--linear-text-quaternary)">{hint}</div>}
           {below}
         </div>
         {!wide && action && (
-          <div className="flex min-w-0 flex-wrap items-center gap-2 @2xl:justify-self-end @2xl:justify-end">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 @lg:max-w-[22rem] @lg:justify-self-end @lg:justify-end">
             {action}
           </div>
         )}
@@ -274,22 +307,23 @@ export function RowFootnoteAction({ children, onClick }: { children: ReactNode; 
 // its shape (like ModelSettings) instead of collapsing to a centered spinner.
 export function SectionHeadingSkeleton() {
   return (
-    <div className="mb-2.5 flex items-center gap-2 pt-2">
-      <Skeleton className="size-4" />
+    <div className={SECTION_HEADING_CLASS}>
       <Skeleton className="h-4 w-36 max-w-full" />
     </div>
   )
 }
 
 export function ListRowSkeleton({ wide = false }: { wide?: boolean }) {
+  const inCard = useContext(SettingsCardContext)
+
   return (
     <div className="@container">
-      <div className={cn('grid gap-3 py-3', !wide && [LIST_ROW_COLUMNS, '@2xl:items-center'])}>
+      <div className={cn('grid gap-3', inCard ? 'py-4' : 'py-3', !wide && [LIST_ROW_COLUMNS, '@lg:items-center'])}>
         <div className="min-w-0 space-y-1.5">
           <Skeleton className="h-3.5 w-40 max-w-full" />
           <Skeleton className="h-3 w-64 max-w-full" />
         </div>
-        {!wide && <Skeleton className="h-8 w-full @2xl:w-72 @2xl:justify-self-end" />}
+        {!wide && <Skeleton className="h-8 w-full @lg:w-48 @lg:justify-self-end" />}
       </div>
     </div>
   )
@@ -307,15 +341,15 @@ export function SettingsSkeleton({
 }) {
   return (
     <SettingsContent>
-      {search && <Skeleton className="mb-3 h-8 w-full" />}
+      {search && <Skeleton className="mb-4 h-8 w-full" />}
       {sections.map((section, i) => (
-        <section className={cn(i > 0 && 'mt-6')} key={i}>
+        <section className="not-first:mt-12" key={i}>
           {section.heading && <SectionHeadingSkeleton />}
-          <div className="grid gap-1">
+          <SettingsCard>
             {Array.from({ length: section.rows }, (_, r) => (
               <ListRowSkeleton key={r} />
             ))}
-          </div>
+          </SettingsCard>
         </section>
       ))}
     </SettingsContent>

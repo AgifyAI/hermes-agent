@@ -18,7 +18,7 @@ import {
 import { useI18n } from '@/i18n'
 import type { WebAccessTranslations } from '@/i18n/types_gateway_host'
 import { ExternalLink } from '@/lib/external-link'
-import { Globe, Loader2, Network } from '@/lib/icons'
+import { Loader2 } from '@/lib/icons'
 import { isBrowserHostedDesktop } from '@/lib/platform'
 import { notify, notifyError } from '@/store/notifications'
 import { $connection } from '@/store/session'
@@ -188,9 +188,9 @@ function WebAccessForm({ queryKey, status, w }: FormProps): ReactElement {
 
   return (
     <SettingsContent>
-      <SectionHeading icon={Network} page title={w.title} />
-      <p className="mb-4 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{w.intro}</p>
-      <SettingsSection aside={<Pill tone={phase === 'serving' ? 'success' : 'muted'}>{pillLabel(phase, busy, w)}</Pill>} icon={Globe} title={w.title}>
+      <SectionHeading page title={w.title} />
+      <p className="px-4 text-xs text-(--linear-text-tertiary)">{w.intro}</p>
+      <SettingsSection aside={<Pill tone={phase === 'serving' ? 'success' : 'muted'}>{pillLabel(phase, busy, w)}</Pill>} title={w.title}>
         {/* A web app served on this computer only has no network address to choose until it stops. */}
         {status.mode !== 'local' && (
           <WhereRow

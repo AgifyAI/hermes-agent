@@ -298,7 +298,7 @@ function ScopedSkillCatalog({
           )}
           {hasHubSkills && hubPending && !installedPending && !notice && (
             <Loader
-              className="mx-auto my-2 size-6 text-(--ui-text-tertiary)"
+              className="mx-auto my-2 size-6 text-(--linear-text-tertiary)"
               label={t.skills.loading}
               type="rose-curve"
             />

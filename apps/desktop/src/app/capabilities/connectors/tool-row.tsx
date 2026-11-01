@@ -16,10 +16,10 @@ export const TOOL_ROW_HEIGHT = 30
 const MAX_ROW_HINTS = 2
 
 const TONE_CLASS = {
-  danger: 'text-(--ui-red)',
-  neutral: 'text-(--ui-text-secondary)',
-  notice: 'text-(--ui-yellow)',
-  unknown: 'text-(--ui-purple)'
+  danger: 'text-(--linear-red)',
+  neutral: 'text-(--linear-text-secondary)',
+  notice: 'text-(--linear-yellow)',
+  unknown: 'text-(--linear-accent)'
 } satisfies Record<VocabularyTone, string>
 
 export interface ToolRowProps {
@@ -47,16 +47,16 @@ export function ToolRow({ expanded, on, onExpand, onToggle, preview = false, rea
       <span
         className={cn(
           'min-w-0 truncate text-xs font-medium',
-          struck ? 'text-(--ui-text-quaternary) line-through' : 'text-(--ui-text-primary)'
+          struck ? 'text-(--linear-text-quaternary) line-through' : 'text-(--linear-text-primary)'
         )}
       >
         {tool.name}
       </span>
 
-      <span className="flex shrink-0 items-center gap-1.5 text-[0.65rem] text-(--ui-text-quaternary)">
+      <span className="flex shrink-0 items-center gap-1.5 text-[0.6875rem] text-(--linear-text-quaternary)">
         {tool.facet === 'unclassified' ? null : (
           <Tip label={facetCopy.long}>
-            <span className={cn('whitespace-nowrap', locked ? 'text-(--ui-text-quaternary)' : TONE_CLASS[facet.tone])}>
+            <span className={cn('whitespace-nowrap', locked ? 'text-(--linear-text-quaternary)' : TONE_CLASS[facet.tone])}>
               {facetCopy.label}
             </span>
           </Tip>
@@ -68,21 +68,21 @@ export function ToolRow({ expanded, on, onExpand, onToggle, preview = false, rea
           <HintTags hints={hints.slice(0, MAX_ROW_HINTS)} more={Math.max(0, hints.length - MAX_ROW_HINTS)} />
         )}
 
-        {expandable ? <DisclosureCaret className="text-(--ui-text-quaternary)" open={expanded} /> : null}
+        {expandable ? <DisclosureCaret className="text-(--linear-text-quaternary)" open={expanded} /> : null}
       </span>
     </>
   )
 
   return (
     <div
-      className={cn('grid', locked && 'bg-muted/40', expanded && 'bg-(--ui-row-open-background)')}
+      className={cn('grid', locked && 'bg-(--linear-hover-control)', expanded && 'bg-(--ui-row-open-background)')}
       data-slot="tool-row"
       data-tool={tool.slug}
     >
       <div className="flex items-center gap-2.5 px-3.5" style={{ height: TOOL_ROW_HEIGHT }}>
         <span className="flex w-7 shrink-0 items-center">
           {preview ? null : locked ? (
-            <Lock aria-hidden className="size-3 text-(--ui-text-quaternary)" />
+            <Lock aria-hidden className="size-3 text-(--linear-text-quaternary)" />
           ) : (
             <Switch
               aria-label={on ? copy.turnToolOff(tool.name) : copy.turnToolOn(tool.name)}
@@ -97,7 +97,7 @@ export function ToolRow({ expanded, on, onExpand, onToggle, preview = false, rea
         {expandable ? (
           <button
             aria-expanded={expanded}
-            className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 text-left outline-none focus-visible:ring-[0.1875rem] focus-visible:ring-ring/50"
+            className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 text-left outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)"
             onClick={onExpand}
             type="button"
           >
@@ -135,9 +135,9 @@ function ToolDetail({ hints, tool }: { hints: ReturnType<typeof hintTags>; tool:
 
   return (
     <div className="grid gap-1 pb-2.5 pl-[3.625rem] pr-3.5">
-      <p className="max-w-[60ch] text-[0.7rem] leading-relaxed text-(--ui-text-secondary)">{tool.description}</p>
+      <p className="max-w-[60ch] text-[0.6875rem] leading-relaxed text-(--linear-text-secondary)">{tool.description}</p>
       {hints.length > MAX_ROW_HINTS ? (
-        <p className="text-[0.65rem] text-(--ui-text-quaternary)">
+        <p className="text-[0.6875rem] text-(--linear-text-quaternary)">
           {hints.map(hint => tagCopy(hint, t.connectorsPage.vocabulary).label).join(' · ')}
         </p>
       ) : null}

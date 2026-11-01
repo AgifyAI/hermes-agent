@@ -7,7 +7,7 @@ import { $settingsRequestProfile } from '@/store/settings-scope'
 import { CredentialKeyCard, credentialPlaceholder, credentialRowLabel } from './credential-key-ui'
 import { useEnvCredentials } from './env-credentials'
 import { asText } from './helpers'
-import { SettingsContent, SettingsSkeleton } from './primitives'
+import { SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
@@ -83,9 +83,9 @@ export function KeysSettings({ view }: KeysSettingsProps) {
 
   return (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       {entries.length > 0 ? (
-        <div className="grid gap-2">
+        <SettingsCard>
           {entries.map(([key, info]) => {
             const label = credentialRowLabel(key, info)
 
@@ -104,9 +104,9 @@ export function KeysSettings({ view }: KeysSettingsProps) {
               </div>
             )
           })}
-        </div>
+        </SettingsCard>
       ) : (
-        <div className="rounded-lg border border-dashed border-(--ui-stroke-tertiary) px-4 py-8 text-center text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+        <div className="rounded-(--linear-radius-card) border-[0.5px] border-dashed border-(--linear-border-tertiary) px-4 py-8 text-center text-xs text-(--linear-text-tertiary)">
           {t.settings.keys.empty}
         </div>
       )}

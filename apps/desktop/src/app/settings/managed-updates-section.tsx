@@ -13,7 +13,7 @@ import {
   runManagedUpdate
 } from '@/store/managed-updates'
 
-import { ListRow, Pill, SectionHeading, SettingsBreadcrumbContext } from './primitives'
+import { ListRow, Pill, SectionHeading, SettingsBreadcrumbContext, SettingsCard } from './primitives'
 
 function stateTone(state: ManagedUpdateState | undefined): 'muted' | 'primary' | 'warn' {
   if (!state || state.status === 'idle') {
@@ -94,13 +94,11 @@ export function ManagedUpdatesSection() {
   }
 
   return (
-    <section className={hasBreadcrumb ? undefined : 'mt-8'}>
-      <SectionHeading icon={Download} page title={m.title} />
-      <p className="mb-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {m.intro}
-      </p>
+    <section className={hasBreadcrumb ? undefined : 'mt-12'}>
+      <SectionHeading page title={m.title} />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{m.intro}</p>
 
-      <div className="grid gap-1">
+      <SettingsCard>
         {sshConnections.map(connection => {
           const state = states[connection.id]
           const updating = state?.status === 'updating'
@@ -124,10 +122,10 @@ export function ManagedUpdatesSection() {
               }
               below={
                 state && (updating || state.message || receipt || state.scopes.length > 0) ? (
-                  <div className="mt-1 grid gap-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                  <div className="mt-1 grid gap-1 text-xs text-(--linear-text-tertiary)">
                     {updating ? <p>{m.progress}</p> : null}
                     {!updating && state.message ? <p>{state.message}</p> : null}
-                    {receipt ? <p className="font-mono text-[0.68rem]">{receipt}</p> : null}
+                    {receipt ? <p className="font-mono text-[0.6875rem]">{receipt}</p> : null}
                     {!updating && restored.length > 0 ? <p>{m.scopesRestored(restored.join(', '))}</p> : null}
                     {!updating &&
                       unrestored.map(scope => (
@@ -147,7 +145,7 @@ export function ManagedUpdatesSection() {
             />
           )
         })}
-      </div>
+      </SettingsCard>
     </section>
   )
 }

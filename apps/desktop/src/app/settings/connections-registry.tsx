@@ -25,7 +25,7 @@ import { $activeConnectionId, setConnectionsRegistry } from '@/store/connections
 import { refreshFleetRoster } from '@/store/fleet-roster'
 import { notify, notifyError } from '@/store/notifications'
 
-import { EmptyState, ListRow, Pill, SectionHeading, SettingsBreadcrumbContext, ToggleRow } from './primitives'
+import { EmptyState, ListRow, Pill, SectionHeading, SettingsBreadcrumbContext, SettingsCard, ToggleRow } from './primitives'
 
 const KIND_ICONS: Record<DesktopConnectionKind, typeof Globe> = {
   cloud: Cloud,
@@ -585,19 +585,17 @@ export function ConnectionsRegistrySection() {
   }
 
   return (
-    <div className={hasBreadcrumb ? undefined : 'mt-8 border-t border-border/60 pt-6'}>
-      <SectionHeading icon={Globe} page title={s.title} />
-      <p className="mb-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{s.intro}</p>
+    <div className={hasBreadcrumb ? undefined : 'mt-12'}>
+      <SectionHeading page title={s.title} />
+      <p className="mb-1 px-4 text-xs text-(--linear-text-tertiary)">{s.intro}</p>
       {/* Source selection lives in Sessions. Primary is the registry fallback,
           not an immediate workspace switch. */}
-      <p className="mb-4 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {s.stagedNote}
-      </p>
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.stagedNote}</p>
 
       {!loading && showSearch && (
         <Input
           aria-label={s.searchPlaceholder}
-          containerClassName="mt-3 mb-0 w-full max-w-sm"
+          containerClassName="mb-4 w-full max-w-sm"
           onChange={event => updateSearchQuery(event.target.value)}
           placeholder={s.searchPlaceholder}
           prefix={<SearchIcon className="size-3.5" />}
@@ -615,7 +613,8 @@ export function ConnectionsRegistrySection() {
       ) : displayedConnections.length === 0 ? (
         <EmptyState title={s.noSearchResults} />
       ) : (
-        displayedConnections.map(conn => {
+        <SettingsCard>
+          {displayedConnections.map(conn => {
           const Icon = KIND_ICONS[conn.kind]
           const isCurrent = activeConnectionId === conn.id
           const isPrimary = registry.primary === conn.id
@@ -680,7 +679,7 @@ export function ConnectionsRegistrySection() {
               key={conn.id}
               title={
                 <span className="flex items-center gap-2">
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
+                  <Icon className="size-4 shrink-0 text-(--linear-icon)" />
                   <span className="truncate">{conn.label}</span>
                   {isCurrent && <Pill tone="primary">{s.currentPill}</Pill>}
                   {isPrimary && <Pill>{s.primaryPill}</Pill>}
@@ -689,12 +688,13 @@ export function ConnectionsRegistrySection() {
               }
             />
           )
-        })
+          })}
+        </SettingsCard>
       )}
 
       {editor ? (
-        <div className="mt-4 space-y-3 rounded-lg border border-border/60 p-4">
-          <div className="grid grid-cols-2 gap-2 @2xl:grid-cols-4">
+        <div className="mt-4 space-y-3 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 shadow-(--linear-shadow-card)">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {/* Kind is fixed once created (buttons disable on edit). On create
                 every kind is offered; Local is disabled while the managed
                 local entry exists (the registry holds at most one). */}

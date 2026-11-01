@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
-import { Download, Search } from '@/lib/icons'
+import { Search } from '@/lib/icons'
 import type { LocalCatalogModel, LocalModelsStatus, LocalRuntimeJob } from '@/types/hermes'
 
 import { CatalogModelRow, SideloadedModelRow } from './local-models-model-rows'
@@ -42,7 +42,7 @@ export function LocalModelsModelsSection({
   const sortedCatalog = [...catalog].sort((a, b) => fitRank(a) - fitRank(b))
 
   return (
-    <SettingsSection icon={Download} meta={`${catalog.length}`} title={copy.modelsTitle}>
+    <SettingsSection meta={`${catalog.length}`} title={copy.modelsTitle}>
       {!hasRecommendation && (
         <ListRow
           action={
@@ -61,7 +61,7 @@ export function LocalModelsModelsSection({
         />
       )}
 
-      <div className="grid gap-1">
+      <>
         {sortedCatalog.map(model => (
           <CatalogModelRow jobs={jobs} key={model.id} model={model} status={status} />
         ))}
@@ -71,9 +71,9 @@ export function LocalModelsModelsSection({
           .map(m => (
             <SideloadedModelRow jobs={jobs} key={m.id} model={m} status={status} />
           ))}
-      </div>
+      </>
 
-      {lastError?.kind === 'model-download' && <p className="text-[0.75rem] text-destructive">{lastError.error}</p>}
+      {lastError?.kind === 'model-download' && <p className="py-3 text-xs text-(--linear-red)">{lastError.error}</p>}
     </SettingsSection>
   )
 }

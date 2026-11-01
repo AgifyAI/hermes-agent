@@ -47,7 +47,7 @@ export function ConnectorDialogMenu({ onDisconnect, onReconnect, onRefreshTools 
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className={cn(dropdownMenuRow, 'text-destructive focus:text-destructive')}
+              className={cn(dropdownMenuRow, 'text-(--linear-red) focus:text-(--linear-red)')}
               onSelect={onDisconnect}
             >
               {copy.dialog.disconnect}

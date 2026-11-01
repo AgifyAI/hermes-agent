@@ -11,7 +11,7 @@ export function CatalogMark({ className }: { className?: string }) {
     <Tip label={label}>
       <span
         aria-label={label}
-        className={cn('relative z-10 flex shrink-0 items-center text-(--ui-text-quaternary)', className)}
+        className={cn('relative z-10 flex shrink-0 items-center text-(--linear-text-quaternary)', className)}
         role="img"
       >
         <Codicon name="verified-filled" size="0.75rem" />

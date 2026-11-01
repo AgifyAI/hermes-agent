@@ -49,7 +49,7 @@ import { ConnectionsRegistrySection } from './connections-registry'
 import { CONTROL_TEXT } from './constants'
 import { KeychainEncryptionSetting, useKeychainEncryption } from './keychain-encryption-setting'
 import { ManagedUpdatesSection } from './managed-updates-section'
-import { EmptyState, ListRow, Pill, SettingsContent, SettingsSkeleton } from './primitives'
+import { EmptyState, ListRow, Pill, SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { enrichSelectedSshHost, selectSshHost } from './ssh-host-selection'
 import { useSettingDeepLink } from './use-setting-deep-link'
@@ -120,6 +120,10 @@ export function savedCloudConnectionUrl(config: Pick<GatewaySettingsState, 'mode
   return config.mode === 'cloud' ? config.remoteUrl.trim().replace(/\/+$/, '').toLowerCase() : ''
 }
 
+// A titled group inside the Gateways page (cloud sign-in, org and agent
+// pickers): Linear's section title over its card.
+const GATEWAY_GROUP_TITLE = 'mb-4 px-4 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)'
+
 function ModeCard({
   active,
   description,
@@ -148,23 +152,21 @@ function ModeCard({
       type="button"
     >
       <div className="flex items-center gap-1.5">
-        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 text-[length:var(--conversation-text-font-size)] font-medium">{title}</span>
+        <Icon className="size-3.5 shrink-0 text-(--linear-icon)" />
+        <span className="min-w-0 text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</span>
         {hint ? (
           <Tip label={hint}>
             <span
-              className="grid size-3.5 shrink-0 cursor-help place-items-center text-(--ui-text-tertiary) hover:text-(--ui-text-secondary)"
+              className="grid size-3.5 shrink-0 cursor-help place-items-center text-(--linear-text-tertiary) hover:text-(--linear-text-secondary)"
               onClick={event => event.stopPropagation()}
             >
               <HelpCircle className="size-3.5" />
             </span>
           </Tip>
         ) : null}
-        {active ? <Check className="ml-auto size-3.5 shrink-0 text-primary" /> : null}
+        {active ? <Check className="ml-auto size-3.5 shrink-0 text-(--linear-accent)" /> : null}
       </div>
-      <p className="mt-1.5 flex-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {description}
-      </p>
+      <p className="mt-1.5 flex-1 text-xs text-(--linear-text-tertiary)">{description}</p>
     </button>
   )
 }
@@ -1033,20 +1035,17 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
   return (
     <SettingsContent bare={embedded}>
       {embedded || standalone ? null : (
-        <div className="mb-5">
-          <div className="flex items-center gap-2 text-[length:var(--conversation-text-font-size)] font-medium">
-            <Globe className="size-4 text-muted-foreground" />
+        <div className="mb-8 px-4">
+          <div className="flex items-center gap-2 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">
             {g.title}
             {state.envOverride ? <Pill tone="primary">{g.envOverride}</Pill> : null}
           </div>
-          <p className="mt-2 max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {g.intro}
-          </p>
+          <p className="mt-1 text-xs text-(--linear-text-tertiary)">{g.intro}</p>
         </div>
       )}
 
       {state.envOverride ? (
-        <div className="mb-5 flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-[length:var(--conversation-caption-font-size)] text-destructive">
+        <div className="mb-8 flex items-start gap-2 rounded-(--linear-radius-card) border-[0.5px] border-(--linear-red) bg-[color-mix(in_srgb,var(--linear-red)_8%,transparent)] px-3 py-2.5 text-xs text-(--linear-red)">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           <div>
             <div className="font-medium">{g.envOverrideTitle}</div>
@@ -1055,11 +1054,11 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
         </div>
       ) : null}
 
-      <div className="mb-5 grid gap-2" id={settingElementId(SETTING_IDS.gateway.connectionMode)}>
-        <div className="text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-secondary)">
+      <div className="mb-4" id={settingElementId(SETTING_IDS.gateway.connectionMode)}>
+        <div className="mb-4 px-4 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">
           {g.modeTitle}
         </div>
-        <div className="grid auto-rows-fr grid-cols-1 gap-2 sm:grid-cols-2 min-[72rem]:grid-cols-4">
+        <div className="grid auto-rows-fr grid-cols-1 gap-2 sm:grid-cols-2">
           <ModeCard
             active={state.mode === 'local'}
             description={g.localDesc}
@@ -1101,74 +1100,74 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
           whose selection drives the silent per-agent cascade + a cloud
           connection. Replaces the URL/token form while in cloud mode. */}
       {state.mode === 'cloud' && !state.envOverride ? (
-        <div className="mt-5 grid gap-1">
+        <div className="mt-12">
           {savedCloudConnections.length > 0 ? (
-            <div className="mb-4 grid gap-1">
-              <div className="text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-secondary)">
-                {g.cloudSavedTitle}
-              </div>
-              <p className="mb-2 text-xs text-muted-foreground">{g.cloudSavedDesc}</p>
-              {savedCloudConnections.map(connection => (
-                <div data-slot="saved-cloud-gateway" key={connection.id}>
-                  <ListRow
-                    action={
-                      activeConnectionId === connection.id ? (
-                        <Pill tone="primary">
-                          <Check className="size-3" />
-                          {g.cloudActive}
-                        </Pill>
-                      ) : (
-                        <Button
-                          disabled={cloudConnectingId !== null}
-                          onClick={() => void activateSavedCloud(connection.id, connection.url)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          {cloudConnectingId === connection.id ? <Loader2 className="animate-spin" /> : null}
-                          {g.cloudUseSaved}
-                        </Button>
-                      )
-                    }
-                    description={connection.url}
-                    title={connection.label}
-                  />
-                </div>
-              ))}
+            <div className="mb-12">
+              <div className={GATEWAY_GROUP_TITLE}>{g.cloudSavedTitle}</div>
+              <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{g.cloudSavedDesc}</p>
+              <SettingsCard>
+                {savedCloudConnections.map(connection => (
+                  <div data-slot="saved-cloud-gateway" key={connection.id}>
+                    <ListRow
+                      action={
+                        activeConnectionId === connection.id ? (
+                          <Pill tone="primary">
+                            <Check className="size-3" />
+                            {g.cloudActive}
+                          </Pill>
+                        ) : (
+                          <Button
+                            disabled={cloudConnectingId !== null}
+                            onClick={() => void activateSavedCloud(connection.id, connection.url)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            {cloudConnectingId === connection.id ? <Loader2 className="animate-spin" /> : null}
+                            {g.cloudUseSaved}
+                          </Button>
+                        )
+                      }
+                      description={connection.url}
+                      title={connection.label}
+                    />
+                  </div>
+                ))}
+              </SettingsCard>
             </div>
           ) : null}
-          <ListRow
-            action={
-              cloudSignedIn ? (
-                <div className="flex items-center gap-2">
-                  <Pill tone="primary">
-                    <Check className="size-3" /> {g.cloudSignedIn}
-                  </Pill>
-                  <Button disabled={cloudSigningIn} onClick={() => void cloudSignOut()} variant="outline">
-                    {cloudSigningIn ? <Loader2 className="animate-spin" /> : null}
-                    {g.signOut}
+          <SettingsCard>
+            <ListRow
+              action={
+                cloudSignedIn ? (
+                  <div className="flex items-center gap-2">
+                    <Pill tone="primary">
+                      <Check className="size-3" /> {g.cloudSignedIn}
+                    </Pill>
+                    <Button disabled={cloudSigningIn} onClick={() => void cloudSignOut()} variant="outline">
+                      {cloudSigningIn ? <Loader2 className="animate-spin" /> : null}
+                      {g.signOut}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button disabled={cloudSigningIn} onClick={() => void cloudSignIn()}>
+                    {cloudSigningIn ? <Loader2 className="animate-spin" /> : <LogIn />}
+                    {g.cloudSignIn}
                   </Button>
-                </div>
-              ) : (
-                <Button disabled={cloudSigningIn} onClick={() => void cloudSignIn()}>
-                  {cloudSigningIn ? <Loader2 className="animate-spin" /> : <LogIn />}
-                  {g.cloudSignIn}
-                </Button>
-              )
-            }
-            description={cloudSignedIn ? g.cloudSignedInDesc : g.cloudNeedsSignIn}
-            title={g.cloudSignInTitle}
-          />
+                )
+              }
+              description={cloudSignedIn ? g.cloudSignedInDesc : g.cloudNeedsSignIn}
+              title={g.cloudSignInTitle}
+            />
+          </SettingsCard>
 
           {cloudSignedIn ? (
             cloudOrgs.length > 0 && !cloudOrg ? (
               // Multi-org user who hasn't picked an org yet: show the org picker
               // instead of the agent list. Selecting one re-runs discovery
               // scoped to it.
-              <div className="mt-3">
-                <div className="mb-2 text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-secondary)">
-                  {g.cloudOrgPickerTitle}
-                </div>
-                <div className="grid gap-1">
+              <div className="mt-12">
+                <div className={GATEWAY_GROUP_TITLE}>{g.cloudOrgPickerTitle}</div>
+                <SettingsCard>
                   {cloudOrgs.map(orgEntry => (
                     <ListRow
                       action={
@@ -1181,14 +1180,12 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
                       title={orgEntry.name}
                     />
                   ))}
-                </div>
+                </SettingsCard>
               </div>
             ) : (
-              <div className="mt-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-secondary)">
-                    {g.cloudAgentsTitle}
-                  </div>
+              <div className="mt-12">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className={cn(GATEWAY_GROUP_TITLE, 'mb-0')}>{g.cloudAgentsTitle}</div>
                   <div className="flex items-center gap-2">
                     {cloudOrg ? (
                       // Let the user switch orgs. Gating on cloudOrgs.length would
@@ -1215,12 +1212,12 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
                 </div>
 
                 {cloudDiscover === 'loading' ? (
-                  <div className="flex items-center gap-2 py-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                  <div className="flex items-center gap-2 px-4 py-3 text-xs text-(--linear-text-tertiary)">
                     <Loader2 className="size-4 animate-spin" />
                     {g.cloudLoadingAgents}
                   </div>
                 ) : cloudAgents.length === 0 ? (
-                  <div className="flex items-start gap-2 py-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                  <div className="flex items-start gap-2 px-4 py-3 text-xs text-(--linear-text-tertiary)">
                     <AlertCircle className="mt-0.5 size-4 shrink-0" />
                     <span>
                       {g.cloudNoAgents.before}
@@ -1231,17 +1228,14 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
                     </span>
                   </div>
                 ) : (
-                  <div className="grid gap-1">
+                  <SettingsCard>
                     {cloudAgents.map(agent => {
                       const connected = isConnectedAgent(agent)
                       const gatewayState = (agent.dashboardGatewayState ?? '').trim()
                       const hasKnownGatewayState = gatewayState.length > 0 && gatewayState.toLowerCase() !== 'unknown'
 
                       return (
-                        <div
-                          className={cn('rounded-md px-2', connected && 'bg-primary/5 ring-1 ring-primary/25')}
-                          key={agent.id}
-                        >
+                        <div className={cn(connected && '-mx-4 bg-(--linear-hover-row) px-4')} key={agent.id}>
                           <ListRow
                             action={
                               connected ? (
@@ -1272,7 +1266,7 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
                         </div>
                       )
                     })}
-                  </div>
+                  </SettingsCard>
                 )}
               </div>
             )
@@ -1288,10 +1282,12 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
           every remote failure here, so "Use local gateway" became the only way
           back in (#114856). The URL input and Save/Test stay env-gated. */}
       {state.mode === 'remote' ? (
-        <div className="mt-5">
-          <RemoteSetupFields disabled={saving} setup={remote} urlDisabled={state.envOverride} />
+        <div>
+          <SettingsCard>
+            <RemoteSetupFields disabled={saving} setup={remote} urlDisabled={state.envOverride} />
+          </SettingsCard>
           {remote.credentials.authMode === 'token' && state.remoteTokenPlainText ? (
-            <div className="mt-2 text-sm text-destructive">
+            <div className="mt-4 px-4 text-xs text-(--linear-red)">
               <div className="font-medium">{g.plainTextStoredTitle}</div>
               <div>{g.plainTextStoredDesc}</div>
             </div>
@@ -1300,7 +1296,7 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
       ) : null}
 
       {state.mode === 'ssh' && !state.envOverride ? (
-        <div className="mt-5 grid gap-1">
+        <SettingsCard>
           {sshHostSuggestions.length > 0 && !sshCustomHost ? (
             <ListRow
               action={
@@ -1406,16 +1402,16 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
             description={g.sshHermesPathDesc}
             title={g.sshHermesPathTitle}
           />
-        </div>
+        </SettingsCard>
       ) : null}
 
-      {lastTest ? <div className="mt-4 text-xs text-primary">{lastTest}</div> : null}
+      {lastTest ? <div className="mt-4 px-4 text-xs text-(--linear-accent)">{lastTest}</div> : null}
 
       {/* Test/Save apply to local + remote. Cloud connects via the agent picker
           above (which applies a cloud connection on select), so its only
           bottom-row action would be redundant — hidden in cloud mode. */}
       {state.mode !== 'cloud' ? (
-        <div className="mt-6 flex flex-wrap items-center justify-end gap-4">
+        <div className="mt-4 flex flex-wrap items-center justify-end gap-4">
           {state.mode === 'remote' ? (
             <Button
               className="mr-auto"
@@ -1457,19 +1453,21 @@ function GatewayConnectionSettings({ embedded, standalone }: { embedded: boolean
       ) : null}
 
       {embedded ? null : (
-        <div className="mt-6 grid gap-1">
-          <KeychainEncryptionSetting keychain={keychainEncryption} />
-          <ListRow
-            action={
-              <Button onClick={() => void window.hermesDesktop?.revealLogs()} size="sm" variant="textStrong">
-                <FileText />
-                {g.openLogs}
-              </Button>
-            }
-            description={g.diagnosticsDesc}
-            id={settingElementId(SETTING_IDS.gateway.diagnostics)}
-            title={g.diagnostics}
-          />
+        <div className="mt-12">
+          <SettingsCard>
+            <KeychainEncryptionSetting keychain={keychainEncryption} />
+            <ListRow
+              action={
+                <Button onClick={() => void window.hermesDesktop?.revealLogs()} size="sm" variant="textStrong">
+                  <FileText />
+                  {g.openLogs}
+                </Button>
+              }
+              description={g.diagnosticsDesc}
+              id={settingElementId(SETTING_IDS.gateway.diagnostics)}
+              title={g.diagnostics}
+            />
+          </SettingsCard>
         </div>
       )}
 

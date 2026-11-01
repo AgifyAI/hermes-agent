@@ -74,9 +74,8 @@ export function CatalogSurface({ sections, kind, actions }: { sections: CatalogS
               </div>
             </header>
             <div className={section.layout === 'feature' ? 'catalog-feature-row' : 'catalog-banner-list'}>
-              {section.items.map((item, index) => (
+              {section.items.map(item => (
                 <CatalogCard
-                  accentIndex={index}
                   action={item.action}
                   entry={entryFor(item, section.id)}
                   key={item.id}

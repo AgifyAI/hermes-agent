@@ -47,7 +47,7 @@ export function SkillDetail({
           <Button onClick={onEdit} size="xs" variant="text">
             {t.skills.edit}
           </Button>
-          <Button className="text-destructive hover:text-destructive" onClick={onArchive} size="xs" variant="text">
+          <Button className="text-(--linear-red) hover:text-(--linear-red)" onClick={onArchive} size="xs" variant="text">
             {t.skills.archive}
           </Button>
         </div>
@@ -56,7 +56,7 @@ export function SkillDetail({
         <PageLoader className="h-40" label={t.skills.loading} />
       ) : parsed ? (
         <pre
-          className="overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[0.68rem] leading-relaxed text-(--ui-text-secondary)"
+          className="overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[0.6875rem] leading-relaxed text-(--linear-text-secondary)"
           data-selectable-text="true"
         >
           {parsed.body.trim() || t.skills.noDescription}

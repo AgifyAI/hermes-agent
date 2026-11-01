@@ -18,7 +18,7 @@ import { sessionTitle } from '@/lib/chat-runtime'
 import { selectDesktopPaths } from '@/lib/desktop-fs'
 import { pathLeaf } from '@/lib/display-path'
 import { triggerHaptic } from '@/lib/haptics'
-import { Archive, ArchiveOff, FolderOpen, Loader2, Trash2 } from '@/lib/icons'
+import { ArchiveOff, FolderOpen, Loader2, Trash2 } from '@/lib/icons'
 import { purgeInFlightTurnJournals } from '@/lib/inflight-turn-journal'
 import { isBrowserHostedDesktop } from '@/lib/platform'
 import { confirm } from '@/store/confirm'
@@ -29,7 +29,7 @@ import { forgetSessionUnread } from '@/store/session-unread'
 import { listEveryArchivedSession } from '@/store/sidebar-archive'
 import type { HermesConfigRecord, SessionInfo } from '@/types/hermes'
 
-import { EmptyState, ListRow, SectionHeading, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
+import { EmptyState, ListRow, SectionHeading, SettingsCard, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 import { useSettingDeepLink } from './use-setting-deep-link'
@@ -152,18 +152,15 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
       <AutoArchiveSetting />
 
       <SectionHeading
-        icon={Archive}
         meta={sessions.length ? String(sessions.length) : undefined}
         title={s.archivedTitle}
       />
-      <p className="mb-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {s.archivedIntro}
-      </p>
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.archivedIntro}</p>
 
       {sessions.length === 0 ? (
         <EmptyState description={s.emptyArchivedDesc} title={s.emptyArchivedTitle} />
       ) : (
-        <div className="grid gap-1">
+        <SettingsCard>
           {sessions.map(session => {
             const label = pathLeaf(session.cwd)
             const busy = busyId === session.id
@@ -205,7 +202,7 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
               </div>
             )
           })}
-        </div>
+        </SettingsCard>
       )}
     </SettingsContent>
   )
@@ -288,7 +285,7 @@ function AutoArchiveSetting() {
   }
 
   return (
-    <div className="mb-6">
+    <SettingsCard className="mb-12">
       <ToggleRow
         checked={enabled}
         description={s.autoArchiveDesc}
@@ -312,15 +309,13 @@ function AutoArchiveSetting() {
                 type="number"
                 value={days}
               />
-              <span className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-                {s.autoArchiveDaysUnit}
-              </span>
+              <span className="text-xs text-(--linear-text-tertiary)">{s.autoArchiveDaysUnit}</span>
             </div>
           }
           title={s.autoArchiveDaysLabel}
         />
       )}
-    </div>
+    </SettingsCard>
   )
 }
 
@@ -424,11 +419,10 @@ function DefaultProjectDirSetting() {
   }, [s])
 
   return (
-    <div className="mb-6">
-      <SectionHeading icon={FolderOpen} page title={s.defaultDirTitle} />
-      <p className="mb-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {s.defaultDirDesc}
-      </p>
+    <div className="mb-12">
+      <SectionHeading page title={s.defaultDirTitle} />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.defaultDirDesc}</p>
+      <SettingsCard>
       <ListRow
         action={
           <div className="flex items-center gap-3">
@@ -446,6 +440,7 @@ function DefaultProjectDirSetting() {
         description={dir || s.defaultsTo(fallback || '~')}
         title={dir ? dir : s.notSet}
       />
+      </SettingsCard>
     </div>
   )
 }

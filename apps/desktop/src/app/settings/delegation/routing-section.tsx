@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { DelegationRouting, ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
 import type { DelegationRoutingTranslations } from '@/i18n/types_delegation_routing'
-import { AlertTriangle, Check, GitFork, Plug, SlidersHorizontal } from '@/lib/icons'
+import { AlertTriangle, Check, Plug } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { $settingsRequestProfile } from '@/store/settings-scope'
 
@@ -59,8 +59,8 @@ export function DelegationRoutingSection({ scope }: { scope: ProfileScope }) {
 
   return (
     <>
-      <SettingsSection icon={GitFork} title={r.title}>
-        <p className="mb-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{r.intro}</p>
+      <SettingsSection card={false} title={r.title}>
+        <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{r.intro}</p>
         {routing ? (
           <RoutingBody routing={routing} scope={scope} />
         ) : query.isError ? (
@@ -78,7 +78,7 @@ export function DelegationRoutingSection({ scope }: { scope: ProfileScope }) {
           </div>
         )}
       </SettingsSection>
-      <SectionHeading icon={SlidersHorizontal} title={r.settingsTitle} />
+      <SectionHeading title={r.settingsTitle} />
     </>
   )
 }

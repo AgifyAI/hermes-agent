@@ -101,7 +101,7 @@ export function HudModifierSettings() {
         onChange={enabled => void refresh(enabled)}
       />
       {notice && (
-        <div className="space-y-2" role="alert">
+        <div className="space-y-2 pb-4" role="alert">
           <ErrorBanner>{notice}</ErrorBanner>
           <div className="flex flex-wrap items-center gap-2">
             {status?.state === 'input-permission' && (

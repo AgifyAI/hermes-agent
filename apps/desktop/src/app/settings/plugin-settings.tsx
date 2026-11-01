@@ -41,7 +41,7 @@ import type { OverlayNavLink } from '../overlays/overlay-split-layout'
 import { CAPABILITIES_ROUTE } from '../routes'
 
 import { PluginSettingsForm } from './plugin-settings-form'
-import { EmptyState, ListRowSkeleton, SectionHeading, SettingsContent } from './primitives'
+import { EmptyState, ListRowSkeleton, SectionHeading, SettingsCard, SettingsContent } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 
 /** Opens Settings ▸ Plugins at a route; `null` = the overview. */
@@ -239,8 +239,7 @@ export function pluginSettingsNavChildren(
 }
 
 // Lead copy under a page heading, the same caption rhythm native pages use.
-const BLURB_CLASS =
-  'mb-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)'
+const BLURB_CLASS = 'mb-4 px-4 text-xs text-(--linear-text-tertiary)'
 
 function PluginSettingsOverview({
   entries,
@@ -258,7 +257,7 @@ function PluginSettingsOverview({
     <SettingsContent>
       {/* The agent half of this list is per profile: keep the selector here
           too, or a profile without the plugin strands the user (no way back). */}
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       <SectionHeading
         aside={
           // Page-level action on the heading row, like Passwords & Logins' Add.
@@ -269,14 +268,13 @@ function PluginSettingsOverview({
             </a>
           </Button>
         }
-        icon={PLUGINS_NAV_ICON}
         page
         title={t.settings.nav.plugins}
       />
       <p className={BLURB_CLASS}>{copy.blurb}</p>
       {missing && (
         <p
-          className="mb-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-secondary)"
+          className="mb-4 px-4 text-xs text-(--linear-text-secondary)"
           role="status"
         >
           {copy.missing}
@@ -285,7 +283,7 @@ function PluginSettingsOverview({
       {entries.length === 0 ? (
         <EmptyState title={copy.empty} />
       ) : (
-        <div className="mt-2 grid overflow-hidden rounded-lg border border-(--ui-stroke-tertiary)">
+        <SettingsCard className="overflow-hidden px-0">
           {entries.map(entry => {
             const Icon = entryIcon(entry)
             // The landing page counts as one; sub-pages add to it.
@@ -293,26 +291,24 @@ function PluginSettingsOverview({
 
             return (
               <button
-                className="flex min-h-11 items-center gap-3 border-b border-(--ui-stroke-tertiary) px-3 text-left transition-colors last:border-b-0 hover:bg-(--chrome-action-hover)"
+                className="flex min-h-11 w-full cursor-pointer items-center gap-3 px-4 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
                 data-testid={`plugin-settings-row-${entry.uid}`}
                 key={entry.uid}
                 onClick={() => onOpen(pluginSettingsRouteOf(entry))}
                 type="button"
               >
-                <Icon className="size-4 shrink-0 text-(--ui-text-tertiary)" />
-                <span className="min-w-0 flex-1 truncate text-[length:var(--conversation-text-font-size)]">
+                <Icon className="size-4 shrink-0 text-(--linear-icon)" />
+                <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
                   {entry.title}
                 </span>
                 {pages > 1 && (
-                  <span className="shrink-0 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-                    {copy.pageCount(pages)}
-                  </span>
+                  <span className="shrink-0 text-xs text-(--linear-text-tertiary)">{copy.pageCount(pages)}</span>
                 )}
-                <Codicon className="text-(--ui-text-tertiary)" name="chevron-right" size="0.8rem" />
+                <Codicon className="text-(--linear-text-tertiary)" name="chevron-right" size="0.8rem" />
               </button>
             )
           })}
-        </div>
+        </SettingsCard>
       )}
     </SettingsContent>
   )
@@ -321,12 +317,12 @@ function PluginSettingsOverview({
 function PluginSettingsLoading() {
   return (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
-      <div className="grid gap-1">
+      <SettingsProfileScope className="mb-8" />
+      <SettingsCard>
         <ListRowSkeleton />
         <ListRowSkeleton />
         <ListRowSkeleton />
-      </div>
+      </SettingsCard>
     </SettingsContent>
   )
 }
@@ -352,7 +348,7 @@ function PluginSchemaSettingsPage({ agentKey, owner }: { agentKey: string; owner
 
   return (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       <PluginSettingsForm
         disabled={busy}
         fields={row.settings_schema}

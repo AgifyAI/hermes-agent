@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
-import { KeyRound, Lock, Plus, ShieldLock, Trash2 } from '@/lib/icons'
+import { KeyRound, Lock, Plus, Trash2 } from '@/lib/icons'
 import { $activeConnectionId } from '@/store/connections'
 import { requestGatewayForAgent } from '@/store/gateway'
 import { notify, notifyError } from '@/store/notifications'
@@ -28,7 +28,7 @@ import { $gatewayState } from '@/store/session'
 import { $settingsScopeProfile } from '@/store/settings-scope'
 
 import { CONTROL_TEXT } from './constants'
-import { ListRow, Pill, SectionHeading, SettingsContent } from './primitives'
+import { ListRow, Pill, SectionHeading, SettingsCard, SettingsContent } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 
 // Vault data is private to one (connection, profile); the cache key carries that owner so a
@@ -393,7 +393,7 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
       {/* The vault is per profile (its RPCs ride the (connection, profile) owner above), so the
           page must SAY which profile it is showing — without the chip a non-default selection
           looked like the default vault with entries missing (#121966). */}
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       {(subpage === undefined || subpage === 'credentials') && (
         <>
           <SectionHeading
@@ -403,17 +403,15 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
                 {v.add}
               </Button>
             }
-            icon={ShieldLock}
             meta={items.length > 0 ? v.count(items.length) : undefined}
             page
             title={v.title}
           />
-          <p className="mb-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {v.blurb}
-          </p>
+          <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{v.blurb}</p>
 
           {!isPending && items.length === 0 && <EmptyState description={v.emptyDesc} title={v.empty} />}
 
+          <SettingsCard>
           {items.map(item => (
             <ListRow
               action={
@@ -422,7 +420,7 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
                 ) : (
                   <Button
                     aria-label={v.deleteAction}
-                    className="text-(--ui-text-tertiary) hover:text-destructive"
+                    className="text-(--linear-text-tertiary) hover:text-(--linear-red)"
                     onClick={() => setPendingDelete(item)}
                     size="icon-sm"
                     type="button"
@@ -440,14 +438,14 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
                   {item.origin && item.origin.replace(/^https?:\/\//, '') !== item.label && (
                     <>
                       {item.identifier && (
-                        <span aria-hidden className="text-(--ui-text-tertiary)">
+                        <span aria-hidden className="text-(--linear-text-quaternary)">
                           ·
                         </span>
                       )}
                       <span className="truncate">{item.origin}</span>
                     </>
                   )}
-                  <span aria-hidden className="text-(--ui-text-tertiary)">
+                  <span aria-hidden className="text-(--linear-text-quaternary)">
                     ·
                   </span>
                   <span>{v.createdOn(formatCreated(item.created_at))}</span>
@@ -463,17 +461,17 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
               }
             />
           ))}
+          </SettingsCard>
         </>
       )}
 
       {(subpage === undefined || subpage === 'sources') && (
         <>
-          <div className={subpage === undefined ? 'mt-6' : undefined}>
-            <SectionHeading icon={KeyRound} page title={v.sources.title} />
+          <div className={subpage === undefined ? 'mt-12' : undefined}>
+            <SectionHeading page title={v.sources.title} />
           </div>
-          <p className="mb-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {v.sources.blurb}
-          </p>
+          <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{v.sources.blurb}</p>
+          <SettingsCard>
           {externalSources.map(source => (
             <ListRow
               action={
@@ -542,6 +540,7 @@ export function VaultSettings({ subpage }: VaultSettingsProps = {}) {
               }
             />
           ))}
+          </SettingsCard>
         </>
       )}
 

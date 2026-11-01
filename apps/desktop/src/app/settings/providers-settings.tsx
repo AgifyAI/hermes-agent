@@ -19,7 +19,7 @@ import { SearchField } from '@/components/ui/search-field'
 import { Tip } from '@/components/ui/tooltip'
 import { disconnectOAuthProvider, listOAuthProviders } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { Check, ChevronDown, ChevronRight, KeyRound, Loader2, Terminal, Trash2 } from '@/lib/icons'
+import { Check, ChevronDown, ChevronRight, Loader2, Terminal, Trash2 } from '@/lib/icons'
 import { normalize } from '@/lib/text'
 import { cn } from '@/lib/utils'
 import { confirm } from '@/store/confirm'
@@ -34,7 +34,7 @@ import { CustomEndpointsSettings } from './custom-endpoints-settings'
 import { SettingsCategoryHeading, useEnvCredentials } from './env-credentials'
 import { providerGroup, providerMeta, providerPriority } from './helpers'
 import { LocalModelsSettings } from './local-models-settings'
-import { SettingsContent, SettingsSkeleton } from './primitives'
+import { SettingsCard, SettingsContent, SettingsSkeleton } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
@@ -46,7 +46,7 @@ const canRunInTerminal = () => typeof window !== 'undefined' && Boolean(window.h
 // reads as its own section instead of bleeding into the connected group.
 function GroupLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-3 px-0.5 text-[length:var(--conversation-caption-font-size)] font-medium text-(--ui-text-tertiary)">
+    <p className="px-3 pt-3 pb-1 text-xs font-medium text-(--linear-text-tertiary)">
       {children}
     </p>
   )
@@ -194,22 +194,18 @@ function OAuthPicker({
   const showOthers = !collapsible || showAll
 
   return (
-    <section className="mb-5 grid gap-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <SettingsCategoryHeading icon={KeyRound} title={p.connectAccount} />
-        <Button
-          className="text-[length:var(--conversation-caption-font-size)]"
-          onClick={onWantApiKey}
-          size="inline"
-          type="button"
-          variant="textStrong"
-        >
-          {p.haveApiKey}
-        </Button>
-      </div>
-      <p className="-mt-2 mb-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {p.intro}
-      </p>
+    <section>
+      <SettingsCategoryHeading
+        aside={
+          <Button className="text-xs" onClick={onWantApiKey} size="inline" type="button" variant="textStrong">
+            {p.haveApiKey}
+          </Button>
+        }
+        title={p.connectAccount}
+      />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{p.intro}</p>
+      <SettingsCard className="p-1.5">
+      <div className="grid gap-0.5">
       {featured && <FeaturedProviderRow onSelect={select} provider={featured} />}
       {/* Slot #2 — the no-account path, matching onboarding. Behind the
           --local launch flag like every local-models surface. */}
@@ -239,9 +235,11 @@ function OAuthPicker({
           <OpenRouterProviderRow onClick={onWantApiKey} />
         </>
       )}
+      </div>
+      </SettingsCard>
       {collapsible && (
         <Button
-          className="py-1 text-[length:var(--conversation-caption-font-size)]"
+          className="mt-3 ml-4 text-xs"
           onClick={() => setShowAll(v => !v)}
           size="inline"
           type="button"
@@ -281,21 +279,21 @@ function ConnectedProviderRow({
   const showHint = !canDisconnect && !terminalDisconnect
 
   return (
-    <div className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-[6px] transition-colors hover:bg-(--ui-control-hover-background)">
+    <div className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-(--linear-radius-control) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none">
       <RowButton
         className="min-w-0 px-3 py-2.5 text-left"
         onClick={() => (terminalDisconnect ? onTerminalDisconnect(provider) : onSelect(provider))}
       >
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-[length:var(--conversation-text-font-size)] font-semibold">{title}</span>
-          <span className="inline-flex shrink-0 items-center gap-1 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--linear-accent)_12%,transparent)] px-2 py-0.5 text-xs font-medium text-(--linear-accent)">
             <Check className="size-3" />
             {copy.connected}
           </span>
         </div>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">{t.onboarding.flowSubtitles[provider.flow]}</p>
+        <p className="mt-1 text-xs leading-5 text-(--linear-text-tertiary)">{t.onboarding.flowSubtitles[provider.flow]}</p>
         {showHint && (
-          <p className="mt-0.5 truncate text-[0.68rem] leading-5 text-muted-foreground/70">
+          <p className="mt-0.5 truncate text-[0.6875rem] leading-5 text-(--linear-text-quaternary)">
             {provider.flow === 'external' ? copy.removeExternalGeneric(title) : copy.removeKeyManaged(title)}
           </p>
         )}
@@ -312,7 +310,7 @@ function ConnectedProviderRow({
             <Terminal className="size-4" />
           </Button>
         ) : (
-          <Trail className="size-4 text-muted-foreground transition group-hover:text-foreground" />
+          <Trail className="size-3.5 text-(--linear-icon) transition group-hover:text-(--linear-text-primary)" />
         )}
         {canDisconnect && (
           <Button
@@ -348,7 +346,7 @@ function NoProviderKeys() {
   const { t } = useI18n()
 
   return (
-    <div className="grid min-h-32 place-items-center px-4 py-8 text-center text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+    <div className="grid min-h-32 place-items-center px-4 py-8 text-center text-xs text-(--linear-text-tertiary)">
       {t.settings.providers.noProviderKeys}
     </div>
   )
@@ -370,16 +368,14 @@ function LocalEndpointRow({ onOpen }: { onOpen: (reason: null | string) => void 
 
   return (
     <RowButton
-      className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-[6px] px-3 py-2.5 text-left transition-colors hover:bg-(--ui-control-hover-background)"
+      className="group grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-1 rounded-(--linear-radius-control) px-3 py-2.5 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
       onClick={() => onOpen(null)}
     >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="truncate text-[length:var(--conversation-text-font-size)] font-semibold">{copy.title}</span>
-        <span className="truncate text-[length:var(--conversation-caption-font-size)] leading-5 text-muted-foreground">
-          {copy.description}
-        </span>
+      <div className="flex min-w-0 flex-col gap-[3px]">
+        <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{copy.title}</span>
+        <span className="truncate text-xs text-(--linear-text-tertiary)">{copy.description}</span>
       </div>
-      <ChevronRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
+      <ChevronRight className="size-3.5 text-(--linear-icon) transition group-hover:text-(--linear-text-primary)" />
     </RowButton>
   )
 }
@@ -553,19 +549,21 @@ export function ProvidersSettings({
 
     return (
       <SettingsContent>
-        <SettingsProfileScope className="mb-5" />
-        <LocalEndpointRow onOpen={reason => startManualLocalEndpoint(reason, scopeProfile)} />
+        <SettingsProfileScope className="mb-8" />
+        <SettingsCard className="p-1.5">
+          <LocalEndpointRow onOpen={reason => startManualLocalEndpoint(reason, scopeProfile)} />
+        </SettingsCard>
         {keyGroups.length > 0 ? (
-          <div className="grid gap-3">
+          <div className="mt-8">
             <SearchField
               aria-label={t.settings.providers.searchKeys}
-              containerClassName="w-full"
+              containerClassName="mb-4 w-full px-4"
               onChange={setKeyQuery}
               placeholder={t.settings.providers.searchKeys}
               value={keyQuery}
             />
             {visibleGroups.length > 0 ? (
-              <div className="grid gap-2">
+              <SettingsCard>
                 {visibleGroups.map(group => (
                   <div className="scroll-mt-6 rounded-[6px]" id={providerKeyElementId(group.name)} key={group.name}>
                     <ProviderKeyRows
@@ -577,9 +575,9 @@ export function ProvidersSettings({
                     />
                   </div>
                 ))}
-              </div>
+              </SettingsCard>
             ) : (
-              <div className="grid min-h-24 place-items-center px-4 py-6 text-center text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+              <div className="grid min-h-24 place-items-center px-4 py-6 text-center text-xs text-(--linear-text-tertiary)">
                 {t.settings.providers.noKeysMatch}
               </div>
             )}
@@ -604,7 +602,7 @@ export function ProvidersSettings({
 
   return (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       <OAuthPicker
         disconnecting={disconnecting}
         onDisconnect={provider => void handleDisconnect(provider)}

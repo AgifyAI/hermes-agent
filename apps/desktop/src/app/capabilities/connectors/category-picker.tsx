@@ -66,7 +66,7 @@ export function CategoryPicker({ categories, onChange, value }: CategoryPickerPr
               {categories.map(entry => (
                 <CommandItem key={entry.value} onSelect={() => pick(entry.value)} value={labelFor(entry.value)}>
                   <span className="min-w-0 flex-1 truncate">{labelFor(entry.value)}</span>
-                  <span className="shrink-0 tabular-nums text-(--ui-text-tertiary)">{entry.count}</span>
+                  <span className="shrink-0 tabular-nums text-(--linear-text-tertiary)">{entry.count}</span>
                   <CommandItemCheck checked={entry.value === value} />
                 </CommandItem>
               ))}

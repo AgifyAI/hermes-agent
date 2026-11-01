@@ -40,10 +40,10 @@ function CatalogDetailHeader({ entry, action, dialog }: { entry: CatalogEntry; a
           <div className="flex min-w-0 items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className={cn('flex min-w-0 items-center gap-2', dialog && !entry.imageUrl && 'pr-7')}>
-                <Title className="min-w-0 flex-1 break-words text-lg font-semibold tracking-tight">{entry.name}</Title>
+                <Title className="min-w-0 flex-1 break-words text-lg font-semibold">{entry.name}</Title>
                 {action && <span className="shrink-0">{action}</span>}
               </div>
-              <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-(--ui-text-tertiary)">
+              <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-(--linear-text-tertiary)">
                 <span className="min-w-0 truncate">{entry.author || catalogLabel(entry.source)}</span>
                 <CatalogHeaderMeta entry={entry} />
               </div>
@@ -96,7 +96,7 @@ export function CatalogDetail({
         <CatalogImage
           className={cn(
             'aspect-[2/1] object-cover',
-            dialog ? 'w-full rounded-t-xl' : 'w-full rounded-md'
+            dialog ? 'w-full rounded-t-xl' : 'w-full rounded-(--linear-radius-control)'
           )}
           key={entry.imageUrl}
           src={entry.imageUrl}
@@ -104,11 +104,11 @@ export function CatalogDetail({
       )}
       <CatalogDetailHeader action={action} dialog={dialog} entry={entry} />
 
-      <p className="whitespace-pre-wrap break-words text-[length:var(--conversation-caption-font-size)] leading-relaxed text-(--ui-text-secondary)">
+      <p className="whitespace-pre-wrap break-words text-[length:var(--conversation-caption-font-size)] leading-relaxed text-(--linear-text-secondary)">
         {entry.description}
       </p>
       {entry.overview && entry.overview !== entry.description && (
-        <p className="whitespace-pre-wrap break-words text-[length:var(--conversation-caption-font-size)] leading-relaxed text-(--ui-text-tertiary)">
+        <p className="whitespace-pre-wrap break-words text-[length:var(--conversation-caption-font-size)] leading-relaxed text-(--linear-text-tertiary)">
           {entry.overview}
         </p>
       )}
@@ -121,7 +121,7 @@ export function CatalogDetail({
             .filter(([, value]) => Boolean(value))
             .map(([label, value]) => (
               <div className="contents" key={label}>
-                <dt className="whitespace-nowrap text-(--ui-text-tertiary)">{label}</dt>
+                <dt className="whitespace-nowrap text-(--linear-text-tertiary)">{label}</dt>
                 <dd className="m-0 break-words">{value}</dd>
               </div>
             ))}
@@ -137,7 +137,7 @@ export function CatalogDetail({
             {entry.screenshots?.map((url, index) => (
               <ZoomableImage
                 alt={`${c.screenshots} — ${entry.name} ${index + 1}`}
-                className="h-56 w-auto max-w-none cursor-zoom-in rounded-lg border border-(--ui-stroke-tertiary)"
+                className="h-56 w-auto max-w-none cursor-zoom-in rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-panel)"
                 decoding="async"
                 key={url}
                 loading="lazy"
@@ -176,7 +176,7 @@ export function CatalogDetail({
         ) : null
       )}
 
-      <p className="text-[0.65rem] leading-relaxed text-(--ui-text-quaternary)">{c.installHint}</p>
+      <p className="text-[0.6875rem] leading-relaxed text-(--linear-text-quaternary)">{c.installHint}</p>
 
       {related.length > 0 && (
         <section className="space-y-2">
@@ -184,14 +184,14 @@ export function CatalogDetail({
           <div className="grid grid-cols-3 gap-2">
             {related.map(item => (
               <RowButton
-                className="row-hover flex min-w-0 flex-col gap-1 overflow-hidden rounded-md text-left"
+                className="row-hover flex min-w-0 flex-col gap-1 overflow-hidden rounded-(--linear-radius-control) text-left"
                 key={item.id}
                 onClick={() => onRelated?.(item)}
               >
                 {item.imageUrl ? (
-                  <CatalogImage className="aspect-[2/1] w-full rounded-t-md object-contain" src={item.imageUrl} />
+                  <CatalogImage className="aspect-[2/1] w-full rounded-t-(--linear-radius-control) object-contain" src={item.imageUrl} />
                 ) : (
-                  <span className="flex aspect-[2/1] w-full items-center justify-center bg-(--ui-bg-quaternary) text-(--ui-text-tertiary)">
+                  <span className="flex aspect-[2/1] w-full items-center justify-center bg-(--linear-hover-control) text-(--linear-text-tertiary)">
                     <Codicon name={catalogIcon(item.category)} size="1.25rem" />
                   </span>
                 )}

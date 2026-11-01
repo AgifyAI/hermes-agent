@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 import { deleteEnvVar, getEnvVars, revealEnvVar, setEnvVar } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { type IconComponent } from '@/lib/icons'
 import { queryClient } from '@/lib/query-client'
 import { confirm } from '@/store/confirm'
 import { notify, notifyError } from '@/store/notifications'
@@ -30,12 +29,14 @@ export function filterEnv(info: EnvVarInfo, key: string, q: string, cat: string,
   )
 }
 
-export function SettingsCategoryHeading({ count, icon: Icon, title }: CategoryHeadingProps) {
+// Linear's section title over a credentials card (same rhythm as SectionHeading,
+// without its page/breadcrumb rule).
+export function SettingsCategoryHeading({ aside, count, title }: CategoryHeadingProps) {
   return (
-    <div className="mb-3 flex items-center gap-2 text-[length:var(--conversation-text-font-size)] font-medium">
-      <Icon className="size-4 text-muted-foreground" />
-      <span>{title}</span>
+    <div className="mb-4 flex items-center gap-2 px-4 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">
+      <span className="min-w-0 truncate">{title}</span>
       {count && <Pill>{count}</Pill>}
+      {aside && <div className="ml-auto flex min-w-0 items-center">{aside}</div>}
     </div>
   )
 }
@@ -205,8 +206,8 @@ export function useEnvCredentials(profile?: string): UseEnvCredentials {
 }
 
 interface CategoryHeadingProps {
+  aside?: ReactNode
   count?: string
-  icon: IconComponent
   title: string
 }
 

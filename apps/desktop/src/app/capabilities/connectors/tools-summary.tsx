@@ -71,10 +71,10 @@ export function ToolsSummary({
   return (
     <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto px-3.5 py-3" data-slot="tools-summary">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="min-w-0 truncate text-xs font-medium text-(--ui-text-primary)">
+        <h3 className="min-w-0 truncate text-xs font-medium text-(--linear-text-primary)">
           {title ?? (preview ? copy.summaryPreviewTitle(connectorName) : copy.summaryTitle(connectorName))}
         </h3>
-        <span className="shrink-0 tabular-nums text-[0.7rem] text-(--ui-text-tertiary)">
+        <span className="shrink-0 tabular-nums text-[0.6875rem] text-(--linear-text-tertiary)">
           {copy.summaryCount(total)}
         </span>
       </div>
@@ -90,17 +90,17 @@ export function ToolsSummary({
 
           return (
             <li
-              className="flex items-center gap-3 border-t border-(--ui-stroke-tertiary) py-2 first:border-t-0"
+              className="flex items-center gap-3 border-t-[0.5px] border-(--linear-border-panel) py-2 first:border-t-0"
               key={row.facet}
             >
-              <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--ui-text-primary)">
+              <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
                 {label}
               </span>
-              <span className="shrink-0 tabular-nums text-xs text-(--ui-text-secondary)">{row.total}</span>
+              <span className="shrink-0 tabular-nums text-xs text-(--linear-text-secondary)">{row.total}</span>
 
               {preview ? null : (
                 <>
-                  <span className="w-24 shrink-0 text-right text-[0.7rem] text-(--ui-text-tertiary)">
+                  <span className="w-24 shrink-0 text-right text-[0.6875rem] text-(--linear-text-tertiary)">
                     {onLabel(copy, row)}
                   </span>
                   <Switch

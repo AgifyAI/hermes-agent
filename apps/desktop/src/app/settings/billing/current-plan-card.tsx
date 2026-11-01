@@ -18,26 +18,18 @@ export function CurrentPlanCard({ onViewPlans, plan }: { onViewPlans: () => void
 
   return (
     <div className="@container">
-      <div className={cn('grid gap-3 py-3 @2xl:items-center', LIST_ROW_COLUMNS)}>
+      <div className={cn('grid gap-3 py-4 @lg:items-center', LIST_ROW_COLUMNS)}>
         <div className="flex min-w-0 items-center gap-3">
           <TierArt name={plan.tierName} />
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-              <span className="truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-                {plan.tierName}
-              </span>
-              {plan.price && (
-                <span className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-                  {b.perMonth(plan.price)}
-                </span>
-              )}
+              <span className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{plan.tierName}</span>
+              {plan.price && <span className="text-xs text-(--linear-text-tertiary)">{b.perMonth(plan.price)}</span>}
             </div>
-            <div className="mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-              {plan.caption}
-            </div>
+            <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">{plan.caption}</div>
           </div>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 @2xl:justify-end">
+        <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 @lg:justify-end">
           {plan.action && (
             <Button onClick={plan.action.onSelect ?? onViewPlans} size="sm" type="button" variant="outline">
               {plan.action.label}

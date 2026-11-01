@@ -62,10 +62,10 @@ import {
   PluginSettingsPane,
   usePluginSettingsRoute
 } from './plugin-settings'
-import { SettingsBreadcrumbContext } from './primitives'
+import { SettingsBreadcrumbContext, SettingsPageTitleContext } from './primitives'
 import { PROVIDER_VIEWS, ProvidersSettings, type ProviderView } from './providers-settings'
 import { SessionsSettings } from './sessions-settings'
-import { SettingsSubpageHeader } from './subpage-navigation'
+import { settingsPageTitle, SettingsSubpageHeader } from './subpage-navigation'
 import { resolveSettingsSubpage, settingsSubpageIcon, settingsSubpages } from './subpages'
 import type { SettingsPageProps, SettingsView as SettingsViewId } from './types'
 import { vaultOwnerKey, VaultSettings } from './vault-settings'
@@ -611,7 +611,9 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
             {needsSubpageRedirect ? (
               <Navigate replace to={{ hash, pathname, search: `?${subpageSearch}` }} />
             ) : (
-              activeSettingsContent
+              <SettingsPageTitleContext.Provider value={settingsPageTitle(activeGroup, activeChild)}>
+                {activeSettingsContent}
+              </SettingsPageTitleContext.Provider>
             )}
           </SettingsBreadcrumbContext.Provider>
         </OverlayMain>

@@ -59,11 +59,11 @@ export function OfficialSkillDetail({
         </Button>
       </div>
       {parsed && parsed.meta.length > 0 && (
-        <div className="grid gap-1 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-3">
+        <div className="grid gap-1 rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-panel) bg-(--linear-hover-control) p-3">
           {parsed.meta.map(([key, value]) => (
-            <div className="flex gap-2 text-[0.68rem] leading-4" key={key}>
-              <span className="w-24 shrink-0 font-medium text-(--ui-text-tertiary)">{key}</span>
-              <span className="min-w-0 whitespace-pre-wrap break-words text-(--ui-text-secondary)">{value}</span>
+            <div className="flex gap-2 text-[0.6875rem] leading-4" key={key}>
+              <span className="w-24 shrink-0 font-medium text-(--linear-text-tertiary)">{key}</span>
+              <span className="min-w-0 whitespace-pre-wrap break-words text-(--linear-text-secondary)">{value}</span>
             </div>
           ))}
         </div>
@@ -72,7 +72,7 @@ export function OfficialSkillDetail({
         <CountSkeleton />
       ) : parsed ? (
         <pre
-          className="overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-3 font-mono text-[0.68rem] leading-relaxed"
+          className="overflow-auto whitespace-pre-wrap wrap-break-word rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-panel) bg-(--linear-hover-control) p-3 font-mono text-[0.6875rem] leading-relaxed"
           data-selectable-text="true"
         >
           {parsed.body.trim() || t.skills.noDescription}

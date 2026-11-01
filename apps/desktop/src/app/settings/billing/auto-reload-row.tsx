@@ -168,18 +168,18 @@ export function AutoReloadRow({
   // panes. The form is `invisible` + `aria-hidden` when not editing.
   return (
     <div className="@container">
-      <div className={cn('grid gap-3 py-3 @2xl:items-start', LIST_ROW_COLUMNS)}>
+      <div className={cn('grid gap-3 py-4 @lg:items-start', LIST_ROW_COLUMNS)}>
         <div className="min-w-0">
-          <div className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+          <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">
             {row.title}
           </div>
-          <div className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
+          <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">
             {row.description}
           </div>
           <div className="mt-3 grid [grid-template-areas:'stack']">
             {/* EDIT layer — always in layout (reserves exact height); hidden until editing. */}
             <div aria-hidden={!editing} className={cn('space-y-2 [grid-area:stack]', !editing && 'invisible')}>
-              <div className="grid gap-2 @2xl:grid-cols-2">
+              <div className="grid gap-2 @lg:grid-cols-2">
                 <label className="min-w-0 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
                   {b.threshold}
                   <Input
@@ -259,7 +259,7 @@ export function AutoReloadRow({
           </div>
         </div>
         {/* Action column swaps Manage ↔ Save/Cancel in place (top-aligned, no move). */}
-        <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 @2xl:justify-end">
+        <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 @lg:justify-end">
           {row.pill && <Pill tone={row.pill.tone}>{row.pill.label}</Pill>}
           {editing ? (
             <>

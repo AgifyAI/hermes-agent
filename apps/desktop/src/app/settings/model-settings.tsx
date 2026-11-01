@@ -30,7 +30,7 @@ import type {
 } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { isCodeSkewRestartRequired } from '@/lib/code-skew-error'
-import { AlertTriangle, Cpu, Loader2 } from '@/lib/icons'
+import { AlertTriangle, Loader2 } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 import { catalogProviderMatches, findCatalogProvider } from '@/lib/model-options'
 import { composerServiceTier } from '@/lib/model-status-label'
@@ -55,7 +55,7 @@ import {
 import { CONTROL_TEXT } from './constants'
 import { getNested, setNested } from './helpers'
 import { ModelSelect, withActive } from './model-select'
-import { ListRow, ListRowSkeleton, Pill, SectionHeading, SectionHeadingSkeleton } from './primitives'
+import { ListRow, ListRowSkeleton, Pill, SectionHeading, SectionHeadingSkeleton, SettingsCard } from './primitives'
 import { dismissStaleAux, readStaleAuxDismissal, staleAuxFingerprint } from './stale-aux-dismissal'
 
 // Skeleton mirror of the Model settings DOM so the page keeps its shape while
@@ -63,21 +63,23 @@ import { dismissStaleAux, readStaleAuxDismissal, staleAuxFingerprint } from './s
 // spinner. Same containers/rhythm as the real render below.
 export function ModelSettingsSkeleton({ subpage }: Pick<ModelSettingsProps, 'subpage'> = {}) {
   return (
-    <div className="grid gap-6" data-slot="model-settings-skeleton">
+    <div className="grid gap-12" data-slot="model-settings-skeleton">
       {(subpage === undefined || subpage === 'main') && (
         <section>
-          <Skeleton className="mb-3 h-3 w-72 max-w-full" />
-          <div className="grid gap-1">
+          <Skeleton className="mx-4 mb-4 h-3 w-72 max-w-full" />
+          <SettingsCard>
             <ListRowSkeleton />
             <ListRowSkeleton />
+          </SettingsCard>
+          <div className="flex justify-end pt-3">
+            <Skeleton className="h-7 w-16" />
           </div>
-          <div className="flex justify-end pt-1">
-            <Skeleton className="h-8 w-16" />
-          </div>
-          <div className="mt-6 grid gap-1">
-            <Skeleton className="mb-1 h-3 w-16" />
-            <ListRowSkeleton />
-            <ListRowSkeleton />
+          <div className="mt-12">
+            <SectionHeadingSkeleton />
+            <SettingsCard>
+              <ListRowSkeleton />
+              <ListRowSkeleton />
+            </SettingsCard>
           </div>
         </section>
       )}
@@ -85,11 +87,11 @@ export function ModelSettingsSkeleton({ subpage }: Pick<ModelSettingsProps, 'sub
       {(subpage === undefined || subpage === 'auxiliary' || subpage === 'moa') && (
         <section>
           <SectionHeadingSkeleton />
-          <div className="grid gap-1">
+          <SettingsCard>
             {[0, 1, 2, 3].map(row => (
               <ListRowSkeleton key={row} />
             ))}
-          </div>
+          </SettingsCard>
         </section>
       )}
     </div>
@@ -268,7 +270,7 @@ function StaleAuxWarning({ applying, onDismiss, onReset, slots, taskLabel }: Sta
   const names = slots.map(slot => taskLabel(slot.task)).join(', ')
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-md border border-amber-400/60 bg-amber-500/15 px-3 py-2.5 text-sm text-amber-600 dark:text-amber-300">
+    <div className="flex flex-wrap items-center gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-orange) bg-[color-mix(in_srgb,var(--linear-orange)_12%,transparent)] px-3 py-2.5 text-[0.8125rem] text-(--linear-orange)">
       <AlertTriangle className="size-4 shrink-0" />
       <span className="grow font-medium">
         {m.staleAuxBefore(slots.length, names)}
@@ -320,58 +322,60 @@ function MainModelDefaults({
   const m = t.settings.model
 
   return (
-    <div className="mt-6 grid gap-1">
-      <p className="mb-1 text-xs text-muted-foreground">{m.defaultsLabel}</p>
-      {reasoningSupported && (
-        <ListRow
-          action={
-            <Select onValueChange={value => void onChange('agent.reasoning_effort', value)} value={effortValue}>
-              <SelectTrigger aria-label={m.reasoning} className={cn('min-w-28', CONTROL_TEXT)}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {REASONING_EFFORT_VALUES.map(value => (
-                  <SelectItem key={value} value={value}>
-                    {value === 'none' ? m.reasoningOff : t.shell.modelOptions[value]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          }
-          title={m.reasoning}
-        />
-      )}
-      {ultrafastSupported ? (
-        <ListRow
-          action={
-            <Select onValueChange={value => void onChange('agent.service_tier', value)} value={speedValue}>
-              <SelectTrigger aria-label={m.speed} className={cn('min-w-28', CONTROL_TEXT)}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">{m.speedStandard}</SelectItem>
-                {fastSupported && <SelectItem value="fast">{t.shell.modelOptions.fast}</SelectItem>}
-                <SelectItem value="ultrafast">{t.shell.modelOptions.ultrafast}</SelectItem>
-              </SelectContent>
-            </Select>
-          }
-          title={m.speed}
-        />
-      ) : (
-        fastSupported && (
+    <div className="mt-12">
+      <SectionHeading title={m.defaultsLabel} />
+      <SettingsCard>
+        {reasoningSupported && (
           <ListRow
             action={
-              <Switch
-                aria-label={t.shell.modelOptions.fast}
-                checked={fastOn}
-                onCheckedChange={checked => void onChange('agent.service_tier', checked ? 'fast' : 'normal')}
-                size="xs"
-              />
+              <Select onValueChange={value => void onChange('agent.reasoning_effort', value)} value={effortValue}>
+                <SelectTrigger aria-label={m.reasoning} className={cn('min-w-28', CONTROL_TEXT)}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {REASONING_EFFORT_VALUES.map(value => (
+                    <SelectItem key={value} value={value}>
+                      {value === 'none' ? m.reasoningOff : t.shell.modelOptions[value]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             }
-            title={t.shell.modelOptions.fast}
+            title={m.reasoning}
           />
-        )
-      )}
+        )}
+        {ultrafastSupported ? (
+          <ListRow
+            action={
+              <Select onValueChange={value => void onChange('agent.service_tier', value)} value={speedValue}>
+                <SelectTrigger aria-label={m.speed} className={cn('min-w-28', CONTROL_TEXT)}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">{m.speedStandard}</SelectItem>
+                  {fastSupported && <SelectItem value="fast">{t.shell.modelOptions.fast}</SelectItem>}
+                  <SelectItem value="ultrafast">{t.shell.modelOptions.ultrafast}</SelectItem>
+                </SelectContent>
+              </Select>
+            }
+            title={m.speed}
+          />
+        ) : (
+          fastSupported && (
+            <ListRow
+              action={
+                <Switch
+                  aria-label={t.shell.modelOptions.fast}
+                  checked={fastOn}
+                  onCheckedChange={checked => void onChange('agent.service_tier', checked ? 'fast' : 'normal')}
+                  size="xs"
+                />
+              }
+              title={t.shell.modelOptions.fast}
+            />
+          )
+        )}
+      </SettingsCard>
     </div>
   )
 }
@@ -907,6 +911,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
       if (result.notice) {
         showLargeModelNotice(result.notice)
       }
+
       setSwitchStaleAux(result.stale_aux ?? [])
       notify({ kind: 'success', title: m.mainAppliedTitle, message: m.mainAppliedMessage(model) })
 
@@ -1075,20 +1080,26 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
     </div>
   )
 
+  const resetAuxButton = (
+    <Button disabled={!mainModel || applying} onClick={() => void resetAuxiliaryModels()} size="sm" variant="textStrong">
+      {m.resetAllToMain}
+    </Button>
+  )
+
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-12">
       {!showMain && errorNotice}
       {showMain && (
         <section>
-          <p className="mb-3 text-xs text-muted-foreground">{m.appliesDesc}</p>
-          <div className="grid gap-1">
+          <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{m.appliesDesc}</p>
+          <SettingsCard>
             <ListRow
               action={
                 <Select onValueChange={switchProvider} value={selectedProviderRow?.slug ?? selectedProvider}>
                   <SelectTrigger
                     aria-label={m.provider}
                     className={cn(
-                      'w-full min-w-0 max-w-full @2xl:w-72 [&_[data-slot=select-value]]:truncate',
+                      'w-full min-w-0 max-w-full @lg:w-64 [&_[data-slot=select-value]]:truncate',
                       CONTROL_TEXT
                     )}
                   >
@@ -1109,7 +1120,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               action={
                 needsSetup ? (
                   setupIsApiKey ? (
-                    <div className="grid w-full min-w-0 max-w-full @2xl:w-72 justify-items-end gap-2">
+                    <div className="grid w-full min-w-0 max-w-full @lg:w-64 justify-items-end gap-2">
                       <Input
                         autoComplete="off"
                         className={cn('min-w-0', CONTROL_TEXT)}
@@ -1140,7 +1151,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 ) : (
                   <ModelSelect
                     aria-label={m.model}
-                    className="w-full min-w-0 max-w-full @2xl:w-72 [&_[data-slot=select-value]]:truncate"
+                    className="w-full min-w-0 max-w-full @lg:w-64 [&_[data-slot=select-value]]:truncate"
                     models={selectedProviderModels}
                     onValueChange={setSelectedModel}
                     provider={selectedProviderRow}
@@ -1151,9 +1162,9 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               }
               title={m.model}
             />
-          </div>
+          </SettingsCard>
           {!needsSetup && (
-            <div className="flex justify-end pt-1">
+            <div className="flex justify-end pt-3">
               <Button
                 disabled={!selectedProvider || !selectedModel || applying}
                 onClick={() => void applyMainModel()}
@@ -1165,7 +1176,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
             </div>
           )}
           {needsSetup && !setupIsApiKey && selectedProviderRow && (
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-3 px-4 text-xs text-(--linear-text-tertiary)">
               {selectedProviderRow?.auth_type === 'api_key'
                 ? `${selectedProviderRow?.name} needs an API key — set it up to choose a model.`
                 : `${selectedProviderRow?.name} signs in through your browser — Hermes runs the flow for you.`}
@@ -1198,20 +1209,14 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
 
       {showAuxiliary && (
         <section>
-          <div className={cn('mb-2.5 flex items-center', subpage === undefined ? 'justify-between' : 'justify-end')}>
-            {subpage === undefined && <SectionHeading icon={Cpu} title={m.auxiliaryTitle} />}
-            <Button
-              disabled={!mainModel || applying}
-              onClick={() => void resetAuxiliaryModels()}
-              size="sm"
-              variant="textStrong"
-            >
-              {m.resetAllToMain}
-            </Button>
-          </div>
-          <p className="mb-2 text-xs text-muted-foreground">{m.auxiliaryDesc}</p>
+          {subpage === undefined ? (
+            <SectionHeading aside={resetAuxButton} title={m.auxiliaryTitle} />
+          ) : (
+            <div className="mb-4 flex justify-end">{resetAuxButton}</div>
+          )}
+          <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{m.auxiliaryDesc}</p>
           {(switchStaleAux.length === 0 || !showMain) && persistentStaleAux.length > 0 && !staleAuxDismissed && (
-            <div className="mb-2.5">
+            <div className="mb-4">
               <StaleAuxWarning
                 applying={applying}
                 onDismiss={() => {
@@ -1226,7 +1231,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               />
             </div>
           )}
-          <div className="grid gap-1">
+          <SettingsCard>
             {auxRows.map(meta => {
               const copy = m.tasks[meta.key] ?? { label: meta.label ?? meta.key, hint: meta.hint ?? meta.key }
               const current = auxiliary?.tasks.find(entry => entry.task === meta.key)
@@ -1352,14 +1357,14 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 </div>
               )
             })}
-          </div>
+          </SettingsCard>
         </section>
       )}
       {showMoa && moa && currentMoaPreset && (
         <section>
-          {subpage === undefined && <SectionHeading icon={Cpu} title={m.moaTitle} />}
-          <p className="mb-2 text-xs text-muted-foreground">{m.moaDescription}</p>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          {subpage === undefined && <SectionHeading title={m.moaTitle} />}
+          <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{m.moaDescription}</p>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
             <Select onValueChange={setSelectedMoaPreset} value={selectedMoaPreset || moa.default_preset}>
               <SelectTrigger className={cn('min-w-40', CONTROL_TEXT)}>
                 <SelectValue placeholder={m.moaPreset} />
@@ -1372,7 +1377,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 ))}
               </SelectContent>
             </Select>
-            <label className="flex items-center gap-2 rounded-sm border border-border px-2 py-1 text-xs">
+            <label className="flex h-7 items-center gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-tertiary) px-2 text-xs font-medium text-(--linear-text-secondary)">
               {m.moaEnabled}
               <Switch
                 checked={currentMoaPreset.enabled !== false}
@@ -1451,10 +1456,10 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
               {m.moaAddPreset}
             </Button>
           </div>
-          <div className="mb-2 text-xs text-muted-foreground">
+          <div className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">
             {m.moaDefault} <span className="font-mono">{moa.default_preset}</span>
           </div>
-          <div className="grid gap-1">
+          <SettingsCard>
             {currentMoaPreset.reference_models.map((slot, index) => (
               <ListRow
                 action={
@@ -1535,7 +1540,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 }
                 className={cn(slot.enabled === false && 'opacity-60')}
                 description={
-                  <span className="font-mono text-[0.68rem]">
+                  <span className="font-mono text-[0.6875rem]">
                     {slot.provider} · {slot.model || m.model}
                   </span>
                 }
@@ -1548,19 +1553,21 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 }
               />
             ))}
-            <Button
-              disabled={applying}
-              onClick={() =>
-                updateMoaPreset(prev => ({
-                  ...prev,
-                  reference_models: [...prev.reference_models, { ...prev.aggregator, enabled: true }]
-                }))
-              }
-              size="sm"
-              variant="textStrong"
-            >
-              {m.moaAddReference}
-            </Button>
+            <div className="py-3">
+              <Button
+                disabled={applying}
+                onClick={() =>
+                  updateMoaPreset(prev => ({
+                    ...prev,
+                    reference_models: [...prev.reference_models, { ...prev.aggregator, enabled: true }]
+                  }))
+                }
+                size="sm"
+                variant="textStrong"
+              >
+                {m.moaAddReference}
+              </Button>
+            </div>
             <ListRow
               below={
                 <div className="mt-2 flex flex-wrap items-center gap-2 pt-1">
@@ -1607,7 +1614,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 </div>
               }
               description={
-                <span className="font-mono text-[0.68rem]">
+                <span className="font-mono text-[0.6875rem]">
                   {currentMoaPreset.aggregator.provider} · {currentMoaPreset.aggregator.model}
                 </span>
               }
@@ -1618,7 +1625,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile, subpage }: Mod
                 </span>
               }
             />
-          </div>
+          </SettingsCard>
         </section>
       )}
       {subpage === 'moa' && !loading && (!moa || !currentMoaPreset) && (

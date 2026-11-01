@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useI18n } from '@/i18n'
-import { Loader2, Save, SlidersHorizontal } from '@/lib/icons'
+import { Loader2, Save } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import type { PluginSettingField, PluginSettingFieldType } from '@/store/agent-plugins'
 
 import { CONTROL_TEXT } from './constants'
-import { ListRow, Pill, SectionHeading } from './primitives'
+import { ListRow, Pill, SectionHeading, SettingsCard } from './primitives'
 
 // A plugin manifest's `config_schema` rendered as a form. Every non-secret
 // value is edited as TEXT (the draft) and coerced to its wire type on save, so a
@@ -357,17 +357,16 @@ export function PluginSettingsForm({
             {s.save}
           </Button>
         }
-        icon={SlidersHorizontal}
         page
         title={title}
       />
       {intro}
       {error && (
-        <p className="mb-1 text-[length:var(--conversation-caption-font-size)] text-destructive" role="alert">
+        <p className="mb-4 px-4 text-xs text-(--linear-red)" role="alert">
           {error}
         </p>
       )}
-      <div>
+      <SettingsCard>
         {fields.map(field => {
           const id = `${idPrefix}-${field.key}`
           const Control = FIELD_CONTROLS[field.type]
@@ -416,7 +415,7 @@ export function PluginSettingsForm({
             />
           )
         })}
-      </div>
+      </SettingsCard>
     </form>
   )
 }

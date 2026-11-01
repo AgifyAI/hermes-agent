@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 
 import { useI18n } from '@/i18n'
-import { Cpu, Monitor, Package, Zap } from '@/lib/icons'
+import { Cpu, Package, Zap } from '@/lib/icons'
 import type { LocalHardware } from '@/types/hermes'
 
 import { gbLabel } from './local-model-download-progress'
@@ -16,9 +16,9 @@ export function LocalModelsHardwareSection({ hardware }: LocalModelsHardwareSect
   const copy = t.settings.localModels
 
   return (
-    <SettingsSection icon={Monitor} title={copy.hardwareTitle}>
+    <SettingsSection title={copy.hardwareTitle}>
       {hardware ? (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 py-1 text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 py-4 text-xs text-(--linear-text-tertiary)">
           {hardware.gpu_name && (
             <span className="inline-flex items-center gap-1.5">
               <Zap className="size-3.5" />
@@ -39,7 +39,7 @@ export function LocalModelsHardwareSection({ hardware }: LocalModelsHardwareSect
           {hardware.uma && <Pill>{copy.unifiedMemory}</Pill>}
         </div>
       ) : (
-        <p className="py-1 text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+        <p className="py-4 text-xs text-(--linear-text-tertiary)">
           {copy.hardwareLoading}
         </p>
       )}

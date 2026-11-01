@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { SearchField } from '@/components/ui/search-field'
 
 /** The one search field every Capabilities tab uses: the boxed SearchField
+ *  (Linear's text input: 32px, radius 8, hairline)
  *  with the tab's name as a scope badge and the tab's own actions (add, view
  *  toggle, …) at the end. Callers own the column it sits in and the query. */
 export function CapabilitySearch({
@@ -23,7 +24,7 @@ export function CapabilitySearch({
 }) {
   return (
     <SearchField
-      containerClassName="h-10 w-full min-w-0 rounded-2xl bg-(--dt-card) py-0"
+      containerClassName="w-full min-w-0 py-0"
       hints={hints}
       leadingContent={<Badge size="xs" variant="muted">{scope}</Badge>}
       onChange={onChange}
