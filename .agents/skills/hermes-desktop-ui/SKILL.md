@@ -47,6 +47,7 @@ For a small change, do it yourself. For work across many screens:
 ## 4. Prove it
 
 1. Run the checks: `cd apps/desktop && npm run typecheck && npm run lint && npm run test:ui`, then `python scripts/check` at the repo root. Attribute any failure by running it on the base commit.
+   After any token or class change, also run `python3 .agents/skills/hermes-desktop-ui/scripts/token-audit.py`: a misspelled token paints nothing and no test notices.
 2. Rebuild and launch. See [the harness guide](references/harness.md).
 3. Capture every listed screen in both modes with `scripts/capture.mjs`. For Settings, `scripts/settings-sweep.mjs` visits every subpage and flags content overflowing its panel.
 4. **Open and look at every image.** A saved file proves nothing. Check for clipped or overflowing content, off-centre layouts, weak contrast in dark, leftover legacy styling, and divergence from the Linear reference. Read the console errors the script returns.

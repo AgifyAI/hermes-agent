@@ -230,11 +230,11 @@ export function CatalogRow({ request, target }: CatalogRowProps) {
         <div className="grid min-w-0 flex-1 gap-0.5">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1">
             <span className="font-medium leading-4.5 wrap-anywhere">{catalog.display}</span>
-            <span className={cn(PILL, 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)')}>
+            <span className={cn(PILL, 'bg-(--linear-segment-selected) text-(--linear-text-tertiary)')}>
               {copy.kind[target.kind]}
             </span>
             {catalog.tier ? (
-              <span className={cn(PILL, 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)')}>
+              <span className={cn(PILL, 'bg-(--linear-segment-selected) text-(--linear-text-tertiary)')}>
                 {copy.tier[catalog.tier]}
               </span>
             ) : null}

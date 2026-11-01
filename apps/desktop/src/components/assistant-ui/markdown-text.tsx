@@ -736,7 +736,7 @@ function MarkdownTextSurface({
         table: ResizableMarkdownTable,
         thead: ({ className, ...props }: ComponentProps<'thead'>) => (
           <thead
-            className={cn('m-0 bg-(--linear-bg-secondary)/50 text-(--linear-text-tertiary)', className)}
+            className={cn('m-0 bg-(--linear-bg-quaternary) text-(--linear-text-tertiary)', className)}
             {...props}
           />
         ),

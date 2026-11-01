@@ -76,7 +76,7 @@ const TONE_STYLES: Record<EmptyStateTone, { cube: string; primary: string }> = {
   },
   warning: {
     cube: 'text-(--linear-yellow)/70',
-    primary: 'bg-(--linear-yellow)/10 text-(--linear-text-(--linear-accent)) hover:bg-(--linear-yellow)/20'
+    primary: 'bg-(--linear-yellow)/10 text-(--linear-text-primary) hover:bg-(--linear-yellow)/20'
   }
 }
 
@@ -129,7 +129,7 @@ export function PreviewEmptyState({
       <div className="grid max-w-sm justify-items-center gap-5">
         <PreviewCubeIcon className={styles.cube} />
         <div className="grid gap-[3px]">
-          <div className="text-[0.8125rem] font-medium text-(--linear-text-(--linear-accent))">{title}</div>
+          <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</div>
           {body && <div className="text-xs leading-relaxed text-(--linear-text-tertiary)">{body}</div>}
         </div>
         {(primaryAction || secondaryAction) && (
@@ -324,16 +324,16 @@ const MD_TAG_CLASSES = {
   h2: 'mb-2.5 mt-5 text-[1.25rem] leading-7 font-medium first:mt-0',
   h3: 'mb-2 mt-4 text-[1.125rem] leading-[1.8rem] font-medium first:mt-0',
   h4: 'mb-2 mt-3 text-[0.9375rem] leading-[1.4375rem] font-medium first:mt-0',
-  p: 'mb-4 leading-relaxed text-(--linear-text-(--linear-accent)) last:mb-0',
+  p: 'mb-4 leading-relaxed text-(--linear-text-primary) last:mb-0',
   ul: 'mb-4 list-disc pl-6 marker:text-(--linear-text-quaternary) last:mb-0',
   ol: 'mb-4 list-decimal pl-6 marker:text-(--linear-text-quaternary) last:mb-0',
   li: 'mt-1 leading-relaxed',
   blockquote: 'mb-4 border-l-2 border-(--linear-border-secondary) pl-3 text-(--linear-text-tertiary) italic last:mb-0',
   pre: 'mb-4 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-card) font-mono text-xs leading-relaxed last:mb-0 [&_pre]:m-0 [&_pre]:overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-3 [&_pre]:font-mono',
   hr: 'my-6 border-(--linear-border-primary)',
-  th: 'px-3 py-2 text-left text-[0.8125rem] font-medium text-(--linear-text-(--linear-accent))',
+  th: 'px-3 py-2 text-left text-[0.8125rem] font-medium text-(--linear-text-primary)',
   td: 'px-3 py-2 align-top text-[0.8125rem] leading-relaxed',
-  thead: 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)'
+  thead: 'bg-(--linear-bg-quaternary) text-(--linear-text-tertiary)'
 } as const
 
 function tagged<T extends keyof typeof MD_TAG_CLASSES>(Tag: T) {
@@ -357,7 +357,7 @@ function MarkdownCode({ className, children, ...props }: ComponentProps<'code'>)
     return (
       <code
         className={cn(
-          'rounded-(--linear-radius-kbd) bg-(--linear-bg-secondary) px-1 py-0.5 font-mono text-[0.86em] text-(--linear-text-secondary)',
+          'rounded-(--linear-radius-kbd) bg-(--linear-segment-selected) px-1 py-0.5 font-mono text-[0.86em] text-(--linear-text-secondary)',
           className
         )}
         {...props}
@@ -403,7 +403,7 @@ function MarkdownImage({ alt, src, ...rest }: ComponentProps<'img'>) {
 
 const PreviewNoteContext = createContext<string | undefined>(undefined)
 
-const MARKDOWN_LINK_CLASS = 'text-(--linear-text-(--linear-accent)) underline underline-offset-2 hover:text-(--linear-accent)'
+const MARKDOWN_LINK_CLASS = 'text-(--linear-text-primary) underline underline-offset-2 hover:text-(--linear-accent)'
 
 async function openLinkedNote(target: string, filePath?: string) {
   const preview = await normalizeOrLocalPreviewTarget(target, noteDirectory(filePath))
@@ -493,7 +493,7 @@ export function MarkdownPreview({ filePath, text }: { filePath?: string; text: s
   return (
     <PreviewNoteContext.Provider value={filePath}>
       <div
-        className="preview-markdown mx-auto max-w-3xl px-4 py-3 text-[0.8125rem] text-(--linear-text-(--linear-accent))"
+        className="preview-markdown mx-auto max-w-3xl px-4 py-3 text-[0.8125rem] text-(--linear-text-primary)"
         data-preview-markdown=""
         data-selectable-text="true"
       >
@@ -694,8 +694,8 @@ export function SourceView({ filePath, language, text }: { filePath?: string; la
                       'h-5 w-9 pr-2 leading-5 tabular-nums transition-colors',
                       filePath && 'cursor-pointer',
                       selected
-                        ? 'bg-(--linear-yellow)/20 text-(--linear-text-(--linear-accent))'
-                        : filePath && 'hover:text-(--linear-text-(--linear-accent))'
+                        ? 'bg-(--linear-yellow)/20 text-(--linear-text-primary)'
+                        : filePath && 'hover:text-(--linear-text-primary)'
                     )}
                     draggable={Boolean(filePath)}
                     key={line}
@@ -1079,7 +1079,7 @@ export function LocalFilePreview({
           trailing={<EditControls dirty={dirty} onCancel={cancelEdit} onSave={() => void saveEdit()} saving={saving} />}
         />
         {conflict && (
-          <div className="shrink-0 border-b-[0.5px] border-(--linear-yellow)/40 bg-(--linear-yellow)/10 px-3 py-2 text-xs text-(--linear-text-(--linear-accent))">
+          <div className="shrink-0 border-b-[0.5px] border-(--linear-yellow)/40 bg-(--linear-yellow)/10 px-3 py-2 text-xs text-(--linear-text-primary)">
             <div className="font-medium">{t.preview.diskChangedTitle}</div>
             <div className="mt-0.5 leading-relaxed">{t.preview.diskChangedBody}</div>
             <div className="mt-1.5 flex gap-3">

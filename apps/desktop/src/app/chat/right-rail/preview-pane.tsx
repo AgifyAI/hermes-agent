@@ -238,7 +238,7 @@ function PreviewLoadError({
       body={
         <>
           <a
-            className="pointer-events-auto block font-mono text-(--linear-text-tertiary) underline decoration-current/20 underline-offset-4 transition-colors hover:text-(--linear-text-(--linear-accent))"
+            className="pointer-events-auto block font-mono text-(--linear-text-tertiary) underline decoration-current/20 underline-offset-4 transition-colors hover:text-(--linear-text-primary)"
             href={error.url}
             onClick={event => {
               event.preventDefault()
@@ -1465,7 +1465,7 @@ export function PreviewPane({
             <div className="min-w-0 flex-1">
               <Tip label={copy.openTarget(currentUrl)}>
                 <a
-                  className="pointer-events-auto inline max-w-full truncate text-left text-xs font-medium text-(--linear-text-(--linear-accent)) underline-offset-4 decoration-current/20 transition-colors hover:text-(--linear-accent) hover:underline"
+                  className="pointer-events-auto inline max-w-full truncate text-left text-xs font-medium text-(--linear-text-primary) underline-offset-4 decoration-current/20 transition-colors hover:text-(--linear-accent) hover:underline"
                   href={isRemoteHtmlTarget ? undefined : currentUrl}
                   onClick={event => {
                     if (isRemoteHtmlTarget) {

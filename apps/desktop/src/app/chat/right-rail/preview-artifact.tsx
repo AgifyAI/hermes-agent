@@ -215,7 +215,7 @@ export function ArtifactPreview({ onClose, target }: { onClose?: () => void; tar
             />
             <CopyButton
               appearance="inline"
-              className="inline-grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-(--linear-accent)) hover:transition-none"
+              className="inline-grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none"
               iconClassName="size-3.5"
               label={copy.copyContent}
               showLabel={false}

@@ -17,8 +17,9 @@ import { cn } from '@/lib/utils'
 export interface AvatarChipBrand {
   Icon?: ComponentType<SVGProps<SVGSVGElement>>
   color: string
-  /** Marks that are black or white by design (GitHub, Notion, Unreal) follow
-   *  the surrounding text color instead of vanishing into the theme. */
+  /** Marks that are black or white by design (GitHub, Notion, Unreal), or too
+   *  dark to read on a dark surface (Slack's aubergine), follow the surrounding
+   *  text color instead of vanishing into the theme. */
   monochrome?: boolean
   monogram?: string
 }

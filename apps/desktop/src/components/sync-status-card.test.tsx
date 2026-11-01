@@ -68,7 +68,19 @@ const cases: ReceiptCase[] = [
   {
     name: 'review beats bisect and updates',
     receipt: details,
-    headline: /need update-url review/,
+    headline: /^1 plugin needs update-url review$/,
+    tone: 'text-(--linear-orange)'
+  },
+  {
+    name: 'review counts plural plugins',
+    receipt: {
+      ...details,
+      plugin_checks: [
+        { name: 'other-url', needs_fixing: 'update_url points at a fork', update_available: false },
+        ...(details.plugin_checks ?? [])
+      ]
+    },
+    headline: /^2 plugins need update-url review$/,
     tone: 'text-(--linear-orange)'
   },
   {

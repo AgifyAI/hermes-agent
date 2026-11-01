@@ -62,3 +62,5 @@ Close the copy and Vite straight after. `npm run pack` rebuilds the production b
 - The session switcher does not open on an empty profile. Check it on real data.
 - Opening a real session in a capture can move its "last active" time. Say so in the report.
 - Untracked tarballs in `.cache/desktop-inputs/` make the `profile-archives` check fail locally. Move `.cache` aside for that run.
+- A bulk rename can corrupt a class: `text-primary` inside `--linear-text-primary` became `text-(--linear-text-(--linear-accent))` at 12 sites and survived every review, because the text simply inherited a nearby colour. Run `scripts/token-audit.py` after a rename.
+- Mounting a component alone can hide a layout bug: the Review diff collapsed to 0px only inside the real rail. Check the real parent, not a forced wrapper with a test-only height.

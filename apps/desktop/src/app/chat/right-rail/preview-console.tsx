@@ -211,7 +211,7 @@ export function PreviewConsolePanel({
           <PanelBottom className="size-3.5 text-(--linear-icon)" />
           {copy.title}
           {selectedLogIds.size > 0 && (
-            <span className="rounded-full bg-(--linear-bg-secondary) px-1.5 py-px text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
+            <span className="rounded-full bg-(--linear-segment-selected) px-1.5 py-px text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
               {copy.selected(selectedLogIds.size)}
             </span>
           )}
