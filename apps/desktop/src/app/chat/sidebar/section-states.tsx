@@ -51,8 +51,8 @@ export function SidebarPinnedEmptyState() {
   const { t } = useI18n()
 
   return (
-    <div className="flex min-h-7 items-center gap-1.5 rounded-lg pl-2 text-[0.75rem] text-(--ui-text-tertiary)">
-      <span className="grid w-3.5 shrink-0 place-items-center text-(--ui-text-quaternary)">
+    <div className="flex min-h-7 items-center gap-1.5 pl-2 text-xs font-[450] text-(--linear-text-tertiary)">
+      <span className="grid w-3.5 shrink-0 place-items-center text-(--linear-text-quaternary)">
         <Codicon name="pin" size="0.75rem" />
       </span>
       <span>{t.sidebar.shiftClickHint}</span>

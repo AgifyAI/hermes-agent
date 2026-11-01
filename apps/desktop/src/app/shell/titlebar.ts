@@ -73,7 +73,7 @@ export function titlebarToolsRightCss(
 // shared <Button size="icon-titlebar"> (used polymorphically via asChild) —
 // Button is the single source of button styling.
 export const titlebarButtonClass =
-  'text-muted-foreground/85 hover:bg-(--ui-control-hover-background) hover:text-foreground'
+  'text-(--linear-icon) hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary)'
 
 /** Shared flex shell for left/right/pane titlebar tool rows — no gap; 24px buttons abut. */
 export const titlebarToolClusterClass =

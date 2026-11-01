@@ -57,7 +57,7 @@ export function useApprovalModeStatusbarItem(
   }, [gatewayState, profile, requestGateway])
 
   return {
-    className: mode === 'off' ? 'bg-(--chrome-action-hover) text-foreground' : undefined,
+    className: mode === 'off' ? 'bg-(--linear-hover-sidebar-icon) text-(--linear-text-primary)' : undefined,
     icon: mode === 'off' ? <ZapFilled className="size-3.5" /> : <Zap className="size-3.5 opacity-70" />,
     id: 'approval-mode',
     label: labels[mode],
@@ -76,8 +76,8 @@ export function useApprovalModeStatusbarItem(
           {(['manual', 'smart', 'off'] as const).map(value => (
             <DropdownMenuRadioItem className="items-start gap-2" key={value} value={value}>
               <span className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-xs text-foreground">{labels[value]}</span>
-                <span className="text-[0.6875rem] leading-snug text-(--ui-text-tertiary)">{descriptions[value]}</span>
+                <span className="text-[0.8125rem] text-(--linear-text-overlay-strong)">{labels[value]}</span>
+                <span className="text-xs leading-snug text-(--linear-text-tertiary)">{descriptions[value]}</span>
               </span>
             </DropdownMenuRadioItem>
           ))}

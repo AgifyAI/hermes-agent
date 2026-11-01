@@ -35,7 +35,7 @@ export function LocalSetupMenuRow() {
       >
         <Codicon className="mt-0.5 shrink-0 text-(--ui-accent)" name="chip" size="0.8rem" />
         <span className="min-w-0 flex-1 leading-snug">
-          <span className="block font-medium text-foreground">{copy.title}</span>
+          <span className="block font-medium text-(--linear-text-overlay-strong)">{copy.title}</span>
           <span className="block truncate text-(--ui-text-tertiary)">
             {copy.text(fit.model.display_name, fit.model.size_label)}
           </span>

@@ -36,11 +36,11 @@ export function ContextUsagePanel({ breakdown, loading, usage }: ContextUsagePan
   const segmentTotal = categories.reduce((sum, category) => sum + category.tokens, 0) || contextUsed || 1
 
   return (
-    <div className="flex w-72 flex-col gap-3 p-3 text-[0.75rem]" data-slot="context-usage-panel">
+    <div className="flex w-72 flex-col gap-3 p-3 text-[0.8125rem] font-[450] text-(--linear-text-overlay)" data-slot="context-usage-panel">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="font-medium text-foreground">{copy.title}</p>
+        <p className="font-medium text-(--linear-text-overlay-strong)">{copy.title}</p>
 
-        <span className="text-[0.6875rem] text-muted-foreground">
+        <span className="text-xs text-(--linear-text-tertiary)">
           {copy.tokenSummary(
             `${usage.context_estimated ? '~' : ''}${compactNumber(contextUsed)}`,
             compactNumber(contextMax)
@@ -48,7 +48,7 @@ export function ContextUsagePanel({ breakdown, loading, usage }: ContextUsagePan
         </span>
       </div>
 
-      <p className="flex items-center justify-between gap-2 text-[0.6875rem] text-foreground">
+      <p className="flex items-center justify-between gap-2 text-xs">
         <span>
           {usage.context_estimated ? '~' : ''}
           {copy.percentFull(contextPercent)}
@@ -56,7 +56,7 @@ export function ContextUsagePanel({ breakdown, loading, usage }: ContextUsagePan
 
         {usage.compressions !== undefined && (
           <span
-            className="inline-flex items-center gap-1 text-muted-foreground"
+            className="inline-flex items-center gap-1 text-(--linear-text-tertiary)"
             data-testid="context-panel-compressions"
           >
             <Codicon aria-hidden="true" name="layers" size="0.6875rem" />
@@ -73,17 +73,17 @@ export function ContextUsagePanel({ breakdown, loading, usage }: ContextUsagePan
             <span className="flex min-w-0 items-center gap-2">
               <span className="size-2 shrink-0 rounded-[2px]" style={{ background: category.color }} />
 
-              <span className="truncate text-muted-foreground">{category.label}</span>
+              <span className="truncate text-(--linear-text-tertiary)">{category.label}</span>
             </span>
 
-            <span className="shrink-0 tabular-nums text-foreground">~{compactNumber(category.tokens)}</span>
+            <span className="shrink-0 tabular-nums">~{compactNumber(category.tokens)}</span>
           </li>
         ))}
       </ul>
 
-      {loading && !categories.length && <p className="text-[0.6875rem] text-muted-foreground">{copy.loading}</p>}
+      {loading && !categories.length && <p className="text-xs text-(--linear-text-tertiary)">{copy.loading}</p>}
 
-      {!loading && !categories.length && <p className="text-[0.6875rem] text-muted-foreground">{copy.empty}</p>}
+      {!loading && !categories.length && <p className="text-xs text-(--linear-text-tertiary)">{copy.empty}</p>}
     </div>
   )
 }
@@ -119,7 +119,7 @@ function ContextUsageBar({
     <div
       className={cn(
         'flex h-1.5 overflow-hidden rounded-full',
-        categories.length ? 'bg-(--ui-stroke-tertiary)' : 'dither bg-(--ui-bg-elevated)'
+        categories.length ? 'bg-(--linear-border-secondary)' : 'dither bg-(--linear-bg-tertiary)'
       )}
       data-slot="context-usage-bar"
     >

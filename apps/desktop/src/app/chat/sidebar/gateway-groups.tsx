@@ -114,7 +114,7 @@ export function GatewayProfileGroups({
           renderRows={renderRows}
         >
           {gatewayProfiles.has(group.id) && (
-            <div className="ml-3 border-l border-border/50 pl-1">
+            <div className="ml-3 border-l border-(--linear-border-secondary) pl-1">
               <GatewayProfileGroups
                 groups={gatewayProfiles.get(group.id)!.map(profile => ({ ...profile, label: profile.profile! }))}
                 nested
@@ -259,7 +259,7 @@ function GatewayProfileGroup({
             </DropdownMenu>
           </div>
         }
-        className={cn(sortable.dragging && 'cursor-grabbing bg-(--ui-sidebar-surface-background)')}
+        className={cn(sortable.dragging && 'cursor-grabbing bg-(--linear-bg-window)')}
         label={
           <SidebarRowLink aria-expanded={open} onClick={() => toggleGatewayGroup(group.id)}>
             {label}

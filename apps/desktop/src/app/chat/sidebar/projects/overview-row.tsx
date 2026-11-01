@@ -65,7 +65,7 @@ export function ProjectBackRow({ label, onClick }: { label: string; onClick: () 
   return (
     <SidebarRowShell>
       <SidebarRowBody
-        className="group/back w-full text-(--ui-text-tertiary) opacity-40 hover:text-foreground"
+        className="group/back w-full text-(--linear-text-tertiary) opacity-40 hover:text-(--linear-text-primary)"
         onClick={onClick}
       >
         <SidebarRowLead>
@@ -240,7 +240,7 @@ export function ProjectOverviewRow({
           )}
         </>
       }
-      className={cn(dragging && 'cursor-grabbing bg-(--ui-sidebar-surface-background)')}
+      className={cn(dragging && 'cursor-grabbing bg-(--linear-bg-window)')}
       label={project.isAuto ? <Tip label={s.projects.autoDiscovered}>{labelLink}</Tip> : labelLink}
       lead={lead}
       // The label is grab surface too, not just the lead's grabber — the

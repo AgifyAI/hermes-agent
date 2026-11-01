@@ -75,13 +75,15 @@ function SidebarSectionHeader({
   const labelBody = (
     <>
       {icon}
-      <SidebarPanelLabel>{label}</SidebarPanelLabel>
+      <SidebarPanelLabel className="group-hover/section-label:text-(--linear-text-primary)">{label}</SidebarPanelLabel>
       {meta && <SidebarSectionMeta>{meta}</SidebarSectionMeta>}
     </>
   )
 
   return (
-    <div className="group/section flex shrink-0 items-center justify-between gap-1 pb-1 pt-2">
+    // Linear's section header: a 28px band, label 12px/500 tertiary that turns
+    // primary on hover.
+    <div className="group/section mt-1 flex h-7 shrink-0 items-center justify-between gap-1">
       {collapsible ? (
         <button
           // min-w-0 lets the label truncate at narrow sidebar widths instead of
@@ -92,7 +94,7 @@ function SidebarSectionHeader({
         >
           {labelBody}
           <DisclosureCaret
-            className="text-(--ui-text-tertiary) opacity-0 transition group-hover/section-label:opacity-100"
+            className="text-(--linear-text-tertiary) opacity-0 transition group-hover/section-label:opacity-100"
             open={open}
           />
         </button>

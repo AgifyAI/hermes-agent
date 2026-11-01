@@ -150,14 +150,14 @@ export function GatewayMenuPanel({
   }, [recentLogs])
 
   return (
-    <div className="text-sm">
+    <div className="text-[0.8125rem] font-[450] text-(--linear-text-overlay)">
       <div className="flex items-center justify-between gap-3 px-3 py-2">
-        <div className="flex min-w-0 flex-col gap-1 text-[0.7rem] leading-none">
+        <div className="flex min-w-0 flex-col gap-1.5 text-xs leading-none">
           <span className="flex items-center gap-1.5 font-medium">
             <StatusDot tone={gatewayOpen ? 'good' : gatewayConnecting ? 'warn' : 'bad'} />
             {connectionLabel}
           </span>
-          <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-(--linear-text-tertiary)">
             <StatusDot tone={inferenceReady ? 'good' : gatewayOpen ? 'warn' : 'bad'} />
             {inferenceLabel}
           </span>
@@ -167,7 +167,7 @@ export function GatewayMenuPanel({
           <Tip label={copy.reconnectGateway}>
             <Button
               aria-label={copy.reconnectGateway}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-(--linear-icon) hover:text-(--linear-text-primary)"
               disabled={reconnecting}
               onClick={reconnect}
               size="icon-xs"
@@ -179,7 +179,7 @@ export function GatewayMenuPanel({
           <Tip label={copy.openSystem}>
             <Button
               aria-label={copy.openSystem}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-(--linear-icon) hover:text-(--linear-text-primary)"
               onClick={openSystem}
               size="icon-xs"
               variant="ghost"
@@ -190,11 +190,11 @@ export function GatewayMenuPanel({
           {/* Restart is the heavy, disruptive action: keep it visually distinct
               (power icon, destructive hover) and separated from the benign
               reconnect/system buttons so it can't be hit by mistake. */}
-          <span aria-hidden className="mx-1 h-4 w-px bg-border/70" />
+          <span aria-hidden className="mx-1 h-4 w-px bg-(--linear-border-overlay)" />
           <Tip label={t.commandCenter.restartGateway}>
             <Button
               aria-label={t.commandCenter.restartGateway}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-(--linear-icon) hover:text-(--linear-red)"
               onClick={restart}
               size="icon-xs"
               variant="ghost"
@@ -206,7 +206,7 @@ export function GatewayMenuPanel({
       </div>
 
       {inferenceStatus?.reason && (
-        <Section className="text-xs text-muted-foreground">
+        <Section className="text-xs text-(--linear-text-tertiary)">
           <div className="line-clamp-3">{inferenceStatus.reason}</div>
         </Section>
       )}
@@ -216,7 +216,7 @@ export function GatewayMenuPanel({
           <div className="flex items-center justify-between gap-2">
             <SectionLabel>{copy.recentActivity}</SectionLabel>
             <Button
-              className="-mr-2 h-auto py-0 font-medium leading-none text-muted-foreground"
+              className="-mr-2 h-auto py-0 font-medium leading-none"
               onClick={openSystem}
               size="xs"
               type="button"
@@ -238,7 +238,7 @@ export function GatewayMenuPanel({
             {platforms.map(([name, platform]) => (
               <li className="flex items-center justify-between gap-2 text-xs" key={name}>
                 <span className="truncate capitalize">{name}</span>
-                <span className="flex items-center gap-1.5 text-[0.66rem] text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-[0.6875rem] text-(--linear-text-tertiary)">
                   <StatusDot tone={platformStatusTone({ state: platform.state })} />
                   {prettyState(platform.state)}
                 </span>
@@ -252,11 +252,11 @@ export function GatewayMenuPanel({
 }
 
 function Section({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('border-t border-border/50 px-3 py-2', className)}>{children}</div>
+  return <div className={cn('border-t border-(--linear-border-overlay) px-3 py-2', className)}>{children}</div>
 }
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">{children}</div>
+    <div className="text-xs font-medium text-(--linear-text-tertiary)">{children}</div>
   )
 }

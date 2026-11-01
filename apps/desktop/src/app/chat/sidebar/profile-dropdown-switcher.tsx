@@ -190,8 +190,8 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
           <Button
             aria-label={`${p.title}: ${triggerLabel}`}
             className={cn(
-              'w-full min-w-0 justify-between overflow-hidden px-1 text-(--ui-text-secondary) data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground',
-              compact && 'h-full min-h-0 rounded-none px-1.5 text-[0.6875rem] font-normal'
+              'w-full min-w-0 justify-between overflow-hidden px-1 text-(--linear-text-secondary) data-[state=open]:bg-(--linear-active-sidebar) data-[state=open]:text-(--linear-text-primary)',
+              compact && 'h-full min-h-0 px-2 text-xs font-[450] text-(--linear-text-tertiary) hover:bg-(--linear-hover-sidebar-icon)'
             )}
             size="xs"
             type="button"

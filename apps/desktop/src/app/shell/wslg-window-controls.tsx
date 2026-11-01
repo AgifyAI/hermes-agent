@@ -16,7 +16,7 @@ interface WslgWindowControlsProps {
 // the contrib shell zeroes for content subtrees (controller.tsx), collapsing
 // the buttons if inherited.
 const buttonClass =
-  'grid h-full w-[46px] place-items-center border-0 bg-transparent p-0 text-muted-foreground transition-colors duration-75 select-none [-webkit-app-region:no-drag] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring hover:bg-white/10 hover:text-foreground active:bg-white/15'
+  'grid h-full w-[46px] place-items-center border-0 bg-transparent p-0 text-(--linear-icon) transition-colors duration-75 select-none [-webkit-app-region:no-drag] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--linear-focus) hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) active:bg-(--linear-hover-control)'
 
 // Match the native titlebar tools: stopPropagation (NOT preventDefault) on
 // pointerdown. preventDefault on pointerdown suppresses the synthesized click
@@ -68,7 +68,7 @@ export function WslgWindowControls({ isFullscreen, isMaximized }: WslgWindowCont
         aria-label="Close window"
         className={cn(
           buttonClass,
-          'hover:bg-[#c42b1c] hover:text-white active:bg-[#b3271a] active:text-white dark:hover:bg-[#c42b1c]'
+          'hover:bg-(--linear-red) hover:text-(--linear-on-accent) active:bg-(--linear-red) active:text-(--linear-on-accent) active:brightness-95'
         )}
         onClick={() => controls.close()}
         onPointerDown={stopTitlebarDrag}

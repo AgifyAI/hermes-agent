@@ -26,9 +26,15 @@ import {
 } from '@/store/statusbar-prefs'
 
 // Shared chrome styling for interactive statusbar items (button / link / menu
-// trigger). The 'text' variant intentionally omits hover/transition/disabled.
-const STATUSBAR_ACTION_CLASS =
-  'inline-flex h-full items-center gap-1 rounded-none px-1.5 text-[0.6875rem] text-(--ui-text-tertiary) transition-colors hover:bg-(--chrome-action-hover) hover:text-foreground disabled:cursor-default disabled:opacity-45'
+// trigger): Linear's quiet 12px/450 tertiary text, a pill hover on the window
+// colour (the sidebar icon-button fill). The 'text' variant omits
+// hover/transition/disabled.
+const STATUSBAR_ITEM_CLASS = 'inline-flex h-full items-center gap-1 px-2 text-xs font-[450] text-(--linear-text-tertiary)'
+
+const STATUSBAR_ACTION_CLASS = cn(
+  STATUSBAR_ITEM_CLASS,
+  'rounded-(--linear-radius-pill) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:transition-none disabled:cursor-default disabled:opacity-60'
+)
 
 export interface StatusbarMenuItem {
   id: string
@@ -101,7 +107,7 @@ export function StatusbarControls({ className, leftItems = [], items = [], ...pr
       <ContextMenuTrigger asChild>
         <footer
           className={cn(
-            'flex h-5 shrink-0 items-stretch justify-between gap-2 bg-(--ui-sidebar-surface-background) px-1 py-0 text-(--ui-text-tertiary) [-webkit-app-region:no-drag]',
+            'flex h-6 shrink-0 items-stretch justify-between gap-2 bg-(--linear-bg-window) px-1 py-0.5 text-(--linear-text-tertiary) [-webkit-app-region:no-drag]',
             className
           )}
           data-slot="statusbar"
@@ -208,7 +214,7 @@ function StatusbarVisibilityMenu({
 function StatusbarHideHint() {
   const hint = useKeybindHint('view.toggleStatusbar')
 
-  return hint ? <span className="ml-auto pl-2 text-(--ui-text-quaternary)">{hint}</span> : null
+  return hint ? <span className="ml-auto pl-2 text-(--linear-text-hint)">{hint}</span> : null
 }
 
 /** Memoized: `useStatusbarItems` rebuilds the item array whenever ANY of its
@@ -237,7 +243,7 @@ const StatusbarItemView = memo(function StatusbarItemView({
     <>
       {item.icon}
       {item.label && <span className="truncate">{item.label}</span>}
-      {item.detail && <span className="truncate text-muted-foreground/80">{item.detail}</span>}
+      {item.detail && <span className="truncate text-(--linear-text-quaternary)">{item.detail}</span>}
     </>
   )
 
@@ -281,7 +287,7 @@ const StatusbarItemView = memo(function StatusbarItemView({
                 .filter(menuItem => !menuItem.hidden)
                 .map(menuItem => (
                   <DropdownMenuItem
-                    className={cn('gap-2 text-foreground focus:bg-accent [&_svg]:size-4', menuItem.className)}
+                    className={cn('gap-2 [&_svg]:size-4', menuItem.className)}
                     disabled={menuItem.disabled}
                     key={menuItem.id}
                     onSelect={() => {
@@ -319,10 +325,7 @@ const StatusbarItemView = memo(function StatusbarItemView({
     return (
       <Tip label={tooltipLabel}>
         <div
-          className={cn(
-            'inline-flex h-full items-center gap-1 px-1.5 text-[0.6875rem] text-(--ui-text-tertiary)',
-            item.className
-          )}
+          className={cn(STATUSBAR_ITEM_CLASS, item.className)}
         >
           {content}
         </div>

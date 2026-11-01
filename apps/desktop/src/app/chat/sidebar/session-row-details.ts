@@ -1,6 +1,6 @@
 // One-line rows are title-only at every density (density only spaces the day
 // groups), so the virtualizer has one inline height to plan for.
-export const SESSION_ROW_ESTIMATE_PX = 26
+export const SESSION_ROW_ESTIMATE_PX = 28
 
 /** Virtual-list placement estimate for the Inbox-style card. A full card
  *  stacks four text lines (header, title, preview, model/size) where the

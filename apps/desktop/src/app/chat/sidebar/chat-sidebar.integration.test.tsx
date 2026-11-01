@@ -69,7 +69,7 @@ const renderSidebar = (pathname: string, currentView: AppView, onRetrySessions: 
   )
 
 const currentButtons = () =>
-  screen.queryAllByRole('button').filter(button => button.classList.contains('bg-(--ui-control-active-background)'))
+  screen.queryAllByRole('button').filter(button => button.getAttribute('data-active') === 'true')
 
 const expectOnlyCurrent = (label: string | null) => {
   const button = label ? screen.getByRole('button', { name: label }) : null
@@ -82,7 +82,7 @@ const expectOnlySelectedSession = (title: string | null) => {
     .map(label => screen.queryByText(label)?.closest('.group.row-hover'))
     .filter(row => row !== undefined)
 
-  const selectedRows = rows.filter(row => row?.className.includes('bg-(--ui-row-active-background)'))
+  const selectedRows = rows.filter(row => row?.className.includes('bg-(--linear-active-sidebar)'))
   const expected = title ? [screen.getByText(title).closest('.group.row-hover')] : []
 
   expect(selectedRows).toEqual(expected)

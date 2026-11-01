@@ -101,7 +101,7 @@ function ModelPrice({ pricing }: { pricing: ModelPricing }) {
   const cache = pricing.cache || null
 
   if (pricing.free) {
-    return <span className="shrink-0 pl-2 text-[0.625rem] text-(--ui-green)">{copy.free}</span>
+    return <span className="shrink-0 pl-2 text-[0.6875rem] font-medium text-(--linear-green)">{copy.free}</span>
   }
 
   if (!input && !output) {
@@ -113,7 +113,7 @@ function ModelPrice({ pricing }: { pricing: ModelPricing }) {
 
   return (
     <span
-      className="flex shrink-0 items-center gap-1.5 pl-2 text-[0.625rem] tabular-nums text-(--ui-text-tertiary)"
+      className="flex shrink-0 items-center gap-1.5 pl-2 text-[0.6875rem] font-medium tabular-nums text-(--linear-text-hint)"
       title={copy.priceTitle(input ?? '—', output ?? '—', cache ?? '')}
     >
       <span>
@@ -690,7 +690,7 @@ export function ModelCatalogMenu({
     const active = kbActiveKey === key
 
     return {
-      className: cn(dropdownMenuRow, active && 'bg-(--ui-control-active-background) text-foreground'),
+      className: cn(dropdownMenuRow, active && 'bg-(--linear-hover-overlay) text-(--linear-text-overlay-strong)'),
       ...(active ? { 'data-kb-active': '' } : {})
     }
   }
@@ -827,7 +827,7 @@ export function ModelCatalogMenu({
                   group.families.map((family, familyIdx) => (
                     <Fragment key={`${group.provider.slug}:${family.id}`}>
                       {!search && sectionTitle(group, familyIdx, copyPicker) ? (
-                        <DropdownMenuLabel className="px-2 pb-0.5 pt-1.5 text-[0.6rem] font-medium uppercase tracking-wide text-(--ui-text-tertiary)">
+                        <DropdownMenuLabel className="px-2 pb-0.5 pt-1.5 text-xs font-medium text-(--linear-text-hint)">
                           {sectionTitle(group, familyIdx, copyPicker)}
                         </DropdownMenuLabel>
                       ) : null}
@@ -884,7 +884,7 @@ export function ModelCatalogMenu({
                 <span className="min-w-0 flex-1 truncate">
                   MoA: <HighlightMatches foldSeparators query={search} text={preset} />
                 </span>
-                {isCurrentMoa ? <Codicon className="ml-auto text-foreground" name="check" size="0.75rem" /> : null}
+                {isCurrentMoa ? <Codicon className="ml-auto text-(--linear-text-overlay-strong)" name="check" size="0.75rem" /> : null}
               </DropdownMenuItem>
             )
           })}
@@ -922,7 +922,7 @@ export function ModelCatalogMenu({
       <DropdownMenuSeparator className="mx-0" />
       {footer}
       <DropdownMenuItem
-        className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)', slugEntry && 'text-foreground')}
+        className={cn(dropdownMenuRow, 'text-(--linear-text-tertiary)', slugEntry && 'text-(--linear-text-overlay-strong)')}
         onSelect={event => {
           event.preventDefault()
           setSearch('')
@@ -1144,7 +1144,7 @@ function ModelFamilyRow({
             aria-label={favoriteLabel}
             aria-pressed={favorite}
             className={cn(
-              '-mx-0.5 grid size-4 shrink-0 place-items-center rounded-sm transition-colors duration-100 hover:text-foreground hover:transition-none',
+              '-mx-0.5 grid size-4 shrink-0 place-items-center rounded-(--linear-radius-pill) transition-colors duration-100 hover:text-(--linear-text-overlay-strong) hover:transition-none',
               favorite
                 ? 'text-(--ui-text-secondary)'
                 : 'text-(--ui-text-quaternary) group-hover/model:text-(--ui-text-tertiary) group-hover/model:transition-none group-data-[kb-active]/model:text-(--ui-text-tertiary)'
@@ -1177,11 +1177,11 @@ function ModelFamilyRow({
           <span className="flex shrink-0 items-center gap-1.5" title={copyPicker.loadingIntoMemory}>
             <span className="h-1 w-14 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
               <span
-                className="block h-full rounded-full bg-primary transition-[width] duration-500"
+                className="block h-full rounded-full bg-(--linear-accent) transition-[width] duration-500"
                 style={{ width: `${Math.max(2, loadProgress.percent)}%` }}
               />
             </span>
-            <span className="text-[0.62rem] tabular-nums text-(--ui-text-tertiary)">{loadProgress.percent}%</span>
+            <span className="text-[0.6875rem] tabular-nums text-(--linear-text-hint)">{loadProgress.percent}%</span>
           </span>
         ) : null}
         {showPricing && pricing && !rowLevel ? <ModelPrice pricing={pricing} /> : null}
@@ -1191,7 +1191,7 @@ function ModelFamilyRow({
             {setting}
           </ModelChip>
         ))}
-        {isCurrent ? <Codicon className="text-foreground" name="check" size="0.75rem" /> : null}
+        {isCurrent ? <Codicon className="text-(--linear-text-overlay-strong)" name="check" size="0.75rem" /> : null}
       </DropdownMenuSubTrigger>
       <ModelEditSubmenu
         canDisableReasoning={caps?.can_disable_reasoning ?? undefined}
@@ -1228,12 +1228,12 @@ const LOCAL_PROVIDER_SLUG = 'llamacpp'
 
 // Heading for every row group in the list (Favorites, providers, downloads).
 const catalogGroupLabel =
-  'px-2 pb-0.5 pt-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-secondary)'
+  'px-2 pb-0.5 pt-0.5 text-xs font-medium text-(--linear-text-hint)'
 
 // A provider inside a mixed Favorites section: the group heading's ink, set
 // in normal case and indented to the model names it labels, so it reads as
 // a sub-group rather than a sibling section.
-const favoriteProviderLabel = 'pt-1.5 pb-0 pr-2 pl-7.75 text-[0.625rem] text-(--ui-text-tertiary)'
+const favoriteProviderLabel = 'pt-1.5 pb-0 pr-2 pl-7.75 text-[0.6875rem] font-medium text-(--linear-text-hint)'
 
 /** The picker's chips: a filled tag for what the model IS (its variant), an
  *  outlined one for how this row is SET (fast, effort), so the two read as
@@ -1327,12 +1327,12 @@ function DownloadingModelRow({
           <span
             className={cn(
               'block h-full rounded-full',
-              paused ? 'bg-muted-foreground/60' : 'bg-primary transition-[width] duration-500'
+              paused ? 'bg-(--linear-text-quaternary)' : 'bg-(--linear-accent) transition-[width] duration-500'
             )}
             style={{ width: `${Math.max(2, percent ?? 0)}%` }}
           />
         </span>
-        <span className="text-[0.62rem] tabular-nums text-(--ui-text-tertiary)">
+        <span className="text-[0.6875rem] tabular-nums text-(--linear-text-hint)">
           {paused
             ? copyLocal.downloadPausedLabel
             : typeof percent === 'number'

@@ -263,13 +263,13 @@ const SCROLL_GUTTER = '[scrollbar-gutter:stable]'
 // (group/section lives on SidebarSectionHeader), mirroring the artifacts/file
 // browser header affordances. focus-visible keeps them keyboard-reachable.
 const HEADER_ACTION_BTN =
-  'text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/section:opacity-100 focus-visible:opacity-100'
+  'text-(--linear-icon) opacity-0 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) group-hover/section:opacity-100 focus-visible:opacity-100'
 
 // The view toggle (overview group toggle / in-project back) is the one control
 // that stays visible at all times — it's the stable navigation affordance, not
 // a hover-revealed action.
 const HEADER_NAV_BTN =
-  'text-(--ui-text-tertiary) opacity-70 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground hover:opacity-100 focus-visible:opacity-100'
+  'text-(--linear-icon) opacity-70 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:opacity-100 focus-visible:opacity-100'
 
 // FTS results cover sessions that aren't in the loaded page; synthesize a
 // minimal SessionInfo so they render in the same row component (resume works
@@ -1614,7 +1614,8 @@ export function ChatSidebar({
         // paints itself fully.
         'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-foreground transition-none',
         panesFlipped ? 'border-l border-r-0' : 'border-r border-l-0',
-        'border-(--sidebar-edge-border) bg-(--ui-sidebar-surface-background) opacity-100'
+        // Rows in the sidebar take Linear's sidebar hover, not the panel-row one.
+        'border-(--sidebar-edge-border) bg-(--linear-bg-window) opacity-100 [--ui-row-hover-background:var(--linear-hover-sidebar)]'
       )}
       collapsible="none"
       data-tip-region=""
@@ -1640,24 +1641,19 @@ export function ChatSidebar({
                 const button = (
                   <SidebarMenuButton
                     aria-disabled={!isInteractive}
-                    className={cn(
-                      // no-drag: these rows sit directly under the titlebar's
-                      // [-webkit-app-region:drag] strips (app-shell.tsx), with only
-                      // 6px of clearance. Drag regions win hit-testing over DOM
-                      // (pointer-events can't override), and on Linux/WSLg the
-                      // resolved region has been observed to swallow clicks on the
-                      // top rows. Same carve-out as USER_BUBBLE_BASE_CLASS in
-                      // thread.tsx.
-                      'flex h-7 w-full justify-start gap-2 rounded-md border border-transparent px-2 text-left text-[0.8125rem] font-medium text-(--ui-text-secondary) transition-colors duration-100 ease-out [-webkit-app-region:no-drag] hover:bg-(--ui-control-hover-background) hover:text-foreground hover:transition-none',
-                      // Linear marks the current row with a neutral fill only —
-                      // no outline, no accent rail.
-                      active && 'bg-(--ui-control-active-background) text-foreground',
-                      !isInteractive &&
-                        'cursor-default hover:border-transparent hover:bg-transparent hover:text-inherit'
-                    )}
+                    // Geometry, type and fills come from the primitive. no-drag:
+                    // these rows sit directly under the titlebar's
+                    // [-webkit-app-region:drag] strips (app-shell.tsx), with only
+                    // 6px of clearance. Drag regions win hit-testing over DOM
+                    // (pointer-events can't override), and on Linux/WSLg the
+                    // resolved region has been observed to swallow clicks on the
+                    // top rows. Same carve-out as USER_BUBBLE_BASE_CLASS in
+                    // thread.tsx.
+                    className="[-webkit-app-region:no-drag]"
                     // A tip anchored to the label points at the end of the
                     // word; the row is what it's actually about.
                     data-tip-region=""
+                    isActive={active}
                     onClick={() => {
                       // A plain new session lands in whatever profile the live
                       // gateway is on (= the active switcher context). null →
@@ -1703,7 +1699,8 @@ export function ChatSidebar({
                     }
                     type="button"
                   >
-                    <item.icon className="size-4 shrink-0 text-[color-mix(in_srgb,currentColor_72%,transparent)]" />
+                    {/* Codicons are font glyphs: `!` beats codicon.css's 16px. */}
+                    <item.icon className="size-3.5 shrink-0 text-[0.875rem]! leading-none" />
                     {/* Shrink-to-fit, not flex-1: the label carries the row's
                         `data-tour` handle, and anything anchored to it should
                         land at the end of the WORD, not out at the sidebar's
@@ -1793,7 +1790,7 @@ export function ChatSidebar({
                   searchPending ? (
                     <SidebarSessionSkeletons />
                   ) : (
-                    <div className="wrap-anywhere grid min-h-24 place-items-center rounded-lg px-2 text-center text-xs text-(--ui-text-tertiary)">
+                    <div className="wrap-anywhere grid min-h-24 place-items-center px-2 text-center text-xs text-(--linear-text-tertiary)">
                       {s.noMatch(trimmedQuery)}
                     </div>
                   )
@@ -1879,7 +1876,7 @@ export function ChatSidebar({
                   ) : !inProject && sessionsLoadError ? (
                     <SidebarLoadErrorState onRetry={() => void onRetrySessions()} />
                   ) : (
-                    <div className="grid min-h-16 place-items-center rounded-lg px-2 text-center text-xs text-(--ui-text-tertiary)">
+                    <div className="grid min-h-16 place-items-center px-2 text-center text-xs text-(--linear-text-tertiary)">
                       {inProject
                         ? s.projectEmpty
                         : filtersActive
@@ -1995,7 +1992,7 @@ export function ChatSidebar({
                 labelMeta={
                   worktreeGroupingActive ? (
                     reposScanning && !projectsSkeletonVisible ? (
-                      <GlyphSpinner ariaLabel={s.loading} className="text-[0.6875rem] text-(--ui-text-quaternary)" />
+                      <GlyphSpinner ariaLabel={s.loading} className="text-[0.6875rem] text-(--linear-text-quaternary)" />
                     ) : undefined
                   ) : undefined
                 }
