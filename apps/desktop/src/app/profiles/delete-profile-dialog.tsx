@@ -39,7 +39,7 @@ export function DeleteProfileDialog({
         profile ? (
           <>
             {p.deleteDescPrefix}
-            <span className="font-medium text-foreground">{profile.name}</span>
+            <span className="font-medium text-(--linear-text-primary)">{profile.name}</span>
             {gatewayLabel ? p.fleet.deleteOn(gatewayLabel) : null}
             {p.deleteDescMid}
             <span className="font-mono text-xs">{profile.path}</span>

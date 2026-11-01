@@ -17,8 +17,11 @@ import { renameProfile } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { AlertTriangle } from '@/lib/icons'
 import { slug } from '@/lib/sanitize'
+import { cn } from '@/lib/utils'
 import { retireLocalProfileGateways } from '@/store/gateway'
 import { migrateTilesForProfile } from '@/store/session-states'
+
+import { PANEL_ERROR_NOTICE } from '../overlays/panel'
 
 import { isValidProfileName } from './create-profile-dialog'
 
@@ -145,7 +148,7 @@ export function RenameProfileDialog({
           </Field>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')}>
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span>{error}</span>
             </div>

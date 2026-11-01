@@ -21,7 +21,6 @@ import {
 } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { AlertCircle } from '@/lib/icons'
-import { cn } from '@/lib/utils'
 import { upsertDesktopActionTask } from '@/store/activity'
 import { confirm } from '@/store/confirm'
 import { notify, notifyError } from '@/store/notifications'
@@ -195,7 +194,7 @@ export function MaintenancePanel() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-2">
       {error && (
-        <span className="inline-flex items-center gap-1 text-[length:var(--conversation-caption-font-size)] text-destructive">
+        <span className="inline-flex items-center gap-1 text-xs text-(--linear-red)">
           <AlertCircle className="size-3.5" />
           {error}
         </span>
@@ -229,13 +228,11 @@ export function MaintenancePanel() {
         />
 
         {share && Object.keys(share.urls).length > 0 && (
-          <div className="mt-2 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-3">
-            <div className="mb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              {mm.debugShareLinks}
-            </div>
+          <div className="mt-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2">
+            <div className="mb-1 text-xs font-medium text-(--linear-text-tertiary)">{mm.debugShareLinks}</div>
             {Object.entries(share.urls).map(([key, url]) => (
               <div className="flex items-center justify-between gap-2 py-1" key={key}>
-                <span className="min-w-0 truncate font-mono text-[0.7rem]">
+                <span className="min-w-0 truncate font-mono text-xs text-(--linear-text-secondary)">
                   {key}: {url}
                 </span>
                 <Button
@@ -255,12 +252,12 @@ export function MaintenancePanel() {
 
         {actionStatus && (
           <div className="mt-2">
-            <div className="mb-1.5 flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <div className="mb-1 flex items-center gap-2 text-xs font-medium text-(--linear-text-tertiary)">
               {mm.viewLog}
-              {actionStatus.running && <span className="normal-case tracking-normal">{mm.running}</span>}
+              {actionStatus.running && <span className="font-[450]">{mm.running}</span>}
             </div>
             <pre
-              className="max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-3 font-mono text-[0.65rem] leading-relaxed text-(--ui-text-tertiary)"
+              className="max-h-48 overflow-auto rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2.5 font-mono text-xs leading-5 whitespace-pre-wrap wrap-break-word text-(--linear-text-secondary)"
               data-selectable-text="true"
             >
               {actionStatus.lines.join('\n')}
@@ -277,20 +274,12 @@ export function MaintenancePanel() {
           <div className="flex items-center justify-between gap-3 py-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[length:var(--conversation-text-font-size)] font-medium">{mm.curator}</span>
-                <Badge
-                  className={cn(
-                    !curator.enabled
-                      ? 'bg-(--ui-bg-quinary) text-(--ui-text-tertiary)'
-                      : curator.paused
-                        ? 'bg-amber-500/15 text-amber-400'
-                        : 'bg-emerald-500/15 text-emerald-400'
-                  )}
-                >
+                <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{mm.curator}</span>
+                <Badge variant={!curator.enabled ? 'muted' : curator.paused ? 'warn' : 'success'}>
                   {!curator.enabled ? mm.curatorDisabled : curator.paused ? mm.curatorPaused : mm.curatorActive}
                 </Badge>
               </div>
-              <div className="mt-0.5 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+              <div className="mt-[3px] text-xs font-[450] text-(--linear-text-tertiary)">
                 {mm.curatorDesc}
                 {' · '}
                 {curator.last_run_at ? mm.curatorLastRun(curator.last_run_at) : mm.curatorNeverRan}
@@ -298,15 +287,14 @@ export function MaintenancePanel() {
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               {curator.enabled && (
-                <Button disabled={curatorBusy} onClick={() => void toggleCurator()} size="xs" variant="text">
+                <Button disabled={curatorBusy} onClick={() => void toggleCurator()} variant="ghost">
                   {curator.paused ? mm.resume : mm.pause}
                 </Button>
               )}
               <Button
                 disabled={actionStatus?.running === true}
                 onClick={() => void launch(mm.curator, runCurator)}
-                size="xs"
-                variant="textStrong"
+                variant="secondary"
               >
                 {mm.runNow}
               </Button>
@@ -321,7 +309,7 @@ export function MaintenancePanel() {
           <PageLoader className="min-h-16" label={mm.memoryData} />
         ) : (
           <div>
-            <div className="py-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+            <div className="py-1 text-xs font-[450] text-(--linear-text-tertiary)">
               {mm.memoryDataDesc}
               {' · '}
               {mm.memoryProvider(memory.active || mm.builtinMemory)}
@@ -351,9 +339,8 @@ export function MaintenancePanel() {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className="mb-1.5 text-[0.625rem] font-medium uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
-      {children}
-    </div>
+    // Linear's section title: 15px/500, primary ink.
+    <div className="mb-1 text-[0.9375rem] leading-[23px] font-medium text-(--linear-text-primary)">{children}</div>
   )
 }
 
@@ -371,12 +358,10 @@ function OpRow({
   return (
     <div className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0">
-        <div className="text-[length:var(--conversation-text-font-size)] font-medium">{label}</div>
-        <div className="mt-0.5 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {description}
-        </div>
+        <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</div>
+        <div className="mt-[3px] text-xs font-[450] text-(--linear-text-tertiary)">{description}</div>
       </div>
-      <Button disabled={disabled} onClick={onRun} size="xs" variant="textStrong">
+      <Button disabled={disabled} onClick={onRun} variant="secondary">
         {label}
       </Button>
     </div>
@@ -401,13 +386,11 @@ function MemoryFileRow({
   return (
     <div className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0">
-        <span className="text-[length:var(--conversation-text-font-size)] font-medium">{label}</span>
-        <span className="ml-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {sizeLabel}
-        </span>
+        <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
+        <span className="ml-2 text-xs font-[450] text-(--linear-text-tertiary)">{sizeLabel}</span>
       </div>
       <Button
-        className="text-destructive hover:text-destructive"
+        className="text-(--linear-red) hover:text-(--linear-red)"
         disabled={busy || size <= 0}
         onClick={onReset}
         size="xs"

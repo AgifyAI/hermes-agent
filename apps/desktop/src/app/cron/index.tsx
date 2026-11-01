@@ -48,6 +48,7 @@ import { type Translations, useI18n } from '@/i18n'
 import { AlertTriangle } from '@/lib/icons'
 import { requestModelOptions } from '@/lib/model-options'
 import { asText } from '@/lib/text'
+import { cn } from '@/lib/utils'
 import { $cronFocusJobId, $cronJobs, invalidateCronJobsRequests, setCronFocusJobId } from '@/store/cron'
 import { $changeEventsAvailable, $cronChangeTick } from '@/store/live-sync'
 import { notify, notifyError } from '@/store/notifications'
@@ -56,6 +57,7 @@ import { $profileScope, ALL_PROFILES } from '@/store/profile'
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import { DetailColumn, ListColumn, MasterDetail } from '../master-detail'
 import {
+  PANEL_ERROR_NOTICE,
   PanelAction,
   PanelBlock,
   PanelEmpty,
@@ -64,7 +66,8 @@ import {
   PanelMeta,
   PanelPill,
   type PanelPillTone,
-  PanelSectionLabel
+  PanelSectionLabel,
+  PanelTitle
 } from '../overlays/panel'
 import { PageSearchShell } from '../page-search-shell'
 
@@ -691,8 +694,8 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
         .map(title => t.common.tryHint(title))}
       searchPlaceholder={c.search}
       searchTrailingAction={
-        <Button className="gap-1.5" onClick={() => setEditor({ mode: 'create' })} size="sm">
-          <Codicon name="add" size="0.85rem" />
+        <Button onClick={() => setEditor({ mode: 'create' })}>
+          <Codicon name="add" size="0.875rem" />
           {c.newCron}
         </Button>
       }
@@ -730,7 +733,7 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
           <ListColumn
             header={
               visibleJobs.length > 0 ? (
-                <PanelSectionLabel className="px-2 pb-1.5">{c.count(visibleJobs.length)}</PanelSectionLabel>
+                <PanelSectionLabel className="px-2">{c.count(visibleJobs.length)}</PanelSectionLabel>
               ) : undefined
             }
           >
@@ -748,12 +751,12 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
               />
             ))}
             {visibleJobs.length === 0 && visibleBlueprints.length === 0 && (
-              <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+              <p className="px-2 py-4 text-center text-xs text-(--linear-text-tertiary)">
                 {query.trim() ? c.emptyTitleSearch : c.emptyTitleNew}
               </p>
             )}
             {blueprintsQuery.isError ? (
-              <div className="mt-3 flex items-center justify-between gap-2 px-2 text-xs text-muted-foreground">
+              <div className="mt-3 flex items-center justify-between gap-2 px-2 text-xs text-(--linear-text-tertiary)">
                 <span className="min-w-0">{c.blueprints.failedLoad}</span>
                 <Button onClick={() => void blueprintsQuery.refetch()} size="sm" variant="ghost">
                   {t.common.retry}
@@ -761,7 +764,7 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
               </div>
             ) : visibleBlueprints.length > 0 ? (
               <>
-                <PanelSectionLabel className="mt-3 px-2 pb-1.5">{c.blueprints.tab}</PanelSectionLabel>
+                <PanelSectionLabel className="mt-3 px-2">{c.blueprints.tab}</PanelSectionLabel>
                 {visibleBlueprints.map(item => (
                   <PanelListRow
                     active={false}
@@ -831,7 +834,7 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
           pendingDelete ? (
             <>
               {c.deleteDescPrefix}
-              <span className="font-medium text-foreground">{truncate(jobTitle(pendingDelete), 60)}</span>
+              <span className="font-medium text-(--linear-text-primary)">{truncate(jobTitle(pendingDelete), 60)}</span>
               {c.deleteDescSuffix}
             </>
           ) : null
@@ -865,7 +868,7 @@ function CronJobListRow({
   return (
     <PanelListRow
       active={active}
-      dotClassName={STATE_DOT[state] ?? 'bg-muted-foreground'}
+      dotClassName={STATE_DOT[state] ?? 'bg-(--linear-text-quaternary)'}
       menuItems={menuItems}
       menuLabel={menuLabel}
       onSelect={onSelect}
@@ -919,11 +922,11 @@ function CronJobDetail({
       <header className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h3 className="text-[0.95rem] font-semibold tracking-tight text-foreground">{jobTitle(job)}</h3>
+            <PanelTitle>{jobTitle(job)}</PanelTitle>
             {scriptOnly && <PanelPill tone="muted">{c.scriptBadge}</PanelPill>}
             <PanelPill tone={STATE_TONE[state] ?? 'muted'}>{c.states[state] ?? state}</PanelPill>
           </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-1.5">
             <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
               {c.editJob}
             </PanelAction>
@@ -956,14 +959,14 @@ function CronJobDetail({
         />
 
         {job.last_error ? (
-          <div className="space-y-1.5 rounded bg-destructive/10 p-2 text-[0.7rem] text-destructive">
+          <div className={cn(PANEL_ERROR_NOTICE, 'space-y-2 px-3 py-2.5 text-[0.8125rem]')}>
             <div className="flex items-start gap-1.5">
-              <AlertTriangle className="mt-px size-3 shrink-0" />
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span className="min-w-0 break-words" title={job.last_error}>
                 {c.lastRunFailed} {lastErrorSummary(job.last_error)}
               </span>
             </div>
-            <div className="flex items-center gap-0.5 pl-4">
+            <div className="flex items-center gap-1.5 pl-5">
               <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
                 {c.editJob}
               </PanelAction>
@@ -976,7 +979,7 @@ function CronJobDetail({
       </header>
 
       {description ? (
-        <section className="space-y-1.5">
+        <section className="space-y-1">
           <PanelSectionLabel>{scriptOnly && !prompt ? c.scriptLabel : c.promptLabel}</PanelSectionLabel>
           <PanelBlock>{description}</PanelBlock>
         </section>
@@ -1138,9 +1141,14 @@ function CronJobRuns({
   }, [onPendingRunSettled, pendingJobKey, pendingRunAt])
 
   const loadFailedNotice = (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-1 text-xs text-destructive">
+    <div
+      className={cn(
+        PANEL_ERROR_NOTICE,
+        'flex flex-wrap items-center justify-between gap-2 py-1 pr-1 pl-3 text-[0.8125rem]'
+      )}
+    >
       <span className="flex min-w-0 items-center gap-1.5">
-        <AlertTriangle className="size-3 shrink-0" />
+        <AlertTriangle className="size-3.5 shrink-0" />
         <span className="min-w-0">{c.failedRuns}</span>
       </span>
       <PanelAction icon="refresh" onClick={() => setReloadToken(token => token + 1)}>
@@ -1151,7 +1159,7 @@ function CronJobRuns({
 
   return (
     <div>
-      <PanelSectionLabel className="mb-1.5">
+      <PanelSectionLabel className="mb-1">
         {c.runHistory}
         {runs && runs.length + (pending ? 1 : 0) > 0 ? ` · ${runs.length + (pending ? 1 : 0)}` : ''}
       </PanelSectionLabel>
@@ -1159,15 +1167,15 @@ function CronJobRuns({
         runsFailed ? (
           loadFailedNotice
         ) : (
-          <div className="flex items-center gap-1.5 py-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 py-1 text-xs text-(--linear-text-tertiary)">
             <Codicon name="loading" size="0.75rem" spinning />
             <span className="sr-only">{t.common.loading}</span>
           </div>
         )
       ) : runs?.length === 0 && !pending && !runsFailed ? (
-        <div className="py-1 text-xs text-muted-foreground">{c.noRuns}</div>
+        <div className="py-1 text-[0.8125rem] text-(--linear-text-tertiary)">{c.noRuns}</div>
       ) : (
-        <div className="flex flex-col gap-px">
+        <div className="flex flex-col gap-0.5">
           {runsFailed && loadFailedNotice}
           {pending && (
             // The queued row is transient feedback for a trigger the backend
@@ -1175,7 +1183,7 @@ function CronJobRuns({
             // the authoritative rows and is replaced once one appears.
             <div
               aria-live="polite"
-              className="flex items-center justify-between gap-3 rounded-md px-2 py-1 text-xs text-muted-foreground"
+              className="flex h-7 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem] text-(--linear-text-tertiary)"
               data-slot="cron-run-pending"
               role="status"
             >
@@ -1183,7 +1191,7 @@ function CronJobRuns({
                 <Codicon name="loading" size="0.75rem" spinning />
                 <span className="truncate">{c.queuedRun}</span>
               </span>
-              <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">
+              <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">
                 {formatRunTime(pendingRunAt / 1000)}
               </span>
             </div>
@@ -1197,9 +1205,12 @@ function CronJobRuns({
               // session opener a run row is informational too. Neither may
               // render as a button that does nothing.
               return (
-                <div className="flex items-center justify-between gap-3 rounded-md px-2 py-1 text-xs" key={run.id}>
-                  <span className="truncate text-foreground/85">{label}</span>
-                  <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">{time}</span>
+                <div
+                  className="flex h-7 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem]"
+                  key={run.id}
+                >
+                  <span className="truncate text-(--linear-text-secondary)">{label}</span>
+                  <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">{time}</span>
                 </div>
               )
             }
@@ -1208,13 +1219,13 @@ function CronJobRuns({
               // One click to the run's transcript; a run the scheduler never
               // closed opens view-only (see `openCronRun`, #88443).
               <button
-                className="row-hover flex w-full items-center justify-between gap-3 rounded-md px-2 py-1 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="flex h-7 w-full cursor-pointer items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none"
                 key={run.id}
                 onClick={() => openCronRun(run, onOpenSession)}
                 type="button"
               >
-                <span className="truncate text-foreground/85">{label}</span>
-                <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">{time}</span>
+                <span className="truncate text-(--linear-text-primary)">{label}</span>
+                <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">{time}</span>
               </button>
             )
           })}
@@ -1263,7 +1274,7 @@ export function DeliverCheckboxes({
   return (
     <div
       aria-labelledby={`${id}-label`}
-      className="grid gap-2 rounded-md border border-input px-3 py-2.5"
+      className="grid gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-input) bg-(--linear-bg-input) px-3 py-2.5"
       id={id}
       role="group"
     >
@@ -1272,7 +1283,7 @@ export function DeliverCheckboxes({
         const checkboxId = `${id}-${index}`
 
         return (
-          <label className="flex items-center gap-2 text-sm" htmlFor={checkboxId} key={target.id}>
+          <label className="flex items-center gap-2 text-[0.8125rem]" htmlFor={checkboxId} key={target.id}>
             <Checkbox
               checked={checked}
               id={checkboxId}
@@ -1489,7 +1500,7 @@ function CronEditorDialog({
         {!isEdit && blueprintList.length > 0 && (
           <Field htmlFor="cron-template" label={c.blueprints.startFrom}>
             <Select onValueChange={setTemplateChoice} value={templateChoice}>
-              <SelectTrigger className="h-9 rounded-md" id="cron-template">
+              <SelectTrigger id="cron-template">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1497,7 +1508,7 @@ function CronEditorDialog({
                 {blueprintList.map(item => (
                   <SelectItem key={item.key} value={item.key}>
                     {item.title}
-                    {item.plugin && <span className="ml-1.5 text-muted-foreground">· {item.plugin}</span>}
+                    {item.plugin && <span className="ml-1.5 text-(--linear-text-tertiary)">· {item.plugin}</span>}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1539,10 +1550,7 @@ function CronEditorDialog({
             })}
 
             {error && (
-              <div
-                className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive"
-                role="alert"
-              >
+              <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')} role="alert">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -1588,7 +1596,7 @@ function CronEditorDialog({
             <div className="grid items-start gap-4 sm:grid-cols-2">
               <Field htmlFor="cron-frequency" label={c.frequencyLabel}>
                 <Select onValueChange={handleSchedulePresetChange} value={schedulePreset}>
-                  <SelectTrigger className="h-9 rounded-md" id="cron-frequency">
+                  <SelectTrigger id="cron-frequency">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1615,7 +1623,7 @@ function CronEditorDialog({
             {!scriptOnlyJob && (
               <Field htmlFor="cron-model" label={c.modelLabel} optional optionalLabel={c.optional}>
                 <Select onValueChange={setModelChoice} value={modelChoice}>
-                  <SelectTrigger className="h-9 rounded-md" id="cron-model">
+                  <SelectTrigger id="cron-model">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1656,19 +1664,16 @@ function CronEditorDialog({
                 <FieldHint>{c.customHint}</FieldHint>
               </Field>
             ) : (
-              <div className="rounded-md bg-(--ui-bg-quinary) px-3 py-2">
+              <div className="rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-medium text-foreground">{scheduleHint}</span>
-                  <span className="font-mono text-muted-foreground">{schedule}</span>
+                  <span className="font-medium text-(--linear-text-primary)">{scheduleHint}</span>
+                  <span className="font-mono text-(--linear-text-tertiary)">{schedule}</span>
                 </div>
               </div>
             )}
 
             {error && (
-              <div
-                className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive"
-                role="alert"
-              >
+              <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')} role="alert">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 <span>{error}</span>
               </div>

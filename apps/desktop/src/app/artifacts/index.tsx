@@ -331,7 +331,6 @@ export function ArtifactsView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
         <Tip label={refreshing ? a.refreshing : a.refresh}>
           <Button
             aria-label={refreshing ? a.refreshing : a.refresh}
-            className="text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
             disabled={refreshing}
             onClick={() => void refreshArtifacts()}
             size="icon-titlebar"
@@ -354,8 +353,8 @@ export function ArtifactsView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
       ) : visibleArtifacts.length === 0 ? (
         <div className="grid h-full place-items-center px-6 text-center">
           <div>
-            <div className="text-sm font-medium">{a.noArtifactsTitle}</div>
-            <div className="mt-1 text-xs text-muted-foreground">{a.noArtifactsDesc}</div>
+            <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{a.noArtifactsTitle}</div>
+            <div className="mt-1 text-xs font-[450] text-(--linear-text-tertiary)">{a.noArtifactsDesc}</div>
           </div>
         </div>
       ) : (
@@ -363,7 +362,7 @@ export function ArtifactsView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
           <div className="flex flex-col gap-3 px-3 pb-2">
             {visibleImageArtifacts.length > 0 && (
               <section className="flex flex-col">
-                <div className="sticky top-0 z-10 -mx-3 flex h-7 items-center gap-3 overflow-x-auto bg-background px-3">
+                <div className="sticky top-0 z-10 -mx-3 flex h-7 items-center gap-3 overflow-x-auto bg-(--linear-bg-panel) px-3">
                   <ArtifactsPagination
                     className="ml-auto justify-end px-0"
                     itemLabel={a.itemsImage}
@@ -389,7 +388,7 @@ export function ArtifactsView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
 
             {visibleFileArtifacts.length > 0 && (
               <section className="flex flex-col">
-                <div className="sticky top-0 z-10 -mx-3 flex h-7 items-center gap-3 overflow-x-auto bg-background px-3">
+                <div className="sticky top-0 z-10 -mx-3 flex h-7 items-center gap-3 overflow-x-auto bg-(--linear-bg-panel) px-3">
                   <ArtifactsPagination
                     className="ml-auto justify-end px-0"
                     itemLabel={itemsLabel(kindFilter, a)}
@@ -399,7 +398,7 @@ export function ArtifactsView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
                     total={visibleFileArtifacts.length}
                   />
                 </div>
-                <div className="overflow-x-auto rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-chat-bubble-background)">
+                <div className="overflow-x-auto">
                   <ArtifactTable artifacts={pagedFileArtifacts} ctx={cellCtx} filter={kindFilter} />
                 </div>
               </section>
@@ -427,7 +426,7 @@ function ArtifactsPagination({ className, itemLabel, onPageChange, page, pageSiz
 
   return (
     <div className={cn('flex h-6 items-center justify-between gap-2 px-1', className)}>
-      <div className="shrink-0 text-[0.62rem] text-muted-foreground">
+      <div className="shrink-0 text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
         {pageRangeLabel(total, page, pageSize, a)} {itemLabel}
       </div>
       {pageCount > 1 && (
@@ -500,12 +499,12 @@ function ArtifactImageCard({ artifact, failedImage, onImageError, onOpenChat }: 
 
   return (
     <article
-      className="group/artifact overflow-hidden rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-chat-bubble-background)"
+      className="group/artifact overflow-hidden rounded-(--linear-radius-card) bg-(--linear-bg-card) shadow-(--linear-shadow-card)"
       data-tour="artifact-card"
     >
       <div
         className={cn(
-          'relative flex h-40 w-full items-center justify-center overflow-hidden border-b border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-1.5',
+          'relative flex h-40 w-full items-center justify-center overflow-hidden border-b-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-secondary) p-1.5',
           failedImage && 'cursor-default'
         )}
       >
@@ -523,25 +522,23 @@ function ArtifactImageCard({ artifact, failedImage, onImageError, onOpenChat }: 
         )}
       </div>
 
-      <div className="space-y-1.5 p-2">
+      <div className="space-y-1.5 p-3">
         <div className="min-w-0">
-          <div className="mb-0.5 flex items-center gap-1 text-[0.625rem] uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
+          <div className="mb-0.5 flex items-center gap-1 text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
             <FileImage className="size-3" />
             {kindLabel}
           </div>
-          <div className="truncate text-[length:var(--conversation-caption-font-size)] font-medium">
-            {artifact.label}
-          </div>
-          <div className="mt-0.5 truncate text-[0.625rem] text-(--ui-text-tertiary)">{artifact.value}</div>
+          <div className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{artifact.label}</div>
+          <div className="mt-0.5 truncate text-[0.6875rem] text-(--linear-text-tertiary)">{artifact.value}</div>
         </div>
 
-        <div className="truncate text-[0.625rem] text-(--ui-text-tertiary)">
+        <div className="truncate text-[0.6875rem] text-(--linear-text-tertiary)">
           {artifact.sessionTitle} · {formatArtifactTime(artifact.timestamp)}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <Button onClick={() => onOpenChat(artifact.sessionId)} size="xs" type="button" variant="textStrong">
-            <FolderOpen className="size-3" />
+          <Button onClick={() => onOpenChat(artifact.sessionId)} size="sm" type="button" variant="ghost">
+            <FolderOpen />
             {a.chat}
           </Button>
         </div>
@@ -567,7 +564,7 @@ function ArtifactCellAction({
   if (href) {
     return (
       <ExternalLink
-        className="flex h-full w-full min-w-0 items-center gap-2 px-2.5 py-1.5 text-left text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) font-normal text-(--ui-text-secondary) no-underline underline-offset-4 decoration-current/20 transition-colors hover:text-foreground hover:underline"
+        className="flex h-full min-h-11 w-full min-w-0 items-center gap-2 px-2.5 py-1.5 text-left text-[0.8125rem] leading-5 font-[450] text-(--linear-text-secondary) no-underline decoration-current/20 underline-offset-4 transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) hover:underline hover:transition-none"
         href={href}
         showExternalIcon={false}
         title={title}
@@ -579,7 +576,7 @@ function ArtifactCellAction({
 
   return (
     <RowButton
-      className="flex h-full w-full min-w-0 items-center gap-2 px-2.5 py-1.5 text-left text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) font-normal text-(--ui-text-secondary) no-underline underline-offset-4 decoration-current/20 transition-colors hover:text-foreground hover:underline"
+      className="flex h-full min-h-11 w-full min-w-0 items-center gap-2 px-2.5 py-1.5 text-left text-[0.8125rem] leading-5 font-[450] text-(--linear-text-secondary) no-underline decoration-current/20 underline-offset-4 transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) hover:underline hover:transition-none"
       onClick={onClick}
     >
       {children}
@@ -600,10 +597,10 @@ const PrimaryCell = memo(function PrimaryCell({ artifact, ctx }: { artifact: Art
       onClick={isLink ? undefined : () => void ctx.onOpen(artifact)}
       title={label}
     >
-      <span className="mt-0.5 grid size-6 shrink-0 place-items-center self-start rounded-md bg-(--ui-bg-tertiary) text-(--ui-text-tertiary)">
-        <Icon className="size-3.5" />
-      </span>
-      <span className={cn('min-w-0 flex-1', isLink ? 'wrap-anywhere' : 'truncate')}>
+      <Icon className="size-3.5 shrink-0 text-(--linear-icon)" />
+      <span
+        className={cn('min-w-0 flex-1 font-medium text-(--linear-text-primary)', isLink ? 'wrap-anywhere' : 'truncate')}
+      >
         {label}
         {isLink && <ExternalLinkIcon />}
       </span>
@@ -622,7 +619,7 @@ const LocationCell = memo(function LocationCell({ artifact }: { artifact: Artifa
       <Tip label={artifact.value}>
         <div
           className={cn(
-            'min-w-0 flex-1 truncate text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)',
+            'min-w-0 flex-1 truncate text-xs text-(--linear-text-tertiary)',
             isLink ? 'font-normal' : 'font-mono'
           )}
         >
@@ -632,7 +629,7 @@ const LocationCell = memo(function LocationCell({ artifact }: { artifact: Artifa
       <CopyButton
         appearance="icon"
         buttonSize="icon-xs"
-        className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/location:opacity-100"
+        className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover/location:opacity-100"
         iconClassName="size-3.5"
         label={copyLabel}
         text={artifact.value}
@@ -647,7 +644,7 @@ const SessionCell = memo(function SessionCell({ artifact, ctx }: { artifact: Art
     <ArtifactCellAction onClick={() => ctx.onOpenChat(artifact.sessionId)} title={artifact.sessionTitle}>
       <span className="flex min-w-0 flex-col">
         <span className="truncate">{artifact.sessionTitle}</span>
-        <span className="truncate text-[0.6875rem] font-normal text-(--ui-text-tertiary)">
+        <span className="truncate text-xs font-[450] text-(--linear-text-tertiary)">
           {formatArtifactTime(artifact.timestamp)}
         </span>
       </span>
@@ -693,11 +690,11 @@ function ArtifactTable({
   const { t } = useI18n()
 
   return (
-    <table className="w-full min-w-176 table-fixed text-left text-[length:var(--conversation-caption-font-size)]">
-      <thead className="border-b border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) text-[0.625rem] uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
+    <table className="w-full min-w-176 table-fixed text-left text-[0.8125rem]">
+      <thead className="border-b-[0.5px] border-(--linear-border-primary) text-xs text-(--linear-text-tertiary)">
         <tr>
           {ARTIFACT_COLUMNS.map(col => (
-            <th className={cn(col.width(filter), 'px-2.5 py-1.5 font-medium')} key={col.id}>
+            <th className={cn(col.width(filter), 'h-8 px-2.5 font-medium')} key={col.id}>
               {col.header(filter, t.artifacts)}
             </th>
           ))}
@@ -705,7 +702,11 @@ function ArtifactTable({
       </thead>
       <tbody>
         {artifacts.map(artifact => (
-          <tr className="group/artifact" key={artifact.id}>
+          // Linear's list row: 44px, hover fill.
+          <tr
+            className="group/artifact transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
+            key={artifact.id}
+          >
             {ARTIFACT_COLUMNS.map(col => {
               const Cell = col.Cell
 

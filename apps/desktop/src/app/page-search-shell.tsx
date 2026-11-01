@@ -73,11 +73,12 @@ export function PageSearchShell({
   ...props
 }: PageSearchShellProps) {
   const hasTabs = (tabs?.length ?? 0) > 0
+  const hasHeader = hasTabs || !searchHidden || Boolean(filters)
 
   return (
     <section
       {...props}
-      className={cn('flex h-full min-w-0 flex-col overflow-hidden bg-(--ui-chat-surface-background)', className)}
+      className={cn('flex h-full min-w-0 flex-col overflow-hidden bg-(--linear-bg-panel)', className)}
     >
       {/*
         Header lives in the page body, below the window chrome (the shell floats
@@ -94,33 +95,67 @@ export function PageSearchShell({
         draggable titlebar strip that is `calc()`'d around the icon clusters
         (see app-shell.tsx), so window dragging still works here.
       */}
-      <div className="shrink-0">
+      <div
+        className={cn(
+          'shrink-0 pt-(--titlebar-height)',
+          // One hairline under the whole header (Linear's header rule).
+          tabsAlign === 'center' && hasHeader && 'border-b-[0.5px] border-(--linear-border-primary)'
+        )}
+      >
         {(hasTabs || !searchHidden) && (
-          <div className={cn('grid items-center gap-3 px-3 pb-2 pt-[calc(var(--titlebar-height)+0.5rem)]', tabsAlign === 'start' ? 'grid-cols-[minmax(0,1fr)_auto_auto] px-6 pt-[calc(var(--titlebar-height)+1.5rem)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]')}>
-            <div className={cn('flex min-w-0 items-center justify-start', tabsAlign === 'start' ? 'col-start-2 row-start-1 justify-end' : '', searchHidden && tabsAlign === 'start' && 'hidden')}>
+          <div
+            className={cn(
+              'grid items-center gap-3',
+              tabsAlign === 'start'
+                ? 'grid-cols-[minmax(0,1fr)_auto_auto] px-6 pt-6 pb-2'
+                : // Linear's page header: 44px, 8px left / 12px right, hairline below.
+                  'h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] pr-3 pl-2'
+            )}
+          >
+            <div
+              className={cn(
+                'flex min-w-0 items-center justify-start',
+                tabsAlign === 'start' && 'col-start-2 row-start-1 justify-end',
+                searchHidden && tabsAlign === 'start' && 'hidden'
+              )}
+            >
               {!searchHidden && onSearchChange && (
                 <SearchField
-                  containerClassName="max-w-[45vw]"
+                  containerClassName="w-64 max-w-[45vw]"
                   hints={searchHints}
                   onChange={onSearchChange}
                   placeholder={searchPlaceholder ?? ''}
                   value={searchValue ?? ''}
+                  variant="box"
                 />
               )}
             </div>
             {hasTabs ? (
-              <div className={cn('flex min-w-0 items-center', tabsAlign === 'start' ? 'col-start-1 row-start-1 justify-start' : 'justify-center')} data-tour="page-tabs">
+              <div
+                className={cn(
+                  'flex min-w-0 items-center',
+                  tabsAlign === 'start' ? 'col-start-1 row-start-1 justify-start' : 'justify-center'
+                )}
+                data-tour="page-tabs"
+              >
                 <ShellTabs activeTab={activeTab} align={tabsAlign} onTabChange={onTabChange} tabs={tabs!} />
               </div>
             ) : (
               <span />
             )}
-            <div className={cn('flex min-w-0 items-center justify-end', tabsAlign === 'start' && 'col-start-3 row-start-1')}>{searchTrailingAction}</div>
+            <div
+              className={cn(
+                'flex min-w-0 items-center justify-end gap-1.5',
+                tabsAlign === 'start' && 'col-start-3 row-start-1'
+              )}
+            >
+              {searchTrailingAction}
+            </div>
           </div>
         )}
-        {filters ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 pb-2">{filters}</div> : null}
+        {filters ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-3 pb-2 pl-2">{filters}</div> : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden bg-(--ui-chat-surface-background)">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden bg-(--linear-bg-panel)">{children}</div>
     </section>
   )
 }

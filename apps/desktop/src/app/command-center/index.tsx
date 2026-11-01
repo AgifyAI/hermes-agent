@@ -114,14 +114,7 @@ function RowIconButton({
 }) {
   return (
     <Tip label={title}>
-      <Button
-        aria-label={title}
-        className={cn('text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground', className)}
-        onClick={onClick}
-        size="icon-xs"
-        type="button"
-        variant="ghost"
-      >
+      <Button aria-label={title} className={className} onClick={onClick} size="icon-xs" type="button" variant="ghost">
         {children}
       </Button>
     </Tip>
@@ -132,12 +125,8 @@ function EmptyPanel({ action, description, title }: { action?: ReactNode; descri
   return (
     <div className="grid min-h-48 place-items-center px-6 text-center">
       <div>
-        {title && (
-          <div className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">{title}</div>
-        )}
-        <div className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-          {description}
-        </div>
+        {title && <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</div>}
+        <div className="mt-1 text-xs font-[450] text-(--linear-text-tertiary)">{description}</div>
         {action && <div className="mt-3 flex justify-center">{action}</div>}
       </div>
     </div>
@@ -386,10 +375,11 @@ export function CommandCenterView({
                 <>
                   {section === 'sessions' && (
                     <SearchField
-                      containerClassName="max-w-[40vw]"
+                      containerClassName="w-64 max-w-[40vw]"
                       onChange={next => setQuery(next)}
                       placeholder={cc.searchPlaceholder}
                       value={query}
+                      variant="box"
                     />
                   )}
                   {section === 'usage' && (
@@ -410,22 +400,27 @@ export function CommandCenterView({
                   {!sessionListHasResults ? (
                     <EmptyPanel description={debouncedQuery ? cc.noResults : cc.noSessions} />
                   ) : (
-                    <ul>
+                    // Linear list rows bleed 12px past the gutter so titles
+                    // line up with the breadcrumb.
+                    <ul className="-mx-3 flex flex-col">
                       {filteredSessions.map(session => {
                         const pinId = sessionPinId(session)
                         const pinned = pinnedSessionIds.includes(pinId)
 
                         return (
-                          <li className="group flex items-center gap-2 py-2" key={session.id}>
+                          <li
+                            className="group flex h-11 items-center gap-2 rounded-(--linear-radius-control) pr-2 pl-3 transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
+                            key={session.id}
+                          >
                             <button
-                              className="min-w-0 flex-1 text-left"
+                              className="min-w-0 flex-1 cursor-pointer text-left focus-visible:outline-none"
                               onClick={() => onOpenSession(session.id, session)}
                               type="button"
                             >
-                              <div className="truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+                              <div className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
                                 {sessionTitle(session)}
                               </div>
-                              <div className="truncate text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                              <div className="truncate text-xs font-[450] text-(--linear-text-tertiary)">
                                 {formatTimestamp(session.last_active || session.started_at)}
                               </div>
                             </button>
@@ -445,7 +440,7 @@ export function CommandCenterView({
                                 <Download className="size-3.5" />
                               </RowIconButton>
                               <RowIconButton
-                                className="hover:text-destructive"
+                                className="hover:text-(--linear-red)"
                                 onClick={() => setPendingDelete(session)}
                                 title={cc.deleteSession}
                               >
@@ -489,14 +484,14 @@ export function CommandCenterView({
                             <span
                               className={cn(
                                 'size-2 shrink-0 rounded-full',
-                                status.gateway_running ? 'bg-emerald-500' : 'bg-amber-500'
+                                status.gateway_running ? 'bg-(--linear-green)' : 'bg-(--linear-orange)'
                               )}
                             />
-                            <span className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+                            <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">
                               {status.gateway_running ? cc.gatewayRunning : cc.gatewayStopped}
                             </span>
                           </div>
-                          <div className="mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                          <div className="mt-1 text-xs font-[450] text-(--linear-text-tertiary)">
                             {cc.hermesActiveSessions(status.version, status.active_sessions)}
                           </div>
                         </div>
@@ -510,7 +505,7 @@ export function CommandCenterView({
                         </div>
                       </div>
                       {systemAction && (
-                        <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                        <div className="text-xs font-[450] text-(--linear-text-tertiary)">
                           {systemAction.name} ·{' '}
                           {systemAction.running
                             ? cc.actionRunning
@@ -527,9 +522,7 @@ export function CommandCenterView({
 
                 <div className="flex min-h-0 flex-col pt-2">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                    <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
-                      {cc.recentLogs}
-                    </span>
+                    <span className="text-xs font-medium text-(--linear-text-tertiary)">{cc.recentLogs}</span>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <ResponsiveTabs
                         align="end"
@@ -555,14 +548,14 @@ export function CommandCenterView({
                       />
                     </div>
                     {systemError && (
-                      <span className="inline-flex items-center gap-1 text-[length:var(--conversation-caption-font-size)] text-destructive">
+                      <span className="inline-flex items-center gap-1 text-xs text-(--linear-red)">
                         <AlertCircle className="size-3.5" />
                         {systemError}
                       </span>
                     )}
                   </div>
                   <LogTail
-                    className="flex-1 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary)"
+                    className="flex-1 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary)"
                     emptyLabel={cc.noLogs}
                     lines={systemLoading && logs.length === 0 ? null : logs}
                     search={logSearch}
@@ -636,7 +629,7 @@ function UsagePanel({ error, loading, onRefresh, period, usage }: UsagePanelProp
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-2">
       {error && (
-        <span className="inline-flex items-center gap-1 text-[length:var(--conversation-caption-font-size)] text-destructive">
+        <span className="inline-flex items-center gap-1 text-xs text-(--linear-red)">
           <AlertCircle className="size-3.5" />
           {error}
         </span>
@@ -653,22 +646,18 @@ function UsagePanel({ error, loading, onRefresh, period, usage }: UsagePanelProp
 
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-[0.625rem] font-medium uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
-            {cc.dailyTokens}
-          </span>
-          <span className="flex items-center gap-3 text-[0.65rem] text-(--ui-text-tertiary)">
+          <span className="text-xs font-medium text-(--linear-text-tertiary)">{cc.dailyTokens}</span>
+          <span className="flex items-center gap-3 text-[0.6875rem] text-(--linear-text-tertiary)">
             <span className="inline-flex items-center gap-1">
-              <span className="size-2 rounded-[1px] bg-[color:var(--dt-primary)]/60" /> {cc.input}
+              <span className="size-2 rounded-[1px] bg-(--linear-accent)/60" /> {cc.input}
             </span>
             <span className="inline-flex items-center gap-1">
-              <span className="size-2 rounded-[1px] bg-emerald-500/70" /> {cc.output}
+              <span className="size-2 rounded-[1px] bg-(--linear-green)/70" /> {cc.output}
             </span>
           </span>
         </div>
         {daily.length === 0 ? (
-          <div className="grid h-24 place-items-center text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-            {cc.noDailyActivity}
-          </div>
+          <div className="grid h-24 place-items-center text-xs text-(--linear-text-tertiary)">{cc.noDailyActivity}</div>
         ) : (
           <>
             <div className="flex h-24 items-end gap-px">
@@ -683,18 +672,18 @@ function UsagePanel({ error, loading, onRefresh, period, usage }: UsagePanelProp
                     title={`${entry.day} · in ${compactNumber(entry.input_tokens)} · out ${compactNumber(entry.output_tokens)}`}
                   >
                     <div
-                      className="w-full rounded-t-[1px] bg-[color:var(--dt-primary)]/50"
+                      className="w-full rounded-t-[1px] bg-(--linear-accent)/50"
                       style={{ height: Math.max(inputH, entry.input_tokens > 0 ? 1 : 0) }}
                     />
                     <div
-                      className="w-full bg-emerald-500/60"
+                      className="w-full bg-(--linear-green)/60"
                       style={{ height: Math.max(outputH, entry.output_tokens > 0 ? 1 : 0) }}
                     />
                   </div>
                 )
               })}
             </div>
-            <div className="mt-1 flex justify-between text-[0.6rem] text-(--ui-text-tertiary)">
+            <div className="mt-1 flex justify-between text-[0.6875rem] text-(--linear-text-tertiary)">
               <span>{daily[0]?.day}</span>
               <span>{daily[daily.length - 1]?.day}</span>
             </div>
@@ -737,19 +726,15 @@ function UsageList({
 }) {
   return (
     <section className="min-w-0">
-      <div className="mb-1.5 text-[0.625rem] font-medium uppercase tracking-[0.08em] text-(--ui-text-tertiary)">
-        {title}
-      </div>
+      <div className="mb-1 text-xs font-medium text-(--linear-text-tertiary)">{title}</div>
       {rows.length === 0 ? (
-        <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {emptyLabel}
-        </div>
+        <div className="text-xs text-(--linear-text-tertiary)">{emptyLabel}</div>
       ) : (
         <ul>
           {rows.map(row => (
-            <li className="flex items-center justify-between gap-2 py-1.5" key={row.key}>
-              <span className="min-w-0 truncate font-mono text-[0.7rem] text-foreground">{row.label}</span>
-              <span className="shrink-0 text-[0.65rem] text-(--ui-text-tertiary)">{row.value}</span>
+            <li className="flex h-7 items-center justify-between gap-2" key={row.key}>
+              <span className="min-w-0 truncate text-[0.8125rem] text-(--linear-text-primary)">{row.label}</span>
+              <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">{row.value}</span>
             </li>
           ))}
         </ul>
@@ -761,9 +746,9 @@ function UsageList({
 function UsageStat({ hint, label, value }: { hint?: string; label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="text-[0.625rem] font-medium uppercase tracking-[0.12em] text-(--ui-text-tertiary)">{label}</div>
-      <div className="mt-1 truncate text-base font-semibold tracking-tight text-foreground">{value}</div>
-      {hint && <div className="mt-0.5 truncate text-[0.62rem] text-(--ui-text-tertiary)">{hint}</div>}
+      <div className="text-xs font-medium text-(--linear-text-tertiary)">{label}</div>
+      <div className="mt-1 truncate text-xl font-medium text-(--linear-text-primary) tabular-nums">{value}</div>
+      {hint && <div className="mt-0.5 truncate text-[0.6875rem] text-(--linear-text-tertiary)">{hint}</div>}
     </div>
   )
 }

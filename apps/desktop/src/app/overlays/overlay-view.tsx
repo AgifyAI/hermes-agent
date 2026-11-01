@@ -74,7 +74,8 @@ export function OverlayView({
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 bg-black/22 backdrop-blur-[0.125rem]',
+        // Linear's modal overlay: a flat scrim, no blur.
+        'fixed inset-0 z-50 bg-(--linear-scrim)',
         // Equidistant inset on every side. The top value is driven by the
         // titlebar height so the card clears the OS traffic-lights vertically;
         // since the card top already sits below them, the left needs no extra
@@ -105,7 +106,8 @@ export function OverlayView({
       <div className="relative h-full min-h-0">
         <div
           className={cn(
-            'relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-(--ui-stroke-secondary) bg-(--ui-chat-surface-background) shadow-md',
+            // Linear's modal: radius 21, card surface, dialog shadow, no border.
+            'relative flex h-full min-h-0 flex-col overflow-hidden rounded-(--linear-radius-modal) bg-(--linear-bg-card) shadow-(--linear-shadow-dialog)',
             rootClassName
           )}
         >
@@ -119,13 +121,7 @@ export function OverlayView({
             <div className="pointer-events-auto absolute right-[var(--titlebar-tools-right,0.75rem)] top-[calc(0.1875rem+var(--titlebar-height)/2)] flex -translate-y-1/2 items-center gap-1.5 [-webkit-app-region:no-drag]">
               {titlebarActions}
 
-              <Button
-                aria-label={closeLabel}
-                className="text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
-                onClick={closeOverlay}
-                size="icon-titlebar"
-                variant="ghost"
-              >
+              <Button aria-label={closeLabel} onClick={closeOverlay} size="icon-titlebar" variant="ghost">
                 <TitlebarIcon name="close" />
               </Button>
             </div>

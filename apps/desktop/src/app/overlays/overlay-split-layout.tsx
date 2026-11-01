@@ -74,7 +74,8 @@ export function OverlaySidebar({ children, className }: OverlaySidebarProps) {
         // they ride up via the shorter shared OVERLAY_TOP_CLEARANCE (same line
         // as a Panel header) instead of main's taller X-clearance. The bg still
         // fills from the card's top edge, so there's no gap above the sidebar.
-        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--ui-sidebar-surface-background) px-2.5 pb-3',
+        // Linear's settings nav sits on the window colour beside the content.
+        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--linear-bg-window) px-3 pb-3',
         OVERLAY_TOP_CLEARANCE,
         className
       )}
@@ -126,18 +127,16 @@ export const OverlayNavItem = memo(function OverlayNavItem({
       aria-current={current ? 'page' : undefined}
       aria-pressed={pressed}
       className={cn(
-        'row-hover flex h-7 w-full shrink-0 items-center justify-start gap-2 rounded-md border px-2 text-left text-[length:var(--conversation-text-font-size)] font-normal transition-colors',
-        nested
-          ? active
-            ? current
-              ? 'border-transparent bg-(--chrome-action-hover) font-medium text-foreground'
-              : // Ancestor of the current page (a plugin whose sub-page is open):
-                // named, not filled, so exactly one nested row reads as selected.
-                'border-transparent bg-transparent font-medium text-foreground hover:bg-(--chrome-action-hover)'
-            : 'border-transparent bg-transparent text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+        // Linear's settings nav row: 28px, radius 8, 10px left / 9px right,
+        // 13px/500 in the sidebar ink; hover and active use the sidebar fills.
+        'flex h-7 w-full shrink-0 cursor-pointer items-center justify-start gap-2 rounded-(--linear-radius-control) pr-[0.5625rem] pl-2.5 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        current
+          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
           : active
-            ? 'border-(--ui-stroke-tertiary) bg-(--ui-bg-tertiary) text-foreground'
-            : 'border-transparent bg-transparent text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+            ? // Ancestor of the current page (a group or plugin whose sub-page is
+              // open): named, not filled, so exactly one row reads as selected.
+              'text-(--linear-text-primary) hover:bg-(--linear-hover-sidebar)'
+            : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
       )}
       // Names the row by its own id, so a tour can address one link
       // (`[data-tour="nav-models"]`) instead of guessing at nth-child.
@@ -148,11 +147,7 @@ export const OverlayNavItem = memo(function OverlayNavItem({
       {leading}
       {Icon && (
         <Icon
-          className={cn(
-            'shrink-0',
-            nested ? 'size-3.5' : 'size-4',
-            active ? 'text-foreground/80' : 'text-muted-foreground/80'
-          )}
+          className={cn('shrink-0 text-(--linear-icon)', nested ? 'size-3.5' : 'size-4', !active && 'opacity-80')}
         />
       )}
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -223,7 +218,7 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
 
           return (
             <Fragment key={group.id}>
-              {group.gapBefore && <div aria-hidden className="h-2" />}
+              {group.gapBefore && <div aria-hidden className="h-3" />}
               <div className="relative">
                 <OverlayNavItem
                   active={group.active}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { ActionsContextMenu, ActionsMenu, type MenuKit, renderActionItem } from '@/components/ui/actions-menu'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { RowButton } from '@/components/ui/row-button'
@@ -11,11 +12,10 @@ import { cn } from '@/lib/utils'
 
 import { OVERLAY_TOP_CLEARANCE, OverlayView } from './overlay-view'
 
-// Overlay "panel" primitive — the centered, capped card + framed chrome lifted
-// straight from the trace / agents overlay so every non-settings overlay (cron,
-// profiles, …) speaks the same visual language: tight type scale, muted
-// opacities, NO container borders (rows separate via the row-hover/active bg
-// vars + gaps, exactly like the trace waterfall labels).
+// Overlay "panel" primitive — the Linear modal card shared by every
+// non-settings overlay (profiles, webhooks, …): Linear's 13px type scale,
+// 28px nav rows on the sidebar fills, a Properties-style key/value grid and
+// NO container borders (rows separate via fills + gaps).
 //
 // Compose it as:
 //   <Panel onClose>
@@ -71,10 +71,13 @@ export function PanelHeader({ actions, subtitle, title }: PanelHeaderProps) {
     // layout space, so header actions would otherwise slide right up against it.
     // Reserve clearance (button footprint from the card edge + a small gap) on
     // the right whenever actions are present.
-    <header className={cn('mb-3 flex shrink-0 items-start justify-between gap-3', actions ? 'pr-8' : undefined)}>
-      <div className="min-w-0">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {subtitle ? <p className="truncate text-xs text-muted-foreground/80">{subtitle}</p> : null}
+    // Linear's header line: 13px/500 title, 12px tertiary count beside it.
+    <header
+      className={cn('mb-3 flex min-h-7 shrink-0 items-center justify-between gap-3', actions ? 'pr-8' : undefined)}
+    >
+      <div className="flex min-w-0 items-baseline gap-2">
+        <h2 className="shrink-0 text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</h2>
+        {subtitle ? <p className="truncate text-xs font-[450] text-(--linear-text-tertiary)">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-1.5">{actions}</div> : null}
     </header>
@@ -129,14 +132,15 @@ export function PanelList({
       {onSearchChange ? (
         <SearchField
           aria-label={searchLabel ?? searchPlaceholder ?? ''}
-          containerClassName="mb-1 w-full shrink-0"
+          containerClassName="mb-2 w-full shrink-0"
           hints={searchHints}
           onChange={onSearchChange}
           placeholder={searchPlaceholder ?? ''}
           value={searchValue ?? ''}
+          variant="box"
         />
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">{children}</div>
     </div>
   )
 }
@@ -183,24 +187,32 @@ export function PanelListRow({
   const row = (
     <div
       className={cn(
-        'group/row row-hover relative flex h-7 w-full items-center rounded-md text-[0.78rem] hover:text-foreground',
-        active ? 'bg-(--ui-row-active-background) text-foreground' : 'text-(--ui-text-secondary)'
+        // Linear's nav row: 28px, radius 8, 13px/500 sidebar ink; hover and
+        // selection use the sidebar fills.
+        'group/row relative flex h-7 w-full shrink-0 items-center rounded-(--linear-radius-control) text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none',
+        active
+          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
+          : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
       )}
       data-panel-row={rowKey}
     >
       <RowButton
-        className="flex h-full min-w-0 flex-1 items-center gap-2 rounded-md pl-2 pr-1 text-left"
+        className="flex h-full min-w-0 flex-1 items-center gap-1.5 rounded-(--linear-radius-control) pl-2 pr-1 text-left"
         onClick={onSelect}
       >
         {lead ??
           (dotClassName ? (
-            <span aria-hidden="true" className={cn('size-1.5 shrink-0 rounded-full', dotClassName)} />
+            <span aria-hidden="true" className={cn('size-2 shrink-0 rounded-full', dotClassName)} />
           ) : icon ? (
-            <Codicon className="shrink-0 text-muted-foreground/55" name={icon} size="0.85rem" />
+            <Codicon className="shrink-0 text-(--linear-icon) opacity-80" name={icon} size="0.875rem" />
           ) : null)}
-        <span className="min-w-0 flex-1 truncate font-medium text-foreground/85">{title}</span>
+        <span className="min-w-0 flex-1 truncate">{title}</span>
       </RowButton>
-      {meta ? <span className="shrink-0 pr-2 text-[0.62rem] tabular-nums text-muted-foreground/45">{meta}</span> : null}
+      {meta ? (
+        <span className="shrink-0 pr-2 text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-tertiary)">
+          {meta}
+        </span>
+      ) : null}
       {menuItems ? (
         <div className="shrink-0 pr-1">
           <PanelRowMenu items={menuItems} label={menuLabel} />
@@ -251,8 +263,8 @@ function renderPanelMenuItems(items: PanelMenuItem[]) {
     )
 }
 
-// Per-row "⋮" actions menu — mirrors the sidebar session row's settled pattern
-// (size-5 ghost trigger + kebab-vertical codicon + w-40 content). Hidden until
+// Per-row "⋮" actions menu — Linear's 24px ghost icon button + kebab-vertical
+// codicon + w-40 content. Hidden until
 // the row is hovered/focused (or the menu is open). Returns null with no items
 // (e.g. the default profile, which can't be renamed/deleted).
 export function PanelRowMenu({ items, label = 'Actions' }: { items: PanelMenuItem[]; label?: string }) {
@@ -264,8 +276,8 @@ export function PanelRowMenu({ items, label = 'Actions' }: { items: PanelMenuIte
     <ActionsMenu ariaLabel={label} contentClassName="w-40" items={renderPanelMenuItems(items)}>
       <Button
         aria-label={label}
-        className="size-5 rounded-[4px] bg-transparent text-(--ui-text-tertiary) opacity-0 transition-colors duration-100 hover:bg-(--ui-control-active-background) hover:text-foreground focus-visible:opacity-100 focus-visible:ring-0 group-hover/row:opacity-100 data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground data-[state=open]:opacity-100 [&_svg]:size-3.5!"
-        size="icon"
+        className="opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100 data-[state=open]:bg-(--linear-hover-control) data-[state=open]:text-(--linear-text-primary) data-[state=open]:opacity-100"
+        size="icon-xs"
         variant="ghost"
       >
         <Codicon name="kebab-vertical" size="0.875rem" />
@@ -279,7 +291,7 @@ export function PanelRowMenu({ items, label = 'Actions' }: { items: PanelMenuIte
 export function PanelDetail({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain', className)}>
-      <div className="space-y-4 pb-6 pl-1 pr-2">{children}</div>
+      <div className="space-y-6 pb-6 pl-1 pr-2">{children}</div>
     </div>
   )
 }
@@ -296,10 +308,10 @@ export function PanelEmpty({ action, description, icon = 'inbox', title }: Panel
   return (
     <div className="grid flex-1 place-items-center px-6 py-10 text-center">
       <div className="flex flex-col items-center gap-2">
-        <Codicon className="text-muted-foreground/50" name={icon} size="1.25rem" />
-        {title ? <p className="text-sm font-medium text-foreground/90">{title}</p> : null}
+        <Codicon className="text-(--linear-text-quaternary)" name={icon} size="1.25rem" />
+        {title ? <p className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</p> : null}
         {description ? (
-          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground/70">{description}</p>
+          <p className="max-w-sm text-xs font-[450] leading-relaxed text-(--linear-text-tertiary)">{description}</p>
         ) : null}
         {action ? <div className="mt-2">{action}</div> : null}
       </div>
@@ -307,15 +319,32 @@ export function PanelEmpty({ action, description, icon = 'inbox', title }: Panel
   )
 }
 
+// Inline failure notice (load errors, last-run failures): a faint red wash at
+// the control radius with red ink. Callers add padding and layout.
+export const PANEL_ERROR_NOTICE =
+  'rounded-(--linear-radius-control) bg-[color-mix(in_srgb,var(--linear-red)_8%,transparent)] text-(--linear-red)'
+
+// Detail title — Linear's issue title: 24px/600, -0.1px tracking.
+// `as` keeps the caller's heading level (h3 under a panel header by default).
+export function PanelTitle({ as: Heading = 'h3', children }: { as?: 'h2' | 'h3'; children: ReactNode }) {
+  return (
+    <Heading className="text-2xl leading-8 font-semibold tracking-[-0.1px] break-words text-(--linear-text-primary)">
+      {children}
+    </Heading>
+  )
+}
+
 export function PanelSectionLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('text-[0.6rem] font-medium uppercase tracking-wider text-muted-foreground/50', className)}>
+    // Linear's section header: 12px/500 tertiary on a 28px line.
+    <div className={cn('flex min-h-7 items-center text-xs font-medium text-(--linear-text-tertiary)', className)}>
       {children}
     </div>
   )
 }
 
-// Inspector-style key/value grid (mirrors the trace span inspector's <dl>).
+// Key/value grid in the shape of Linear's issue Properties panel: 32px rows,
+// tertiary 13px label, primary 13px value.
 export interface PanelMetaRow {
   label: ReactNode
   value: ReactNode
@@ -323,24 +352,24 @@ export interface PanelMetaRow {
 
 export function PanelMeta({ className, rows }: { className?: string; rows: PanelMetaRow[] }) {
   return (
-    <dl className={cn('grid grid-cols-[5rem_1fr] gap-x-2 gap-y-1 text-[0.7rem]', className)}>
+    <dl className={cn('grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 text-[0.8125rem] leading-5 font-[450]', className)}>
       {rows.map((row, i) => (
         <div className="contents" key={typeof row.label === 'string' ? row.label : i}>
-          <dt className="truncate text-muted-foreground/55">{row.label}</dt>
-          <dd className="min-w-0 break-words text-foreground/85">{row.value}</dd>
+          <dt className="min-h-8 truncate py-1.5 text-(--linear-text-tertiary)">{row.label}</dt>
+          <dd className="min-h-8 min-w-0 break-words py-1.5 text-(--linear-text-primary)">{row.value}</dd>
         </div>
       ))}
     </dl>
   )
 }
 
-// Monospace content block (job prompt, etc.) — mirrors the inspector's
-// input/output <pre> blocks: subtle bg, no border.
+// Monospace content block (job prompt, etc.): no fill, a hairline frame at the
+// control radius, 12px mono in the secondary ink.
 export function PanelBlock({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <pre
       className={cn(
-        'max-h-48 overflow-auto whitespace-pre-wrap break-words rounded bg-foreground/5 p-2.5 text-[0.68rem] leading-relaxed text-foreground/80',
+        'max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2.5 font-mono text-xs leading-5 text-(--linear-text-secondary)',
         className
       )}
     >
@@ -351,23 +380,19 @@ export function PanelBlock({ children, className }: { children: ReactNode; class
 
 export type PanelPillTone = 'bad' | 'good' | 'muted' | 'warn'
 
-const PILL_TONE: Record<PanelPillTone, string> = {
-  bad: 'bg-destructive/10 text-destructive',
-  good: 'bg-primary/10 text-primary',
-  muted: 'bg-foreground/10 text-muted-foreground',
-  warn: 'bg-amber-500/10 text-amber-600 dark:text-amber-300'
+const PILL_VARIANT: Record<PanelPillTone, NonNullable<BadgeProps['variant']>> = {
+  bad: 'destructive',
+  good: 'success',
+  muted: 'muted',
+  warn: 'warn'
 }
 
+// State tag — the shared Badge, tone mapped onto its status variants.
 export function PanelPill({ children, tone = 'muted' }: { children: ReactNode; tone?: PanelPillTone }) {
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-medium capitalize',
-        PILL_TONE[tone]
-      )}
-    >
+    <Badge className="capitalize" variant={PILL_VARIANT[tone]}>
       {children}
-    </span>
+    </Badge>
   )
 }
 
@@ -384,21 +409,15 @@ export function PanelAddButton({
 }) {
   return (
     <Tip label={label}>
-      <Button
-        aria-label={label}
-        className="h-7 w-full shrink-0 justify-center text-muted-foreground/70 hover:bg-(--ui-row-hover-background) hover:text-foreground"
-        onClick={onClick}
-        size="sm"
-        variant="ghost"
-      >
+      <Button aria-label={label} className="w-full" onClick={onClick} variant="ghost">
         <Codicon name={icon} size="0.875rem" />
       </Button>
     </Tip>
   )
 }
 
-// Visible action for a detail header (cron pause/resume/trigger, …). Ghost by
-// default; `primary` promotes the header's main action to a filled button.
+// Visible action for a detail header (cron pause/resume/trigger, …). Linear's
+// toolbar button by default; `primary` promotes the main action to the accent.
 export function PanelAction({
   children,
   disabled,
@@ -417,14 +436,9 @@ export function PanelAction({
   return (
     <Button
       aria-busy={spinning || undefined}
-      className={cn(
-        'gap-1.5',
-        !primary && 'text-muted-foreground hover:bg-(--ui-row-hover-background) hover:text-foreground'
-      )}
       disabled={disabled}
       onClick={onClick}
-      size="sm"
-      variant={primary ? 'default' : 'ghost'}
+      variant={primary ? 'default' : 'secondary'}
     >
       <Codicon name={icon} size="0.875rem" spinning={spinning} />
       {children}
