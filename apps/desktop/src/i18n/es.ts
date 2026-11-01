@@ -1366,7 +1366,7 @@ export const esOverrides = {
       },
       stt: {
         enabled: 'Activa transcripción de voz local o respaldada por proveedor.',
-        echoTranscripts: 'Publica la transcripción sin procesar 🎙️ de los mensajes de voz en el chat.',
+        echoTranscripts: 'Publica la transcripción sin procesar de los mensajes de voz en el chat.',
         elevenlabs: {
           languageCode: 'Código de idioma ISO-639-3 opcional. En blanco deja que ElevenLabs lo detecte automáticamente.'
         }

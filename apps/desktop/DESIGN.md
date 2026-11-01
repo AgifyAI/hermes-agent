@@ -218,8 +218,8 @@ and large 32px (padding 12px), ghost/xs 24px, icon buttons 28/24/32px.
 `outline` (transparent + hairline ring, no fill/shadow), `chip` (Linear's
 property chip), `ghost`, `floating` (a control loose from any surface —
 overlay fill + hairline + menu shadow), `link`, `text`
-(boxless quiet inline — "Cancel", "Clear"), `textStrong` (bold underlined
-inline affordance — "Change", "Open logs").
+(boxless quiet inline — "Cancel", "Clear", underlined on hover only), `textStrong`
+(the same look, always flush with the text around it — "Change", "Open logs").
 `grip` is the quiet, fill-free drawer handle; pair it with size `grip` for a
 48×16 hit area around a small horizontal ridge.
 
@@ -353,8 +353,12 @@ focusing its composer.
   labels and parent URLs open the first ordered subpage, never an overview or
   the last visited child. Explicit child links retain their destination;
   every parent and child uses the same Settings breadcrumb, without a duplicate
-  icon-and-title heading. Page-level `SectionHeading page` retains actions and
-  counts under breadcrumb-owned chrome; embedded callers keep their headings.
+  icon-and-title heading. Page-level `SectionHeading page` retains actions under
+  breadcrumb-owned chrome and drops its title and count; embedded callers keep
+  them. Breadcrumb, page title, scope chips and cards share one left edge (section
+  titles keep Linear's 16px inset), and the page scroller and the breadcrumb both
+  reserve `SETTINGS_SCROLL_GUTTER`, so that edge holds whether a page scrolls or
+  not. In the rail only the links scroll: header and footer stay fixed.
   Narrow windows keep every destination available in the shared navigation dropdown.
   Search and saved field links resolve to the owning child before highlighting.
 - **Rows:** `ListRow` inside `SettingsCard` (settings `primitives.tsx`), under a

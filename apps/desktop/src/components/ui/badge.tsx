@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 // Small status/metadata tag. App radius (not a full pill); tones map to the
 // shared accent/muted/destructive surfaces so badges read consistently.
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center gap-1 rounded-full font-medium leading-none whitespace-nowrap [&_svg]:pointer-events-none',
+  'inline-flex w-fit shrink-0 items-center gap-1 rounded-full font-medium whitespace-nowrap [&_svg]:pointer-events-none',
   {
     variants: {
       variant: {
@@ -21,9 +21,11 @@ const badgeVariants = cva(
         solid: 'bg-(--linear-accent) text-(--linear-on-accent)'
       },
       size: {
-        default: 'px-1.5 py-0.5 text-[0.6875rem] font-[450] [&_svg]:size-3',
-        xs: 'px-1 py-px text-[0.6875rem] [&_svg]:size-2.5',
-        overlay: 'h-2 min-w-2 justify-center rounded-[2px] px-px text-[7px] font-semibold tabular-nums'
+        // `leading-none` follows the font size here: tailwind-merge drops a line
+        // height set before a font size, and the pill then inherits its parent's.
+        default: 'px-1.5 py-0.5 text-[0.6875rem] leading-none font-[450] [&_svg]:size-3',
+        xs: 'px-1 py-px text-[0.6875rem] leading-none [&_svg]:size-2.5',
+        overlay: 'h-2 min-w-2 justify-center rounded-[2px] px-px text-[7px] leading-none font-semibold tabular-nums'
       }
     },
     defaultVariants: { variant: 'default', size: 'default' }

@@ -129,8 +129,8 @@ export function CanonicalGroupList({ onOpen }: { onOpen: (key: string, origin: C
   }, [connectionId, profile, refresh, revision])
 
   return <div className="grid gap-1 px-2">
-    <Button onClick={() => setRefresh(value => value + 1)} variant="ghost">{labels.refreshGroups}</Button>
+    <Button className="justify-start text-(--linear-text-tertiary)" onClick={() => setRefresh(value => value + 1)} variant="ghost">{labels.refreshGroups}</Button>
     {error && <p role="alert">{error}</p>}
-    {rooms.map(room => <Button key={room.key} onClick={() => onOpen(room.key, 'key')} variant="ghost">{room.name}</Button>)}
+    {rooms.map(room => <Button className="justify-start" key={room.key} onClick={() => onOpen(room.key, 'key')} variant="ghost">{room.name}</Button>)}
   </div>
 }

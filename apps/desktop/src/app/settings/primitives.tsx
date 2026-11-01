@@ -29,6 +29,11 @@ const SettingsFlatContext = createContext(false)
 // Linear's settings content column: 640px, centred in the pane.
 export const SETTINGS_COLUMN = 'mx-auto w-full max-w-[40rem]'
 
+// The page scroller always holds its scrollbar's room, so the column stays put
+// whether or not a page overflows. The breadcrumb sits outside that scroller and
+// reserves the same room, or it would start half a scrollbar left of the column.
+export const SETTINGS_SCROLL_GUTTER = '[scrollbar-gutter:stable]'
+
 // `bare` drops the page gutters + tall bottom pad for embedding in a tighter
 // surface (e.g. the boot-failure recovery card owns its own padding).
 export function SettingsContent({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
@@ -42,10 +47,15 @@ export function SettingsContent({ children, bare = false }: { children: ReactNod
 
   return (
     <section className="min-h-0 overflow-hidden">
-      <div className={cn('h-full min-h-0 overflow-y-auto', bare ? 'px-5 pb-6' : cn('pb-20', PAGE_INSET_X))}>
+      <div
+        className={cn(
+          'h-full min-h-0 overflow-y-auto',
+          bare ? 'px-5 pb-6' : cn('pb-20', SETTINGS_SCROLL_GUTTER, PAGE_INSET_X)
+        )}
+      >
         <div className={cn(!bare && SETTINGS_COLUMN)}>
           {!bare && title && (
-            <h1 className="mb-8 pl-4 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">
+            <h1 className="mb-8 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">
               {title}
             </h1>
           )}
@@ -64,9 +74,10 @@ export const WARN_NOTICE_CLASS =
 // an inset hairline. Margins collapse in the page's block flow, so a card sits
 // 16px under its section title and 16px under a previous card. The hairline
 // goes on every rendered row after the first, so a slot that renders nothing
-// (an empty wrapper, a hidden input) never doubles or strands a line.
+// (an empty wrapper, a hidden input) never doubles or strands a line. Rows may be
+// rounded for their focus or deep-link flash; a top border would curve with them.
 const CARD_SEPARATOR =
-  '[&>:not(:empty)~:not(:empty)]:border-t-[0.5px] [&>:not(:empty)~:not(:empty)]:border-(--linear-border-secondary)'
+  '[&>:not(:empty)~:not(:empty)]:rounded-t-none [&>:not(:empty)~:not(:empty)]:border-t-[0.5px] [&>:not(:empty)~:not(:empty)]:border-(--linear-border-secondary)'
 
 export function SettingsCard({ children, className }: { children: ReactNode; className?: string }) {
   if (useContext(SettingsFlatContext)) {
@@ -135,14 +146,17 @@ export function SectionHeading({
   const hasBreadcrumb = useContext(SettingsBreadcrumbContext)
   const showTitle = !page || !hasBreadcrumb
 
-  if (!showTitle && !aside && !meta) {
+  // A count needs the title it counts: under the breadcrumb it would float alone.
+  const showMeta = showTitle && meta
+
+  if (!showTitle && !aside) {
     return null
   }
 
   return (
     <div className={SECTION_HEADING_CLASS}>
       {showTitle && <h2 className="min-w-0 truncate font-medium">{title}</h2>}
-      {meta && <Pill>{meta}</Pill>}
+      {showMeta && <Pill>{meta}</Pill>}
       {aside && <div className="ml-auto flex min-w-0 items-center">{aside}</div>}
     </div>
   )

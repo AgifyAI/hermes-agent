@@ -7,7 +7,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 // focus, invalid state) comes from the `desktop-input-chrome` CSS so every
 // control shares one exact look.
 export const controlVariants = cva(
-  'desktop-input-chrome w-full min-w-0 rounded-(--linear-radius-control) border-[0.5px] text-[0.8125rem] leading-5 text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-(--linear-text-hint)',
+  'desktop-input-chrome w-full min-w-0 rounded-(--linear-radius-control) border-[0.5px] text-[0.8125rem] leading-5 text-ellipsis text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-(--linear-text-hint)',
   {
     variants: {
       size: {

@@ -4,6 +4,7 @@ import { type ReactElement, type ReactNode, useState } from 'react'
 import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
+import { ErrorIcon } from '@/components/ui/error-state'
 import type { DesktopUpdateStatus, DesktopVersionInfo } from '@/global'
 import { type Translations, useI18n } from '@/i18n'
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw } from '@/lib/icons'
@@ -378,18 +379,18 @@ function UpdateStatusCardBody({
   return (
     <div
       className={cn(
-        'rounded-(--linear-radius-card) px-4 py-3 text-[0.8125rem]',
-        view.tone === 'available' &&
-          'bg-[color-mix(in_srgb,var(--linear-accent)_10%,transparent)] text-(--linear-text-primary)',
-        view.tone === 'error' && 'bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] text-(--linear-red)',
-        (view.tone === 'idle' || view.tone === 'unsupported') &&
-          'bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-card)'
+        'rounded-(--linear-radius-card) px-4 py-3 text-[0.8125rem] text-(--linear-text-primary)',
+        view.tone === 'available'
+          ? 'bg-[color-mix(in_srgb,var(--linear-accent)_10%,transparent)]'
+          : 'bg-(--linear-bg-card) shadow-(--linear-shadow-card)'
       )}
     >
       <div className="flex items-start gap-2">
         {view.tone === 'available' ? (
           <Codicon className="mt-0.5 size-4 shrink-0 text-(--linear-accent)" name="cloud-download" size="1rem" />
-        ) : view.tone === 'error' || view.tone === 'unsupported' ? null : (
+        ) : view.tone === 'error' ? (
+          <ErrorIcon className="mt-0.5 shrink-0" size="1rem" />
+        ) : view.tone === 'unsupported' ? null : (
           <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-(--linear-green)" />
         )}
         <div className="min-w-0">

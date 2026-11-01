@@ -1367,7 +1367,7 @@ export const frOverrides = {
       },
       stt: {
         enabled: 'Activer la transcription vocale locale ou via fournisseur.',
-        echoTranscripts: 'Publier la transcription brute 🎙️ des messages vocaux dans la conversation.',
+        echoTranscripts: 'Publier la transcription brute des messages vocaux dans la conversation.',
         elevenlabs: {
           languageCode: 'Code de langue ISO-639-3 facultatif. Vide = détection automatique par ElevenLabs.'
         }

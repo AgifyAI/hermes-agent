@@ -1360,7 +1360,7 @@ export const deOverrides = {
       },
       stt: {
         enabled: 'Lokale oder anbieterbasierte Sprachtranskription aktivieren.',
-        echoTranscripts: 'Das rohe 🎙️-Transkript von Sprachnachrichten zurück in den Chat posten.',
+        echoTranscripts: 'Das rohe Transkript von Sprachnachrichten zurück in den Chat posten.',
         elevenlabs: {
           languageCode: 'Optionaler ISO-639-3-Sprachcode. Leer lässt ElevenLabs automatisch erkennen.'
         }

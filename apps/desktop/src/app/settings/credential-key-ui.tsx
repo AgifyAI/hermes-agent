@@ -97,10 +97,10 @@ export function KeyField({
   }
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+    <div className="flex items-center gap-2">
       <Input
         autoFocus={editing}
-        className={cn(CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE)}
+        className={cn('flex-1', CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE)}
         onChange={update}
         onFocus={() => {
           if (!editing) {
