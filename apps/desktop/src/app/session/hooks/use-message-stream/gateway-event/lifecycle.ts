@@ -7,12 +7,10 @@ import {
   noteGatewayReady,
   notifyCronChanged,
   notifyPairingChanged,
-  notifyPetChanged,
   notifyPlatformsChanged,
   notifyProjectsChanged,
   notifySessionsChanged,
   notifySetupReady,
-  type PetChangeMeta,
   setChangeEventsAvailable
 } from '@/store/live-sync'
 import { clearAllPrompts, clearApprovalRequest } from '@/store/prompts'
@@ -24,7 +22,7 @@ import { $sessionTiles, dropSessionState, sessionTileDelegate, unbindTileRuntime
 import type { GatewayEventContext } from './types'
 
 function onGatewayReady(ready: GatewayEvent<'gateway.ready'>['payload'], activeSource: boolean): void {
-  // Backends with the change watcher broadcast pet/cron/sessions change
+  // Backends with the change watcher broadcast cron/sessions change
   // events; consumers demote their legacy polls to slow backstops.
   setChangeEventsAvailable(Boolean(ready?.change_events))
 
@@ -64,7 +62,6 @@ export function handleLifecycleEvent(ctx: GatewayEventContext): boolean {
   }
 
   if (
-    event.type === 'pet.changed' ||
     event.type === 'cron.changed' ||
     event.type === 'sessions.changed' ||
     event.type === 'projects.changed' ||
@@ -77,9 +74,7 @@ export function handleLifecycleEvent(ctx: GatewayEventContext): boolean {
     // changes apply — background profile sockets (and other connections'
     // gateways) watch their own homes.
     if (fromActiveSource()) {
-      if (event.type === 'pet.changed') {
-        notifyPetChanged(payload as PetChangeMeta | undefined)
-      } else if (event.type === 'cron.changed') {
+      if (event.type === 'cron.changed') {
         notifyCronChanged()
       } else if (event.type === 'projects.changed') {
         notifyProjectsChanged()

@@ -36,7 +36,7 @@ describe('AppearanceSettings extra slot', () => {
       )
     })
 
-    const { unmount } = renderPage('pet')
+    const { unmount } = renderPage('chat-display')
 
     expect(screen.queryByText('Extra controls')).toBeNull()
     unmount()

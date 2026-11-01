@@ -47,7 +47,6 @@ import { ChatFontSetting } from './chat-font-setting'
 import { MODE_OPTIONS } from './constants'
 import { setNested } from './helpers'
 import { MinimizeToTraySetting } from './minimize-to-tray-setting'
-import { PetSettings } from './pet-settings'
 import { ListRow, RowFootnoteAction, SectionHeading, SettingsCard, SettingsContent, ToggleRow } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { TerminalFontSetting } from './terminal-font-setting'
@@ -563,12 +562,6 @@ export function AppearanceSettings({ subpage }: AppearanceSettingsProps = {}) {
           )}
         </SettingsCard>
       </div>
-
-      {show('pet') && (
-        <div className={subpage === undefined ? 'mt-12' : undefined} id={settingElementId(ids.pet)}>
-          <PetSettings />
-        </div>
-      )}
 
       {/* Plugin-provided appearance controls — the sanctioned seam for a
           plugin that used to inject nodes into this page. Top-level page only:
