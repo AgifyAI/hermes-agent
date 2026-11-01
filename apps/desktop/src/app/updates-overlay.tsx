@@ -357,7 +357,7 @@ function IdleView({
   // honest view names that path. Only this mechanism gets it.
   if (status.mechanism === 'app-installer' && status.error && !status.updateAvailable) {
     return (
-      <div className="grid gap-4 px-6 pb-6 pt-1 pr-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-1">
         <VersionHero renderHeading={heading => <DialogTitle>{heading}</DialogTitle>} version={version} />
         <div className="flex flex-col items-center gap-2 text-center">
           <AlertCircle className="size-6 text-(--linear-text-tertiary)" />
@@ -380,7 +380,7 @@ function IdleView({
   // check/retry actions (its "Check now" covers the old Try-again button).
   if (!status.supported || status.error || !updateAvailable) {
     return (
-      <div className="grid gap-4 px-6 pb-6 pt-1 pr-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-1">
         <VersionHero renderHeading={heading => <DialogTitle>{heading}</DialogTitle>} version={version} />
         <UpdateStatusCard target={target} version={version} />
         <SyncStatusCard />
@@ -427,7 +427,7 @@ function IdleView({
   const handleCopyFullLog = () => formatFullChangelogText(commits, behind, status.branch)
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <BrandMark className="size-16" />
 
@@ -489,7 +489,7 @@ function ManualView({
   // message + a Done button, not a copy-a-command box.
   if (!command) {
     return (
-      <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
         <div className="flex flex-col items-center gap-3 text-center">
           <Terminal className="size-8 text-(--linear-accent)" />
 
@@ -505,7 +505,7 @@ function ManualView({
   }
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <Terminal className="size-8 text-(--linear-accent)" />
 
@@ -562,7 +562,7 @@ function GuiSkewView({ message, onDone }: { message?: string; onDone: () => void
   const u = t.updates
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <AlertCircle className="size-8 text-(--linear-orange)" />
 
@@ -670,7 +670,7 @@ function CenteredStatus({
   title: string
 }) {
   return (
-    <div className="grid gap-4 px-6 pb-6 pt-8 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-8">
       <div className="flex flex-col items-center gap-3 text-center">
         {icon}
 

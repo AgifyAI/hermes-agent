@@ -394,7 +394,7 @@ function UpdateStatusCardBody({
         )}
         <div className="min-w-0">
           <p className="font-medium">{view.line}</p>
-          {view.error && <p className="mt-1 text-xs text-(--linear-text-tertiary)">{view.error}</p>}
+          {view.error && <p className="mt-1 wrap-anywhere text-xs text-(--linear-text-tertiary)">{view.error}</p>}
           {view.tone !== 'unsupported' && (
             <p className="mt-1 text-xs text-(--linear-text-tertiary)">
               {u.lastChecked(relativeTime(status?.fetchedAt, u))}

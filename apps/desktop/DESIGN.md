@@ -57,7 +57,8 @@ one-off at the call site.
   remain in shell chrome. Do not hide a distinct product noun inside an
   unrelated page.
 - **Route overlays are short tasks.** Settings, Command Center, Cron, Profiles,
-  Agents, and Starmap render as `OverlayView` cards and return to the previous
+  Agents, and Starmap render as full-window `OverlayView` pages (window colour,
+  content in one `OVERLAY_PANEL_SURFACE` panel) and return to the previous
   route on close. Model/session pickers and dialogs layer above the current
   surface; they are not navigation stacks.
 - **Panes are working context.** Preview, files, review, and terminal remain
@@ -340,6 +341,8 @@ focusing its composer.
 - **Gutters:** `PAGE_INSET_X` (`src/app/layout-constants.ts`) for page side
   padding; `PAGE_INSET_NEG_X` to bleed a child to the edge. Don't hardcode
   `px-6`/`px-8` on pages.
+- **Tabs in a page header:** `TextTab` / `ResponsiveTabs` are a left-aligned
+  segmented pill (`role="tablist"`), sentence case, search beside them.
 - **Master/detail overlays:** `OverlaySplitLayout` + `OverlaySidebar` /
   `OverlayMain`. Cron, profiles, etc. ride this — don't rebuild a titlebar
   shell.

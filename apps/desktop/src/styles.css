@@ -192,7 +192,6 @@
   /* Floating overlays (popovers, palettes, dialogs) and the hairline that
      pairs with them. */
   --shadow-nous: var(--linear-shadow-dialog);
-  --stroke-nous: var(--linear-border-overlay);
   --shadow-composer: var(--linear-shadow-low);
 }
 
