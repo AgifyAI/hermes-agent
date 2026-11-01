@@ -19,6 +19,10 @@ node $S/hx.mjs 9334 run $S/shot.mjs session-menu                     # whatever 
 
 Set `HX_PROCESS` to the macOS process name when it is not `Hermes`, and `HX_WAIT` in milliseconds for slow routes. Files are named `<screen>-<light|dark>-<phase>.png`. Stop the debug instance and reopen the app normally when finished: `open -a Hermes`.
 
+To review many captures, build sheets and read them: `uv run --no-project --with pillow python $S/sheets.py "$HX_OUT" chat settings cron` writes `sheets/` with each screen in light above dark, three screens per sheet. The final decision on a suspicious cell still needs the full-size image.
+
+`node $S/hx.mjs 9334 run $S/settings-sweep.mjs` writes every Settings subpage to `$HX_OUT/sweep/` and returns console errors and overflow per page. It only opens navigation rows. It needs a connected instance: on the isolated copy, Settings does not open.
+
 To open menus or dialogs, write a small script exporting `default async (page, { args, out })` and run it with `hx.mjs <port> run`. Prefer role and label locators, then call `shot.mjs`.
 
 ## Isolated copy (forced states only)
@@ -49,6 +53,8 @@ Close the copy and Vite straight after. `npm run pack` rebuilds the production b
 - After a native window resize Playwright's viewport is stale, so the scripts capture through `Page.captureScreenshot`.
 - `quick`, `overlay`, `wake` and `hud` are small or transparent windows. In the main window they look stretched, so judge the control, not the layout.
 - Clarify rows look dim in a forced state because no server request is open: that is the disabled style, not a contrast bug.
+- The isolated copy has no sessions and keeps the connecting overlay up. To reach a session menu there, call `setSidebarOpen(true)` from `store/layout.ts`, set `$sessions` from `store/session.ts` to one fake row, and hide `[class*="z-(--z-connecting)"]` with a style tag.
+- Rows and tabs in the sidebar are missing when it is collapsed on the user's profile, so a locator can time out on a healthy screen. Check `[role=tab]` before blaming the UI.
 - The session switcher does not open on an empty profile. Check it on real data.
 - Opening a real session in a capture can move its "last active" time. Say so in the report.
 - Untracked tarballs in `.cache/desktop-inputs/` make the `profile-archives` check fail locally. Move `.cache` aside for that run.

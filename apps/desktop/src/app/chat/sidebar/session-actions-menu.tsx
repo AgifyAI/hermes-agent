@@ -573,7 +573,6 @@ export function SessionActionsMenu({ children, align = 'end', sideOffset = 6, ..
       <ActionsMenu
         align={align}
         ariaLabel={t.sidebar.row.sessionActions}
-        contentClassName="w-40"
         items={renderItems}
         onCloseAutoFocus={onCloseAutoFocus}
         sideOffset={sideOffset}
@@ -597,7 +596,6 @@ export function SessionContextMenu({ children, ...actions }: SessionContextMenuP
     <>
       <ActionsContextMenu
         ariaLabel={t.sidebar.row.sessionActions}
-        contentClassName="w-40"
         items={renderItems}
         onCloseAutoFocus={onCloseAutoFocus}
       >
