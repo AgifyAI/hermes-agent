@@ -215,7 +215,7 @@ export interface KanbanCardBadgesProps {
 }
 
 const HUE_STYLE =
-  'bg-[color-mix(in_srgb,var(--kanban-badge-hue)_16%,transparent)] text-[color-mix(in_oklab,var(--kanban-badge-hue)_40%,var(--ui-text-primary,currentColor))] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--kanban-badge-hue)_45%,transparent)]'
+  'bg-[color-mix(in_srgb,var(--kanban-badge-hue)_16%,transparent)] text-[color-mix(in_oklab,var(--kanban-badge-hue)_40%,var(--linear-text-primary,currentColor))] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--kanban-badge-hue)_45%,transparent)]'
 
 // Only the host's own palette reaches `style`; no plugin string ever does.
 const hueVar = (tone: KanbanCardBadgeTone): CSSProperties | undefined => {

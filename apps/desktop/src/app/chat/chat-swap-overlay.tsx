@@ -33,7 +33,7 @@ export function ChatSwapOverlay({ profile }: { profile: string | null }) {
         profile ? 'opacity-100' : 'opacity-0'
       )}
     >
-      <div className="flex items-center gap-2 bg-[color-mix(in_srgb,var(--dt-card)_92%,transparent)] px-4 py-2 font-mono text-[0.8125rem] text-foreground shadow-composer">
+      <div className="flex items-center gap-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) p-3 text-[0.8125rem] font-medium text-(--linear-text-primary) shadow-(--linear-shadow-menu)">
         {/* Was a local 80ms setInterval + setState braille ticker — the same
             mechanism class (per-tick DOM mutation scheduling style recalc)
             that GlyphSpinner was rewritten to remove. `braille` is exactly the
@@ -41,7 +41,7 @@ export function ChatSwapOverlay({ profile }: { profile: string | null }) {
             glyph left-aligned in its w-3 box the way the bare span was, and
             `paused` restores the old "no ticking once the swap is done"
             behaviour while the overlay fades out still mounted. */}
-        <GlyphSpinner className="w-3 justify-start text-(--ui-accent)" paused={!profile} spinner="braille" />
+        <GlyphSpinner className="w-3 justify-start text-(--linear-accent)" paused={!profile} spinner="braille" />
         {t.composer.wakingProfile(label ?? '')}
       </div>
     </div>
@@ -63,9 +63,9 @@ export function ChatSyncBadge({ profile }: { profile: string | null }) {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none absolute right-3 top-2 z-30 flex items-center gap-1.5 rounded-full border border-border/50 bg-[color-mix(in_srgb,var(--dt-card)_92%,transparent)] px-2 py-0.5 font-mono text-[0.6875rem] text-muted-foreground shadow-composer"
+      className="pointer-events-none absolute right-3 top-2 z-30 flex items-center gap-1.5 rounded-full border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) px-2 py-0.5 text-[0.6875rem] font-[450] text-(--linear-text-tertiary) shadow-(--linear-shadow-low)"
     >
-      <GlyphSpinner className="w-3 justify-start text-(--ui-accent)" spinner="braille" />
+      <GlyphSpinner className="w-3 justify-start text-(--linear-accent)" spinner="braille" />
       {t.desktop.hydrationSyncing(profile)}
     </div>
   )
