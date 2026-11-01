@@ -63,7 +63,7 @@ export function getAnimationAlpha(startedAtMs: number, nowMs: number, autoHide: 
 }
 
 // ---------------------------------------------------------------------------
-// Colors (Colors.cpp + FancyZones settings defaults)
+// Colors (Colors.cpp)
 // ---------------------------------------------------------------------------
 
 export interface ZoneColors {
@@ -75,15 +75,6 @@ export interface ZoneColors {
   highlightOpacity: number
 }
 
-/** FancyZonesSettings defaults (custom-color mode). */
-export const FANCYZONES_DEFAULT_COLORS: ZoneColors = {
-  primaryColor: '#F5FCFF',
-  borderColor: '#FFFFFF',
-  highlightColor: '#008CFF',
-  numberColor: '#000000',
-  highlightOpacity: 50
-}
-
 /**
  * Colors::GetZoneColors systemTheme branch, mapped to our design tokens:
  * accent -> border + highlight, surface -> primary, number auto-contrast
@@ -91,10 +82,10 @@ export const FANCYZONES_DEFAULT_COLORS: ZoneColors = {
  */
 export function systemThemeZoneColors(): ZoneColors {
   return {
-    primaryColor: 'var(--ui-bg-editor)',
-    borderColor: 'var(--ui-accent)',
-    highlightColor: 'var(--ui-accent)',
-    numberColor: 'var(--ui-text-primary)',
+    primaryColor: 'var(--linear-bg-card)',
+    borderColor: 'var(--linear-accent)',
+    highlightColor: 'var(--linear-accent)',
+    numberColor: 'var(--linear-text-primary)',
     highlightOpacity: 50
   }
 }

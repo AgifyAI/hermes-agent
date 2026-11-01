@@ -33,14 +33,14 @@ export function LocalSetupMenuRow() {
         data-slot="model-menu-local-setup"
         onSelect={() => requestRoute(`${SETTINGS_ROUTE}?tab=providers&pview=local`)}
       >
-        <Codicon className="mt-0.5 shrink-0 text-(--ui-accent)" name="chip" size="0.8rem" />
+        <Codicon className="mt-0.5 shrink-0 text-(--linear-accent)" name="chip" size="0.8rem" />
         <span className="min-w-0 flex-1 leading-snug">
           <span className="block font-medium text-(--linear-text-overlay-strong)">{copy.title}</span>
-          <span className="block truncate text-(--ui-text-tertiary)">
+          <span className="block truncate text-(--linear-text-tertiary)">
             {copy.text(fit.model.display_name, fit.model.size_label)}
           </span>
         </span>
-        <span className="shrink-0 self-center text-(--ui-accent)">{copy.action}</span>
+        <span className="shrink-0 self-center text-(--linear-accent)">{copy.action}</span>
       </DropdownMenuItem>
       <DropdownMenuSeparator className="mx-0" />
     </>

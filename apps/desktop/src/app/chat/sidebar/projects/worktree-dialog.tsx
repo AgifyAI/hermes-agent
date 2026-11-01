@@ -237,17 +237,17 @@ export function WorktreeDialog() {
           <Popover onOpenChange={setProjectOpen} open={projectOpen}>
             <PopoverTrigger asChild>
               <Button
-                className="group w-full flex justify-start items-center min-w-0 gap-1.5 hover:no-underline hover:text-muted-foreground"
+                className="group w-full flex justify-start items-center min-w-0 gap-1.5 hover:no-underline hover:text-(--linear-text-tertiary)"
                 disabled={pending}
                 size="inline"
                 variant="text"
               >
-                <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="folder" size="0.8rem" />
+                <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="folder" size="0.8rem" />
                 <span className="shrink-0">{p.worktreeProjectLabel}</span>
-                <span className="truncate text-primary underline-offset-4 decoration-current/20 group-hover:underline">
+                <span className="truncate text-(--linear-accent) underline-offset-4 decoration-current/20 group-hover:underline">
                   {activeProjectLabel}
                 </span>
-                <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="chevron-down" size="0.75rem" />
+                <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="chevron-down" size="0.75rem" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -276,7 +276,7 @@ export function WorktreeDialog() {
                         }}
                         value={`${option.label} ${option.path}`}
                       >
-                        <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="repo" size="0.8rem" />
+                        <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="repo" size="0.8rem" />
                         <span className="truncate">{option.label}</span>
                         <CommandItemCheck checked={option === activeOption} />
                       </CommandItem>
@@ -290,7 +290,7 @@ export function WorktreeDialog() {
 
         {convertMode ? (
           <Command
-            className="rounded-md border border-(--ui-stroke-tertiary)"
+            className="rounded-md border border-(--linear-border-panel)"
             filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
           >
             <CommandInput autoFocus disabled={pending} placeholder={p.convertBranchPlaceholder} />
@@ -305,12 +305,12 @@ export function WorktreeDialog() {
                     value={branch.name}
                   >
                     <Codicon
-                      className="shrink-0 text-(--ui-text-tertiary)"
+                      className="shrink-0 text-(--linear-text-tertiary)"
                       name={branch.isRemote ? 'repo' : 'git-branch'}
                       size="0.8rem"
                     />
                     <span className="truncate">{branch.name}</span>
-                    <span className="ml-auto shrink-0 text-[0.625rem] text-(--ui-text-tertiary)">
+                    <span className="ml-auto shrink-0 text-[0.625rem] text-(--linear-text-tertiary)">
                       {branchActionLabel(branch, p)}
                     </span>
                   </CommandItem>
@@ -351,7 +351,7 @@ export function WorktreeDialog() {
         {convertMode ? (
           <DialogFooter className="sm:justify-start">
             <Button
-              className="px-0 text-(--ui-text-secondary) hover:text-foreground"
+              className="px-0 text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
               disabled={pending}
               onClick={() => setConvertMode(false)}
               type="button"
@@ -363,7 +363,7 @@ export function WorktreeDialog() {
         ) : (
           <DialogFooter className="sm:justify-between">
             <Button
-              className="px-0 text-(--ui-text-secondary) hover:text-foreground"
+              className="px-0 text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
               disabled={pending}
               onClick={enterConvert}
               type="button"

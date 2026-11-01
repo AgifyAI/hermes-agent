@@ -201,7 +201,7 @@ export function ConnectionSwitcher({ compact = false, onConnect }: { compact?: b
           >
             {displayedConnections.length === 0 ? (
               <div
-                className="flex h-full items-center justify-center px-4 text-center text-xs text-(--ui-text-tertiary)"
+                className="flex h-full items-center justify-center px-4 text-center text-xs text-(--linear-text-tertiary)"
                 role="status"
               >
                 {t.settings.connections.noSearchResults}
@@ -271,7 +271,7 @@ function ConnectionSwitcherTrigger({
 
 function ManageGatewaysLabel({ label }: { label: string }) {
   return (
-    <span className="flex min-w-0 items-center gap-1.5 text-(--ui-text-secondary)">
+    <span className="flex min-w-0 items-center gap-1.5 text-(--linear-text-secondary)">
       <Codicon aria-hidden="true" name="settings-gear" size="0.875rem" />
       <span className="truncate">{label}</span>
     </span>

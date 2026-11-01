@@ -118,7 +118,7 @@ function RenameSessionDialog({ target }: { target: SessionRenameTarget }) {
           value={value}
         />
         <DialogFooter className="items-center justify-between gap-2">
-          <span className="hidden items-center gap-1 text-[0.6875rem] text-(--ui-text-quaternary) sm:flex">
+          <span className="hidden items-center gap-1 text-[0.6875rem] text-(--linear-text-quaternary) sm:flex">
             <KbdGroup keys={['enter']} size="sm" />
             <span>{t.common.save}</span>
             <span aria-hidden="true">·</span>

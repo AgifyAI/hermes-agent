@@ -425,7 +425,7 @@ function useSessionActions({
       }
     }),
     {
-      className: 'text-destructive focus:text-destructive',
+      className: 'text-(--linear-red) focus:text-(--linear-red)',
       disabled: !onDelete,
       icon: 'trash',
       label: t.common.delete,

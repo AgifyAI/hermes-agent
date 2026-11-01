@@ -127,17 +127,17 @@ export function BaseBranchPicker({
       >
         <PopoverTrigger asChild>
           <Button
-            className="group w-full flex justify-start items-center min-w-0 gap-1.5 hover:no-underline hover:text-muted-foreground"
+            className="group w-full flex justify-start items-center min-w-0 gap-1.5 hover:no-underline hover:text-(--linear-text-tertiary)"
             disabled={disabled || loading}
             size="inline"
             variant="text"
           >
-            <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="git-branch" size="0.8rem" />
+            <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="git-branch" size="0.8rem" />
             <span className="shrink-0">{parts.before}</span>
-            <span className="shrink-0 text-primary underline-offset-4 decoration-current/20 group-hover:underline">
+            <span className="shrink-0 text-(--linear-accent) underline-offset-4 decoration-current/20 group-hover:underline">
               {loading ? '...' : value}
             </span>
-            <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="chevron-down" size="0.75rem" />
+            <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="chevron-down" size="0.75rem" />
             <span className="shrink-0">{parts.after}</span>
           </Button>
         </PopoverTrigger>
@@ -164,12 +164,12 @@ export function BaseBranchPicker({
                     value={branch.name}
                   >
                     <Codicon
-                      className="shrink-0 text-(--ui-text-tertiary)"
+                      className="shrink-0 text-(--linear-text-tertiary)"
                       name={branch.isRemote ? 'repo' : 'git-branch'}
                       size="0.8rem"
                     />
                     <span className="truncate">{branch.name}</span>
-                    {branch.isDefault && <span className="shrink-0 text-[0.625rem] text-(--ui-text-tertiary)">★</span>}
+                    {branch.isDefault && <span className="shrink-0 text-[0.625rem] text-(--linear-text-tertiary)">★</span>}
                     <CommandItemCheck checked={value === branch.name} />
                   </CommandItem>
                 ))}

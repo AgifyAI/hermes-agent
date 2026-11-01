@@ -48,7 +48,7 @@ export function PaneBody({ wrap, hidden, panel = false, children }: PaneBodyProp
       className={cn(
         'relative min-h-0 min-w-0 flex-1 overflow-hidden',
         panel &&
-          'mr-2 mb-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--ui-editor-surface-background) shadow-(--linear-shadow-low)'
+          'mr-2 mb-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) shadow-(--linear-shadow-low)'
       )}
       ref={ref}
       style={hidden ? { position: 'absolute', visibility: 'hidden', pointerEvents: 'none', ...size } : undefined}

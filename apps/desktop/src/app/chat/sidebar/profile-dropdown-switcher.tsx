@@ -235,7 +235,7 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
             {profiles.length > 1 && (
               <DropdownMenuRadioItem className="min-w-0" value={ALL_PROFILES}>
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <Codicon aria-hidden="true" className="text-(--ui-text-tertiary)" name="layers" size="0.875rem" />
+                  <Codicon aria-hidden="true" className="text-(--linear-text-tertiary)" name="layers" size="0.875rem" />
                   <span className="truncate">{p.allProfiles}</span>
                 </span>
               </DropdownMenuRadioItem>

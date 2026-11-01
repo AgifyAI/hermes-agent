@@ -823,7 +823,7 @@ function EditSoulDialog({
             {gatewayLabel && profileName ? p.fleet.onGateway(profileName, gatewayLabel) : profileName} · SOUL.md
           </DialogTitle>
         </DialogHeader>
-        {missing && <p className="text-xs text-muted-foreground">{p.soulMissing}</p>}
+        {missing && <p className="text-xs text-(--linear-text-tertiary)">{p.soulMissing}</p>}
         <div className="h-80">
           {!loading && profileName && (
             <CodeEditor
@@ -1302,7 +1302,7 @@ function RestSquare({
 }) {
   const { t } = useI18n()
   const p = t.profiles
-  const hue = color ?? 'var(--ui-text-quaternary)'
+  const hue = color ?? 'var(--linear-text-quaternary)'
   const [pickerOpen, setPickerOpen] = useState(false)
   const label = p.fleet.onGateway(agent.profile, agent.connectionLabel)
 
@@ -1379,7 +1379,7 @@ function RestSquare({
             <span>{p.editSoul}</span>
           </ContextMenuItem>
           <ContextMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-(--linear-red) focus:text-(--linear-red)"
             onSelect={onDelete}
             variant="destructive"
           >
@@ -1454,7 +1454,7 @@ function ProfileSquare({
 }: ProfileSquareProps) {
   const { t } = useI18n()
   const p = t.profiles
-  const hue = color ?? 'var(--ui-text-quaternary)'
+  const hue = color ?? 'var(--linear-text-quaternary)'
   const [pickerOpen, setPickerOpen] = useState(false)
   const pressTimer = useRef<null | number>(null)
   const suppressClick = useRef(false)
@@ -1575,7 +1575,7 @@ function ProfileSquare({
                     {remoteHost && (
                       <span
                         aria-hidden="true"
-                        className="absolute -right-0.5 -top-0.5 grid size-2 place-items-center rounded-full bg-(--ui-panel-background)"
+                        className="absolute -right-0.5 -top-0.5 grid size-2 place-items-center rounded-full bg-(--linear-bg-window)"
                         data-slot="profile-remote-badge"
                       >
                         <Codicon name="globe" size="0.5rem" />
@@ -1635,7 +1635,7 @@ function ProfileSquare({
             </ContextMenuItem>
           )}
           <ContextMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-(--linear-red) focus:text-(--linear-red)"
             onSelect={onDelete}
             variant="destructive"
           >

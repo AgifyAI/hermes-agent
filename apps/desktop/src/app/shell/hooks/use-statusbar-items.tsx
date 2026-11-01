@@ -697,7 +697,7 @@ export function useStatusbarItems({
         id: 'context-usage',
         label: contextUsage || '—',
         menuAlign: 'end',
-        menuClassName: 'w-auto border-(--ui-stroke-secondary) p-0',
+        menuClassName: 'w-auto border-(--linear-border-secondary) p-0',
         menuContent: (
           <ContextUsagePanel breakdown={contextBreakdown} loading={contextBreakdownLoading} usage={gaugeUsage} />
         ),

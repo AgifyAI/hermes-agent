@@ -401,15 +401,15 @@ export function ZoneEditor() {
   return (
     <div
       className="absolute inset-0 z-[70] flex flex-col gap-3 p-6 [-webkit-app-region:no-drag]"
-      style={{ background: 'color-mix(in srgb, var(--ui-bg-chrome) 88%, transparent)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'color-mix(in srgb, var(--linear-bg-panel) 88%, transparent)' }}
     >
       {/* Toolbar — Panel-style title + hint, template chooser on the right. */}
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{t.zones.zoneEditorTitle}</h2>
-          <p className="text-xs text-muted-foreground/80">
+          <h2 className="text-sm font-semibold text-(--linear-text-primary)">{t.zones.zoneEditorTitle}</h2>
+          <p className="text-xs text-(--linear-text-tertiary)/80">
             {t.zones.editorHintPre}
-            <kbd className="rounded border border-(--ui-stroke-secondary) bg-foreground/5 px-1 font-mono text-[10px]">
+            <kbd className="rounded border border-(--linear-border-secondary) bg-(--linear-text-primary)/5 px-1 font-mono text-[10px]">
               ⇧
             </kbd>
             {t.zones.editorHintPost}
@@ -443,7 +443,7 @@ export function ZoneEditor() {
 
       {/* Canvas */}
       <div
-        className="relative min-h-0 flex-1 cursor-crosshair overflow-hidden rounded-lg border border-(--ui-stroke-secondary)"
+        className="relative min-h-0 flex-1 cursor-crosshair overflow-hidden rounded-lg border border-(--linear-border-secondary)"
         onPointerDown={onCanvasPointerDown}
         onPointerLeave={onCanvasPointerLeave}
         onPointerMove={onCanvasPointerMove}
@@ -463,13 +463,13 @@ export function ZoneEditor() {
                 height: pct(zone.bottom - zone.top),
                 // Accent over an elevated base — zones stay legible on dark
                 // themes where a bare accent wash sinks into the canvas.
-                background: `color-mix(in srgb, var(--ui-accent) ${selected ? 34 : 12}%, var(--ui-bg-elevated))`,
-                borderColor: `color-mix(in srgb, var(--ui-accent) ${selected ? 90 : 40}%, transparent)`
+                background: `color-mix(in srgb, var(--linear-accent) ${selected ? 34 : 12}%, var(--linear-bg-overlay))`,
+                borderColor: `color-mix(in srgb, var(--linear-accent) ${selected ? 90 : 40}%, transparent)`
               }}
             >
               {/* Quiet zone tag — the app's small-caps label voice, not a
                   billboard number. */}
-              <span className="select-none text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-(--ui-text-tertiary)">
+              <span className="select-none text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-(--linear-text-tertiary)">
                 {t.zones.zoneTag(zone.index + 1)}
               </span>
             </div>
@@ -495,7 +495,7 @@ export function ZoneEditor() {
                   top: horizontal ? pct(splitPreview.position) : pct(zone.top),
                   width: horizontal ? pct(zone.right - zone.left) : 2,
                   height: horizontal ? 2 : pct(zone.bottom - zone.top),
-                  background: 'var(--ui-accent)'
+                  background: 'var(--linear-accent)'
                 }}
               />
             )
@@ -510,8 +510,8 @@ export function ZoneEditor() {
               top: pct(selectBox.y0),
               width: pct(selectBox.x1 - selectBox.x0),
               height: pct(selectBox.y1 - selectBox.y0),
-              background: 'color-mix(in srgb, var(--ui-accent) 10%, transparent)',
-              borderColor: 'var(--ui-accent)'
+              background: 'color-mix(in srgb, var(--linear-accent) 10%, transparent)',
+              borderColor: 'var(--linear-accent)'
             }}
           />
         )}
@@ -540,7 +540,7 @@ export function ZoneEditor() {
             >
               <span
                 className={cn('pointer-events-none rounded-full', horizontal ? 'h-[4px] w-10' : 'h-10 w-[4px]')}
-                style={{ background: 'color-mix(in srgb, var(--ui-text-primary) 55%, transparent)' }}
+                style={{ background: 'color-mix(in srgb, var(--linear-text-primary) 55%, transparent)' }}
               />
             </div>
           )
@@ -586,8 +586,8 @@ export function ZoneEditor() {
         <Button onClick={() => $zoneEditorOpen.set(false)} size="sm" variant="ghost">
           {t.common.cancel}
         </Button>
-        {!treeExpressible && <span className="text-xs text-muted-foreground/80">{t.zones.notExpressible}</span>}
-        <span className="ml-auto text-xs text-muted-foreground/60">{t.zones.zoneCount(zones.length)}</span>
+        {!treeExpressible && <span className="text-xs text-(--linear-text-tertiary)/80">{t.zones.notExpressible}</span>}
+        <span className="ml-auto text-xs text-(--linear-text-tertiary)/60">{t.zones.zoneCount(zones.length)}</span>
       </div>
     </div>
   )

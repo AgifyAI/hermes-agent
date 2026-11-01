@@ -27,7 +27,7 @@ import { TITLEBAR_DRAG_HANDLE_WIDTH } from '@/app/shell/titlebar'
 import { ActionsContextMenu, type MenuKit, renderActionItem } from '@/components/ui/actions-menu'
 import { Codicon } from '@/components/ui/codicon'
 import { DecodeText } from '@/components/ui/decode-text'
-import { DROP_SHEET_BLUR_CLASS, DROP_SHEET_CLASS } from '@/components/ui/drop-affordance'
+import { DROP_SHEET_CLASS } from '@/components/ui/drop-affordance'
 import {
   PANE_TAB_STRIP_LINE_LEFT,
   PANE_TAB_STRIP_LINE_RIGHT,
@@ -218,7 +218,7 @@ function ZoneMenu({
                   so without this it breaks mid-phrase before the menu widens. */}
               <span className="whitespace-nowrap">{stripVisible ? t.zones.hideTabStrip : t.zones.showTabStrip}</span>
               {toggleHint && (
-                <span className="ml-auto shrink-0 pl-2 whitespace-nowrap text-(--ui-text-quaternary)">
+                <span className="ml-auto shrink-0 pl-2 whitespace-nowrap text-(--linear-text-quaternary)">
                   {toggleHint}
                 </span>
               )}
@@ -298,18 +298,17 @@ function EditVeil({ label, onPointerDown, top, ...menu }: EditVeilProps) {
         // terminal rail is z-40) — the edit veil must cover all of it.
         // The scrim mixes the accent over the CHROME BG (not transparent)
         // so it properly dims content in dark themes instead of leaving a
-        // barely-tinted wash; the light blur reads as "edit mode" the same
-        // way the zone editor's backdrop does.
-        className="absolute inset-x-0 bottom-0 z-50 flex cursor-grab items-center justify-center outline-1 -outline-offset-2 outline-dashed backdrop-blur-[2px]"
+        // barely-tinted wash.
+        className="absolute inset-x-0 bottom-0 z-50 flex cursor-grab items-center justify-center outline-1 -outline-offset-2 outline-dashed"
         onPointerDown={onPointerDown}
         style={{
           top,
           background:
-            'color-mix(in srgb, var(--ui-accent) 6%, color-mix(in srgb, var(--ui-bg-chrome) 55%, transparent))',
-          outlineColor: 'color-mix(in srgb, var(--ui-accent) 55%, transparent)'
+            'color-mix(in srgb, var(--linear-accent) 6%, color-mix(in srgb, var(--linear-bg-panel) 55%, transparent))',
+          outlineColor: 'color-mix(in srgb, var(--linear-accent) 55%, transparent)'
         }}
       >
-        <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-(--ui-stroke-secondary) bg-popover px-2 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-(--ui-text-secondary)">
+        <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-(--linear-border-secondary) bg-(--linear-bg-overlay) px-2 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-(--linear-text-secondary)">
           <Codicon className="shrink-0" name="gripper" size="0.8125rem" />
           <span className="min-w-0 truncate">{label}</span>
         </span>
@@ -607,7 +606,7 @@ export function TreeGroup({
 
   return (
     <div
-      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--ui-sidebar-surface-background)"
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--linear-bg-window)"
       data-tree-group={node.id}
       data-window-top={topEdge || undefined}
       // Advertises the visible tab strip so panes can drop their own
@@ -645,7 +644,7 @@ export function TreeGroup({
         <ZoneMenu {...zoneMenu}>
           <div
             className={cn(
-              'flex h-full min-h-7 w-7 min-w-7 shrink-0 cursor-pointer select-none flex-col items-stretch bg-(--ui-sidebar-surface-background)',
+              'flex h-full min-h-7 w-7 min-w-7 shrink-0 cursor-pointer select-none flex-col items-stretch bg-(--linear-bg-window)',
               // Strip line faces the content the zone collapsed away from.
               railSide === 'right' ? PANE_TAB_STRIP_LINE_LEFT : PANE_TAB_STRIP_LINE_RIGHT
             )}
@@ -688,7 +687,7 @@ export function TreeGroup({
           bounds, strip refs, focus ownership and split geometry as the body. */}
       {(headerVisible || (topEdge && !verticalCollapse)) && (
         <div
-          className="relative flex min-w-0 shrink-0 bg-(--ui-sidebar-surface-background)"
+          className="relative flex min-w-0 shrink-0 bg-(--linear-bg-window)"
           data-panel-header=""
           style={topEdge ? { height: topHeaderHeight } : undefined}
         >
@@ -741,7 +740,7 @@ export function TreeGroup({
                     {minimizable && (
                       <button
                         aria-label={node.minimized ? t.zones.restore : minimizeLabel}
-                        className="mx-1 grid size-5 shrink-0 place-items-center self-center [-webkit-app-region:no-drag] rounded-md text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground focus-visible:opacity-100 group-hover/pane-header:opacity-100"
+                        className="mx-1 grid size-5 shrink-0 place-items-center self-center [-webkit-app-region:no-drag] rounded-md text-(--linear-text-tertiary) opacity-0 transition-opacity hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) focus-visible:opacity-100 group-hover/pane-header:opacity-100"
                         onClick={toggleCollapse}
                         onPointerDown={e => e.stopPropagation()}
                         type="button"
@@ -953,7 +952,7 @@ export function TreeGroup({
           {isEmpty ? (
             <div className="grid h-full place-items-center">
               {/* Same decode primitive as the CONNECTING boot overlay. */}
-              <DecodeText className="text-(--ui-text-quaternary)" cursor prefix={1} text="HERMES" />
+              <DecodeText className="text-(--linear-text-quaternary)" cursor prefix={1} text="HERMES" />
             </div>
           ) : (
             inlinePanes.map(paneId => {
@@ -992,7 +991,7 @@ export function TreeGroup({
                     </PaneGroupContext.Provider>
                   ) : (
                     isActive && (
-                      <div className="p-3 font-mono text-[11px] text-(--ui-text-quaternary)">
+                      <div className="p-3 font-mono text-[11px] text-(--linear-text-quaternary)">
                         {t.zones.missingPane(paneId)}
                       </div>
                     )
@@ -1030,8 +1029,8 @@ export function TreeGroup({
 /**
  * The insertion divider for a stack drop: a 2px vertical line at the slot the
  * dragged tab will land in (before `stack.before`, or after the last tab).
- * Absolute over the strip — pure overlay, zero layout shift. #000 on light,
- * #FFF on dark. Split out so per-pointermove `$dropHint` churn re-renders
+ * Absolute over the strip — pure overlay, zero layout shift, in the primary
+ * text colour. Split out so per-pointermove `$dropHint` churn re-renders
  * only this node (same isolation contract as ZoneDropOverlay).
  */
 function StripDropCaret({ groupId, stripRef }: { groupId: string; stripRef: RefObject<HTMLDivElement | null> }) {
@@ -1060,7 +1059,7 @@ function StripDropCaret({ groupId, stripRef }: { groupId: string; stripRef: RefO
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute z-50 w-px -translate-x-1/2 bg-black dark:bg-white"
+      className="pointer-events-none absolute z-50 w-px -translate-x-1/2 bg-(--linear-text-primary)"
       style={{
         height: targetRect.height * 0.6,
         left: x,
@@ -1169,7 +1168,6 @@ function ZoneDropOverlay({ node }: { node: GroupNode }) {
           // paint in the whole drag.
           'absolute transition-[top,right,bottom,left,background-color,border-color,opacity] duration-150 ease-out',
           // Blur only the live target — idle outlines must not fog the app.
-          active && !centerLink && DROP_SHEET_BLUR_CLASS,
           centerLink && 'opacity-0'
         )}
         style={{
@@ -1177,9 +1175,9 @@ function ZoneDropOverlay({ node }: { node: GroupNode }) {
           // Accent over a card wash so the fill dims content on dark themes
           // (a bare accent alpha disappears there).
           background: active
-            ? 'color-mix(in srgb, var(--ui-accent) 18%, color-mix(in srgb, var(--dt-card) 55%, transparent))'
-            : 'color-mix(in srgb, var(--ui-accent) 5%, color-mix(in srgb, var(--dt-card) 25%, transparent))',
-          borderColor: `color-mix(in srgb, var(--ui-accent) ${active ? 75 : 28}%, transparent)`
+            ? 'color-mix(in srgb, var(--linear-accent) 18%, color-mix(in srgb, var(--linear-bg-card) 55%, transparent))'
+            : 'color-mix(in srgb, var(--linear-accent) 5%, color-mix(in srgb, var(--linear-bg-card) 25%, transparent))',
+          borderColor: `color-mix(in srgb, var(--linear-accent) ${active ? 75 : 28}%, transparent)`
         }}
       />
     </div>

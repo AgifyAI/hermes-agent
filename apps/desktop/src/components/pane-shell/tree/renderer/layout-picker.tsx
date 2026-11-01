@@ -81,7 +81,7 @@ export function TreeThumbnail({ node, resting }: { node: LayoutNode; resting: Re
 /** Small-caps section heading — the app's SidebarPanelLabel voice. */
 function PickerSectionLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-(--ui-text-quaternary)">
+    <span className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-(--linear-text-quaternary)">
       {children}
     </span>
   )
@@ -109,7 +109,7 @@ function PresetCard({ preset }: { preset: Contribution }) {
           <TreeThumbnail node={tree} resting={layoutPresetResting(preset.id)} />
         </div>
         <span
-          className={cn('truncate text-[0.68rem] font-medium', active ? 'text-foreground' : 'text-muted-foreground/80')}
+          className={cn('truncate text-[0.68rem] font-medium', active ? 'text-(--linear-text-primary)' : 'text-(--linear-text-tertiary)/80')}
         >
           {preset.title ?? preset.id}
         </span>
@@ -119,7 +119,7 @@ function PresetCard({ preset }: { preset: Contribution }) {
           aria-label={t.zones.deletePreset(preset.title ?? preset.id)}
           // Hover-reveal (opacity, not display) — stays laid out + clickable,
           // appears on card hover or keyboard focus.
-          className="absolute right-1 top-1 z-10 grid size-5 place-items-center rounded-md bg-(--ui-bg-elevated) text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground focus-visible:opacity-100 group-hover/preset:opacity-100"
+          className="absolute right-1 top-1 z-10 grid size-5 place-items-center rounded-md bg-(--linear-bg-overlay) text-(--linear-text-tertiary) opacity-0 transition-opacity hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) focus-visible:opacity-100 group-hover/preset:opacity-100"
           onClick={() => deleteUserPreset(preset.id)}
           onPointerDown={e => e.stopPropagation()}
           type="button"
@@ -150,10 +150,10 @@ function ModeCard({ mode }: { mode: InterfaceMode }) {
       onClick={() => setInterfaceMode(mode)}
       type="button"
     >
-      <span className={cn('text-[0.68rem] font-medium', active ? 'text-foreground' : 'text-muted-foreground/80')}>
+      <span className={cn('text-[0.68rem] font-medium', active ? 'text-(--linear-text-primary)' : 'text-(--linear-text-tertiary)/80')}>
         {copy.label}
       </span>
-      <span className="text-[0.62rem] leading-snug text-(--ui-text-tertiary)">{copy.description}</span>
+      <span className="text-[0.62rem] leading-snug text-(--linear-text-tertiary)">{copy.description}</span>
     </button>
   )
 }
@@ -193,7 +193,7 @@ export function LayoutPicker() {
             <ModeCard key={mode} mode={mode} />
           ))}
         </div>
-        <p className="text-[0.62rem] text-(--ui-text-quaternary)">{t.interfaceMode.hint}</p>
+        <p className="text-[0.62rem] text-(--linear-text-quaternary)">{t.interfaceMode.hint}</p>
       </section>
 
       <section className="flex flex-col gap-2">
@@ -218,7 +218,7 @@ export function LayoutPicker() {
               </div>
             )}
             <Button
-              className="w-full border border-dashed border-(--ui-stroke-secondary) text-muted-foreground hover:border-(--ui-stroke-primary) hover:text-foreground"
+              className="w-full border border-dashed border-(--linear-border-secondary) text-(--linear-text-tertiary) hover:border-(--linear-border-tertiary) hover:text-(--linear-text-primary)"
               onClick={() => $zoneEditorOpen.set(true)}
               size="sm"
               variant="ghost"

@@ -195,7 +195,7 @@ export function ProjectOverviewRow({
           ? `${s.projects.enter(project.label)} (${s.projects.autoDiscovered})`
           : s.projects.enter(project.label)
       }
-      labelClassName={cn('hover:text-foreground hover:underline', isActive && 'text-foreground')}
+      labelClassName={cn('hover:text-(--linear-text-primary) hover:underline', isActive && 'text-(--linear-text-primary)')}
       onClick={() => onEnter?.(project.id)}
     >
       {project.label}
@@ -283,7 +283,7 @@ export function ProjectOverviewRow({
         // Painted imperatively by session-drag.ts while a dragged session
         // hovers this row — a live "drop here to move" cue, not React state
         // (it must not repaint the sidebar on every pixel of pointer travel).
-        'rounded-[6px] data-[session-drop-hover=true]:outline-2 data-[session-drop-hover=true]:-outline-offset-2 data-[session-drop-hover=true]:outline-sidebar-ring'
+        'rounded-[6px] data-[session-drop-hover=true]:outline-2 data-[session-drop-hover=true]:-outline-offset-2 data-[session-drop-hover=true]:outline-(--linear-focus)'
       )}
       data-sessions-project={project.id}
       ref={ref}

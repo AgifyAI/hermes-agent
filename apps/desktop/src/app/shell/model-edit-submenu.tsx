@@ -158,7 +158,7 @@ export function ModelOptionsContent({
   const fastOn = fastControl.kind === 'none' ? false : fastControl.on && !ultrafastOn
 
   return !hasFast && !ultrafastSupported && !reasoning ? (
-    <div className="px-2.5 py-3 text-xs text-(--ui-text-tertiary)">{copy.noOptions}</div>
+    <div className="px-2.5 py-3 text-xs text-(--linear-text-tertiary)">{copy.noOptions}</div>
   ) : (
     <>
       <DropdownMenuLabel className={dropdownMenuSectionLabel}>{copy.options}</DropdownMenuLabel>

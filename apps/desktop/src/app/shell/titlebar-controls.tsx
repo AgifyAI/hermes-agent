@@ -93,7 +93,7 @@ function LayoutGlyph({ modHeld }: { modHeld: boolean }) {
       </span>
       <span className={cn('relative hidden', modHeld && 'group-hover/tool:inline-flex')}>
         <TitlebarIcon name="layout" />
-        <span className="absolute -bottom-1 -right-1.5 grid place-items-center rounded-full bg-(--ui-bg-chrome) p-px">
+        <span className="absolute -bottom-1 -right-1.5 grid place-items-center rounded-full bg-(--linear-bg-panel) p-px">
           <TitlebarIcon className="-scale-x-100" name="refresh" size={titlebarIconSizeCss(TITLEBAR_ICON_BADGE_SCALE)} />
         </span>
       </span>

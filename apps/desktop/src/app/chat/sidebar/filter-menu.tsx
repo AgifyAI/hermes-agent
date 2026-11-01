@@ -82,7 +82,7 @@ function OptionGlyph({ option }: { option: Option }) {
     return <span aria-hidden="true" className={cn('shrink-0', option.dot)} />
   }
 
-  return option.icon ? <Codicon className="text-(--ui-text-tertiary)" name={option.icon} size="0.8125rem" /> : null
+  return option.icon ? <Codicon className="text-(--linear-text-tertiary)" name={option.icon} size="0.8125rem" /> : null
 }
 
 /** Every option row — single or multi select — leaves the menu open, so a whole
@@ -157,7 +157,7 @@ export function SidebarFilterMenu({ className }: { className?: string }) {
     { dot: sessionDotClassName('working'), id: 'working', label: f.working },
     { dot: sessionDotClassName('unread'), id: 'unread', label: f.unread },
     { dot: sessionDotClassName('draft'), id: 'draft', label: f.draft },
-    { dot: cn(sessionDotClassName('idle'), 'bg-(--ui-text-quaternary)'), id: 'idle', label: f.idle }
+    { dot: cn(sessionDotClassName('idle'), 'bg-(--linear-text-quaternary)'), id: 'idle', label: f.idle }
   ]
 
   const grouping = useStore($sidebarGrouping)
@@ -238,11 +238,11 @@ export function SidebarFilterMenu({ className }: { className?: string }) {
           aria-label={f.filters}
           className={cn(
             className,
-            'data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground data-[state=open]:opacity-100',
+            'data-[state=open]:bg-(--linear-segment-selected) data-[state=open]:text-(--linear-text-primary) data-[state=open]:opacity-100',
             // Active filters read as "this control is engaged", the same way the
             // open menu does — never as an accent, which the sidebar reserves
             // for a session that is actually doing something.
-            filtersActive && 'bg-(--ui-control-active-background) text-foreground opacity-100'
+            filtersActive && 'bg-(--linear-segment-selected) text-(--linear-text-primary) opacity-100'
           )}
           size="icon-xs"
           type="button"
@@ -257,7 +257,7 @@ export function SidebarFilterMenu({ className }: { className?: string }) {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger hideChevron>
               {f.grouping}
-              <span className="ml-auto flex items-center gap-1 pl-4 text-(--ui-text-tertiary)">
+              <span className="ml-auto flex items-center gap-1 pl-4 text-(--linear-text-tertiary)">
                 {groupingLabel}
                 <Codicon name="chevron-right" size="1rem" />
               </span>

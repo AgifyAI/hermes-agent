@@ -28,7 +28,7 @@ export function ConnectionGlyph({
   return (
     <span
       aria-hidden="true"
-      className={cn(SIDEBAR_ROW_LEAD, 'text-(--ui-text-quaternary)', className)}
+      className={cn(SIDEBAR_ROW_LEAD, 'text-(--linear-text-quaternary)', className)}
       data-connection-kind={connection.kind}
       data-slot="connection-glyph"
     >

@@ -297,7 +297,7 @@ function RepoFlatSection({
           )
         }
         emphasis
-        icon={<Codicon className="shrink-0 text-(--ui-text-tertiary)" name="repo" size="0.75rem" />}
+        icon={<Codicon className="shrink-0 text-(--linear-text-tertiary)" name="repo" size="0.75rem" />}
         label={repo.label}
         onToggle={toggleOpen}
         open={open}

@@ -220,7 +220,7 @@ export function ProfileRemoteOverrideDialog({ profileNames }: { profileNames: st
               <DialogTitle>{p.confirmTitle}</DialogTitle>
               <DialogDescription>{p.confirmNote(profile ?? '', host)}</DialogDescription>
             </DialogHeader>
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-(--linear-red)">{error}</p>}
             <DialogFooter>
               <Button disabled={saving} onClick={() => setConfirming(false)} type="button" variant="ghost">
                 {p.confirmBack}
@@ -239,7 +239,7 @@ export function ProfileRemoteOverrideDialog({ profileNames }: { profileNames: st
 
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-xs">
-                <span className="text-(--ui-text-secondary)">{p.urlLabel}</span>
+                <span className="text-(--linear-text-secondary)">{p.urlLabel}</span>
                 <Input
                   autoCorrect="off"
                   onChange={event => setUrl(event.target.value)}
@@ -250,11 +250,11 @@ export function ProfileRemoteOverrideDialog({ profileNames }: { profileNames: st
                   type="url"
                   value={url}
                 />
-                {trimmedUrl && !urlValid && <span className="text-destructive">{p.urlInvalid}</span>}
+                {trimmedUrl && !urlValid && <span className="text-(--linear-red)">{p.urlInvalid}</span>}
               </label>
 
               <label className="flex flex-col gap-1 text-xs">
-                <span className="text-(--ui-text-secondary)">{p.tokenLabel}</span>
+                <span className="text-(--linear-text-secondary)">{p.tokenLabel}</span>
                 <Input
                   autoComplete="off"
                   onChange={event => setToken(event.target.value)}
@@ -264,12 +264,12 @@ export function ProfileRemoteOverrideDialog({ profileNames }: { profileNames: st
                   value={token}
                 />
                 {loaded?.tokenSet && !token.trim() && (
-                  <span className="text-(--ui-text-tertiary)">{p.tokenSavedHint}</span>
+                  <span className="text-(--linear-text-tertiary)">{p.tokenSavedHint}</span>
                 )}
               </label>
 
               {loaded && loaded.secureTokenStorage === false && Boolean(token.trim()) && (
-                <label className="flex items-start gap-2 text-xs text-(--ui-text-secondary)">
+                <label className="flex items-start gap-2 text-xs text-(--linear-text-secondary)">
                   <Checkbox
                     checked={allowPlainText}
                     className="mt-0.5"
@@ -279,8 +279,8 @@ export function ProfileRemoteOverrideDialog({ profileNames }: { profileNames: st
                 </label>
               )}
 
-              {collision && <p className="text-xs text-(--ui-text-secondary)">{p.collisionWarning(collision)}</p>}
-              {error && <p className="text-xs text-destructive">{error}</p>}
+              {collision && <p className="text-xs text-(--linear-text-secondary)">{p.collisionWarning(collision)}</p>}
+              {error && <p className="text-xs text-(--linear-red)">{error}</p>}
             </div>
 
             <DialogFooter>

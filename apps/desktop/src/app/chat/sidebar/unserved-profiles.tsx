@@ -65,7 +65,7 @@ export function UnservedProfileNote() {
 
   return (
     <>
-      <span aria-hidden="true" className="ml-auto shrink-0 pl-2 text-[0.6875rem] text-(--ui-text-tertiary)">
+      <span aria-hidden="true" className="ml-auto shrink-0 pl-2 text-[0.6875rem] text-(--linear-text-tertiary)">
         {note}
       </span>
       <span className="sr-only">{`, ${note}`}</span>

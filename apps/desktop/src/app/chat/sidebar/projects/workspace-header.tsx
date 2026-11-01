@@ -84,7 +84,7 @@ export function WorkspaceShowMoreRow({
   return (
     <SidebarRowShell>
       <SidebarRowBody
-        className="group/more w-full text-(--ui-text-tertiary) hover:text-foreground"
+        className="group/more w-full text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
         disabled={disabled}
         onClick={onClick}
       >

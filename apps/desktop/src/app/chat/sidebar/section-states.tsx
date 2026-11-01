@@ -36,9 +36,9 @@ export function SidebarBlankState({ onNewProject }: { onNewProject: () => void }
   return (
     <div className="grid min-h-0 flex-1 place-items-center px-4 text-center">
       <div className="flex flex-col items-center gap-2">
-        <Codicon className="text-(--ui-text-quaternary)" name="root-folder" size="1.25rem" />
-        <p className="text-xs text-(--ui-text-tertiary)">{s.noSessions}</p>
-        <Button className="mt-0.5 text-(--ui-text-secondary)" onClick={onNewProject} size="sm" variant="ghost">
+        <Codicon className="text-(--linear-text-quaternary)" name="root-folder" size="1.25rem" />
+        <p className="text-xs text-(--linear-text-tertiary)">{s.noSessions}</p>
+        <Button className="mt-0.5 text-(--linear-text-secondary)" onClick={onNewProject} size="sm" variant="ghost">
           <Codicon name="add" size="0.75rem" />
           {s.projects.newButton}
         </Button>
@@ -69,13 +69,70 @@ export function SidebarLoadErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="grid min-h-16 place-items-center rounded-lg px-2 text-center">
       <div className="flex flex-col items-center gap-2">
-        <Codicon className="text-(--ui-text-quaternary)" name="error" size="1rem" />
-        <p className="text-xs text-(--ui-text-tertiary)">{t.sidebar.projectLoadFailed}</p>
-        <Button className="mt-0.5 text-(--ui-text-secondary)" onClick={onRetry} size="sm" variant="ghost">
+        <Codicon className="text-(--linear-text-quaternary)" name="error" size="1rem" />
+        <p className="text-xs text-(--linear-text-tertiary)">{t.sidebar.projectLoadFailed}</p>
+        <Button className="mt-0.5 text-(--linear-text-secondary)" onClick={onRetry} size="sm" variant="ghost">
           <Codicon name="refresh" size="0.75rem" />
           {t.common.retry}
         </Button>
       </div>
+    </div>
+  )
+}
+
+interface SidebarSessionsEmptyStateProps {
+  filtersActive: boolean
+  flatDateSplit: boolean
+  hasPinned: boolean
+  inProject: boolean
+  loading: boolean
+  loadError: boolean
+  onRetry: () => void
+  projectLoadFailed: boolean
+  projectLoading: boolean
+}
+
+// What the main sessions section shows when it has no rows. A failed drill-in
+// renders nothing here: the section above it already carries that error.
+export function SidebarSessionsEmptyState({
+  filtersActive,
+  flatDateSplit,
+  hasPinned,
+  inProject,
+  loading,
+  loadError,
+  onRetry,
+  projectLoadFailed,
+  projectLoading
+}: SidebarSessionsEmptyStateProps) {
+  const { t } = useI18n()
+  const s = t.sidebar
+
+  if (inProject && projectLoadFailed) {
+    return null
+  }
+
+  if (loading || (inProject && projectLoading)) {
+    return <SidebarSessionSkeletons />
+  }
+
+  if (!inProject && loadError) {
+    return <SidebarLoadErrorState onRetry={onRetry} />
+  }
+
+  const message = inProject
+    ? s.projectEmpty
+    : filtersActive
+      ? s.noFilterMatches
+      : hasPinned
+        ? s.allPinned
+        : flatDateSplit
+          ? s.noSessionsToday
+          : s.noSessions
+
+  return (
+    <div className="grid min-h-16 place-items-center px-2 text-center text-xs text-(--linear-text-tertiary)">
+      {message}
     </div>
   )
 }
@@ -113,7 +170,7 @@ export function SidebarStorageCorruptNotice({
             hermes sessions recover --source &lt;state.db&gt; --inspect-only
           </code>
           <Button
-            className="-ml-1 mt-0.5 text-(--ui-text-secondary)"
+            className="-ml-1 mt-0.5 text-(--linear-text-secondary)"
             onClick={() => openRecoveryGuide(SESSION_STORAGE_RECOVERY_URL)}
             size="sm"
             variant="ghost"

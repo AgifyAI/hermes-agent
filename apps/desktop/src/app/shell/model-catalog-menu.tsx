@@ -1,12 +1,5 @@
 import type { ModelOptionProvider, ModelOptionsResult, ModelPricing } from '@hermes/shared'
-import {
-  DEFAULT_REASONING_EFFORT,
-  planBlocks,
-  sectionAt,
-  splitRecommended,
-  usageLevel,
-  usageTag
-} from '@hermes/shared'
+import { DEFAULT_REASONING_EFFORT, planBlocks, sectionAt, splitRecommended, usageLevel, usageTag } from '@hermes/shared'
 import { useStore } from '@nanostores/react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -120,12 +113,14 @@ function ModelPrice({ pricing }: { pricing: ModelPricing }) {
         {input ?? '—'}/{output ?? '—'}
       </span>
       {cache ? (
-        <span className="text-(--ui-text-quaternary)" title={`${copy.cacheRead} ${cache}/Mtok`}>
+        <span className="text-(--linear-text-quaternary)" title={`${copy.cacheRead} ${cache}/Mtok`}>
           ·{cache}
         </span>
       ) : null}
       {discount ? (
-        <span className="rounded bg-(--ui-green)/10 px-1 py-px font-medium text-(--ui-green)">−{discount}%</span>
+        <span className="rounded-(--linear-radius-kbd) bg-(--linear-green)/10 px-1 py-px font-medium text-(--linear-green)">
+          −{discount}%
+        </span>
       ) : null}
     </span>
   )
@@ -814,7 +809,7 @@ export function ModelCatalogMenu({
                     <HighlightMatches foldSeparators query={search} text={group.provider.name} />
                   </span>
                   <DisclosureCaret
-                    className="shrink-0 text-(--ui-text-tertiary) opacity-0 transition group-hover/label:opacity-100"
+                    className="shrink-0 text-(--linear-text-tertiary) opacity-0 transition group-hover/label:opacity-100"
                     open={!collapsed}
                     size="0.625rem"
                   />
@@ -884,7 +879,7 @@ export function ModelCatalogMenu({
                 <span className="min-w-0 flex-1 truncate">
                   MoA: <HighlightMatches foldSeparators query={search} text={preset} />
                 </span>
-                {isCurrentMoa ? <Codicon className="ml-auto text-(--linear-text-overlay-strong)" name="check" size="0.75rem" /> : null}
+                {isCurrentMoa ? CURRENT_ROW_CHECK : null}
               </DropdownMenuItem>
             )
           })}
@@ -906,7 +901,7 @@ export function ModelCatalogMenu({
             >
               <span className="min-w-0 flex-1 truncate">
                 {customSlug}
-                <span className="text-(--ui-text-tertiary)"> {provider.name}</span>
+                <span className="text-(--linear-text-tertiary)"> {provider.name}</span>
               </span>
             </DropdownMenuItem>
           ))}
@@ -922,7 +917,7 @@ export function ModelCatalogMenu({
       <DropdownMenuSeparator className="mx-0" />
       {footer}
       <DropdownMenuItem
-        className={cn(dropdownMenuRow, 'text-(--linear-text-tertiary)', slugEntry && 'text-(--linear-text-overlay-strong)')}
+        className={cn(dropdownMenuTertiaryRow, slugEntry && 'text-(--linear-text-overlay-strong)')}
         onSelect={event => {
           event.preventDefault()
           setSearch('')
@@ -936,7 +931,7 @@ export function ModelCatalogMenu({
         {copyPicker.addCustomModelAction}
       </DropdownMenuItem>
       <DropdownMenuItem
-        className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)')}
+        className={dropdownMenuTertiaryRow}
         onSelect={() => setModelVisibilityOpen(true)}
       >
         <Codicon name="settings-gear" size="0.75rem" />
@@ -1146,8 +1141,8 @@ function ModelFamilyRow({
             className={cn(
               '-mx-0.5 grid size-4 shrink-0 place-items-center rounded-(--linear-radius-pill) transition-colors duration-100 hover:text-(--linear-text-overlay-strong) hover:transition-none',
               favorite
-                ? 'text-(--ui-text-secondary)'
-                : 'text-(--ui-text-quaternary) group-hover/model:text-(--ui-text-tertiary) group-hover/model:transition-none group-data-[kb-active]/model:text-(--ui-text-tertiary)'
+                ? 'text-(--linear-text-secondary)'
+                : 'text-(--linear-text-quaternary) group-hover/model:text-(--linear-text-tertiary) group-hover/model:transition-none group-data-[kb-active]/model:text-(--linear-text-tertiary)'
             )}
             onClick={event => {
               event.preventDefault()
@@ -1167,7 +1162,7 @@ function ModelFamilyRow({
           </span>
           {tag ? <ModelChip>{tag}</ModelChip> : null}
           {decoration.badge ? (
-            <Badge className="shrink-0 uppercase tracking-wide" data-model-menu-row-badge="" size="xs" variant="muted">
+            <Badge className="shrink-0" data-model-menu-row-badge="" size="xs" variant="muted">
               {decoration.badge}
             </Badge>
           ) : null}
@@ -1175,7 +1170,7 @@ function ModelFamilyRow({
         <ModelResetBadge time={limit.reset} />
         {loadProgress ? (
           <span className="flex shrink-0 items-center gap-1.5" title={copyPicker.loadingIntoMemory}>
-            <span className="h-1 w-14 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+            <span className="h-1 w-14 overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
               <span
                 className="block h-full rounded-full bg-(--linear-accent) transition-[width] duration-500"
                 style={{ width: `${Math.max(2, loadProgress.percent)}%` }}
@@ -1226,9 +1221,14 @@ function caretAtEnd(input: HTMLInputElement): boolean {
 // _local_runtime_row). Downloads-in-flight attach to this group.
 const LOCAL_PROVIDER_SLUG = 'llamacpp'
 
+const dropdownMenuTertiaryRow = cn(dropdownMenuRow, 'text-(--linear-text-tertiary)')
+
+const CURRENT_ROW_CHECK = (
+  <Codicon className="ml-auto text-(--linear-text-overlay-strong)" name="check" size="0.75rem" />
+)
+
 // Heading for every row group in the list (Favorites, providers, downloads).
-const catalogGroupLabel =
-  'px-2 pb-0.5 pt-0.5 text-xs font-medium text-(--linear-text-hint)'
+const catalogGroupLabel = 'px-2 pb-0.5 pt-0.5 text-xs font-medium text-(--linear-text-hint)'
 
 // A provider inside a mixed Favorites section: the group heading's ink, set
 // in normal case and indented to the model names it labels, so it reads as
@@ -1240,7 +1240,7 @@ const favoriteProviderLabel = 'pt-1.5 pb-0 pr-2 pl-7.75 text-[0.6875rem] font-me
  *  different kinds of fact at a glance. */
 function ModelChip({ children, setting = false }: { children: ReactNode; setting?: boolean }): ReactElement {
   return (
-    <Badge className="shrink-0 uppercase tracking-wide" size="xs" variant={setting ? 'outline' : 'muted'}>
+    <Badge className="shrink-0" size="xs" variant={setting ? 'outline' : 'muted'}>
       {children}
     </Badge>
   )
@@ -1260,7 +1260,7 @@ function familyLimit(
   // Window plans: a model a full allowance stops dims too; the limit line under the provider says why.
   const dim = !isCurrent && (reset !== null || accountResetMs(provider) !== null || planBlocks(provider, family.id))
 
-  return { reset, tone: dim ? 'text-(--ui-text-tertiary)' : undefined }
+  return { reset, tone: dim ? 'text-(--linear-text-tertiary)' : undefined }
 }
 
 function ModelResetBadge({ time }: { time: null | string }): null | ReactElement {
@@ -1323,7 +1323,7 @@ function DownloadingModelRow({
         className="ml-auto flex shrink-0 items-center gap-1.5"
         title={paused ? copyLocal.downloadPausedLabel : copyPicker.downloading}
       >
-        <span className="h-1 w-14 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+        <span className="h-1 w-14 overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
           <span
             className={cn(
               'block h-full rounded-full',
@@ -1451,7 +1451,10 @@ function nousPricingPoll(data: ModelOptionsResult | undefined, updates: number):
 // current-model pin above, so a pinned custom model lands under "Other models" instead of taking the
 // first pick's "Recommended" heading.
 function recommendedFirst(provider: ModelOptionProvider, families: ModelFamily[]): ModelFamily[] {
-  const split = splitRecommended(provider, families.map(family => family.id))
+  const split = splitRecommended(
+    provider,
+    families.map(family => family.id)
+  )
 
   if (!split) {
     return families

@@ -81,7 +81,7 @@ export function ModelMenuPanel({ onFollowDefaultModel, ...props }: ModelMenuPane
         <>
           {pinnedDraft && onFollowDefaultModel && (
             <DropdownMenuItem
-              className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)')}
+              className={cn(dropdownMenuRow, 'text-(--linear-text-tertiary)')}
               onSelect={onFollowDefaultModel}
             >
               <Codicon name="discard" size="0.75rem" />
@@ -89,7 +89,7 @@ export function ModelMenuPanel({ onFollowDefaultModel, ...props }: ModelMenuPane
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)')}
+            className={cn(dropdownMenuRow, 'text-(--linear-text-tertiary)')}
             disabled={refreshing}
             onSelect={event => {
               event.preventDefault()

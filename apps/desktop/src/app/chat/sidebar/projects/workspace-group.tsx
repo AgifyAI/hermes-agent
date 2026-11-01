@@ -83,7 +83,7 @@ export function SidebarWorkspaceGroup({
   // live branch), a branch/kanban mark otherwise.
   const leadingIcon = (
     <Codicon
-      className="shrink-0 text-(--ui-text-tertiary)"
+      className="shrink-0 text-(--linear-text-tertiary)"
       name={group.isKanban ? 'checklist' : group.isHome ? 'home' : 'git-branch'}
       size="0.75rem"
     />
@@ -192,7 +192,7 @@ export function SidebarWorkspaceGroup({
           label={
             <SidebarRowLink
               aria-label={t.profiles.switchToProfile(group.label)}
-              labelClassName="capitalize hover:text-foreground hover:underline"
+              labelClassName="capitalize hover:text-(--linear-text-primary) hover:underline"
               onClick={() => selectProfile(group.id)}
             >
               {group.label}
