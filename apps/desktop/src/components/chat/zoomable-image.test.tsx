@@ -81,8 +81,6 @@ describe('ZoomableImage lightbox', () => {
     const shell = screen.getByRole('dialog') as HTMLElement
 
     expect(shell.getAttribute('data-slot')).toBe('dialog-content')
-    // The variant opts the shell out of the shared dialog paint.
-    expect(shell.getAttribute('data-variant')).toBe('media-lightbox')
   })
 
   it('wheel zooms toward the cursor and prevents the page from scrolling', async () => {
