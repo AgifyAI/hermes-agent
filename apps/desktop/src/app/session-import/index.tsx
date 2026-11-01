@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { setSessionOwnerHint } from '@/store/session'
 import type { SessionOwnerRoute } from '@/store/session-request-router'
 
-import { OverlayView } from '../overlays/overlay-view'
+import { OVERLAY_PANEL_SURFACE, OverlayView } from '../overlays/overlay-view'
 import { PanelEmpty, PanelTitle } from '../overlays/panel'
 
 import { type ForeignImportResult, type ForeignPage, type ForeignPreview, foreignRequest } from './api'
@@ -112,6 +112,7 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
 
   return (
     <OverlayView
+      contentClassName={cn('mx-2 mb-2', OVERLAY_PANEL_SURFACE)}
       onClose={onClose}
       titlebarActions={
         <Button

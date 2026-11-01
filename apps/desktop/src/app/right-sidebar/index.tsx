@@ -94,7 +94,7 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
     <aside
       aria-label={r.aria}
       className={cn(
-        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--linear-border-panel) bg-(--linear-bg-window) pt-(--titlebar-height) text-(--linear-text-tertiary)',
+        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--linear-border-panel) bg-(--linear-bg-panel) pt-(--titlebar-height) text-(--linear-text-tertiary)',
         panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >

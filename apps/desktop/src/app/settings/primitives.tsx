@@ -45,7 +45,7 @@ export function SettingsContent({ children, bare = false }: { children: ReactNod
       <div className={cn('h-full min-h-0 overflow-y-auto', bare ? 'px-5 pb-6' : cn('pb-20', PAGE_INSET_X))}>
         <div className={cn(!bare && SETTINGS_COLUMN)}>
           {!bare && title && (
-            <h1 className="mb-8 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">
+            <h1 className="mb-8 pl-4 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] text-(--linear-text-primary)">
               {title}
             </h1>
           )}

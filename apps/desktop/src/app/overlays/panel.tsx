@@ -10,9 +10,9 @@ import { Tip } from '@/components/ui/tooltip'
 import { translateNow } from '@/i18n'
 import { cn } from '@/lib/utils'
 
-import { OVERLAY_TOP_CLEARANCE, OverlayView } from './overlay-view'
+import { OVERLAY_PANEL_SURFACE, OverlayView } from './overlay-view'
 
-// Overlay "panel" primitive — the Linear modal card shared by every
+// Overlay "panel" primitive — the Linear content panel shared by every
 // non-settings overlay (profiles, webhooks, …): Linear's 13px type scale,
 // 28px nav rows on the sidebar fills, a Properties-style key/value grid and
 // NO container borders (rows separate via fills + gaps).
@@ -30,7 +30,7 @@ import { OVERLAY_TOP_CLEARANCE, OverlayView } from './overlay-view'
 
 interface PanelProps {
   children: ReactNode
-  // Root layout override (the card already fills the equidistant inset).
+  // Root layout override.
   className?: string
   closeLabel?: string
   contentClassName?: string
@@ -47,9 +47,7 @@ export function Panel({
   return (
     <OverlayView
       closeLabel={closeLabel}
-      // Header title rides up next to the floating close button — see
-      // OVERLAY_TOP_CLEARANCE, the shared clearance every overlay column uses.
-      contentClassName={cn('flex h-full min-h-0 flex-col px-4 pb-4 sm:px-5', OVERLAY_TOP_CLEARANCE, contentClassName)}
+      contentClassName={cn('mx-2 mb-2 px-4 pb-4 sm:px-5', OVERLAY_PANEL_SURFACE, contentClassName)}
       onClose={onClose}
       rootClassName={cn('flex h-full w-full flex-col', className)}
     >
@@ -67,19 +65,9 @@ interface PanelHeaderProps {
 
 export function PanelHeader({ actions, subtitle, title }: PanelHeaderProps) {
   return (
-    // The overlay's close (X) is absolutely positioned at right-3 and costs no
-    // layout space, so header actions would otherwise slide right up against it.
-    // Reserve clearance (button footprint from the card edge + a small gap) on
-    // the right whenever actions are present.
-    // Linear's page header: 44px from the card's top edge (the negative margin
-    // cancels Panel's top clearance, so the title stays beside the X), hairline
-    // across the whole card; 13px/500 title, 12px tertiary count beside it.
-    <header
-      className={cn(
-        '-mx-4 mb-3 -mt-[calc(var(--titlebar-height)/2-0.4375rem)] flex h-11 shrink-0 items-center justify-between gap-3 border-b-[0.5px] border-(--linear-border-primary) px-4 sm:-mx-5 sm:px-5',
-        actions && 'pr-12 sm:pr-13'
-      )}
-    >
+    // Linear's page header: 44px, hairline across the whole panel; 13px/500
+    // title, 12px tertiary count beside it.
+    <header className="-mx-4 mb-3 flex h-11 shrink-0 items-center justify-between gap-3 border-b-[0.5px] border-(--linear-border-primary) px-4 sm:-mx-5 sm:px-5">
       <div className="flex min-w-0 items-baseline gap-2">
         <h2 className="shrink-0 text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</h2>
         {subtitle ? <p className="truncate text-xs font-[450] text-(--linear-text-tertiary)">{subtitle}</p> : null}

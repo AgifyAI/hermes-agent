@@ -150,9 +150,8 @@ edits hot-reload. Rebuild and replace `Hermes.app` only when the user asks. Long
 Work in `AgifyAI/hermes-agent` needs NO Linear ticket (explicit owner override of the shared
 delivery harness). Branch + PR on the fork: `gh` defaults to upstream, so always pass
 `--repo AgifyAI/hermes-agent`; never open a PR or push to `NousResearch/hermes-agent`.
-Use the `AgifyAI` GitHub account here, and never `gh auth switch`: the active account is global and
-other sessions rely on it. Git gets it from a local `credential.<origin-url>.helper`; `gh` needs
-`GH_TOKEN=$(gh auth token --user AgifyAI)` on each command.
+Account: `AgifyAI`, never `gh auth switch` (global; breaks other sessions). Git: local credential
+helper. `gh`: prefix `GH_TOKEN=$(gh auth token --user AgifyAI)`.
 
 ## Testing as a habit of proof
 

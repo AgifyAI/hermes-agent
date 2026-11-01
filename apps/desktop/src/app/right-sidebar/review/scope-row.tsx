@@ -30,7 +30,7 @@ export function ReviewScopeRow() {
   return (
     <div className="@container shrink-0 px-2 pb-1.5" data-suppress-pane-reveal-side="">
       <SegmentedControl<HermesReviewScope>
-        className="hidden w-full auto-cols-[minmax(0,auto)] @[13.5rem]:grid [&>button]:px-2"
+        className="hidden w-max auto-cols-[minmax(0,auto)] @[13.5rem]:grid [&>button]:px-2"
         onChange={selectScope}
         options={options}
         value={scope}

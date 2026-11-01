@@ -45,10 +45,10 @@ function ShellTabs({
 }) {
   return (
     <ResponsiveTabs
+      align="start"
       onChange={id => onTabChange?.(id)}
       tabs={tabs}
       value={activeTab ?? tabs[0]?.id ?? ''}
-      wideClassName="justify-center"
     />
   )
 }
@@ -79,8 +79,7 @@ export function PageSearchShell({
       {/*
         Header lives in the page body, below the window chrome (the shell floats
         traffic lights over the top titlebar-height strip, which the `pt` clears
-        and leaves draggable). Search left, tabs centered on the page via the
-        1fr/auto/1fr grid; the trailing 1fr keeps the center honest.
+        and leaves draggable). Tabs and search lead on the left, actions trail.
       */}
       {/*
         IMPORTANT: do NOT put `-webkit-app-region: drag` on this header. It spans
@@ -99,30 +98,25 @@ export function PageSearchShell({
         )}
       >
         {(hasTabs || !searchHidden) && (
-          // Linear's page header: 44px, 8px left / 12px right, hairline below.
-          <div className="grid h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 pr-3 pl-2">
-            <div className="flex min-w-0 items-center justify-start">
-              {!searchHidden && onSearchChange && (
-                <SearchField
-                  containerClassName="w-64 max-w-[45vw]"
-                  hints={searchHints}
-                  onChange={onSearchChange}
-                  placeholder={searchPlaceholder ?? ''}
-                  value={searchValue ?? ''}
-                  variant="box"
-                />
-              )}
-            </div>
-            {hasTabs ? (
-              <div className="flex min-w-0 items-center justify-center" data-tour="page-tabs">
+          // Linear's page header: 44px, 8px left / 12px right, hairline below;
+          // view tabs lead on the left, actions sit on the right.
+          <div className="flex h-11 items-center gap-3 pr-3 pl-2">
+            {hasTabs && (
+              <div className="flex min-w-0 items-center" data-tour="page-tabs">
                 <ShellTabs activeTab={activeTab} onTabChange={onTabChange} tabs={tabs!} />
               </div>
-            ) : (
-              <span />
             )}
-            <div className="flex min-w-0 items-center justify-end gap-1.5">
-              {searchTrailingAction}
-            </div>
+            {!searchHidden && onSearchChange && (
+              <SearchField
+                containerClassName="w-64 max-w-[45vw]"
+                hints={searchHints}
+                onChange={onSearchChange}
+                placeholder={searchPlaceholder ?? ''}
+                value={searchValue ?? ''}
+                variant="box"
+              />
+            )}
+            <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5">{searchTrailingAction}</div>
           </div>
         )}
         {filters ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-3 pb-2 pl-2">{filters}</div> : null}

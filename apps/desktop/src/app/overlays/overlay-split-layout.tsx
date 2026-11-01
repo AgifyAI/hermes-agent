@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 import { PAGE_MAX_W } from '../layout-constants'
 
-import { OVERLAY_TOP_CLEARANCE } from './overlay-view'
+import { OVERLAY_PANEL_SURFACE } from './overlay-view'
 
 // The wide rail and the narrow dropdown swap at exactly the width where
 // OverlaySplitLayout drops to a single column, so the rail never stacks.
@@ -57,7 +57,7 @@ export function OverlaySplitLayout({ children, className }: OverlaySplitLayoutPr
         // Narrow: one column, and pin rows to [nav-bar auto | main 1fr] — without
         // an explicit template the grid's default align-content:stretch splits the
         // height evenly across the two rows, shoving the content to mid-screen.
-        'grid h-full min-h-0 flex-1 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden bg-transparent max-[47.5rem]:grid-cols-1 max-[47.5rem]:grid-rows-[auto_minmax(0,1fr)]',
+        'grid h-full min-h-0 flex-1 grid-cols-[15.25rem_minmax(0,1fr)] overflow-hidden bg-transparent max-[47.5rem]:grid-cols-1 max-[47.5rem]:grid-rows-[auto_minmax(0,1fr)]',
         className
       )}
     >
@@ -70,13 +70,8 @@ export function OverlaySidebar({ children, className }: OverlaySidebarProps) {
   return (
     <aside
       className={cn(
-        // The left links sit beside (not under) the floating close button, so
-        // they ride up via the shorter shared OVERLAY_TOP_CLEARANCE (same line
-        // as a Panel header) instead of main's taller X-clearance. The bg still
-        // fills from the card's top edge, so there's no gap above the sidebar.
         // Linear's settings nav sits on the window colour beside the content.
-        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--linear-bg-window) px-3 pb-3',
-        OVERLAY_TOP_CLEARANCE,
+        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--linear-bg-window) px-3 pt-2.5 pb-3',
         className
       )}
       // Every overlay's left nav (settings, cron, profiles, agents) answers to
@@ -91,22 +86,21 @@ export function OverlaySidebar({ children, className }: OverlaySidebarProps) {
 
 export function OverlayMain({ children, className }: OverlayMainProps) {
   return (
-    <main
-      className={cn(
-        // Main sits UNDER the floating close button (top-right), so it keeps the
-        // taller top pad to clear the X — unlike the sidebar / Panel header,
-        // which sit to its left and ride up via OVERLAY_TOP_CLEARANCE. All four
-        // paddings are 1/3 tighter than the raw values (×2/3): the wide/narrow
-        // top clearance, the bottom gutter, and the horizontal clamp gutter
-        // (inlined from PAGE_INSET_X so only overlay panes tighten, not the
-        // shared page gutter). Narrow top drops toward the OverlayNav bar.
-        'mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-transparent pb-2 pt-[calc((var(--titlebar-height)/2+1rem)*2/3)] max-[47.5rem]:pt-[calc(0.5rem*2/3)] px-[clamp(0.8333rem,2.6667vw,2.6667rem)]',
-        PAGE_MAX_W,
-        className
-      )}
-    >
-      {children}
-    </main>
+    <div className={cn('mr-2 mb-2 flex min-h-0 min-w-0 flex-col max-[47.5rem]:ml-2', OVERLAY_PANEL_SURFACE)}>
+      <main
+        className={cn(
+          // All four paddings are 1/3 tighter than the raw values (×2/3): the
+          // top pad, the bottom gutter, and the horizontal clamp gutter (inlined
+          // from PAGE_INSET_X so only overlay panes tighten, not the shared page
+          // gutter). Narrow top drops toward the OverlayNav bar.
+          'mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-transparent pb-2 pt-[calc((var(--titlebar-height)/2+1rem)*2/3)] max-[47.5rem]:pt-[calc(0.5rem*2/3)] px-[clamp(0.8333rem,2.6667vw,2.6667rem)]',
+          PAGE_MAX_W,
+          className
+        )}
+      >
+        {children}
+      </main>
+    </div>
   )
 }
 
@@ -181,7 +175,16 @@ export interface OverlayNavGroup extends OverlayNavLink {
 // dropdown in PageSearchShell), so every OverlaySplitLayout pane degrades the
 // same way instead of stacking its whole sidebar. Drop it in as the first
 // child of an OverlaySplitLayout, before OverlayMain.
-export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: OverlayNavGroup[] }) {
+export function OverlayNav({
+  footer,
+  groups,
+  header
+}: {
+  footer?: ReactNode
+  groups: OverlayNavGroup[]
+  /** Above the links (Linear's "Back to app" and search). Rail only. */
+  header?: ReactNode
+}) {
   const { t } = useI18n()
   const navId = useId()
   const [disclosures, setDisclosures] = useState<Record<string, boolean>>({})
@@ -211,6 +214,7 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
   return (
     <>
       <OverlaySidebar className={RAIL_HIDDEN}>
+        {header}
         {groups.map(group => {
           const hasChildren = Boolean(group.children?.length)
           const expanded = disclosures[group.id] ?? group.active
@@ -302,14 +306,10 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
         {footer && <div className="mt-auto flex items-center gap-1 pt-2">{footer}</div>}
       </OverlaySidebar>
 
-      {/* Narrow: ride the OverlayView titlebar strip so the dropdown shares the
-          close button's row instead of taking its own. The bar is
-          pointer-events-none (children opt back in) so the floating X underneath
-          stays clickable; pr clears it, no-drag beats the strip's drag region,
-          and the height matches the strip so the trigger lines up with the X. */}
+      {/* Narrow: the rail collapses to a dropdown row under the titlebar strip. */}
       <div
         className={cn(
-          'pointer-events-none relative z-20 h-[calc(var(--titlebar-height)+0.1875rem)] items-center justify-between gap-2 pl-3 pr-[calc(var(--titlebar-tools-right,0.75rem)+2.25rem)]',
+          'pointer-events-none relative z-20 h-(--titlebar-height) items-center justify-between gap-2 px-3',
           BAR_HIDDEN
         )}
       >

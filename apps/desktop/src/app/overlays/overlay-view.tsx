@@ -8,23 +8,20 @@ import { ESCAPE_PRIORITY, isTopEscapeLayer, pushEscapeLayer } from '@/lib/escape
 import { triggerHaptic } from '@/lib/haptics'
 import { cn } from '@/lib/utils'
 
-// Shared top clearance for overlay content that sits *beside* the floating
-// close button (which is absolute at `0.1875rem + titlebar/2`, -translate-y-1/2,
-// so it costs no layout space): a Panel's header and the split layout's left
-// sidebar links. They ride up next to the X on the same line across every
-// overlay (settings, system, agents, cron, …) — change it here, not per-surface.
-// Main content sits *under* the X (top-right) and keeps its own taller pad.
-export const OVERLAY_TOP_CLEARANCE = 'pt-[calc(var(--titlebar-height)/2-0.4375rem)]'
+// Linear has no modal pages: a settings or list view replaces the workspace,
+// its nav on the window colour beside one inset content panel. Every overlay
+// column that holds content wears this surface.
+export const OVERLAY_PANEL_SURFACE =
+  'overflow-hidden rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) shadow-(--linear-shadow-low)'
 
 interface OverlayViewProps {
   children: ReactNode
   onClose: () => void
   closeLabel?: string
   contentClassName?: string
-  /** Chrome pinned to the card's top edge, horizontally centered and riding
-   *  the border half-in half-out (e.g. the Settings search pill). Rendered
-   *  beside the card, not inside it — the card clips its own overflow. */
-  edgeBadge?: ReactNode
+  /** The nav rail carries the way back on wide windows (Linear's "Back to app"),
+   *  so the X only shows once the rail collapses. */
+  railClose?: boolean
   headerContent?: ReactNode
   rootClassName?: string
   /** Controls rendered on the close button's row, to its left. They ride the
@@ -37,8 +34,8 @@ export function OverlayView({
   onClose,
   closeLabel = translateNow('common.close'),
   contentClassName,
-  edgeBadge,
   headerContent,
+  railClose = false,
   rootClassName,
   titlebarActions
 }: OverlayViewProps) {
@@ -73,16 +70,7 @@ export function OverlayView({
 
   return (
     <div
-      className={cn(
-        // Linear's modal overlay: a flat scrim, no blur.
-        'fixed inset-0 z-50 bg-(--linear-scrim)',
-        // Equidistant inset on every side. The top value is driven by the
-        // titlebar height so the card clears the OS traffic-lights vertically;
-        // since the card top already sits below them, the left needs no extra
-        // inset — keeping all sides equal so the card is ~full-width at any size.
-        'p-[calc(var(--titlebar-height)+0.625rem)]',
-        'sm:p-[calc(var(--titlebar-height)+0.875rem)]'
-      )}
+      className="fixed inset-0 z-50 flex flex-col bg-(--linear-bg-window) pt-(--titlebar-height)"
       // Every OverlayView-based overlay (settings, command-center, agents, cron,
       // profiles, star map, …) covers the chat while the composer stays mounted
       // beneath it. This marker tells `composerFocusBlockedBySurface` to stand
@@ -103,40 +91,32 @@ export function OverlayView({
       // the edges. Re-pin the real height at the overlay root.
       style={{ '--titlebar-height': `${TITLEBAR_HEIGHT}px` } as CSSProperties}
     >
-      <div className="relative h-full min-h-0">
-        <div
-          className={cn(
-            // Linear's modal: radius 21, card surface, dialog shadow, no border.
-            'relative flex h-full min-h-0 flex-col overflow-hidden rounded-(--linear-radius-modal) bg-(--linear-bg-card) shadow-(--linear-shadow-dialog)',
-            rootClassName
-          )}
-        >
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[calc(var(--titlebar-height)+0.1875rem)] [-webkit-app-region:drag]">
-            {headerContent && (
-              <div className="pointer-events-auto absolute left-1/2 top-[calc(0.5rem+var(--titlebar-height)/2)] -translate-x-1/2 -translate-y-1/2 [-webkit-app-region:no-drag]">
-                {headerContent}
-              </div>
-            )}
-
-            <div className="pointer-events-auto absolute right-[var(--titlebar-tools-right,0.75rem)] top-[calc(0.1875rem+var(--titlebar-height)/2)] flex -translate-y-1/2 items-center gap-1.5 [-webkit-app-region:no-drag]">
-              {titlebarActions}
-
-              <Button aria-label={closeLabel} onClick={closeOverlay} size="icon-titlebar" variant="ghost">
-                <TitlebarIcon name="close" />
-              </Button>
-            </div>
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-(--titlebar-height) [-webkit-app-region:drag]">
+        {headerContent && (
+          <div className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 [-webkit-app-region:no-drag]">
+            {headerContent}
           </div>
+        )}
 
-          {/* No top padding here: the split-layout columns own their own
-              titlebar clearance so their backgrounds run flush to the card top
-              (otherwise the card surface shows as a gap above the sidebar). */}
-          <div className={cn('min-h-0 flex flex-1 flex-col', contentClassName)}>{children}</div>
+        <div className="pointer-events-auto absolute right-[var(--titlebar-tools-right,0.75rem)] top-1/2 flex -translate-y-1/2 items-center gap-1.5 [-webkit-app-region:no-drag]">
+          {titlebarActions}
+
+          <Button
+            aria-label={closeLabel}
+            className={cn(railClose && 'min-[47.5rem]:hidden')}
+            onClick={closeOverlay}
+            size="icon-titlebar"
+            variant="ghost"
+          >
+            <TitlebarIcon name="close" />
+          </Button>
         </div>
+      </div>
 
-        {/* Sibling of the card, not a child: the card clips its own overflow
-            (rounded corners), and the badge deliberately straddles the top
-            border — half above, half below. */}
-        {edgeBadge && <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/2">{edgeBadge}</div>}
+      <div className={cn('relative flex min-h-0 flex-1 flex-col', rootClassName)}>
+        {/* The split-layout columns own their surfaces, so the nav rail stays on
+            the window colour beside the content panel. */}
+        <div className={cn('flex min-h-0 flex-1 flex-col', contentClassName)}>{children}</div>
       </div>
     </div>
   )

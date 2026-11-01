@@ -194,6 +194,9 @@ content rather than chrome are the only sanctioned literals:
 - third-party brand colours in `messaging/platform-icon.tsx`;
 - `bg-white` behind the Telegram QR code, which must stay scannable;
 - the graph drawing in `starmap/` and the pet's stars and ground shadow;
+- `NOUS_BLUE` in `billing/tier-art.tsx` and the drawn avatars in
+  `plugins/hermes-bots/avatar.tsx`, which are illustrations;
+- `bg-white` behind browser previews, which show external pages;
 - `bg-black` behind video, computed `rgba()` on the image canvas, and the hearts'
   fixed particle colour;
 - `oklch(from var(--bb-tint) …)` in `butterbar.css`, which computes black or white

@@ -308,7 +308,7 @@ function EditVeil({ label, onPointerDown, top, ...menu }: EditVeilProps) {
           outlineColor: 'color-mix(in srgb, var(--linear-accent) 55%, transparent)'
         }}
       >
-        <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md border border-(--linear-border-secondary) bg-(--linear-bg-overlay) px-2 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-(--linear-text-secondary)">
+        <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-overlay) px-2 py-1 text-xs font-medium text-(--linear-text-secondary)">
           <Codicon className="shrink-0" name="gripper" size="0.8125rem" />
           <span className="min-w-0 truncate">{label}</span>
         </span>
