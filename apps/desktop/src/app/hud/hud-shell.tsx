@@ -293,7 +293,7 @@ export function HudShell() {
   // Edge/corner resize frame. The window is created non-resizable so dragging can
   // never be misread as a resize gesture (the Windows transparent-frameless
   // growth bug); the handle is the one sanctioned way to change size, driving
-  // the same flip-resizable-for-the-call pattern the pet overlay uses.
+  // flip resizable for the call.
   const { resizing: hudResizing, onPointerDown: onHudResizePointerDown } = useHudResizeHandle()
   const hudWindowing = window.hermesDesktop?.hud?.windowing
   const resizeDirections = hudResizeDirections(hudWindowing?.clientPlacement !== false)

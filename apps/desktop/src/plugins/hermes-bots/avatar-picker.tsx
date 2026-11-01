@@ -39,7 +39,6 @@ import {
   probeImagen
 } from './avatar-image'
 import { useBots } from './i18n'
-import { PetTab } from './pet'
 
 interface AvatarPickerProps {
   /** `null` = no explicit pick, i.e. the name's deterministic hue. */
@@ -127,8 +126,7 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
         options={[
           { id: 'bot', label: b.avatar.tabBot },
           { id: 'generate', label: b.avatar.tabGenerate },
-          { id: 'upload', label: b.avatar.upload },
-          { id: 'pet', label: b.avatar.tabPet }
+          { id: 'upload', label: b.avatar.upload }
         ]}
         value={tab}
       />
@@ -281,7 +279,6 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
           {b.editor.chooseImage}
         </Button>
       ) : null}
-      {tab === 'pet' ? <PetTab image={image} onImage={onImage} /> : null}
     </div>
   )
 }

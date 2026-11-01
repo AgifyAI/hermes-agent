@@ -2,8 +2,6 @@
 
 export type {
   HermesPlugin,
-  PetMessageTone,
-  PetSayOptions,
   PluginAppActionId,
   PluginAppActionInfo,
   PluginContext,
@@ -15,7 +13,6 @@ export type {
   PluginNativeNotificationInput,
   PluginNotificationAction,
   PluginOs,
-  PluginPet,
   PluginPreview,
   PluginRestOptions,
   PluginRunActionResult,

@@ -136,12 +136,7 @@ export const SETTINGS_MANIFEST = {
       ['thinking', 'reasoning', 'collapse', 'expand', 'chain of thought'],
       'reasoningCollapsed'
     ),
-    embeds: appearanceSetting('chat-display', ['external content', 'privacy'], 'embeds'),
-    pet: {
-      subpage: 'pet',
-      keywords: ['pet', 'mascot', 'petdex', 'companion', 'buddy'],
-      copy: t => ({ label: t.settings.appearance.pet.chooseTitle, description: t.settings.appearance.pet.chooseDesc })
-    }
+    embeds: appearanceSetting('chat-display', ['external content', 'privacy'], 'embeds')
   },
   chat: {
     attachmentSize: {

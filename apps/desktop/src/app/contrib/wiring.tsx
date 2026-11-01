@@ -32,7 +32,6 @@ import {
   $workspaceOwnerKey,
   setWorkspaceScope
 } from '@/components/pane-shell/workspace-scope'
-import { FloatingPet } from '@/components/pet/floating-pet'
 import { RemoteDisplayBanner } from '@/components/remote-display-banner'
 import { SendDiagnosticsHost } from '@/components/send-diagnostics-dialog'
 import { SharedMetricsConsentDialog } from '@/components/shared-metrics/consent-dialog'
@@ -113,7 +112,6 @@ import { useHudHandoff } from '../hud/handoff'
 import { ModelPickerOverlay } from '../model-picker-overlay'
 import { ModelVisibilityOverlay } from '../model-visibility-overlay'
 import { mainChatOccupied, openSession, openSessionFromPicker } from '../open-session'
-import { PetGenerateOverlay } from '../pet-generate/pet-generate-overlay'
 import { FileActionDialogs } from '../right-sidebar/file-actions'
 import { RemoteFolderPicker } from '../right-sidebar/files/remote-picker'
 import { resetProjectTreeState } from '../right-sidebar/files/use-project-tree'
@@ -171,7 +169,6 @@ import {
 } from './hooks/use-background-sync'
 import { useDesktopIntegrations } from './hooks/use-desktop-integrations'
 import { useDesktopMetrics } from './hooks/use-desktop-metrics'
-import { usePetBridge } from './hooks/use-pet-bridge'
 import { useQuickEntryBridge } from './hooks/use-quick-entry-bridge'
 import { useSessionTileDelegate } from './hooks/use-session-tile-delegate'
 import { McpInstallDeepLinkDialog } from './mcp-install-deeplink-dialog'
@@ -743,9 +740,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     sessionStateByRuntimeIdRef,
     updateSessionState
   })
-
-  // The popped-out pet overlay's bridge back into the app.
-  usePetBridge({ requestGateway, resumeSession, submitText })
 
   // The global-hotkey Quick Entry window's bridge: its captured text rides the
   // SAME submit machinery the normal composer uses (current chat / picked
@@ -1343,7 +1337,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
       <UpdateHoldOverlay />
       <CommandPalette />
       <PluginInstallModal />
-      <PetGenerateOverlay />
       <SessionSwitcher />
       <FileActionDialogs />
       <McpInstallDeepLinkDialog />
@@ -1432,10 +1425,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
       {/* Fallback modal when opening an external URL fails — carries the URL
           so a dead system-browser click is never silent. */}
       <ExternalOpenFailedDialog />
-
-      {/* Petdex floating mascot — renders nothing unless installed + enabled.
-          Never in the HUD: that window is the chat bar and nothing else. */}
-      {!isHudWindow() && !isBrowserWindow() && <FloatingPet />}
 
       {/* In-app tips. Renders nothing until the app is quiet and has something
           to point at, and nothing at all once they're off or all retired. The

@@ -13,12 +13,6 @@ import type { WindowSizeMode } from '../electron/window-size-types'
 import type { UiPreferencesBridge } from './lib/ui-preferences/sync'
 import type { WakeIndicatorState } from './lib/wake-indicator'
 import type {
-  PetOverlayBounds,
-  PetOverlayControl,
-  PetOverlayOpenRequest,
-  PetOverlayStatePayload
-} from './store/pet-overlay'
-import type {
   QuickEntryStatePush,
   QuickEntryStatus,
   QuickEntrySubmitPayload,
@@ -136,20 +130,6 @@ declare global {
       }
       chatOnboarding?: {
         size: (mode: WindowSizeMode) => void
-      }
-      // The pop-out pet overlay: a transparent always-on-top window hosting only
-      // the mascot. The main renderer drives it (open/close/drag + state push);
-      // the overlay sends control messages back (pop-in, composer submit).
-      petOverlay?: {
-        open: (request: PetOverlayOpenRequest) => Promise<{ ok: boolean; bounds?: PetOverlayBounds }>
-        close: () => Promise<{ ok: boolean }>
-        setBounds: (bounds: PetOverlayBounds) => void
-        setIgnoreMouse: (ignore: boolean) => void
-        setFocusable: (focusable: boolean) => void
-        pushState: (payload: PetOverlayStatePayload) => void
-        control: (payload: PetOverlayControl) => void
-        onState: (callback: (payload: PetOverlayStatePayload) => void) => () => void
-        onControl: (callback: (payload: PetOverlayControl) => void) => () => void
       }
       // HUD mode: the chrome-free floating chat. A FULL app renderer with its
       // own gateway (like an instance window), sized and skinned as a floating

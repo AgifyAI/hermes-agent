@@ -33,7 +33,6 @@ import {
   Clock,
   Cpu,
   Download,
-  Egg,
   GitBranch,
   Globe,
   type IconComponent,
@@ -44,7 +43,6 @@ import {
   Monitor,
   Moon,
   Package,
-  PawPrint,
   Pin,
   Plus,
   RefreshCw,
@@ -73,7 +71,6 @@ import {
 import { completeFlow, recordAction } from '@/store/desktop-metrics'
 import { $bindings, bindingsFor } from '@/store/keybinds'
 import { $dismissedAutoProjectIds, $pinnedSessionIds, filterVisibleProjects } from '@/store/layout'
-import { openPetGenerate } from '@/store/pet-generate'
 import { toggleBrowserTab } from '@/store/preview'
 import { $projectTree, goToProject, openFolderAsProject, requestStartWorkSession } from '@/store/projects'
 import { $connection, $cronSessions, $messagingSessions, $sessions } from '@/store/session'
@@ -111,7 +108,6 @@ import { type SettingsSearchEntry, settingsSearchTargetQuery } from '../settings
 import { useSettingsSearchCatalog } from '../settings/use-settings-search'
 
 import { usePaletteContributions } from './contrib'
-import { PetInlineToggle, PetPalettePage } from './pet-palette-page'
 
 interface PaletteItem {
   /** Keybind action id — its live combo renders as a hotkey hint. */
@@ -686,7 +682,7 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
   // Search/sub-page are local to a mount, and this component remounts per open
   // (keyed by open count), so each open starts clean without a reset effect.
 
-  // Deep-link into a nested page (e.g. `/pet list` → pets picker).
+  // Deep-link into a nested page.
   useEffect(() => {
     if (pendingPage) {
       setPage(pendingPage)
@@ -979,20 +975,6 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
             keywords: ['appearance', 'theme', 'color mode', 'brightness', 'dark', 'light', 'system'],
             label: cc.changeColorMode,
             to: 'color-mode'
-          },
-          {
-            icon: PawPrint,
-            id: 'appearance-pets',
-            keywords: ['pet', 'petdex', 'mascot', 'pets', '/pet', 'paw'],
-            label: cc.pets.title,
-            to: 'pets'
-          },
-          {
-            icon: Egg,
-            id: 'appearance-generate-pet',
-            keywords: ['pet', 'generate', 'create', 'make', 'new pet', 'mascot', 'hatch', 'ai'],
-            label: cc.generatePet.title,
-            run: () => openPetGenerate()
           }
         ]
       },
@@ -1333,12 +1315,6 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
           }
         ]
       },
-      // Server-driven page: browse petdex gallery, adopt/switch, toggle off.
-      pets: {
-        title: t.commandCenter.pets.title,
-        placeholder: t.commandCenter.pets.placeholder,
-        groups: []
-      },
       // Settings-scoped search (⌘K while the Settings overlay is up, or the
       // search pill beside its close button).
       settings: {
@@ -1451,30 +1427,18 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
             onValueChange={setSearch}
             placeholder={placeholder}
             ref={inputRef}
-            right={page === 'pets' ? <PetInlineToggle /> : undefined}
             value={search}
           />
           <CommandList className="dt-portal-scrollbar max-h-none min-h-0 flex-1">
-            {/* Server-driven pages render their own list; the rest show groups. */}
-            {page === 'pets' ? (
-              <PetPalettePage
-                onGenerate={() => {
-                  closeCommandPalette()
-                  openPetGenerate()
-                }}
-                search={search}
-              />
-            ) : (
-              <PaletteGroups
-                bindings={bindings}
-                groups={visibleGroups}
-                modHeld={modHeld}
-                noResultsLabel={t.commandCenter.noResults}
-                onSelectItem={handleSelect}
-                onSelectMods={noteSelectMods}
-                search={search}
-              />
-            )}
+            <PaletteGroups
+              bindings={bindings}
+              groups={visibleGroups}
+              modHeld={modHeld}
+              noResultsLabel={t.commandCenter.noResults}
+              onSelectItem={handleSelect}
+              onSelectMods={noteSelectMods}
+              search={search}
+            />
           </CommandList>
         </Command>
       </DialogPrimitive.Content>

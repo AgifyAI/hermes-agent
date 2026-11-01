@@ -24,13 +24,10 @@ import { isMissingRpcMethod } from '@/lib/gateway-rpc'
 import { type GuardedModelSwitchResult, surfaceModelSwitchConfirm } from '@/lib/guarded-model-switch'
 import { applyReasoningSlashResult, reasoningSlashParams } from '@/lib/reasoning-slash'
 import { setSessionYolo } from '@/lib/yolo-session'
-import { openCommandPalettePage } from '@/store/command-palette'
 import { markCompressDeferred } from '@/store/compaction'
 import { $composerAttachments, setComposerDraft } from '@/store/composer'
 import { applyGoalStatusText } from '@/store/goals'
 import { dismissNotification, notify, notifyError } from '@/store/notifications'
-import { setPetScale } from '@/store/pet-gallery'
-import { $petGenInput, openPetGenerate } from '@/store/pet-generate'
 import {
   $activeGatewayProfile,
   $newChatProfile,
@@ -1260,47 +1257,6 @@ export function useSlashCommand(deps: SlashCommandDeps) {
         // Args are ignored, matching the TUI overlay behavior.
         journey: async () => {
           openMemoryGraph()
-        },
-        // /hatch opens the pet generator overlay (the desktop's rich, multi-step
-        // generate→pick→hatch→adopt flow). A typed description seeds the prompt
-        // so `/hatch a cyber fox` lands on the composer step prefilled.
-        hatch: async ({ arg }) => {
-          const concept = arg.trim()
-
-          if (concept) {
-            $petGenInput.set(concept)
-          }
-
-          openPetGenerate()
-        },
-        pet: async ctx => {
-          const [sub = '', rawValue = ''] = ctx.arg.trim().split(/\s+/)
-          const lower = sub.toLowerCase()
-
-          if (lower === 'list' || lower === 'gallery' || lower === 'browse' || lower === 'all') {
-            openCommandPalettePage('pets')
-
-            return
-          }
-
-          // `/pet scale <n>` resizes the floating pet locally (instant) and
-          // persists via the store — no round-trip to the slash worker.
-          if (lower === 'scale') {
-            const value = Number(rawValue)
-
-            if (!rawValue || Number.isNaN(value)) {
-              const resolved = await withSlashOutput(ctx)
-              resolved?.render('usage: /pet scale <factor>  (e.g. /pet scale 0.5)')
-
-              return
-            }
-
-            setPetScale(requestGateway, value)
-
-            return
-          }
-
-          await runExec(ctx)
         },
         // /browser connect|disconnect manages the live CDP connection on the
         // gateway host, mirroring the TUI's browser.manage RPC. It mutates

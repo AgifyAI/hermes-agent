@@ -204,7 +204,6 @@ export type BotsMessages = {
     tabBot: string
     tabGenerate: string
     upload: string
-    tabPet: string
     removeImage: string
     removeBackToShape: string
     describePlaceholder: string
