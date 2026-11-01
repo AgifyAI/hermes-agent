@@ -193,3 +193,9 @@ then copy `release/<platform>-<arch>/Hermes.app` over `/Applications/Hermes.app`
 with the app quit) when the user explicitly wants the installed app to carry the
 change. State plainly that without that step the installed app still runs the
 previous build.
+
+## GitHub account for this fork
+
+Use the `AgifyAI` account, and never run `gh auth switch`: the active account is global and other
+sessions rely on it. Git gets the account from a local `credential.<origin-url>.helper`. `gh` needs
+`GH_TOKEN=$(gh auth token --user AgifyAI)` on each command.
