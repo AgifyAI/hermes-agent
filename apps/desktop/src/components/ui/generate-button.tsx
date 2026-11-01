@@ -43,7 +43,7 @@ export function GenerateButton({
     <Tip label={tip}>
       <Button
         aria-label={tip}
-        className={cn('text-muted-foreground/80 hover:text-foreground', className)}
+        className={cn('text-(--linear-text-tertiary) hover:text-(--linear-text-primary)', className)}
         disabled={generating ? !onCancel : disabled}
         onClick={cancellable ? onCancel : onGenerate}
         size="icon-xs"

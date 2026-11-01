@@ -14,7 +14,7 @@ export const controlVariants = cva(
         xs: 'min-h-6 px-2 py-0.5 text-xs leading-4',
         sm: 'min-h-7 px-2.5 py-1 text-xs leading-4',
         default: 'min-h-8 px-3 py-1.5',
-        lg: 'min-h-9 px-3 py-2 text-sm'
+        lg: 'min-h-9 px-3 py-2'
       }
     },
     defaultVariants: {

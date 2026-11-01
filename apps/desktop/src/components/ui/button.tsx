@@ -55,7 +55,7 @@ const buttonVariants = cva(
         sm: 'h-6 px-3 has-[>svg]:pl-1.5',
         // Secondary: 32px, 12px sides.
         lg: 'h-8 px-3 has-[>svg]:pl-2.5',
-        touch: 'min-h-11 min-w-11 px-3 py-2 text-sm',
+        touch: 'min-h-11 min-w-11 px-3 py-2',
         // Flush inline text action — no box padding/height. Pair with text/link
         // variants when the button must sit inline in a heading or sentence
         // (replaces ad-hoc `h-auto px-0 py-0` overrides).

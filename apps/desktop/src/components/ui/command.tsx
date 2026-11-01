@@ -4,7 +4,6 @@ import * as React from 'react'
 import { Codicon } from '@/components/ui/codicon'
 import { usePointerQuiet } from '@/components/ui/keyboard-first'
 import { menuItemClass } from '@/components/ui/menu'
-import { SearchIcon } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 type CommandVariant = 'default' | 'menu'
@@ -64,11 +63,9 @@ function CommandInput({ className, right, ...props }: CommandInputProps) {
   }
 
   return (
-    <div
-      className="flex h-10 items-center gap-2 border-b-[0.5px] border-(--linear-border-overlay) px-3"
-      data-slot="command-input-wrapper"
-    >
-      <SearchIcon className="size-4 shrink-0 text-(--linear-text-tertiary)" />
+    // Linear's ⌘K band: 46px (6px above a 40px field), no magnifier, no rule below;
+    // the typed text starts where row icons do (6px list inset + 12px row padding).
+    <div className="flex h-11.5 shrink-0 items-center gap-2 px-4.5 pt-1.5" data-slot="command-input-wrapper">
       <CommandPrimitive.Input
         className={cn(
           'flex h-10 w-full bg-transparent py-[0.6875rem] text-[0.8125rem] text-(--linear-text-overlay) outline-none placeholder:text-(--linear-text-quaternary) disabled:cursor-not-allowed disabled:opacity-50',

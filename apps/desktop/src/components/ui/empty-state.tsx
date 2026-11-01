@@ -17,7 +17,7 @@ export function EmptyState({
     <div className={cn('grid min-h-48 place-items-center text-center', className)}>
       <div>
         <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</div>
-        {description && <div className="mt-1 text-xs text-(--linear-text-tertiary)">{description}</div>}
+        {description && <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">{description}</div>}
       </div>
     </div>
   )

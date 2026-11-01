@@ -4,17 +4,17 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const alertVariants = cva(
-  'relative grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-1 rounded-lg border bg-card px-4 py-3 text-sm text-card-foreground shadow-xs [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0',
+  'relative grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-1 rounded-(--linear-radius-card) border-[0.5px] bg-(--linear-bg-card) px-4 py-3 text-[0.8125rem] text-(--linear-text-primary) [&>svg]:mt-0.5 [&>svg]:size-4 [&>svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'border-border',
+        default: 'border-(--linear-border-primary)',
         destructive:
-          'border-destructive/35 bg-[color-mix(in_srgb,var(--dt-card)_96%,var(--dt-destructive)_4%)] [&>svg]:text-destructive',
+          'border-(--linear-red)/35 bg-[color-mix(in_srgb,var(--linear-bg-card)_96%,var(--linear-red)_4%)] [&>svg]:text-(--linear-red)',
         warning:
-          'border-primary/30 bg-[color-mix(in_srgb,var(--dt-card)_96%,var(--dt-primary)_4%)] [&>svg]:text-primary',
+          'border-(--linear-orange)/30 bg-[color-mix(in_srgb,var(--linear-bg-card)_96%,var(--linear-orange)_4%)] [&>svg]:text-(--linear-orange)',
         success:
-          'border-primary/25 bg-[color-mix(in_srgb,var(--dt-card)_97%,var(--dt-primary)_3%)] [&>svg]:text-primary'
+          'border-(--linear-green)/25 bg-[color-mix(in_srgb,var(--linear-bg-card)_97%,var(--linear-green)_3%)] [&>svg]:text-(--linear-green)'
       }
     },
     defaultVariants: {
@@ -41,7 +41,7 @@ function AlertDescription({ className, ...props }: React.ComponentProps<'div'>) 
   return (
     <div
       className={cn(
-        'col-start-2 grid justify-items-start gap-1 text-muted-foreground [&_p]:leading-relaxed',
+        'col-start-2 grid justify-items-start gap-1 text-(--linear-text-tertiary) [&_p]:leading-relaxed',
         className
       )}
       data-slot="alert-description"

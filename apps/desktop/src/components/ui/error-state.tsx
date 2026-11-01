@@ -56,7 +56,7 @@ export function ErrorState({ children, className, description, icon, title }: Er
         )}
 
         {typeof description === 'string' ? (
-          <p className="max-w-prose text-center text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">{description}</p>
+          <p className="max-w-prose text-center text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">{description}</p>
         ) : (
           description
         )}

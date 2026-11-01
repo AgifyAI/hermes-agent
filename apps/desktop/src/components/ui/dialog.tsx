@@ -23,18 +23,11 @@ function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.C
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-function DialogOverlay({
-  className,
-  blur = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay> & {
-  blur?: boolean
-}) {
+function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
       className={cn(
         'fixed inset-0 z-(--z-modal-backdrop) pointer-events-auto bg-(--linear-scrim) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
-        blur && 'backdrop-blur-[0.125rem]',
         className
       )}
       data-slot="dialog-overlay"
@@ -79,7 +72,7 @@ function DialogCloseButton() {
     <DialogPrimitive.Close asChild data-slot="dialog-close-button">
       <Button
         aria-label={t.common.close}
-        className="absolute right-2.5 top-2.5 z-20 text-(--linear-text-tertiary)"
+        className="absolute right-2.5 top-2.5 z-20 size-8 text-(--linear-text-tertiary)"
         size="icon"
         variant="ghost"
       >
@@ -96,7 +89,6 @@ function DialogContent({
   children,
   showCloseButton = true,
   fitContent = false,
-  blurBackdrop = true,
   banner,
   bannerTone = 'error',
   chrome,
@@ -110,8 +102,6 @@ function DialogContent({
   // Controls pinned to the shell rather than the scrolling body (e.g. prev/next
   // pagers). The shell doesn't clip, so these may sit past its edges.
   chrome?: React.ReactNode
-  // Keep the underlying task readable for context-sensitive prompts.
-  blurBackdrop?: boolean
   // Size the dialog to its content (capped at the viewport) instead of the
   // default fixed `max-w-lg`. For content that has no intrinsic width (grids,
   // full-width inputs) pair it with a `min-w-*` in `className`.
@@ -143,7 +133,7 @@ function DialogContent({
   const nested = React.useContext(DialogPortalContainerContext) !== null
 
   const overlay = (
-    <DialogOverlay blur={blurBackdrop} className={cn(nested && 'z-[calc(var(--z-modal)+1)]', overlayClassName)} />
+    <DialogOverlay className={cn(nested && 'z-[calc(var(--z-modal)+1)]', overlayClassName)} />
   )
 
   const layerClass = nested && 'z-[calc(var(--z-modal)+2)]'
@@ -168,7 +158,7 @@ function DialogContent({
             // The same split as the plain variant. The shell must not clip,
             // because it crops the popovers that portal into it. The banner
             // below has its own `overflow-hidden`, which rounds its corners.
-            'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+            'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-(--linear-shadow-dialog) duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
             widthClass,
             layerClass,
             className,
@@ -224,7 +214,7 @@ function DialogContent({
           // a clipping ancestor crops them. The body box below owns the scroll,
           // so a tall dialog scrolls and a Select or Popover can still paint
           // past the edge of that box.
-          'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) border-[0.5px] border-(--stroke-nous) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-nous duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'fixed left-1/2 top-1/2 z-(--z-modal) pointer-events-auto flex max-h-[85vh] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--linear-radius-modal) border-[0.5px] border-(--stroke-nous) bg-(--linear-bg-card) text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary) shadow-(--linear-shadow-dialog) duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           widthClass,
           layerClass,
           className

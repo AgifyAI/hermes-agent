@@ -22,7 +22,7 @@ const badgeVariants = cva(
       },
       size: {
         default: 'px-1.5 py-0.5 text-[0.6875rem] font-[450] [&_svg]:size-3',
-        xs: 'px-1 py-px text-[0.6rem] [&_svg]:size-2.5',
+        xs: 'px-1 py-px text-[0.6875rem] [&_svg]:size-2.5',
         overlay: 'h-2 min-w-2 justify-center rounded-[2px] px-px text-[7px] font-semibold tabular-nums'
       }
     },

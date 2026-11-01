@@ -116,9 +116,8 @@ through `src/components/ui/menu.ts`, so a list reads the same wherever it
 opens. Typed fields with suggestions use `ComboboxInput`, never
 `<input list>` + `<datalist>` (Chromium paints that as its own OS popup).
 
-Drag affordances may use tokenized
-dashed targets and local blur. These are semantic surface classes, not licenses
-for call-site shadow or border inventions.
+Drag affordances use tokenized dashed targets, without blur. These are semantic
+surface classes, not licenses for call-site shadow or border inventions.
 
 **Queued cards:** `CardStack` (`src/components/ui/card-stack.tsx`) consumes a live,
 keyed list, retaining the current item when more arrive. Inline and floating
@@ -187,9 +186,19 @@ aliases onto that layer, so existing call sites follow it.
 | `--linear-speed-quick` .1s · `-regular` .25s · `-slow` .35s · `-highlight-out` .15s | motion |
 | `--ui-widget-surface-background` | fill for inline chat widgets (`WIDGET_SHELL_CLASS`) |
 
-Never hardcode `border-gray-*`, `bg-white`, `text-black`, etc. The two tiles in
-`BrandMark` (white in light mode, `#0d1117` in dark) are the sanctioned literals
-(the mark needs a fixed backdrop).
+Never hardcode `border-gray-*`, `bg-white`, `text-black`, etc. Colours that are
+content rather than chrome are the only sanctioned literals:
+
+- the two `BrandMark` tiles (white in light mode, `#0d1117` in dark), which need
+  a fixed backdrop;
+- third-party brand colours in `messaging/platform-icon.tsx`;
+- `bg-white` behind the Telegram QR code, which must stay scannable;
+- the graph drawing in `starmap/` and the pet's stars and ground shadow;
+- `bg-black` behind video, computed `rgba()` on the image canvas, and the hearts'
+  fixed particle colour;
+- `oklch(from var(--bb-tint) …)` in `butterbar.css`, which computes black or white
+  ink from the tint;
+- the `#000` mask in `churn-bar.tsx`, where only its alpha counts.
 
 ## Buttons — one component
 
@@ -342,10 +351,11 @@ focusing its composer.
   counts under breadcrumb-owned chrome; embedded callers keep their headings.
   Narrow windows keep every destination available in the shared navigation dropdown.
   Search and saved field links resolve to the owning child before highlighting.
-- **Rows:** `ListRow` (settings `primitives.tsx`) for label/description/action
-  rows. Flat, flush-left; no per-row indentation that fights flush headers.
-- **No dividers between rows** unless the list genuinely needs them; prefer
-  spacing. When you do need one, it's a single `--ui-stroke-tertiary` hairline.
+- **Rows:** `ListRow` inside `SettingsCard` (settings `primitives.tsx`), under a
+  `SettingsSection`: card radius 10, `--linear-bg-card`, `--linear-shadow-card`;
+  rows padded 16, label 13px/500, description 12px/450 tertiary.
+- **Dividers:** the card draws one hairline between its rows. Don't add your own,
+  and don't nest a card in a card.
 
 ## Panel titlebars
 
@@ -419,11 +429,11 @@ from their root base tokens; do not multiply the global tokens or nest CSS zoom.
 - **Inline widgets** — a tool result that renders as a panel the user reads or
   acts on (clarify, artifact card) wears `WIDGET_SHELL_CLASS`
   (`src/components/chat/widget-shell.ts`): shared radius, the
-  `--ui-widget-surface-background` fill, no border. Its actions sit *outside*
+  `--ui-widget-surface-background` fill, one `--linear-border-panel` hairline, no
+  shadow. Its actions sit *outside*
   the panel, below it. Don't give one widget its own radius or fill.
 - Bordered surfaces in the transcript (tables, fences, callouts, attachments)
-  use `--ui-stroke-tertiary`. Not `border-border` — that's the app-wide
-  default and reads too hot against the thread.
+  use one hairline: `--linear-border-panel`, like fenced code.
 - Interactive directive chips in the composer expose their action on hover.
   The action stays visible for a 500ms grace period while the pointer crosses
   from the chip to the floating pill; leaving both dismisses it.
@@ -525,8 +535,7 @@ from their root base tokens; do not multiply the global tokens or nest CSS zoom.
 - Hover paints instantly; only the return eases. Put the transition on the
   resting state and drop it while hovered (`transition-colors duration-100
   hover:transition-none`, or the CSS equivalent on `:hover`). A group that
-  dims siblings goes instant too. Exceptions are named, e.g. the catalog
-  card's arc border fades in and out.
+  dims siblings goes instant too.
 - Choreographed exits (e.g. onboarding's "matrix" fade-down) stagger per-element
   then settle the surface — the outer container's fade is *delayed* so it
   doesn't swallow the inner animation. Don't let a global fade race the detail.

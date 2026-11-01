@@ -134,6 +134,8 @@
 }
 
 @theme inline {
+  /* Linear's normal weight (Inter variable). */
+  --font-weight-normal: 450;
   --color-background: var(--dt-background);
   --color-foreground: var(--dt-foreground);
   --color-card: var(--dt-card);
@@ -390,7 +392,6 @@
     /* The integrated terminal wears the transcript's background. xterm's canvas
        can't use a var, so the probe in terminal/selection.ts resolves this same
        name to a concrete rgb. */
-    --ui-terminal-surface-background: var(--ui-chat-surface-background);
     --ui-widget-surface-background: var(--linear-bg-card);
     --ui-chat-bubble-background: var(--linear-bg-quaternary);
     --ui-chat-bubble-opaque-background: var(--linear-bg-quaternary);
@@ -633,6 +634,7 @@
     color: var(--dt-foreground);
     font-family: var(--dt-font-sans);
     font-size: 0.8125rem;
+    font-weight: 450;
     line-height: var(--dt-line-height, 1.55);
     letter-spacing: var(--dt-letter-spacing, 0);
     -webkit-user-select: none;
@@ -2327,18 +2329,19 @@ button[data-slot='aui_msg-reactions']:not([data-reacted])[data-state='open'] {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  border: 1px solid color-mix(in srgb, var(--dt-destructive) 30%, transparent);
-  border-radius: 9999px;
+  border: 0.5px solid color-mix(in srgb, var(--linear-red) 30%, transparent);
+  border-radius: var(--linear-radius-pill);
   background: transparent;
   padding: 0.1rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1.1rem;
-  color: color-mix(in srgb, var(--dt-destructive) 80%, var(--ui-text-secondary));
+  color: color-mix(in srgb, var(--linear-red) 80%, var(--linear-text-secondary));
   cursor: pointer;
 }
 
 .aui-error-action:hover {
-  background: color-mix(in srgb, var(--dt-destructive) 10%, transparent);
+  background: color-mix(in srgb, var(--linear-red) 10%, transparent);
 }
 
 .group:hover button[data-slot='aui_msg-reactions']:not([data-reacted]):hover,

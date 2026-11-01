@@ -3,7 +3,12 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function TextTabMeta({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span className={cn('text-[0.72em] font-normal text-(--linear-text-tertiary)', className)} {...props} />
+  return (
+    <span
+      className={cn('text-[0.6875rem] font-[450] text-(--linear-text-tertiary) tabular-nums', className)}
+      {...props}
+    />
+  )
 }
 
 interface TextTabProps extends React.ComponentProps<'button'> {
@@ -14,28 +19,18 @@ function TextTab({ active = false, children, className, type = 'button', ...prop
   return (
     <button
       className={cn(
-        'group/text-tab inline-flex h-7 items-center gap-1 bg-transparent px-1 text-[length:var(--conversation-caption-font-size)] font-medium text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-transparent hover:text-(--linear-text-primary) focus-visible:text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:pointer-events-none disabled:opacity-60',
-        active && 'text-(--linear-text-primary)',
+        // Linear's segmented tab, same as TabsTrigger: 28px pill, 12px/500.
+        'inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:pointer-events-none disabled:opacity-60',
+        active
+          ? 'bg-(--linear-segment-selected) text-(--linear-text-primary)'
+          : 'bg-(--linear-segment-rest) text-(--linear-text-tertiary)',
         className
       )}
       data-active={active}
       type={type}
       {...props}
     >
-      {React.Children.map(children, child =>
-        React.isValidElement(child) && child.type === TextTabMeta ? (
-          child
-        ) : (
-          <span
-            className={cn(
-              'underline-offset-4 decoration-current/25',
-              active ? 'underline' : 'group-hover/text-tab:underline'
-            )}
-          >
-            {child}
-          </span>
-        )
-      )}
+      {children}
     </button>
   )
 }

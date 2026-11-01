@@ -114,12 +114,12 @@ export function SearchField({
       />
       {trailingAction}
       {loading ? (
-        <Loader2 className="pointer-events-none size-3.5 shrink-0 animate-spin text-muted-foreground/70" />
+        <Loader2 className="pointer-events-none size-3.5 shrink-0 animate-spin text-(--linear-text-tertiary)" />
       ) : value ? (
         <Tip label={t.ui.search.clear}>
           <Button
             aria-label={t.ui.search.clear}
-            className="shrink-0 text-muted-foreground/85 hover:bg-accent/60 hover:text-foreground"
+            className="shrink-0 text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
             onClick={clear}
             size="icon-xs"
             variant="ghost"
