@@ -160,7 +160,7 @@ export function ModelVisibilityDialog({
         <div className="max-h-[55vh] overflow-y-auto px-1.5 pb-1">
           {providers.length === 0 ? (
             <div className="px-2 py-5 text-center text-xs text-(--linear-text-tertiary)">
-              {modelOptions.isPending ? <GlyphSpinner className="mx-auto text-sm" /> : copy.noAuthenticatedProviders}
+              {modelOptions.isPending ? <GlyphSpinner className="mx-auto text-[0.8125rem]" /> : copy.noAuthenticatedProviders}
             </div>
           ) : (
             providers.map(provider => {

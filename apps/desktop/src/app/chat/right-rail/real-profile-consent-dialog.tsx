@@ -163,24 +163,19 @@ export function RealProfileConsentDialog({ tabId }: RealProfileConsentDialogProp
           <DialogDescription>{prompt.body}</DialogDescription>
         </DialogHeader>
 
-        <ul className="grid gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-secondary)">
+        <ul className="grid gap-2 text-xs text-(--linear-text-secondary)">
           {bullets.map(bullet => (
             <li className="flex items-start gap-2" key={bullet}>
-              <Check className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              <Check className="mt-0.5 size-3.5 shrink-0 text-(--linear-accent)" />
               <span>{bullet}</span>
             </li>
           ))}
         </ul>
 
         <DialogFooter className="items-center sm:justify-between">
-          <button
-            className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary) underline-offset-4 transition-colors hover:text-foreground hover:underline"
-            disabled={busy}
-            onClick={() => $realProfilePromptDismissed.set(true)}
-            type="button"
-          >
+          <Button disabled={busy} onClick={() => $realProfilePromptDismissed.set(true)} size="xs" type="button" variant="text">
             {prompt.dontShowAgain}
-          </button>
+          </Button>
           <div className="flex gap-2">
             <Button disabled={busy} onClick={() => $realProfilePromptMuted.set(true)} type="button" variant="ghost">
               {prompt.notNow}

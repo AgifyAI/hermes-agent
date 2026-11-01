@@ -160,7 +160,7 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
       <ErrorState
         className="w-full max-w-[28rem]"
         description={
-          <>
+          <div className="max-w-prose text-center text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
             {t.errors.boundaryDesc}
             {error.message ? (
               <details className="mt-2 text-left text-xs text-(--linear-text-tertiary)">
@@ -170,7 +170,7 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
                 </pre>
               </details>
             ) : null}
-          </>
+          </div>
         }
         title={t.errors.boundaryTitle}
       >

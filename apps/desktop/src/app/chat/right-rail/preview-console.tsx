@@ -3,6 +3,7 @@ import type { CSSProperties, MutableRefObject, PointerEvent as ReactPointerEvent
 import { useEffect, useMemo, useRef } from 'react'
 
 import { requestComposerInsert } from '@/app/chat/composer/focus'
+import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
@@ -20,10 +21,10 @@ const consoleLevelLabel: Record<number, string> = {
 }
 
 const consoleLevelClass: Record<number, string> = {
-  0: 'text-foreground',
+  0: 'text-(--linear-text-primary)',
   1: 'text-(--linear-blue)',
   2: 'text-(--linear-orange)',
-  3: 'text-destructive'
+  3: 'text-(--linear-red)'
 }
 
 const CONSOLE_BOTTOM_THRESHOLD = 24
@@ -81,8 +82,8 @@ function ConsoleRow({ copyText, log, onSend, onToggleSelect, selected }: Console
   return (
     <div
       className={cn(
-        'group/row grid grid-cols-[3.25rem_minmax(0,1fr)_auto] items-start gap-2 rounded-md border border-transparent px-1 py-1 transition-colors hover:bg-accent/40',
-        selected && 'border-border/60 bg-accent/40'
+        'group/row grid grid-cols-[3.25rem_minmax(0,1fr)_auto] items-start gap-2 rounded-(--linear-radius-control) border-[0.5px] border-transparent px-1 py-1 transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none',
+        selected && 'border-(--linear-border-secondary) bg-(--linear-hover-row)'
       )}
     >
       <Tip label={selected ? copy.deselect : copy.select}>
@@ -102,7 +103,7 @@ function ConsoleRow({ copyText, log, onSend, onToggleSelect, selected }: Console
           {log.message}
         </span>
         {log.source && (
-          <span className="block truncate text-muted-foreground/60">
+          <span className="block truncate text-(--linear-text-quaternary)">
             {compactUrl(log.source)}
             {log.line ? `:${log.line}` : ''}
           </span>
@@ -111,21 +112,17 @@ function ConsoleRow({ copyText, log, onSend, onToggleSelect, selected }: Console
       <span className="opacity-0 transition-opacity group-hover/row:opacity-100">
         <CopyButton
           appearance="inline"
-          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="inline-grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none"
           errorMessage={copy.copyFailed}
-          iconClassName="size-3"
+          iconClassName="size-3.5"
           label={copy.copyEntry}
           showLabel={false}
           text={copyText}
         />
         <Tip label={copy.sendEntry}>
-          <button
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            onClick={onSend}
-            type="button"
-          >
-            <Send className="size-3" />
-          </button>
+          <Button onClick={onSend} size="icon-xs" type="button" variant="ghost">
+            <Send />
+          </Button>
         </Tip>
       </span>
     </div>
@@ -197,7 +194,7 @@ export function PreviewConsolePanel({
 
   return (
     <div
-      className="pointer-events-auto absolute inset-x-0 bottom-0 z-20 flex h-(--preview-console-height) min-h-8 flex-col overflow-hidden border-t border-border/60 bg-background"
+      className="pointer-events-auto absolute inset-x-0 bottom-0 z-20 flex h-(--preview-console-height) min-h-8 flex-col overflow-hidden border-t-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-panel)"
       style={{ '--preview-console-height': `${consoleHeight}px` } as CSSProperties}
     >
       <div
@@ -207,48 +204,44 @@ export function PreviewConsolePanel({
         onPointerDown={startConsoleResize}
         role="separator"
       >
-        <span className="absolute left-1/2 top-1/2 h-0.75 w-23 -translate-x-1/2 -translate-y-1/2 rounded-full bg-muted-foreground/80 opacity-0 transition-opacity duration-100 group-hover:opacity-[0.5]" />
+        <span className="absolute left-1/2 top-1/2 h-0.75 w-23 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--linear-text-quaternary) opacity-0 transition-opacity duration-(--linear-speed-quick) group-hover:opacity-[0.5]" />
       </div>
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-border/50 px-2">
-        <div className="flex items-center gap-2 text-[0.6875rem] font-medium text-muted-foreground">
-          <PanelBottom className="size-3.5" />
+      <div className="flex h-8 shrink-0 items-center justify-between border-b-[0.5px] border-(--linear-border-primary) px-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-(--linear-text-tertiary)">
+          <PanelBottom className="size-3.5 text-(--linear-icon)" />
           {copy.title}
           {selectedLogIds.size > 0 && (
-            <span className="rounded-full bg-muted px-1.5 py-px text-[0.5625rem] text-muted-foreground">
+            <span className="rounded-full bg-(--linear-bg-secondary) px-1.5 py-px text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
               {copy.selected(selectedLogIds.size)}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1">
-          <button
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.625rem] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+          <Button
             disabled={sendableLogs.length === 0}
             onClick={() => sendLogsToComposer(sendableLogs)}
+            size="xs"
             type="button"
+            variant="ghost"
           >
-            <Send className="size-3" />
+            <Send />
             {copy.sendToChat}
-          </button>
+          </Button>
           <CopyButton
             appearance="inline"
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.625rem] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+            className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium text-(--linear-text-secondary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none disabled:opacity-60"
             disabled={sendableLogs.length === 0}
             errorMessage={copy.copyFailed}
-            iconClassName="size-3"
+            iconClassName="size-3.5"
             label={visibleSelection.length > 0 ? copy.copySelected : copy.copyAll}
             text={() => formatConsoleEntries(sendableLogs)}
           >
             {copy.copy}
           </CopyButton>
-          <button
-            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.625rem] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
-            disabled={logs.length === 0}
-            onClick={consoleState.clear}
-            type="button"
-          >
-            <Trash2 className="size-3" />
+          <Button disabled={logs.length === 0} onClick={consoleState.clear} size="xs" type="button" variant="ghost">
+            <Trash2 />
             {copy.clear}
-          </button>
+          </Button>
         </div>
       </div>
       <div
@@ -271,7 +264,7 @@ export function PreviewConsolePanel({
             )
           })
         ) : (
-          <div className="py-2 text-muted-foreground/70">{copy.empty}</div>
+          <div className="py-2 text-(--linear-text-quaternary)">{copy.empty}</div>
         )}
       </div>
     </div>

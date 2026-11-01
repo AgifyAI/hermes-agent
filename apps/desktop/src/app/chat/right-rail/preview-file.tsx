@@ -21,6 +21,8 @@ import { FileDiffPanel } from '@/components/chat/diff-lines'
 import { chunkTextLines, useFixedRowWindow } from '@/components/chat/fixed-row-window'
 import { LazyShiki as ShikiHighlighter } from '@/components/chat/shiki-highlighter'
 import { PageLoader } from '@/components/page-loader'
+import { Button } from '@/components/ui/button'
+import { TextTab } from '@/components/ui/text-tab'
 import { Tip } from '@/components/ui/tooltip'
 import { translateNow, useI18n } from '@/i18n'
 import {
@@ -69,13 +71,12 @@ type EmptyStateTone = 'neutral' | 'warning'
 
 const TONE_STYLES: Record<EmptyStateTone, { cube: string; primary: string }> = {
   neutral: {
-    cube: 'text-muted-foreground/35',
-    primary: 'border-border bg-background text-foreground hover:bg-accent'
+    cube: 'text-(--linear-text-quaternary)',
+    primary: ''
   },
   warning: {
     cube: 'text-(--linear-yellow)/70',
-    primary:
-      'border-(--linear-yellow)/40 bg-(--linear-yellow)/10 text-(--linear-text-primary) hover:bg-(--linear-yellow)/20'
+    primary: 'bg-(--linear-yellow)/10 text-(--linear-text-(--linear-accent)) hover:bg-(--linear-yellow)/20'
   }
 }
 
@@ -122,39 +123,38 @@ export function PreviewEmptyState({
 
   return (
     <div
-      className="absolute inset-x-0 top-0 z-10 grid place-items-center bg-background px-8 py-10 text-center bottom-(--preview-error-bottom)"
+      className="absolute inset-x-0 top-0 z-10 grid place-items-center bg-(--linear-bg-panel) px-8 py-10 text-center bottom-(--preview-error-bottom)"
       style={{ '--preview-error-bottom': `${consoleHeight}px` } as CSSProperties}
     >
       <div className="grid max-w-sm justify-items-center gap-5">
         <PreviewCubeIcon className={styles.cube} />
-        <div className="grid gap-2">
-          <div className="text-sm font-medium text-foreground">{title}</div>
-          {body && <div className="text-xs leading-relaxed text-muted-foreground">{body}</div>}
+        <div className="grid gap-[3px]">
+          <div className="text-[0.8125rem] font-medium text-(--linear-text-(--linear-accent))">{title}</div>
+          {body && <div className="text-xs leading-relaxed text-(--linear-text-tertiary)">{body}</div>}
         </div>
         {(primaryAction || secondaryAction) && (
           <div className="grid justify-items-center gap-2">
             {primaryAction && (
-              <button
-                className={cn(
-                  'rounded-full border px-3.5 py-1.5 text-xs font-medium shadow-xs transition-colors disabled:cursor-default disabled:opacity-60',
-                  styles.primary
-                )}
+              <Button
+                className={styles.primary}
                 disabled={primaryAction.disabled}
                 onClick={primaryAction.onClick}
                 type="button"
+                variant="secondary"
               >
                 {primaryAction.label}
-              </button>
+              </Button>
             )}
             {secondaryAction && (
-              <button
-                className="text-[0.6875rem] font-medium text-muted-foreground underline decoration-current/20 underline-offset-4 transition-colors hover:text-foreground disabled:cursor-default disabled:text-muted-foreground/55 disabled:no-underline"
+              <Button
                 disabled={secondaryAction.disabled}
                 onClick={secondaryAction.onClick}
+                size="xs"
                 type="button"
+                variant="text"
               >
                 {secondaryAction.label}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -320,20 +320,20 @@ async function readTextPreview(filePath: string, sessionId?: string) {
 // our components keep typography simple and route fenced code through Shiki
 // without the library's copy/download/fullscreen chrome.
 const MD_TAG_CLASSES = {
-  h1: 'mb-3 mt-6 text-3xl font-bold leading-tight tracking-tight first:mt-0',
-  h2: 'mb-2.5 mt-5 text-2xl font-semibold leading-snug tracking-tight first:mt-0',
-  h3: 'mb-2 mt-4 text-xl font-semibold leading-snug first:mt-0',
-  h4: 'mb-2 mt-3 text-base font-semibold leading-snug first:mt-0',
-  p: 'mb-4 leading-relaxed text-foreground last:mb-0',
-  ul: 'mb-4 list-disc pl-6 marker:text-muted-foreground/70 last:mb-0',
-  ol: 'mb-4 list-decimal pl-6 marker:text-muted-foreground/70 last:mb-0',
+  h1: 'mb-3 mt-6 text-[1.5rem] leading-8 font-medium tracking-[-0.01rem] first:mt-0',
+  h2: 'mb-2.5 mt-5 text-[1.25rem] leading-7 font-medium first:mt-0',
+  h3: 'mb-2 mt-4 text-[1.125rem] leading-[1.8rem] font-medium first:mt-0',
+  h4: 'mb-2 mt-3 text-[0.9375rem] leading-[1.4375rem] font-medium first:mt-0',
+  p: 'mb-4 leading-relaxed text-(--linear-text-(--linear-accent)) last:mb-0',
+  ul: 'mb-4 list-disc pl-6 marker:text-(--linear-text-quaternary) last:mb-0',
+  ol: 'mb-4 list-decimal pl-6 marker:text-(--linear-text-quaternary) last:mb-0',
   li: 'mt-1 leading-relaxed',
-  blockquote: 'mb-4 border-l-2 border-border pl-3 text-muted-foreground italic last:mb-0',
-  pre: 'mb-4 overflow-hidden rounded-lg border border-border bg-card font-mono text-xs leading-relaxed last:mb-0 [&_pre]:m-0 [&_pre]:overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-3 [&_pre]:font-mono',
-  hr: 'my-6 border-border',
-  th: 'px-3 py-2 text-left text-sm font-semibold text-foreground',
-  td: 'px-3 py-2 align-top text-sm leading-relaxed',
-  thead: 'bg-muted/35 text-muted-foreground'
+  blockquote: 'mb-4 border-l-2 border-(--linear-border-secondary) pl-3 text-(--linear-text-tertiary) italic last:mb-0',
+  pre: 'mb-4 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-card) font-mono text-xs leading-relaxed last:mb-0 [&_pre]:m-0 [&_pre]:overflow-x-auto [&_pre]:bg-transparent! [&_pre]:p-3 [&_pre]:font-mono',
+  hr: 'my-6 border-(--linear-border-primary)',
+  th: 'px-3 py-2 text-left text-[0.8125rem] font-medium text-(--linear-text-(--linear-accent))',
+  td: 'px-3 py-2 align-top text-[0.8125rem] leading-relaxed',
+  thead: 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)'
 } as const
 
 function tagged<T extends keyof typeof MD_TAG_CLASSES>(Tag: T) {
@@ -357,7 +357,7 @@ function MarkdownCode({ className, children, ...props }: ComponentProps<'code'>)
     return (
       <code
         className={cn(
-          'rounded bg-(--ui-inline-code-background) px-1 py-0.5 font-mono text-[0.86em] text-(--ui-inline-code-foreground)',
+          'rounded-(--linear-radius-kbd) bg-(--linear-bg-secondary) px-1 py-0.5 font-mono text-[0.86em] text-(--linear-text-secondary)',
           className
         )}
         {...props}
@@ -378,10 +378,10 @@ function MarkdownCode({ className, children, ...props }: ComponentProps<'code'>)
 
 function MarkdownTable({ className, ...rest }: ComponentProps<'table'>) {
   return (
-    <div className="mb-4 w-full overflow-x-auto rounded-lg border border-border last:mb-0">
+    <div className="mb-4 w-full overflow-x-auto rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) last:mb-0">
       <table
         className={cn(
-          'm-0 w-full min-w-[18rem] border-collapse [&_tr]:border-b [&_tr]:border-border last:[&_tr]:border-0',
+          'm-0 w-full min-w-[18rem] border-collapse [&_tr]:border-b-[0.5px] [&_tr]:border-(--linear-border-primary) last:[&_tr]:border-0',
           className
         )}
         {...rest}
@@ -394,7 +394,7 @@ function MarkdownImage({ alt, src, ...rest }: ComponentProps<'img'>) {
   return (
     <img
       alt={alt ?? ''}
-      className="my-3 max-h-96 w-auto max-w-full rounded-lg border border-border object-contain shadow-sm"
+      className="my-3 max-h-96 w-auto max-w-full rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) object-contain shadow-(--linear-shadow-low)"
       src={src}
       {...rest}
     />
@@ -403,7 +403,7 @@ function MarkdownImage({ alt, src, ...rest }: ComponentProps<'img'>) {
 
 const PreviewNoteContext = createContext<string | undefined>(undefined)
 
-const MARKDOWN_LINK_CLASS = 'text-foreground underline underline-offset-2 hover:text-primary'
+const MARKDOWN_LINK_CLASS = 'text-(--linear-text-(--linear-accent)) underline underline-offset-2 hover:text-(--linear-accent)'
 
 async function openLinkedNote(target: string, filePath?: string) {
   const preview = await normalizeOrLocalPreviewTarget(target, noteDirectory(filePath))
@@ -493,7 +493,7 @@ export function MarkdownPreview({ filePath, text }: { filePath?: string; text: s
   return (
     <PreviewNoteContext.Provider value={filePath}>
       <div
-        className="preview-markdown mx-auto max-w-3xl px-4 py-3 text-sm text-foreground"
+        className="preview-markdown mx-auto max-w-3xl px-4 py-3 text-[0.8125rem] text-(--linear-text-(--linear-accent))"
         data-preview-markdown=""
         data-selectable-text="true"
       >
@@ -540,22 +540,12 @@ export function PreviewModeSwitcher({
   return (
     // Fixed height so the header is byte-identical between read and edit modes —
     // swapping the trailing controls must never move the body below it.
-    <div className="flex h-7 shrink-0 items-center justify-end gap-3 border-b border-border/40 px-3">
+    <div className="flex h-9 shrink-0 items-center justify-end gap-1.5 border-b-[0.5px] border-(--linear-border-primary) px-2">
       {showModes &&
         modes.map(mode => (
-          <button
-            className={cn(
-              'text-[0.625rem] font-bold underline-offset-4 transition-colors',
-              mode === active
-                ? 'text-foreground underline decoration-current/30'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            key={mode}
-            onClick={() => onSelect(mode)}
-            type="button"
-          >
+          <TextTab active={mode === active} key={mode} onClick={() => onSelect(mode)}>
             {label[mode]}
-          </button>
+          </TextTab>
         ))}
       {trailing && <div className="flex items-center gap-1.5">{trailing}</div>}
     </div>
@@ -579,23 +569,14 @@ function EditControls({
 
   return (
     <>
-      <button
-        className="flex items-center gap-1 rounded-md px-1.5 text-[0.625rem] font-bold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        onClick={onCancel}
-        type="button"
-      >
-        <X className="size-3" />
+      <Button onClick={onCancel} size="xs" type="button" variant="ghost">
+        <X />
         {t.common.cancel}
-      </button>
-      <button
-        className="flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 text-[0.625rem] font-bold text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50"
-        disabled={!dirty || saving}
-        onClick={onSave}
-        type="button"
-      >
-        <Check className="size-3" />
+      </Button>
+      <Button disabled={!dirty || saving} onClick={onSave} size="xs" type="button">
+        <Check />
         {saving ? t.common.saving : t.common.save}
-      </button>
+      </Button>
     </>
   )
 }
@@ -698,11 +679,11 @@ export function SourceView({ filePath, language, text }: { filePath?: string; la
 
   return (
     <div className="h-full overflow-auto" onScroll={onScroll} ref={scrollerRef}>
-      <div className="grid min-w-max grid-cols-[auto_minmax(0,1fr)] font-mono text-[0.7rem] leading-relaxed">
+      <div className="grid min-w-max grid-cols-[auto_minmax(0,1fr)] font-mono text-[0.6875rem] leading-relaxed">
         {beforeRows > 0 && <div aria-hidden className="col-span-2" style={{ height: beforeRows * SOURCE_LINE_PX }} />}
         {visibleChunks.map(chunk => (
           <Fragment key={chunk.start}>
-            <div className="select-none text-right text-muted-foreground/55">
+            <div className="select-none text-right text-(--linear-text-quaternary)">
               {chunk.lines.map((_lineText, offset) => {
                 const line = chunk.start + offset + 1
                 const selected = inSelection(line)
@@ -713,8 +694,8 @@ export function SourceView({ filePath, language, text }: { filePath?: string; la
                       'h-5 w-9 pr-2 leading-5 tabular-nums transition-colors',
                       filePath && 'cursor-pointer',
                       selected
-                        ? 'bg-(--linear-yellow)/20 text-(--linear-text-primary)'
-                        : filePath && 'hover:text-foreground'
+                        ? 'bg-(--linear-yellow)/20 text-(--linear-text-(--linear-accent))'
+                        : filePath && 'hover:text-(--linear-text-(--linear-accent))'
                     )}
                     draggable={Boolean(filePath)}
                     key={line}
@@ -1098,29 +1079,21 @@ export function LocalFilePreview({
           trailing={<EditControls dirty={dirty} onCancel={cancelEdit} onSave={() => void saveEdit()} saving={saving} />}
         />
         {conflict && (
-          <div className="shrink-0 border-b-[0.5px] border-(--linear-yellow)/40 bg-(--linear-yellow)/10 px-3 py-2 text-[0.7rem] text-(--linear-text-primary)">
-            <div className="font-semibold">{t.preview.diskChangedTitle}</div>
+          <div className="shrink-0 border-b-[0.5px] border-(--linear-yellow)/40 bg-(--linear-yellow)/10 px-3 py-2 text-xs text-(--linear-text-(--linear-accent))">
+            <div className="font-medium">{t.preview.diskChangedTitle}</div>
             <div className="mt-0.5 leading-relaxed">{t.preview.diskChangedBody}</div>
             <div className="mt-1.5 flex gap-3">
-              <button
-                className="font-bold underline underline-offset-4 transition-opacity hover:opacity-80"
-                onClick={() => void saveEdit(true)}
-                type="button"
-              >
+              <Button onClick={() => void saveEdit(true)} size="inline" type="button" variant="textStrong">
                 {t.preview.overwrite}
-              </button>
-              <button
-                className="font-bold underline underline-offset-4 transition-opacity hover:opacity-80"
-                onClick={discardAndReload}
-                type="button"
-              >
+              </Button>
+              <Button onClick={discardAndReload} size="inline" type="button" variant="textStrong">
                 {t.preview.discardReload}
-              </button>
+              </Button>
             </div>
           </div>
         )}
         {saveError && (
-          <div className="shrink-0 border-b border-destructive/40 bg-destructive/10 px-3 py-1.5 text-[0.7rem] text-destructive">
+          <div className="shrink-0 border-b-[0.5px] border-(--linear-red)/40 bg-(--linear-red)/10 px-3 py-1.5 text-xs text-(--linear-red)">
             {t.preview.saveFailed(saveError)}
           </div>
         )}
@@ -1184,7 +1157,7 @@ export function LocalFilePreview({
       <div className="flex h-full w-full items-center justify-center overflow-auto bg-transparent p-4">
         <img
           alt={target.label}
-          className="max-h-full max-w-full rounded-lg object-contain shadow-sm"
+          className="max-h-full max-w-full rounded-(--linear-radius-control) object-contain shadow-(--linear-shadow-low)"
           draggable={false}
           src={state.dataUrl}
         />
@@ -1250,7 +1223,7 @@ export function LocalFilePreview({
         ref={readViewRef}
       >
         {state.truncated && (
-          <div className="border-b border-border/60 bg-muted/35 px-3 py-1.5 text-[0.68rem] text-muted-foreground">
+          <div className="border-b-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-secondary) px-3 py-1.5 text-xs text-(--linear-text-tertiary)">
             {t.preview.truncated}
           </div>
         )}
@@ -1261,14 +1234,10 @@ export function LocalFilePreview({
           trailing={
             canEdit ? (
               <Tip label={`${t.preview.edit} (e)`}>
-                <button
-                  className="flex items-center gap-1 text-[0.625rem] font-bold text-muted-foreground underline-offset-4 transition-colors hover:text-foreground"
-                  onClick={beginEdit}
-                  type="button"
-                >
-                  <Pencil className="size-3" />
+                <Button onClick={beginEdit} size="xs" type="button" variant="ghost">
+                  <Pencil />
                   {t.preview.edit}
-                </button>
+                </Button>
               </Tip>
             ) : null
           }

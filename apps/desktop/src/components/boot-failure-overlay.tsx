@@ -72,7 +72,7 @@ function BootFailureModal({
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content aria-describedby={undefined} aria-modal="true" asChild ref={setContentNode}>
-          <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-6">
+          <div className="fixed inset-0 z-(--z-setup) flex items-start justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pt-20 pb-6">
             <DialogPortalContainerContext.Provider value={contentNode}>
               {title ? <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title> : null}
               {children}
@@ -99,14 +99,14 @@ function WebappSignInOverlay() {
 
   return (
     <BootFailureModal onDismiss={() => undefined}>
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
+      <div className="relative w-full max-w-[46.875rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <div className="flex items-start gap-3 px-5 py-4">
           <LogIn className="mt-1.5 size-4 text-(--linear-icon)" />
           <div>
             <DialogPrimitive.Title asChild>
               <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{copy.webappTitle}</h2>
             </DialogPrimitive.Title>
-            <p className="mt-0.5 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">{copy.webappDescription}</p>
+            <p className="mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">{copy.webappDescription}</p>
           </div>
         </div>
       </div>
@@ -501,7 +501,7 @@ export function BootFailureOverlay() {
   if (view === 'connect') {
     return (
       <BootFailureModal onDismiss={dismiss} title={copy.gatewaySettings}>
-        <div className="relative flex max-h-[86vh] w-full max-w-[46rem] flex-col overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
+        <div className="relative flex max-h-[calc(100vh-6.5rem)] w-full max-w-[46.875rem] flex-col overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
           <DialogCloseButton />
           {/* Subtle back affordance (projects/overlay idiom): muted → foreground
               on hover, no divider. */}
@@ -523,7 +523,7 @@ export function BootFailureOverlay() {
 
   return (
     <BootFailureModal onDismiss={dismiss}>
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
+      <div className="relative w-full max-w-[46.875rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <DialogCloseButton />
         <div className="flex items-start gap-3 px-5 py-4 pr-12">
           <ErrorIcon className="mt-1.5" size="1rem" />
@@ -533,7 +533,7 @@ export function BootFailureOverlay() {
                 {remoteReauth ? copy.remoteTitle : cloudDown ? copy.cloudDownTitle : copy.title}
               </h2>
             </DialogPrimitive.Title>
-            <p className="mt-0.5 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+            <p className="mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
               {remoteReauth ? copy.remoteDescription : cloudDown ? copy.cloudDownDescription : copy.description}
             </p>
           </div>

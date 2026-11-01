@@ -38,10 +38,10 @@ export function ConfirmHost() {
       title={shown.title}
     >
       {shown.details && (
-        <dl className="space-y-3 text-xs">
+        <dl className="space-y-3 text-[0.8125rem] leading-5">
           {shown.details.map(({ label, value }) => (
             <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3" key={label}>
-              <dt className="text-(--linear-text-tertiary)">{label}</dt>
+              <dt className="text-xs leading-5 text-(--linear-text-tertiary)">{label}</dt>
               <dd className="m-0 whitespace-pre-wrap break-words text-(--linear-text-primary)">{value}</dd>
             </div>
           ))}

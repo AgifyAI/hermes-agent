@@ -84,18 +84,18 @@ export function UpdateHoldOverlay() {
     <div
       aria-labelledby={titleId}
       aria-modal="true"
-      className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-6"
+      className="fixed inset-0 z-(--z-setup) flex items-start justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pt-20 pb-6"
       data-testid="update-hold-overlay"
       role="alertdialog"
     >
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
+      <div className="relative w-full max-w-[46.875rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <div className="flex items-start gap-3 px-5 py-4">
           <AlertTriangle className="mt-1.5 size-4 shrink-0 text-(--linear-yellow)" />
           <div>
             <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold" id={titleId}>
               {confirming ? copy.confirmTitle : unverified ? copy.titleUnverified : copy.title}
             </h2>
-            <p className="mt-0.5 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+            <p className="mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
               {confirming ? copy.confirmBody : copy.description}
             </p>
           </div>

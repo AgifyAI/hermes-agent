@@ -486,8 +486,7 @@ export function StarMap({
     const val = style.getPropertyValue('--linear-accent').trim()
 
     if (val) {
-      const bgVal =
-        style.getPropertyValue('--background').trim() || style.getPropertyValue('--dt-background').trim() || '#000'
+      const bgVal = style.getPropertyValue('--linear-bg-panel').trim()
 
       setMemoryColor(rgba(memoryInkFor(resolveRgb(val), resolveRgb(bgVal)), 0.9))
     }

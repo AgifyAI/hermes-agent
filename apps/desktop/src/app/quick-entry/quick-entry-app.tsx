@@ -110,7 +110,7 @@ export function QuickEntryApp() {
           autoCapitalize="off"
           autoComplete="off"
           autoCorrect="off"
-          className="w-full min-w-0 border-none bg-transparent font-[inherit] text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) disabled:opacity-55"
+          className="w-full min-w-0 border-none bg-transparent font-[inherit] text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) disabled:opacity-60"
           disabled={!state.connected}
           onBlur={event => {
             // Moving focus to the target picker is not leaving the window.

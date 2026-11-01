@@ -277,9 +277,9 @@ export function PersistentTerminal({ onAddSelectionToChat }: PersistentTerminalP
     opacity: visible ? 1 : 0,
     pointerEvents: visible ? 'auto' : 'none',
     zIndex: 4,
-    // Match the live skin surface so the header strip (transparent) and body
+    // Match the panel surface so the header strip (transparent) and body
     // read as one cohesive pane instead of revealing a near-black slab behind.
-    backgroundColor: 'var(--ui-terminal-surface-background)',
+    backgroundColor: 'var(--linear-bg-panel)',
     contain: 'layout size paint'
   }
 

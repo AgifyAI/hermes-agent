@@ -197,6 +197,18 @@ function useApiKeyCatalog(scope: OnboardingContext['scope']): ApiKeyOption[] {
 // → surface-out (520ms, held back by [transition-delay:660ms]). Finalize after.
 const ONBOARDING_EXIT_MS = 1180
 
+function onboardingSurfaceClass(bare: boolean, leaving: boolean) {
+  return cn(
+    'fixed inset-0 z-(--z-onboarding) flex justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pb-6 transition-opacity duration-[520ms] ease-out',
+    // The bare confirm screen floats centered; every carded state is Linear's modal, 80px from the top.
+    bare ? 'items-center pt-6' : 'items-start pt-20',
+    // On the bare confirm screen, hold the surface (text-out + hold) so the
+    // per-element exit plays before it dissolves.
+    bare && leaving ? '[transition-delay:660ms]' : '',
+    leaving ? 'pointer-events-none opacity-0' : 'opacity-100'
+  )
+}
+
 export function DesktopOnboardingOverlay({
   enabled,
   onCompleted,
@@ -415,18 +427,12 @@ export function DesktopOnboardingOverlay({
 
   return (
     <div
-      className={cn(
-        'fixed inset-0 z-(--z-onboarding) flex items-center justify-center bg-(--linear-bg-panel) p-6 transition-opacity duration-[520ms] ease-out',
-        // On the bare confirm screen, hold the surface (text-out + hold) so the
-        // per-element exit plays before it dissolves.
-        bare && leaving ? '[transition-delay:660ms]' : '',
-        leaving ? 'pointer-events-none opacity-0' : 'opacity-100'
-      )}
+      className={onboardingSurfaceClass(bare, leaving)}
       data-onboarding-overlay=""
     >
       <div
         className={cn(
-          'relative w-full max-w-[45rem] transition-all duration-500 ease-out',
+          'relative w-full max-w-[46.875rem] transition-all duration-500 ease-out',
           bare
             ? ''
             : 'overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)',
@@ -570,7 +576,7 @@ function Header() {
   return (
     <div className="px-5 pt-5 pb-1 pr-14">
       <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{t.onboarding.headerTitle}</h2>
-      <p className="mt-0.5 max-w-xl text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+      <p className="mt-0.5 max-w-xl text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
         {t.onboarding.headerDesc}
       </p>
     </div>

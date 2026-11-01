@@ -12,7 +12,7 @@ import { registerAgentTerminalWriter } from './agent-terminal-stream'
 import { makeTerminalReader, registerTerminalReader } from './buffer'
 import { mirrorSelection, terminalClipboardIntent } from './clipboard'
 import { terminalLinkHandler, terminalWebLinksAddon } from './links'
-import { isMacPlatform, resolveSurfaceColor, terminalTheme } from './selection'
+import { isMacPlatform, terminalTheme } from './selection'
 import { registerTerminalContextMenu } from './terminal-context-menu'
 import { prepareTerminalFontFamily } from './terminal-font'
 import { redrawAllTerminals, registerWebglRefresh } from './terminals'
@@ -28,16 +28,6 @@ export function useAgentTerminal({ active, id, procId }: { active: boolean; id: 
   const webglRef = useRef<WebglAddon | null>(null)
   const fitRef = useRef<(() => void) | null>(null)
   const { latestFontFamilyRef, mountedRef } = useTerminalFontController({ fitRef, termRef, webglRef })
-
-  const surfaceTheme = () => {
-    const base = terminalTheme(resolvedMode)
-    // Fall back to the palette's own background, not white — a hardcoded
-    // '#ffffff' flashes a white slab in dark mode whenever the probe can't read
-    // the token (pre-paint mount). Same contract as the user terminal.
-    const surface = resolveSurfaceColor(base.background ?? '#ffffff')
-
-    return { ...base, background: surface, cursorAccent: surface }
-  }
 
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
   useEffect(() => {
@@ -78,7 +68,7 @@ export function useAgentTerminal({ active, id, procId }: { active: boolean; id: 
       linkHandler: terminalLinkHandler,
       minimumContrastRatio: 4.5,
       scrollback: 1000,
-      theme: surfaceTheme()
+      theme: terminalTheme(resolvedMode)
     })
 
     const fit = new FitAddon()
@@ -247,14 +237,13 @@ export function useAgentTerminal({ active, id, procId }: { active: boolean; id: 
     }
 
     const raf = requestAnimationFrame(() => {
-      term.options.theme = surfaceTheme()
+      term.options.theme = terminalTheme(resolvedMode)
       // The atlas is shared across every terminal with the same render config,
       // so the clear must fan out to the siblings too (see redrawAllTerminals).
       redrawAllTerminals()
     })
 
     return () => cancelAnimationFrame(raf)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedMode])
 
   // A visibility:hidden xterm doesn't paint — refit + redraw on re-activation.

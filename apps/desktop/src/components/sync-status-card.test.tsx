@@ -81,7 +81,7 @@ const cases: ReceiptCase[] = [
     name: 'updates only',
     receipt: { plugin_checks: details.plugin_checks?.slice(1) },
     headline: /Plugin updates available/,
-    tone: 'text-(--linear-text-tertiary)'
+    tone: 'text-(--linear-text-primary)'
   }
 ]
 

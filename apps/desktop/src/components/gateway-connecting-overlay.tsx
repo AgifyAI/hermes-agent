@@ -70,8 +70,10 @@ function SlowSetupStart({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="grid max-w-xs justify-items-center gap-3 text-center" role="status">
-      <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{t.onboarding.setupSlowTitle}</div>
-      <div className="text-xs text-(--linear-text-tertiary)">{t.onboarding.setupSlowBody}</div>
+      <div className="grid gap-[3px]">
+        <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{t.onboarding.setupSlowTitle}</div>
+        <div className="text-xs text-(--linear-text-tertiary)">{t.onboarding.setupSlowBody}</div>
+      </div>
       <Button onClick={onExit} size="sm" type="button" variant="secondary">
         {t.onboarding.continueWithoutSetup}
       </Button>

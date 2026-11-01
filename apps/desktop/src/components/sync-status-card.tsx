@@ -18,8 +18,8 @@ import { AlertCircle, AlertTriangle, Check } from '@/lib/icons'
 import { deriveSyncStatusSummary, type SyncStatusSummary } from './sync-status'
 
 const LEVEL_STYLES: Record<SyncStatusSummary['level'], string> = {
-  ok: 'text-(--linear-text-tertiary)',
-  info: 'text-(--linear-text-tertiary)',
+  ok: 'text-(--linear-text-primary)',
+  info: 'text-(--linear-text-primary)',
   warn: 'text-(--linear-orange)',
   error: 'text-(--linear-red)'
 }
@@ -58,7 +58,7 @@ export function SyncStatusCard() {
 
   return (
     <div
-      className="grid gap-2 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-3 text-left shadow-(--linear-shadow-card)"
+      className="grid gap-3 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 text-left shadow-(--linear-shadow-card)"
       data-testid="sync-status-card"
     >
       <p className={`flex items-center gap-2 text-[0.8125rem] font-medium ${tone}`}>
@@ -71,7 +71,7 @@ export function SyncStatusCard() {
       </p>
 
       {summary.needsFixing.length > 0 && (
-        <ul className="grid gap-1 text-xs text-(--linear-text-primary)">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.needsFixing.map(item => (
             <li className="flex items-start gap-2" key={`needs-fixing-${item.plugin}`}>
               <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-(--linear-yellow)" />
@@ -84,7 +84,7 @@ export function SyncStatusCard() {
       )}
 
       {summary.disabledPlugins.length > 0 && (
-        <ul className="grid gap-1 text-xs text-(--linear-text-primary)">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.disabledPlugins.map(item => (
             <li className="flex items-start gap-2" key={`disabled-${item.plugin}`}>
               <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-(--linear-yellow)" />
@@ -97,7 +97,7 @@ export function SyncStatusCard() {
       )}
 
       {summary.updatesAvailable.length > 0 && (
-        <ul className="grid gap-1 text-xs text-(--linear-text-primary)">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.updatesAvailable.map(item => (
             <li className="leading-snug" key={`update-${item.name}`}>
               {item.name}

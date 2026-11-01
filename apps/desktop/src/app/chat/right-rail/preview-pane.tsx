@@ -238,7 +238,7 @@ function PreviewLoadError({
       body={
         <>
           <a
-            className="pointer-events-auto block font-mono text-muted-foreground/90 underline decoration-current/20 underline-offset-4 transition-colors hover:text-foreground"
+            className="pointer-events-auto block font-mono text-(--linear-text-tertiary) underline decoration-current/20 underline-offset-4 transition-colors hover:text-(--linear-text-(--linear-accent))"
             href={error.url}
             onClick={event => {
               event.preventDefault()
@@ -248,9 +248,9 @@ function PreviewLoadError({
             {compactUrl(error.url)}
             {error.code ? ` (${error.code})` : ''}
           </a>
-          <div className="mt-1 text-[0.6875rem] text-muted-foreground/70">{error.description}</div>
+          <div className="mt-1 text-[0.6875rem] text-(--linear-text-quaternary)">{error.description}</div>
           {isRemoteLoopbackUrl(error.url) && (
-            <div className="mt-2 text-[0.6875rem] leading-relaxed text-muted-foreground/70">{copy.remoteLoopback}</div>
+            <div className="mt-2 text-[0.6875rem] leading-relaxed text-(--linear-text-quaternary)">{copy.remoteLoopback}</div>
           )}
         </>
       }
@@ -1438,7 +1438,7 @@ export function PreviewPane({
 
   return (
     <aside
-      className="relative flex h-full w-full min-w-0 flex-col overflow-hidden bg-transparent text-muted-foreground"
+      className="relative flex h-full w-full min-w-0 flex-col overflow-hidden bg-transparent text-(--linear-text-tertiary)"
       onKeyDown={onPaneKeyDown}
       // Buttons 3/4 are a mouse's back/forward. Chromium delivers them to
       // the renderer as a normal mouse event inside the app's own chrome (the
@@ -1461,11 +1461,11 @@ export function PreviewPane({
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {!embedded && (
-          <div className="pointer-events-none flex min-h-(--titlebar-height) items-center gap-1.5 border-b border-border/60 bg-background px-2 py-1">
+          <div className="pointer-events-none flex min-h-(--titlebar-height) items-center gap-1.5 border-b-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-panel) px-2 py-1">
             <div className="min-w-0 flex-1">
               <Tip label={copy.openTarget(currentUrl)}>
                 <a
-                  className="pointer-events-auto inline max-w-full truncate text-left text-xs font-medium text-foreground underline-offset-4 decoration-current/20 transition-colors hover:text-primary hover:underline"
+                  className="pointer-events-auto inline max-w-full truncate text-left text-xs font-medium text-(--linear-text-(--linear-accent)) underline-offset-4 decoration-current/20 transition-colors hover:text-(--linear-accent) hover:underline"
                   href={isRemoteHtmlTarget ? undefined : currentUrl}
                   onClick={event => {
                     if (isRemoteHtmlTarget) {
@@ -1560,7 +1560,7 @@ export function PreviewPane({
             />
           )}
           {isBlankPage && (
-            <div className="absolute inset-0 grid bg-background">
+            <div className="absolute inset-0 grid bg-(--linear-bg-panel)">
               <PanelEmpty description={copy.blankPageBody} icon="globe" />
             </div>
           )}

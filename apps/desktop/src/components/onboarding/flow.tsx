@@ -180,13 +180,13 @@ export function DeviceCode({ code, copied, onCopy }: { code: string; copied: boo
     >
       {[...code].map((ch, i) =>
         ch === '-' || ch === ' ' ? (
-          <span className="w-1.5 text-center text-lg text-(--linear-text-tertiary)" key={i}>
+          <span className="w-1.5 text-center text-[1.125rem] text-(--linear-text-tertiary)" key={i}>
             –
           </span>
         ) : (
           <span
             className={cn(
-              'flex size-10 items-center justify-center rounded-(--linear-radius-control) border-[0.5px] bg-(--linear-bg-input) font-mono text-xl font-semibold uppercase transition-colors',
+              'flex size-10 items-center justify-center rounded-(--linear-radius-control) border-[0.5px] bg-(--linear-bg-input) font-mono text-[1.25rem] font-semibold uppercase transition-colors',
               copied
                 ? 'border-(--linear-accent) text-(--linear-accent)'
                 : 'border-(--linear-border-input) text-(--linear-text-primary) group-hover:border-(--linear-border-tertiary)'

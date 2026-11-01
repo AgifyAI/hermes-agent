@@ -3,7 +3,7 @@ import { SerializeAddon } from '@xterm/addon-serialize'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { Terminal } from '@xterm/xterm'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
 import { triggerHaptic } from '@/lib/haptics'
@@ -20,7 +20,6 @@ import { terminalLinkHandler, terminalWebLinksAddon } from './links'
 import { createReviveHistory } from './revive-history'
 import { createBootGapFilter } from './revive-snapshot'
 import {
-  resolveSurfaceColor,
   shouldOwnAddSelectionShortcut,
   terminalSelectionAnchor,
   terminalSelectionLabel,
@@ -62,14 +61,6 @@ interface UseTerminalSessionOptions {
   onShell?: (shell: string) => void
 }
 
-// Bind the palette to the live skin surface so the terminal blends with the app
-// (and the contrast clamp has a real background to work against).
-function withSurface(theme: ReturnType<typeof terminalTheme>) {
-  const surface = resolveSurfaceColor(theme.background ?? '#ffffff')
-
-  return { ...theme, background: surface, cursorAccent: surface }
-}
-
 export function useTerminalSession({
   id,
   cwd,
@@ -80,8 +71,7 @@ export function useTerminalSession({
   onShell
 }: UseTerminalSessionOptions) {
   const { resolvedMode } = useTheme()
-  const activeTheme = useMemo(() => terminalTheme(resolvedMode), [resolvedMode])
-  const initialThemeRef = useRef(activeTheme)
+  const initialModeRef = useRef(resolvedMode)
   const hostRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<Terminal | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
@@ -209,7 +199,7 @@ export function useTerminalSession({
       // Opaque canvas = WebGL's crisp fast-path. allowTransparency instead bakes
       // glyphs as grayscale-alpha for compositing over a see-through canvas, which
       // reads soft on every platform; VS Code keeps it off and our surface
-      // (--ui-bg-chrome) is opaque anyway, so withSurface paints it solid.
+      // (--linear-bg-panel) is opaque anyway, so terminalTheme paints it solid.
       allowTransparency: false,
       convertEol: true,
       cursorBlink: true,
@@ -237,7 +227,7 @@ export function useTerminalSession({
       // at render time, matching the muted ink-like look of their terminal.
       minimumContrastRatio: 4.5,
       scrollback: 1000,
-      theme: withSurface(initialThemeRef.current)
+      theme: terminalTheme(initialModeRef.current)
     })
 
     const fit = new FitAddon()
@@ -529,7 +519,7 @@ export function useTerminalSession({
     // CSS vars in a sibling effect that runs after this one, so reading now
     // would lag a mode behind. By the next frame the vars are current.
     const raf = requestAnimationFrame(() => {
-      term.options.theme = withSurface(activeTheme)
+      term.options.theme = terminalTheme(resolvedMode)
       // The WebGL renderer caches glyph colors in a texture atlas, so a
       // light/dark switch leaves already-drawn cells stale until the atlas is
       // cleared. No-op for the DOM fallback. The atlas is shared across every
@@ -539,7 +529,7 @@ export function useTerminalSession({
     })
 
     return () => cancelAnimationFrame(raf)
-  }, [activeTheme])
+  }, [resolvedMode])
 
   // Expose this terminal's buffer to the agent's `read_terminal` tool, keyed by
   // id. The tab selection (setActiveTerminalId) decides which one it reads, so

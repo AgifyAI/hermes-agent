@@ -115,11 +115,7 @@ export function computePalette(canvas: HTMLCanvasElement): Palette {
   const base: Rgb = darkTheme ? { b: 255, g: 255, r: 255 } : { b: 0, g: 0, r: 0 }
   const primary = resolveRgb(style.getPropertyValue('--linear-accent').trim() || style.color)
 
-  const bg = resolveRgb(
-    style.getPropertyValue('--background').trim() ||
-      style.getPropertyValue('--dt-background').trim() ||
-      (darkTheme ? '#000' : '#fff')
-  )
+  const bg = resolveRgb(style.getPropertyValue('--linear-bg-panel').trim())
 
   return {
     // Band tint derives from the theme primary so rings read consistently in

@@ -2,6 +2,7 @@ import { useStore } from '@nanostores/react'
 import DOMPurify from 'dompurify'
 import { useEffect, useMemo, useState } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
@@ -23,9 +24,6 @@ const SOURCE_LANGUAGE_BY_KIND: Record<ArtifactKind, string | undefined> = {
   html: 'html',
   svg: 'xml'
 }
-
-const HEADER_BUTTON_CLASS =
-  'flex items-center gap-1 rounded-md px-1.5 text-[0.625rem] font-bold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40'
 
 /** Wrap an HTML fragment in a minimal document shell; full documents pass
  *  through untouched. Keeps generated fragments (no <html>/<body>) rendering
@@ -88,7 +86,7 @@ function ArtifactLiveView({ content, kind, title }: { content: string; kind: Art
 
   if (kind === 'svg') {
     return (
-      <div className="grid h-full place-items-center overflow-auto bg-background p-4 [&_svg]:h-auto [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:max-w-full">
+      <div className="grid h-full place-items-center overflow-auto bg-(--linear-bg-panel) p-4 [&_svg]:h-auto [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:max-w-full">
         <div dangerouslySetInnerHTML={{ __html: svgClean }} />
       </div>
     )
@@ -127,38 +125,36 @@ function VersionStepper({
   return (
     <>
       <Tip label={copy.olderVersion}>
-        <button
+        <Button
           aria-label={copy.olderVersion}
-          className={HEADER_BUTTON_CLASS}
           disabled={current === 0}
           onClick={() => onSelect(current - 1)}
+          size="icon-xs"
           type="button"
+          variant="ghost"
         >
-          <ChevronLeft className="size-3" />
-        </button>
+          <ChevronLeft />
+        </Button>
       </Tip>
-      <span className="text-[0.625rem] font-bold tabular-nums text-muted-foreground">
+      <span className="text-xs font-medium tabular-nums text-(--linear-text-tertiary)">
         {copy.versionOf(current + 1, total)}
       </span>
       <Tip label={copy.newerVersion}>
-        <button
+        <Button
           aria-label={copy.newerVersion}
-          className={HEADER_BUTTON_CLASS}
           disabled={current === total - 1}
           onClick={() => onSelect(current + 1)}
+          size="icon-xs"
           type="button"
+          variant="ghost"
         >
-          <ChevronRight className="size-3" />
-        </button>
+          <ChevronRight />
+        </Button>
       </Tip>
       {current < total - 1 && (
-        <button
-          className="text-[0.625rem] font-bold text-muted-foreground underline decoration-current/25 underline-offset-4 transition-colors hover:text-foreground"
-          onClick={() => onSelect(total - 1)}
-          type="button"
-        >
+        <Button onClick={() => onSelect(total - 1)} size="xs" type="button" variant="text">
           {copy.latest}
-        </button>
+        </Button>
       )}
     </>
   )
@@ -219,16 +215,15 @@ export function ArtifactPreview({ onClose, target }: { onClose?: () => void; tar
             />
             <CopyButton
               appearance="inline"
-              className="h-5 px-1 opacity-70 hover:opacity-100"
-              iconClassName="size-3"
+              className="inline-grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-(--linear-accent)) hover:transition-none"
+              iconClassName="size-3.5"
               label={copy.copyContent}
               showLabel={false}
               text={version.content}
             />
             <Tip label={copy.download}>
-              <button
+              <Button
                 aria-label={copy.download}
-                className={HEADER_BUTTON_CLASS}
                 onClick={() =>
                   downloadTextFile(
                     artifactDownloadName(record.kind, record.language, record.title),
@@ -236,23 +231,26 @@ export function ArtifactPreview({ onClose, target }: { onClose?: () => void; tar
                     MIME_BY_KIND[record.kind]
                   )
                 }
+                size="icon-xs"
                 type="button"
+                variant="ghost"
               >
-                <Download className="size-3" />
-              </button>
+                <Download />
+              </Button>
             </Tip>
             {record.kind === 'html' && window.hermesDesktop && (
               <Tip label={copy.openInBrowser}>
-                <button
+                <Button
                   aria-label={copy.openInBrowser}
-                  className={HEADER_BUTTON_CLASS}
                   onClick={() =>
                     void openHtmlInBrowser(version.content).catch(error => notifyError(error, copy.openInBrowserFailed))
                   }
+                  size="icon-xs"
                   type="button"
+                  variant="ghost"
                 >
-                  <ExternalLink className="size-3" />
-                </button>
+                  <ExternalLink />
+                </Button>
               </Tip>
             )}
           </>
