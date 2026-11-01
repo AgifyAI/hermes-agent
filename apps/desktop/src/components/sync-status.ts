@@ -66,7 +66,7 @@ export function deriveSyncStatusSummary(receipt: DesktopSyncReceipt | null): Syn
       : 'Dependency rebuild failed — inspect the update receipt'
     level = 'error'
   } else if (needsFixing.length > 0) {
-    headline = `${needsFixing.length} plugin${needsFixing.length === 1 ? '' : 's'} need update-url review`
+    headline = `${needsFixing.length} ${needsFixing.length === 1 ? 'plugin needs' : 'plugins need'} update-url review`
     level = 'warn'
   } else if (disabledPlugins.length > 0) {
     headline = `${disabledPlugins.length} plugin${

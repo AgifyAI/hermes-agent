@@ -394,7 +394,7 @@
     --ui-widget-surface-background: var(--linear-bg-card);
     --ui-chat-bubble-background: var(--linear-bg-quaternary);
     --ui-chat-bubble-opaque-background: var(--linear-bg-quaternary);
-    --ui-inline-code-background: var(--linear-bg-secondary);
+    --ui-inline-code-background: var(--linear-segment-selected);
     --ui-inline-code-foreground: var(--linear-text-secondary);
     --ui-selection-background: var(--linear-selection);
 
@@ -723,9 +723,11 @@
    The fallback is declared FIRST: it shares specificity with every kind rule
    below, so source order alone decides the cascade — declared after them it
    would repaint every kinded reference in the raw primary (#114612). */
+/* Reference text sits on panels and cards, where the solid accent is too faint in
+   dark mode; the hover step is the accent that reads as text in both themes. */
 .ref,
 [data-ref] {
-  --ref-color: var(--dt-primary);
+  --ref-color: var(--linear-accent-hover);
 }
 
 [data-ref='file'],

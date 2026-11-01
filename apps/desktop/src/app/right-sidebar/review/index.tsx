@@ -196,13 +196,13 @@ export function ReviewPane() {
               <Codicon name="close" size="0.875rem" />
             </Button>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto px-1 pb-1">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-1 pb-1">
             {diffLoading ? (
               showDiffSkeleton ? (
                 <DiffSkeleton />
               ) : null
             ) : diff ? (
-              <FileDiffPanel className="mx-0 mb-0 h-full max-h-none" diff={diff} path={selectedFile.path} virtualized />
+              <FileDiffPanel className="mx-0 mb-0 min-h-0 max-h-none flex-1" diff={diff} path={selectedFile.path} virtualized />
             ) : (
               <div className="py-6 text-center text-xs text-(--linear-text-tertiary)">{c.noDiff}</div>
             )}

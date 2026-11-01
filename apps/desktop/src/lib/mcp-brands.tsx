@@ -81,14 +81,14 @@ export const MCP_BRAND_ICONS: Record<string, McpBrand> = {
   n8n: { Icon: SiN8n, color: '#EA4B71' },
   netlify: { Icon: SiNetlify, color: '#00C7B7' },
   notion: { Icon: SiNotion, color: '#000000', monochrome: true },
-  paypal: { Icon: SiPaypal, color: '#003087' },
+  paypal: { Icon: SiPaypal, color: '#003087', monochrome: true },
   postgres: { Icon: SiPostgresql, color: '#4169E1' },
   postgresql: { Icon: SiPostgresql, color: '#4169E1' },
-  sentry: { Icon: SiSentry, color: '#362D59' },
+  sentry: { Icon: SiSentry, color: '#362D59', monochrome: true },
   // simple-icons dropped Slack's mark on a trademark request and the site's
   // favicon is a flat purple square that reads as a blank disc at chip size.
   // Tabler's outline pinwheel is the one recognisable Slack we can ship.
-  slack: { Icon: IconBrandSlack as ComponentType<SVGProps<SVGSVGElement>>, color: '#4A154B' },
+  slack: { Icon: IconBrandSlack as ComponentType<SVGProps<SVGSVGElement>>, color: '#4A154B', monochrome: true },
   spotify: { Icon: SiSpotify, color: '#1DB954' },
   square: { Icon: SiSquare, color: '#3E4348', monochrome: true },
   stripe: { Icon: SiStripe, color: '#635BFF' },

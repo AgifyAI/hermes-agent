@@ -502,7 +502,7 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
         {status?.placement?.startsWith('terminal:') ? (
           // Where the desktop lives matters for what a takeover can reach: inside the terminal's sandbox,
           // not on the gateway host.
-          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-segment-selected) text-(--linear-text-tertiary)">
             {t.screen.placementSandbox(status.placement.slice('terminal:'.length))}
           </span>
         ) : null}
@@ -521,9 +521,9 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
             {t.screen.youControl}
           </span>
         ) : humanOther ? (
-          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">{t.screen.otherControls}</span>
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-segment-selected) text-(--linear-text-tertiary)">{t.screen.otherControls}</span>
         ) : (
-          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">{t.screen.agentControls}</span>
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-segment-selected) text-(--linear-text-tertiary)">{t.screen.agentControls}</span>
         )}
         {iHold ? (
           <Button disabled={busy} onClick={() => void handBack()} size="sm" variant="secondary">

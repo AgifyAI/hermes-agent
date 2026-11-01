@@ -158,7 +158,7 @@ export function ResizableMarkdownTable({ children, className, ...props }: Compon
       <table
         className={cn(
           'm-0 w-full min-w-[18rem] border-collapse text-[length:var(--conversation-text-font-size)] [&_tr]:border-b-[0.5px] [&_tr]:border-(--linear-border-panel) last:[&_tr]:border-0',
-          widths && 'table-fixed [&_td]:wrap-anywhere',
+          widths ? 'table-fixed [&_td]:wrap-anywhere' : '[&_td]:wrap-break-word',
           className
         )}
         onDoubleClick={onDoubleClick}

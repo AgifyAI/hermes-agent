@@ -23,7 +23,7 @@ const TAG_CLASSES = {
   pre: 'mb-2 overflow-x-hidden whitespace-pre-wrap wrap-anywhere rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-secondary) p-2 font-mono text-[0.7rem] leading-[1.55] last:mb-0 [&>code]:block [&>code]:rounded-none [&>code]:bg-transparent [&>code]:p-0',
   td: 'px-2 py-1 align-top leading-snug',
   th: 'px-2 py-1 text-left text-[0.6875rem] font-medium whitespace-nowrap text-(--linear-text-tertiary)',
-  thead: 'bg-(--linear-bg-secondary)',
+  thead: 'bg-(--linear-bg-quaternary)',
   ul: 'mb-2 list-disc pl-5 last:mb-0'
 } as const
 
@@ -59,7 +59,7 @@ function MarkdownCode({ className, ...rest }: ComponentProps<'code'>) {
   return (
     <code
       className={cn(
-        'rounded-(--linear-radius-kbd) bg-(--linear-bg-secondary) px-1 py-px font-mono text-[0.86em] text-(--linear-text-tertiary)',
+        'rounded-(--linear-radius-kbd) bg-(--linear-segment-selected) px-1 py-px font-mono text-[0.86em] text-(--linear-text-tertiary)',
         className
       )}
       {...rest}

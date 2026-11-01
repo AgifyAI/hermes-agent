@@ -654,17 +654,19 @@ export function FileDiffPanel({
   // full-Shiki-of-every-line freeze on large diffs). With `showLineNumbers` a
   // VS Code-style gutter (new number for context/adds, old for removals) sits in
   // a left column; the scroller owns scroll so the overview ruler (an absolute
-  // sibling) stays viewport-fixed.
+  // sibling) stays viewport-fixed. The scroller stays in flow: its spacers carry
+  // the full row height, so a parent that only caps its height (the review pane's
+  // `max-h`) still sizes to the diff instead of collapsing to nothing.
   return (
-    <div className={cn(DIFF_BOX_CLASS, 'relative overflow-hidden', className)} data-slot="file-diff-panel">
+    <div className={cn(DIFF_BOX_CLASS, 'relative flex flex-col overflow-hidden', className)} data-slot="file-diff-panel">
       <div
-        className={cn('absolute inset-0 overflow-auto', showLineNumbers && 'pr-2.5')}
+        className={cn('min-h-0 flex-1 overflow-auto', showLineNumbers && 'pr-2.5')}
         onScroll={onScroll}
         ref={scrollerRef}
       >
         {showLineNumbers ? (
           <div className="grid min-w-max grid-cols-[auto_minmax(0,1fr)]">
-            <div className="sticky left-0 z-1 select-none bg-(--linear-bg-panel) py-3 text-(--linear-text-quaternary)">
+            <div className="sticky left-0 z-1 select-none bg-(--linear-bg-panel) text-(--linear-text-quaternary)">
               {beforeRows > 0 && <div aria-hidden style={{ height: beforeRows * PREVIEW_LINE_PX }} />}
               {visibleLineChunks.map(chunk => (
                 <div className="block" key={chunk.start}>

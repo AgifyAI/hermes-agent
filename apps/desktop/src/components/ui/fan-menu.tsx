@@ -300,7 +300,7 @@ export function FanMenu({ direction = 'vertical', gap = 4, hint = true, hub, ite
   )
 }
 
-function discStyle(target: Point, index: number, entered: boolean): CSSProperties {
+function discStyle(target: Point, index: number, entered: boolean, disabled: boolean): CSSProperties {
   // Folded, a disc sits halfway to its slot rather than under the hub: one
   // that mounts beneath a parked pointer picks up :hover and keeps it (a
   // transform-only move never re-hit-tests), so it would pop out pre-lit.
@@ -308,7 +308,8 @@ function discStyle(target: Point, index: number, entered: boolean): CSSPropertie
   const delay = index * STAGGER_MS
 
   return {
-    opacity: entered ? 1 : 0,
+    // The inline opacity outranks Button's `disabled:opacity-60`, so restate it.
+    opacity: entered ? (disabled ? 0.6 : 1) : 0,
     scale: entered ? '1' : '0.5',
     translate: `${(target.x * k).toFixed(2)}px ${(target.y * k).toFixed(2)}px`,
     transition: entered
@@ -389,7 +390,7 @@ const FanCluster = memo(function FanCluster({
             onPointerEnter={onPointerEnter}
             onPointerLeave={onPointerLeave}
             size="inline"
-            style={discStyle(offsets[index], index, entered)}
+            style={discStyle(offsets[index], index, entered, Boolean(item.disabled))}
             type="button"
             variant={item.active ? 'default' : 'floating'}
           >

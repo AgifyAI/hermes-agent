@@ -12,7 +12,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-[color-mix(in_srgb,var(--linear-accent)_12%,transparent)] text-(--linear-accent)',
-        muted: 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)',
+        muted: 'bg-(--linear-segment-selected) text-(--linear-text-tertiary)',
         success: 'bg-[color-mix(in_srgb,var(--linear-green)_14%,transparent)] text-(--linear-green)',
         warn: 'bg-[color-mix(in_srgb,var(--linear-orange)_14%,transparent)] text-(--linear-orange)',
         destructive: 'bg-[color-mix(in_srgb,var(--linear-red)_12%,transparent)] text-(--linear-red)',
