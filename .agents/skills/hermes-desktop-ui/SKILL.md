@@ -31,7 +31,8 @@ ps -axo pid,command | grep -E "MacOS/(Hermes|Electron)" | grep -v Helper
 - Use the real Electron app over the DevTools protocol, never a plain browser tab on the Vite URL.
 - Before opening the isolated copy, tell the user a second, empty window will appear and why. Close it as soon as the capture ends.
 - A capture from the isolated copy proves chrome only. Never mark a data-bearing screen verified from it.
-- Quitting Hermes interrupts the user's running agents. Warn them first, and relaunch without a debug port when done.
+- Quitting Hermes interrupts the user: agents on a local gateway stop. Warn them first, and relaunch without a debug port when done.
+- The debug instance is a window the user can type in, and your navigation moves under their hands. Ask them to stay out of it, and stop scripting as soon as a capture shows activity that is not yours. Before each quit, read the composer over the debug port. If it holds a draft, do not quit: ask.
 
 ## 3. Delegate large work
 
@@ -47,7 +48,7 @@ For a small change, do it yourself. For work across many screens:
 
 1. Run the checks: `cd apps/desktop && npm run typecheck && npm run lint && npm run test:ui`, then `python scripts/check` at the repo root. Attribute any failure by running it on the base commit.
 2. Rebuild and launch. See [the harness guide](references/harness.md).
-3. Capture every listed screen in both modes with `scripts/capture.mjs`.
+3. Capture every listed screen in both modes with `scripts/capture.mjs`. For Settings, `scripts/settings-sweep.mjs` visits every subpage and flags content overflowing its panel.
 4. **Open and look at every image.** A saved file proves nothing. Check for clipped or overflowing content, off-centre layouts, weak contrast in dark, leftover legacy styling, and divergence from the Linear reference. Read the console errors the script returns.
 5. Exercise difficult content: long unbroken strings, real error text, long names, empty lists.
 6. Fix in the primitive where possible, then recapture what changed. Run one full pass on the final build.
@@ -63,6 +64,8 @@ Tick a screen only if you saw it. State plainly:
 - side effects on the user's data, such as a session whose "last active" moved because a capture opened it.
 
 Delivery follows `apps/desktop/AGENTS.md` § Delivery. Replace `/Applications/Hermes.app` only when the user or the task asks for it.
+
+Before packing for delivery, run `git status -sb` and confirm `main` matches `origin/main`. A failed `git pull --ff-only` does not stop `npm run pack`, which then builds the old UI without warning. A branch cut from a local `main` that was ahead of GitHub causes this failure.
 
 ## When something is missing
 
