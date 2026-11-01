@@ -16,16 +16,16 @@ const EMOJIBASE_URL = './emojibase'
 
 // Slack tints its picker cells in a repeating palette (green, blue, yellow,
 // pink, brown, purple…) so long scrolls stay scannable. Same trick, in the
-// app's own accent idiom (bg-emerald-500/15 etc. are existing patterns).
+// Linear status palette (green, blue, yellow, pink, orange, accent).
 // Keyed off the emoji's codepoint — deterministic, and stable under
 // frimousse's virtualized rows (an index cycle would reshuffle on scroll).
 const CELL_TINTS = [
-  'hover:bg-emerald-500/15 data-[active]:bg-emerald-500/20',
-  'hover:bg-sky-500/15 data-[active]:bg-sky-500/20',
-  'hover:bg-amber-500/15 data-[active]:bg-amber-500/20',
-  'hover:bg-pink-500/15 data-[active]:bg-pink-500/20',
-  'hover:bg-orange-500/15 data-[active]:bg-orange-500/20',
-  'hover:bg-violet-500/15 data-[active]:bg-violet-500/20'
+  'hover:bg-(--linear-green)/15 data-[active]:bg-(--linear-green)/20',
+  'hover:bg-(--linear-blue)/15 data-[active]:bg-(--linear-blue)/20',
+  'hover:bg-(--linear-yellow)/15 data-[active]:bg-(--linear-yellow)/20',
+  'hover:bg-(--linear-pink)/15 data-[active]:bg-(--linear-pink)/20',
+  'hover:bg-(--linear-orange)/15 data-[active]:bg-(--linear-orange)/20',
+  'hover:bg-(--linear-accent)/15 data-[active]:bg-(--linear-accent)/20'
 ] as const
 
 const cellTint = (emoji: string) => CELL_TINTS[(emoji.codePointAt(0) ?? 0) % CELL_TINTS.length]

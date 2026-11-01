@@ -26,8 +26,8 @@ const META_CLASS = 'text-[length:var(--conversation-tool-font-size)]'
  * renderer makes it browsable.
  *
  * It sits on the same shell as every other inline widget
- * (`WIDGET_SHELL_CLASS`: one radius above the composer, mode-derived fill, no
- * border) and uses the conversation's own type scale, so a listing reads as
+ * (`WIDGET_SHELL_CLASS`: a Linear card — 10px radius, card fill, one
+ * hairline) and uses the conversation's own type scale, so a listing reads as
  * app surface rather than a pasted webpage.
  *
  * Facts ride a quiet meta line; catches get ONE muted line, not a wall of
@@ -95,7 +95,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 
         {listing.catches.length > 0 && (
           <span className={cn(META_CLASS, 'mt-2 flex gap-1.5 text-muted-foreground')}>
-            <Codicon className="mt-px shrink-0 text-amber-500" name="warning" size="0.75rem" />
+            <Codicon className="mt-px shrink-0 text-(--linear-yellow)" name="warning" size="0.75rem" />
             <span className="min-w-0">{listing.catches.join(' · ')}</span>
           </span>
         )}
@@ -250,7 +250,7 @@ function GalleryTile({
           <span
             className={cn(
               TEXT_CLASS,
-              'absolute inset-0 grid place-items-center bg-background/55 font-medium tabular-nums text-foreground backdrop-blur-[2px]'
+              'absolute inset-0 grid place-items-center bg-(--linear-bg-card)/70 font-medium tabular-nums text-(--linear-text-primary)'
             )}
           >
             +{more}

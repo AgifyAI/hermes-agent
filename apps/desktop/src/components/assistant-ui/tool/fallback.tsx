@@ -101,17 +101,18 @@ const TOOL_HEADER_SUBTITLE_CLASS =
 
 const TOOL_HEADER_GLYPH_WRAP_CLASS = cn(SCAFFOLD_GLYPH_CLASS, 'self-center')
 
-// Glass-style section label that sits above any pre/JSON/output block.
-// Lowercase tracking + tiny size so it reads as a quiet field label rather
-// than a chrome heading. Used for "stdout", "stderr", "Search results", etc.
-const TOOL_SECTION_LABEL_CLASS = 'mb-1 text-[0.65rem] font-medium uppercase tracking-[0.08em] text-(--ui-text-tertiary)'
+// Section label above any pre/JSON/output block — Linear's 11px/500 tertiary
+// hint, so it reads as a quiet field label rather than a chrome heading. Used
+// for "stdout", "stderr", "Search results", etc.
+const TOOL_SECTION_LABEL_CLASS = 'mb-1 text-[0.6875rem] font-medium text-(--linear-text-tertiary)'
 
 // Inset scroll surface for any detail body. The expanded tool row owns the
 // border; the payload itself is just clipped raw text.
 const TOOL_SECTION_SURFACE_CLASS =
   'max-h-20 max-w-full overflow-auto bg-transparent px-2 py-1.5 text-(--ui-text-secondary)'
 
-const TOOL_EXPANDED_SHELL_CLASS = 'rounded-[0.3125rem] border border-(--ui-stroke-tertiary)'
+// An open row is a Linear card: 10px radius, one panel hairline, no shadow.
+const TOOL_EXPANDED_SHELL_CLASS = 'rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-panel)'
 
 const TOOL_SECTION_PRE_CLASS = cn(TOOL_SECTION_SURFACE_CLASS, 'font-mono text-[0.7rem] leading-relaxed')
 
@@ -211,17 +212,10 @@ function statusGlyph(status: ToolStatus, copy: ToolStatusCopy): ReactNode {
   }
 
   if (status === 'warning') {
-    return (
-      <AlertCircle aria-label={copy.statusRecovered} className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-    )
+    return <AlertCircle aria-label={copy.statusRecovered} className="size-3.5 shrink-0 text-(--linear-orange)" />
   }
 
-  return (
-    <CheckCircle2
-      aria-label={copy.statusDone}
-      className="size-3.5 shrink-0 text-emerald-600/85 dark:text-emerald-400/85"
-    />
-  )
+  return <CheckCircle2 aria-label={copy.statusDone} className="size-3.5 shrink-0 text-(--linear-green)/85" />
 }
 
 // Leading glyph for any tool-row header. Status (running/error/warning)
@@ -318,7 +312,7 @@ function ToolTitle({
         SCAFFOLD_LABEL_CLASS,
         isPending && 'text-(--conversation-scaffold-meta)',
         status === 'error' && 'text-destructive',
-        status === 'warning' && 'text-amber-700 dark:text-amber-300',
+        status === 'warning' && 'text-(--linear-orange)',
         legendary && !isPending && 'tool-memory-legendary-title text-transparent'
       )}
     >
@@ -615,7 +609,7 @@ function ToolEntry({ part }: ToolEntryProps) {
       data-tool-row=""
       ref={enterRef}
     >
-      <div className={cn(open && 'border-b border-(--ui-stroke-tertiary) px-2 py-1.5')}>
+      <div className={cn(open && 'border-b-[0.5px] border-(--linear-border-panel) px-2 py-1.5')}>
         <DisclosureRow
           action={dismissAction}
           onToggle={
@@ -656,12 +650,8 @@ function ToolEntry({ part }: ToolEntryProps) {
             )}
             {showDiffStats && diffStats && (
               <span className="flex shrink-0 items-center gap-1 font-mono text-[0.625rem] tabular-nums">
-                {diffStats.added > 0 && (
-                  <span className="text-emerald-600 dark:text-emerald-400">+{diffStats.added}</span>
-                )}
-                {diffStats.removed > 0 && (
-                  <span className="text-rose-600 dark:text-rose-400">−{diffStats.removed}</span>
-                )}
+                {diffStats.added > 0 && <span className="text-(--linear-green)">+{diffStats.added}</span>}
+                {diffStats.removed > 0 && <span className="text-(--linear-red)">−{diffStats.removed}</span>}
               </span>
             )}
             {!isFileEdit && !isPending && view.durationLabel && (
@@ -688,7 +678,7 @@ function ToolEntry({ part }: ToolEntryProps) {
             <TerminalTranscript command={view.terminalCommand} exitCode={view.terminalExitCode} />
           )}
           {view.imageUrl && (
-            <div className="max-w-72 overflow-hidden rounded-[0.25rem] border border-(--ui-stroke-tertiary)">
+            <div className="max-w-72 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-panel)">
               <MarkdownImage alt={copy.outputAlt} src={view.imageUrl} />
             </div>
           )}
@@ -796,7 +786,7 @@ function TerminalTranscript({ command, exitCode }: TerminalTranscriptProps) {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-[0.25rem] border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) px-2 py-1.5 font-mono text-[0.7rem] leading-relaxed">
+    <div className="flex min-w-0 items-center gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-secondary) px-2 py-1.5 font-mono text-[0.7rem] leading-relaxed">
       {command && (
         <code className="min-w-0 flex-1 whitespace-pre-wrap wrap-anywhere text-(--ui-text-secondary)">
           <span aria-hidden className="select-none text-(--ui-accent-secondary)">
@@ -808,8 +798,8 @@ function TerminalTranscript({ command, exitCode }: TerminalTranscriptProps) {
       {exitCode !== undefined && (
         <span
           className={cn(
-            'shrink-0 rounded bg-(--ui-bg-tertiary) px-1 py-px text-[0.6rem] tabular-nums',
-            exitCode === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+            'shrink-0 rounded-(--linear-radius-kbd) bg-(--linear-bg-tertiary) px-1 py-px text-[0.6875rem] tabular-nums',
+            exitCode === 0 ? 'text-(--linear-green)' : 'text-(--linear-orange)'
           )}
         >
           exit {exitCode}

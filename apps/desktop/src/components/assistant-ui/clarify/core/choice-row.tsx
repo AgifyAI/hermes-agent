@@ -23,7 +23,7 @@ export function ChoiceLabel({ choice }: { choice: string }) {
 }
 
 export const OPTION_ROW_CLASS =
-  'flex w-full items-start gap-2 rounded-[0.25rem] px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-50'
+  'flex w-full items-start gap-2 rounded-(--linear-radius-control) px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-50'
 
 export function KeyBadge({
   char,
@@ -43,8 +43,8 @@ export function KeyBadge({
       className={cn(
         'mt-px',
         disabled && 'opacity-50',
-        selected && 'border-primary bg-primary text-white shadow-none',
-        !selected && preview && 'border-primary text-primary shadow-none'
+        selected && 'border-(--linear-accent) bg-(--linear-accent) text-(--linear-on-accent) shadow-none',
+        !selected && preview && 'border-(--linear-accent) text-(--linear-accent) shadow-none'
       )}
       size="sm"
     >

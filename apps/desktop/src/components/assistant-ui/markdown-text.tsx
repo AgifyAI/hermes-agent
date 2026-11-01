@@ -186,8 +186,8 @@ function MediaPlaybackAttachment({ path }: { path: string }) {
 
   if (kind === 'audio' && src) {
     return (
-      <span className="my-3 block max-w-md rounded-xl border border-(--ui-stroke-tertiary) bg-muted/35 p-3">
-        <span className="mb-2 block truncate text-xs font-medium text-muted-foreground">{name}</span>
+      <span className="my-3 block max-w-md rounded-xl border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-card) p-3">
+        <span className="mb-2 block truncate text-xs font-medium text-(--linear-text-tertiary)">{name}</span>
         <audio
           className="block w-full"
           controls
@@ -203,8 +203,8 @@ function MediaPlaybackAttachment({ path }: { path: string }) {
 
   if (kind === 'video' && src) {
     return (
-      <span className="my-3 block max-w-2xl rounded-xl border border-(--ui-stroke-tertiary) bg-muted/35 p-3">
-        <span className="mb-2 block truncate text-xs font-medium text-muted-foreground">{name}</span>
+      <span className="my-3 block max-w-2xl rounded-xl border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-card) p-3">
+        <span className="mb-2 block truncate text-xs font-medium text-(--linear-text-tertiary)">{name}</span>
         <TranscriptVideo
           className="block max-h-112 w-full rounded-lg bg-black"
           controls
@@ -441,7 +441,7 @@ function MarkdownImageContent({
           {...props}
           alt={alt}
           className={cn(
-            'm-0 block h-auto w-auto max-w-full rounded-lg object-scale-down shadow-[0_0.0625rem_0.125rem_color-mix(in_srgb,#000_4%,transparent),0_0.625rem_1.5rem_color-mix(in_srgb,#000_5%,transparent)]',
+            'm-0 block h-auto w-auto max-w-full rounded-lg object-scale-down',
             framed ? 'max-h-full' : 'max-h-(--image-preview-height)',
             className
           )}
@@ -516,7 +516,7 @@ const MARKDOWN_CONTAINER_CLASS_NAME = cn(
   // Suspense fallback, budget-exceeded blocks): unreadable in light mode.
   'prose-pre:text-foreground',
   'prose-a:break-words prose-p:[overflow-wrap:anywhere]',
-  'prose-li:marker:text-muted-foreground/70',
+  'prose-li:marker:text-(--linear-text-quaternary)',
   'prose-code:rounded-[0.25rem] prose-code:px-[0.1875rem] prose-code:py-px prose-code:font-mono prose-code:text-[0.9em] prose-code:font-normal prose-code:before:content-none prose-code:after:content-none',
   '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>*+*]:mt-(--paragraph-gap)'
 )
@@ -529,7 +529,7 @@ function HugeTextFallback({ containerClassName, text }: { containerClassName?: s
   return (
     <div
       className={cn(
-        'aui-md w-full max-w-none overflow-hidden rounded-[0.625rem] border border-(--ui-stroke-tertiary) font-mono text-[0.7rem] leading-relaxed text-foreground/90',
+        'aui-md w-full max-w-none overflow-hidden rounded-xl border-[0.5px] border-(--linear-border-panel) font-mono text-[0.7rem] leading-relaxed text-foreground/90',
         containerClassName
       )}
     >
@@ -729,7 +729,7 @@ function MarkdownTextSurface({
         // doesn't undo a resize.
         table: ResizableMarkdownTable,
         thead: ({ className, ...props }: ComponentProps<'thead'>) => (
-          <thead className={cn('m-0 bg-muted/35 text-muted-foreground', className)} {...props} />
+          <thead className={cn('m-0 bg-(--linear-bg-secondary)/50 text-(--linear-text-tertiary)', className)} {...props} />
         ),
         th: ResizableMarkdownTh,
         td: ({ children, className, ...props }: ComponentProps<'td'>) => (

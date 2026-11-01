@@ -576,11 +576,7 @@ function AsciiBar({
 
   // Green / yellow / red: how much of the allowance is used.
   const color =
-    style === 'red'
-      ? 'text-red-600 dark:text-red-400'
-      : style === 'yellow'
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-emerald-600 dark:text-emerald-400'
+    style === 'red' ? 'text-(--linear-red)' : style === 'yellow' ? 'text-(--linear-orange)' : 'text-(--linear-green)'
 
   return (
     <span className="inline-flex items-center gap-1 font-mono" title={percentLabel}>
@@ -653,8 +649,8 @@ export function UsageLevelTag({
         isCurrent
           ? 'bg-primary-foreground/20 text-primary-foreground'
           : level === 'free'
-            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-            : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+            ? 'bg-(--linear-green)/15 text-(--linear-green)'
+            : 'bg-(--linear-orange)/15 text-(--linear-orange)'
       )}
       title={level === 'top_tier' ? t.modelPicker.largeFootnote : undefined}
     >
@@ -694,9 +690,7 @@ export function PlanLimitLine({ className, provider }: { className?: string; pro
 
   return (
     <div className={cn('text-[0.62rem] leading-snug', className)}>
-      <span className={limit.then === 'wait' ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}>
-        {head}
-      </span>
+      <span className={limit.then === 'wait' ? 'text-(--linear-orange)' : 'text-muted-foreground'}>{head}</span>
       {then ? (
         <span className={limit.then === 'credits' ? 'text-foreground' : 'text-muted-foreground'}> · {then}</span>
       ) : null}
@@ -763,7 +757,7 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
           <span
             className={cn(
               'rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold',
-              isCurrent ? 'bg-primary-foreground/20' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+              isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-orange)/15 text-(--linear-orange)'
             )}
           >
             -{price.discount_percent}%
@@ -772,7 +766,7 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
         <span
           className={cn(
             'shrink-0 rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold uppercase tracking-wide',
-            isCurrent ? 'bg-primary-foreground/20' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+            isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-green)/15 text-(--linear-green)'
           )}
         >
           {copy.free}
@@ -795,7 +789,7 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
         <span
           className={cn(
             'rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold',
-            isCurrent ? 'bg-primary-foreground/20' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+            isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-orange)/15 text-(--linear-orange)'
           )}
         >
           -{price.discount_percent}%
@@ -846,7 +840,7 @@ function ProviderHeading({ provider }: { provider: ModelOptionProvider }) {
         {planName}
       </span>
     ) : provider.free_tier === true || provider.free_tier_row === true ? (
-      <span className="rounded-sm bg-emerald-500/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+      <span className="rounded-sm bg-(--linear-green)/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-(--linear-green)">
         {copy.freeTier}
       </span>
     ) : provider.free_tier === false ? (

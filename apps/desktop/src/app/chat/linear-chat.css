@@ -1,7 +1,7 @@
 /* Chat-only rules: Linear's issue view and comment composer, measured in the
    Linear app's DevTools (docs/linear-design-reference.md). Colours come from the
-   global --linear-* layer in styles.css; a literal is a chat measurement that
-   has no global token. Scoped to chat and its portaled composer. */
+   global --linear-* layer in styles.css, never a literal. Scoped to chat and
+   its portaled composer. */
 
 .linear-chat {
   --chat-surface: var(--linear-bg-panel);
@@ -50,19 +50,28 @@
 
 .dark .linear-chat {
   --chat-placeholder: var(--linear-text-hint);
-  --chat-border: #303033;
-  --chat-hover: #252627;
-  --chat-accent: #7170ff;
-  --chat-shadow: 0 4px 4px -1px #0000000a, 0 1px 1px #00000014;
+  --chat-border: var(--linear-border-kbd);
+  --chat-hover: var(--linear-hover-control);
+}
+
+/* Linear's composer is opaque in every state. styles.css thins the fill while
+   the thread is scrolled up (it used to sit behind a backdrop blur); without
+   the blur that would show the transcript through the editor, so each of its
+   states is pinned back to the input surface here. */
+.linear-chat [data-slot='composer-root'],
+.linear-chat [data-slot='composer-root'][data-thread-scrolled-up],
+.linear-chat
+  [data-slot='composer-dock']:is(:hover, :focus-within)
+  [data-slot='composer-root'][data-thread-scrolled-up] {
+  --composer-fill: var(--chat-input);
 }
 
 .linear-chat [data-slot='composer-root'] {
-  --composer-fill: var(--chat-input);
-  border-radius: 10px;
+  border-radius: var(--linear-radius-card);
 }
 
 .linear-chat [data-slot='composer-surface'] {
-  border-radius: 10px;
+  border-radius: var(--linear-radius-card);
   box-shadow: var(--chat-shadow);
 }
 
@@ -104,7 +113,7 @@
 
 .linear-chat .composer-human-message {
   border-color: var(--chat-border);
-  border-radius: 10px;
+  border-radius: var(--linear-radius-card);
   box-shadow: none;
   backdrop-filter: none;
 }
@@ -127,4 +136,17 @@
   margin-top: 0.75rem;
   font-size: 0.9375rem;
   line-height: 1.5rem;
+}
+
+/* Streaming code: the card keeps its entrance but drops the pulsing ring and
+   glow, so a streaming fence repaints no shadow on every frame. */
+.linear-chat [data-slot='aui_assistant-message-content'] .aui-md [data-slot='code-card'][data-streaming='true'] {
+  animation: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .linear-chat [data-slot='aui_assistant-message-content'] .aui-md [data-slot='code-card'][data-streaming='true'] {
+    animation: code-card-stream-enter 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
 }

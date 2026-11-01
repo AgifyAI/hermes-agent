@@ -101,10 +101,11 @@ export function ScrollToBottomButton({ sessionId }: { sessionId: string | null }
       aria-hidden={!visible}
       aria-label={label}
       className={cn(
-        'thread-jump-button absolute left-1/2 z-20 flex h-8 items-center gap-1.5 rounded-full border bg-(--composer-fill) px-3 text-xs font-medium backdrop-blur-[0.75rem] [-webkit-backdrop-filter:blur(0.75rem)]',
+        // Opaque Linear overlay pill: no backdrop blur over the scrolling thread.
+        'thread-jump-button absolute left-1/2 z-20 flex h-8 items-center gap-1.5 rounded-full border-[0.5px] bg-(--linear-bg-overlay) px-3 text-xs font-medium shadow-(--linear-shadow-low) hover:bg-(--linear-hover-overlay)',
         visibleApproval
-          ? 'border-primary/40 text-primary hover:bg-primary/10'
-          : 'border-border/65 text-muted-foreground hover:text-foreground',
+          ? 'border-(--linear-accent)/40 text-(--linear-accent)'
+          : 'border-(--linear-border-overlay) text-(--linear-text-tertiary) hover:text-(--linear-text-primary)',
         !visible && 'pointer-events-none'
       )}
       data-state={state}

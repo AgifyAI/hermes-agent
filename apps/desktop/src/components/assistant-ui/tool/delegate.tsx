@@ -51,7 +51,7 @@ function statusGlyph(status: DelegateRowStatus, label: string): ReactNode {
     return <span aria-hidden className="size-1.5 rounded-full bg-(--ui-text-tertiary)" />
   }
 
-  return <CheckCircle2 aria-label={label} className="size-3.5 text-emerald-600/85 dark:text-emerald-400/85" />
+  return <CheckCircle2 aria-label={label} className="size-3.5 text-(--linear-green)/85" />
 }
 
 /**
@@ -93,7 +93,7 @@ function DelegateRowView({ row }: { row: DelegateRow }) {
   // and the whole card read as stacked ghosts (#105579). styles.css's own
   // invariant: the mark is per surface and never on a container.
   return (
-    <div className="grid min-w-0 max-w-full gap-0.5 rounded-xl border border-(--ui-stroke-tertiary) px-3 py-2">
+    <div className="grid min-w-0 max-w-full gap-0.5 rounded-xl border-[0.5px] border-(--linear-border-panel) px-3 py-2">
       <div className="flex min-w-0 max-w-full items-center gap-1.5" data-conversation-scaffold="">
         <span className={SCAFFOLD_GLYPH_CLASS}>{statusGlyph(row.status, statusLabel)}</span>
         <button

@@ -27,11 +27,11 @@ const DOT_BASE = 'size-1.5 rounded-full'
 // filled means producing, hollow means open but quiet. The two states this
 // replaces differed by 30% opacity and were, in practice, the same dot.
 const DOT_VARIANTS: Record<SessionDotState, DotVariant> = {
-  // Amber — a clarify/approval is blocking the turn. The one "act now" color,
+  // Yellow — a clarify/approval is blocking the turn. The one "act now" color,
   // and the only state the user is required to do something about.
   'needs-input': {
     ariaLabel: r => r.needsInput,
-    className: `${DOT_BASE} bg-amber-500`,
+    className: `${DOT_BASE} bg-(--linear-yellow)`,
     role: 'status',
     title: r => r.waitingForAnswer
   },

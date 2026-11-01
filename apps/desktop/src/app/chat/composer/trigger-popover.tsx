@@ -43,14 +43,16 @@ function rowKind(item: Unstable_TriggerItem, isSlash: boolean): string {
   return item.type
 }
 
+// Linear menu rows (docs/linear-design-reference.md § Menu), kept one notch
+// denser than a dropdown: radius 8, overlay highlight, strong text when lit.
 const ROW_CLASS = [
-  'relative flex w-full cursor-default select-none items-center gap-2 rounded-md px-2 py-1 text-left',
-  'outline-hidden transition-colors hover:bg-(--ui-bg-tertiary)',
-  'data-[highlighted]:bg-(--ui-bg-tertiary) data-[highlighted]:text-foreground'
+  'relative flex w-full cursor-default select-none items-center gap-2 rounded-(--linear-radius-control) px-2 py-1 text-left',
+  'outline-hidden transition-colors duration-100 hover:bg-(--linear-hover-overlay) hover:transition-none',
+  'data-[highlighted]:bg-(--linear-hover-overlay) data-[highlighted]:text-(--linear-text-overlay-strong)'
 ].join(' ')
 
-const GROUP_HEADER_CLASS =
-  'select-none px-2 pb-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-tertiary)'
+// Linear's menu section header: 12px/500 hint text, no caps.
+const GROUP_HEADER_CLASS = 'select-none px-2 pb-0.5 text-xs font-medium text-(--linear-text-hint)'
 
 interface ComposerTriggerPopoverProps {
   activeIndex: number

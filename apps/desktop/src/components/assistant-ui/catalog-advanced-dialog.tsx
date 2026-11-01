@@ -340,8 +340,8 @@ function InstallControls(props: InstallControlsProps) {
 
 const SCAN_TONE = {
   failed: 'text-destructive',
-  passed: 'text-emerald-600 dark:text-emerald-400',
-  warnings: 'text-amber-600 dark:text-amber-400'
+  passed: 'text-(--linear-green)',
+  warnings: 'text-(--linear-orange)'
 } as const
 
 function Section({ children, title }: { children: ReactNode; title: string }) {
