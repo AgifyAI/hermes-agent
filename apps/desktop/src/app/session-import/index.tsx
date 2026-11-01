@@ -134,7 +134,7 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
       <section aria-label={copy.title} className="session-import flex h-full min-h-0 flex-col">
         {/* Linear's page title: 24px/500 on a 32px line, -0.16px tracking. */}
         <header className="px-8 pt-12 pb-6">
-          <h1 className="text-2xl leading-8 font-medium tracking-[-0.16px] text-(--linear-text-primary)">
+          <h1 className="text-[1.5rem] leading-8 font-medium tracking-[-0.16px] text-(--linear-text-primary)">
             {copy.title}
           </h1>
           <p className="mt-1 text-[0.8125rem] text-(--linear-text-tertiary)">{copy.subtitle}</p>
@@ -214,8 +214,9 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                     <button
                       aria-pressed={selected === row.id}
                       className={cn(
-                        'w-full cursor-pointer rounded-(--linear-radius-control) px-3 py-2.5 text-start transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none',
-                        selected === row.id ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-sidebar)'
+                        // Linear's list row: 44px, radius 8, 13px/500 title.
+                        'flex h-11 w-full cursor-pointer items-center gap-2 rounded-(--linear-radius-control) px-3 text-start transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none',
+                        selected === row.id ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
                       )}
                       onClick={() => {
                         setSelected(row.id)
@@ -223,18 +224,17 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                       }}
                       type="button"
                     >
-                      <span className="mb-1 flex items-center gap-1.5 text-xs font-[450] text-(--linear-text-tertiary)">
-                        <Codicon name="comment-discussion" />
-                        {row.label}
-                        <span className="ms-auto tabular-nums">
-                          {row.turn_count} {copy.messages}
+                      <Codicon className="shrink-0 text-(--linear-icon)" name="comment-discussion" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.8125rem] leading-4 font-medium text-(--linear-text-primary)">
+                          {row.title}
+                        </span>
+                        <span className="block truncate text-xs leading-4 font-[450] text-(--linear-text-tertiary)">
+                          {[row.label, row.cwd || row.excerpt].filter(Boolean).join(' · ')}
                         </span>
                       </span>
-                      <span className="line-clamp-2 text-[0.8125rem] leading-5 font-medium text-(--linear-text-primary)">
-                        {row.title}
-                      </span>
-                      <span className="mt-0.5 block truncate text-xs leading-5 font-[450] text-(--linear-text-tertiary)">
-                        {row.cwd || row.excerpt}
+                      <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">
+                        {row.turn_count} {copy.messages}
                       </span>
                     </button>
                   </div>

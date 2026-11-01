@@ -599,7 +599,7 @@ const PrimaryCell = memo(function PrimaryCell({ artifact, ctx }: { artifact: Art
     >
       <Icon className="size-3.5 shrink-0 text-(--linear-icon)" />
       <span
-        className={cn('min-w-0 flex-1 font-medium text-(--linear-text-primary)', isLink ? 'wrap-anywhere' : 'truncate')}
+        className="min-w-0 flex-1 truncate font-medium text-(--linear-text-primary)"
       >
         {label}
         {isLink && <ExternalLinkIcon />}
@@ -643,7 +643,7 @@ const SessionCell = memo(function SessionCell({ artifact, ctx }: { artifact: Art
   return (
     <ArtifactCellAction onClick={() => ctx.onOpenChat(artifact.sessionId)} title={artifact.sessionTitle}>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate">{artifact.sessionTitle}</span>
+        <span className="truncate leading-4">{artifact.sessionTitle}</span>
         <span className="truncate text-xs font-[450] text-(--linear-text-tertiary)">
           {formatArtifactTime(artifact.timestamp)}
         </span>
@@ -702,16 +702,20 @@ function ArtifactTable({
       </thead>
       <tbody>
         {artifacts.map(artifact => (
-          // Linear's list row: 44px, hover fill.
-          <tr
-            className="group/artifact transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
-            key={artifact.id}
-          >
+          // Linear's list row: 44px, radius 8. A <tr> can't round its own fill,
+          // so each cell paints it and the outer two cells carry the corners.
+          <tr className="group/artifact h-11" key={artifact.id}>
             {ARTIFACT_COLUMNS.map(col => {
               const Cell = col.Cell
 
               return (
-                <td className={cn('align-middle', col.bodyClassName)} key={col.id}>
+                <td
+                  className={cn(
+                    'align-middle transition-colors duration-(--linear-speed-quick) first:rounded-l-(--linear-radius-control) last:rounded-r-(--linear-radius-control) group-hover/artifact:bg-(--linear-hover-row) group-hover/artifact:transition-none',
+                    col.bodyClassName
+                  )}
+                  key={col.id}
+                >
                   <Cell artifact={artifact} ctx={ctx} />
                 </td>
               )

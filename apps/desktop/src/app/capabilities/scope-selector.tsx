@@ -200,8 +200,8 @@ export function CapabilityScopeSelector({
     <div
       className={cn(
         'flex min-w-0 items-center gap-2',
-        // Linear's header bar: 44px, hairline below, inset to the tab row above.
-        compact ? 'flex-1' : 'h-11 shrink-0 border-b-[0.5px] border-(--linear-border-secondary) px-6'
+        // Linear's header bar: 44px, 8px left / 12px right, hairline below.
+        compact ? 'flex-1' : 'h-11 shrink-0 border-b-[0.5px] border-(--linear-border-primary) pr-3 pl-2'
       )}
     >
       {!compact && (

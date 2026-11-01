@@ -40,7 +40,7 @@ function CatalogDetailHeader({ entry, action, dialog }: { entry: CatalogEntry; a
           <div className="flex min-w-0 items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className={cn('flex min-w-0 items-center gap-2', dialog && !entry.imageUrl && 'pr-7')}>
-                <Title className="min-w-0 flex-1 break-words text-lg font-semibold">{entry.name}</Title>
+                <Title className="min-w-0 flex-1 break-words text-[1.125rem] font-semibold">{entry.name}</Title>
                 {action && <span className="shrink-0">{action}</span>}
               </div>
               <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-(--linear-text-tertiary)">

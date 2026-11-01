@@ -459,11 +459,9 @@ export function CapRow({
       className={cn(
         // content-visibility:auto lets the browser skip layout/paint for
         // offscreen rows — the Capabilities lists routinely hold 80+ entries.
-        // Row height is already fixed (h-8/h-11), so skipped rows keep their
-        // exact size and scrollbar geometry never jumps.
-        // Linear's list row: 44px with a second line, 28px without; radius 8.
-        'group/row flex w-full shrink-0 items-center rounded-(--linear-radius-control) transition-colors duration-(--linear-speed-quick) [content-visibility:auto] hover:transition-none',
-        subtitle ? 'h-11' : 'h-7',
+        // Row height is fixed, so skipped rows keep their exact size and
+        // scrollbar geometry never jumps. Linear's list row: 44px, radius 8.
+        'group/row flex h-11 w-full shrink-0 items-center rounded-(--linear-radius-control) transition-colors duration-(--linear-speed-quick) [content-visibility:auto] hover:transition-none',
         active ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
       )}
       id={rowId}

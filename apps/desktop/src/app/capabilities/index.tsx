@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { PageLoader } from '@/components/page-loader'
 import { Button } from '@/components/ui/button'
+import { ResponsiveTabs, type TabMeta } from '@/components/ui/tab-dropdown'
 import { useI18n } from '@/i18n'
 import { queryClient } from '@/lib/query-client'
 import { invalidateSlashCompletions } from '@/lib/slash-completion-cache'
@@ -33,6 +34,34 @@ import { ToolsetsTab } from './toolsets/toolsets-tab'
 const CAPABILITY_MODES = ['skills', 'plugins', 'connectors', 'toolsets'] as const
 
 type CapabilityMode = (typeof CAPABILITY_MODES)[number]
+
+interface CapabilityTab {
+  id: CapabilityMode
+  label: string
+  meta?: TabMeta
+}
+
+/** Linear's page header (44px, 8px left / 12px right, hairline) holding its
+ *  segmented view tabs: 28px pills with a count. Collapses to the shared tab
+ *  dropdown once the header can't fit the row. */
+function CapabilityTabs({
+  onChange,
+  tabs,
+  value
+}: {
+  onChange: (id: CapabilityMode) => void
+  tabs: CapabilityTab[]
+  value: CapabilityMode
+}) {
+  return (
+    <div
+      className="flex h-11 shrink-0 items-center border-b-[0.5px] border-(--linear-border-primary) pr-3 pl-2"
+      data-tour="page-tabs"
+    >
+      <ResponsiveTabs align="start" onChange={id => onChange(id as CapabilityMode)} tabs={tabs} value={value} />
+    </div>
+  )
+}
 
 interface CapabilitiesViewProps extends React.ComponentProps<'section'> {
   setStatusbarItemGroup?: SetStatusbarItemGroup
@@ -167,19 +196,20 @@ export function CapabilitiesView({
   return (
     <PageSearchShell
       {...props}
-      activeTab={mode}
-      onTabChange={id => setMode(id as CapabilityMode)}
       // Every tab renders the shared CapabilitySearch beside its own results.
       searchHidden
-      tabs={[
-        { id: 'skills', label: t.skills.tabSkills, meta: skills?.length ?? null },
-        { id: 'plugins', label: t.skills.tabPlugins },
-        { id: 'connectors', label: t.connectorsPage.title },
-        { id: 'toolsets', label: t.skills.tabToolsets, meta: toolsets ? visibleToolsetCount(toolsets) : null }
-      ]}
-      tabsAlign="start"
     >
       <div className="flex h-full flex-col">
+        <CapabilityTabs
+          onChange={setMode}
+          tabs={[
+            { id: 'skills', label: t.skills.tabSkills, meta: skills?.length ?? null },
+            { id: 'plugins', label: t.skills.tabPlugins },
+            { id: 'connectors', label: t.connectorsPage.title },
+            { id: 'toolsets', label: t.skills.tabToolsets, meta: toolsets ? visibleToolsetCount(toolsets) : null }
+          ]}
+          value={mode}
+        />
         {mode !== 'plugins' && <CapabilityScopeSelector scope={scope} />}
         <div className="flex min-h-0 flex-1 flex-col">{loadGate ?? tabContent[mode]()}</div>
       </div>

@@ -581,7 +581,7 @@ export function MessagingView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
           <div className="min-h-0 flex-1">
             <MasterDetail>
               <ListColumn>
-                <ul className="flex flex-col gap-px">
+                <ul className="flex flex-col">
                   {visiblePlatforms.map(platform => (
                     <li key={platform.id}>
                       <PlatformRow
@@ -686,11 +686,9 @@ function PlatformRow({
   return (
     <button
       className={cn(
-        // Linear's nav row: 28px, radius 8, 8px left / 9px right, 13px/500.
-        'flex h-7 w-full cursor-pointer items-center gap-1.5 rounded-(--linear-radius-control) pr-[0.5625rem] pl-2 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
-        active
-          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
-          : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
+        // Linear's list row: 44px, radius 8, 13px/500 primary; rows touch.
+        'flex h-11 w-full cursor-pointer items-center gap-2 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] font-medium text-(--linear-text-primary) transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        active ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
       )}
       onClick={onSelect}
       type="button"

@@ -71,9 +71,14 @@ export function PanelHeader({ actions, subtitle, title }: PanelHeaderProps) {
     // layout space, so header actions would otherwise slide right up against it.
     // Reserve clearance (button footprint from the card edge + a small gap) on
     // the right whenever actions are present.
-    // Linear's header line: 13px/500 title, 12px tertiary count beside it.
+    // Linear's page header: 44px from the card's top edge (the negative margin
+    // cancels Panel's top clearance, so the title stays beside the X), hairline
+    // across the whole card; 13px/500 title, 12px tertiary count beside it.
     <header
-      className={cn('mb-3 flex min-h-7 shrink-0 items-center justify-between gap-3', actions ? 'pr-8' : undefined)}
+      className={cn(
+        '-mx-4 mb-3 -mt-[calc(var(--titlebar-height)/2-0.4375rem)] flex h-11 shrink-0 items-center justify-between gap-3 border-b-[0.5px] border-(--linear-border-primary) px-4 sm:-mx-5 sm:px-5',
+        actions && 'pr-12 sm:pr-13'
+      )}
     >
       <div className="flex min-w-0 items-baseline gap-2">
         <h2 className="shrink-0 text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</h2>
@@ -140,14 +145,14 @@ export function PanelList({
           variant="box"
         />
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">{children}</div>
     </div>
   )
 }
 
 interface PanelListRowProps {
   active: boolean
-  // Leading status dot color class (e.g. 'bg-emerald-500'); omit for none.
+  // Leading status dot color class (e.g. 'bg-(--linear-green)'); omit for none.
   dotClassName?: string
   // Leading codicon glyph name (used when there's no lead/dot).
   icon?: string
@@ -187,17 +192,14 @@ export function PanelListRow({
   const row = (
     <div
       className={cn(
-        // Linear's nav row: 28px, radius 8, 13px/500 sidebar ink; hover and
-        // selection use the sidebar fills.
-        'group/row relative flex h-7 w-full shrink-0 items-center rounded-(--linear-radius-control) text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none',
-        active
-          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
-          : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
+        // Linear's list row: 44px, radius 8, 13px/500 primary; rows touch.
+        'group/row relative flex h-11 w-full shrink-0 items-center rounded-(--linear-radius-control) text-[0.8125rem] font-medium text-(--linear-text-primary) transition-colors duration-(--linear-speed-quick) hover:transition-none',
+        active ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
       )}
       data-panel-row={rowKey}
     >
       <RowButton
-        className="flex h-full min-w-0 flex-1 items-center gap-1.5 rounded-(--linear-radius-control) pl-2 pr-1 text-left"
+        className="flex h-full min-w-0 flex-1 items-center gap-2 rounded-(--linear-radius-control) pl-2 pr-1 text-left"
         onClick={onSelect}
       >
         {lead ??
@@ -328,7 +330,7 @@ export const PANEL_ERROR_NOTICE =
 // `as` keeps the caller's heading level (h3 under a panel header by default).
 export function PanelTitle({ as: Heading = 'h3', children }: { as?: 'h2' | 'h3'; children: ReactNode }) {
   return (
-    <Heading className="text-2xl leading-8 font-semibold tracking-[-0.1px] break-words text-(--linear-text-primary)">
+    <Heading className="text-[1.5rem] leading-8 font-medium tracking-[-0.16px] break-words text-(--linear-text-primary)">
       {children}
     </Heading>
   )

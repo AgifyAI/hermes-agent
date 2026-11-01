@@ -68,7 +68,7 @@ function streamGlyph(entry: SubagentStreamEntry): ReactNode {
 
   if (entry.kind === 'thinking') {
     return (
-      <span aria-hidden className="font-mono text-[0.7rem] leading-none text-(--linear-text-tertiary)">
+      <span aria-hidden className="font-mono text-[0.6875rem] leading-none text-(--linear-text-tertiary)">
         …
       </span>
     )
@@ -395,7 +395,7 @@ export function SubagentRow({ node, depth = 0, nowMs }: { node: SubagentNode; de
             </FadeText>
           ) : null}
         </span>
-        {running ? <ActivityTimerText className="mt-1 shrink-0 text-[0.6rem]" seconds={durationSeconds} /> : null}
+        {running ? <ActivityTimerText className="mt-1 shrink-0 text-[0.6875rem]" seconds={durationSeconds} /> : null}
       </button>
 
       {visibleRows.length > 0 ? (

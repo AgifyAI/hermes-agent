@@ -289,7 +289,7 @@ const PaletteGroups = memo(function PaletteGroups({
       {/* Filtering happens in rankGroups, so cmdk's own CommandEmpty
           (keyed to its internal filter count) would never fire. */}
       {deferred.length === 0 && !pending && (
-        <div className="py-6 text-center text-sm text-muted-foreground">{noResultsLabel}</div>
+        <div className="py-6 text-center text-[0.8125rem] text-(--linear-text-hint)">{noResultsLabel}</div>
       )}
       {deferred.map((group, index) => (
         <CommandGroup className={HUD_HEADING} heading={group.heading} key={group.heading ?? `palette-group-${index}`}>
@@ -343,8 +343,8 @@ const PaletteRow = memo(function PaletteRow({
       onSelect={() => onSelectItem(item)}
       value={paletteValue(item)}
     >
-      <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-      <span className={cn('truncate', modPreview && 'text-muted-foreground/80')}>
+      <Icon className="size-4 shrink-0" />
+      <span className={cn('truncate', modPreview && 'text-(--linear-text-tertiary)')}>
         {modPreview ? (
           item.modLabel
         ) : (
@@ -356,14 +356,18 @@ const PaletteRow = memo(function PaletteRow({
       {item.detail && (
         <span className={cn(HUD_NOTE, HUD_NOTE_VARIANT[item.detailVariant ?? 'muted'])}>{item.detail}</span>
       )}
-      {combo && (
-        <KbdCombo className={cn('ml-auto', modPreview ? 'opacity-90' : 'opacity-55')} combo={combo} size="sm" />
-      )}
-      {item.to && <ChevronRight className={cn('size-3.5 shrink-0 text-muted-foreground/70', !combo && 'ml-auto')} />}
-      {item.active && <Check className={cn('size-3.5 shrink-0 text-primary', !combo && !item.to && 'ml-auto')} />}
+      {combo && <KbdCombo className="ml-auto gap-[3px]" combo={combo} />}
+      {item.to && <ChevronRight className={cn('size-3.5 shrink-0 text-(--linear-text-quaternary)', !combo && 'ml-auto')} />}
+      {item.active && <Check className={cn('size-3.5 shrink-0 text-(--linear-accent)', !combo && !item.to && 'ml-auto')} />}
     </CommandItem>
   )
 })
+
+// Linear's palette (docs/linear-design-reference.md § Command palette): 720×450,
+// 80px from the top at every width, so it clears the titlebar without HUD_POSITION's
+// narrow-window drop. Short windows shrink it instead of pushing it off screen.
+const PALETTE_FRAME =
+  'top-20 h-[min(450px,calc(100vh-6rem))] w-[min(720px,calc(100vw-2rem))] max-[44rem]:top-20'
 
 // Hermes session ids: <YYYYMMDD>_<HHMMSS>_<6 hex>. Used to offer a direct
 // "Go to session ‹id›" jump for ids that aren't in the recent-200 list.
@@ -1394,7 +1398,8 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
         className={cn(
           HUD_POSITION,
           HUD_SURFACE,
-          'z-(--z-over-modal-content) w-[min(34rem,calc(100vw-2rem))] overflow-hidden duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:zoom-in-95'
+          PALETTE_FRAME,
+          'z-(--z-over-modal-content) overflow-hidden duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:zoom-in-95'
         )}
         // The close animation finishing is what retires this whole subtree —
         // the CSS owns the duration, not a hardcoded timer. Guarded on the
@@ -1409,19 +1414,21 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
         <DialogPrimitive.Title className="sr-only">{t.commandCenter.paletteTitle}</DialogPrimitive.Title>
         <Command className="bg-transparent" loop shouldFilter={false}>
           {activePage && (
-            <button
-              className="flex w-full items-center gap-1.5 border-b border-border px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
-              onClick={goBack}
-              type="button"
-            >
-              <ChevronLeft className="size-3.5" />
-              <span>{t.commandCenter.back}</span>
-              <span className="text-muted-foreground/50">/</span>
-              <span className="font-medium text-foreground">{activePage.title}</span>
-            </button>
+            <div className="flex h-8.5 shrink-0 items-end px-3.5">
+              <button
+                className="flex h-5.5 min-w-0 items-center gap-1 rounded-(--linear-radius-card) bg-(--linear-hover-overlay) px-1.5 text-left text-xs text-(--linear-text-overlay) transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-overlay-strong) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none"
+                onClick={goBack}
+                type="button"
+              >
+                <ChevronLeft className="size-3.5 shrink-0" />
+                <span className="shrink-0">{t.commandCenter.back}</span>
+                <span className="shrink-0 text-(--linear-text-quaternary)">/</span>
+                <span className="truncate text-(--linear-text-overlay-strong)">{activePage.title}</span>
+              </button>
+            </div>
           )}
           <CommandInput
-            className={HUD_TEXT}
+            className="font-normal"
             onKeyDown={event => {
               // Capture modifiers before cmdk's Enter fires onSelect (which
               // swipes the inviting MouseEvent and hands us nothing).
@@ -1447,7 +1454,7 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
             right={page === 'pets' ? <PetInlineToggle /> : undefined}
             value={search}
           />
-          <CommandList className="dt-portal-scrollbar max-h-[min(20rem,56vh)]">
+          <CommandList className="dt-portal-scrollbar max-h-none min-h-0 flex-1">
             {/* Server-driven pages render their own list; the rest show groups. */}
             {page === 'pets' ? (
               <PetPalettePage

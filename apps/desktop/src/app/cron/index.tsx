@@ -1206,11 +1206,11 @@ function CronJobRuns({
               // render as a button that does nothing.
               return (
                 <div
-                  className="flex h-7 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem]"
+                  className="flex h-11 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem] font-medium"
                   key={run.id}
                 >
                   <span className="truncate text-(--linear-text-secondary)">{label}</span>
-                  <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">{time}</span>
+                  <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">{time}</span>
                 </div>
               )
             }
@@ -1219,13 +1219,13 @@ function CronJobRuns({
               // One click to the run's transcript; a run the scheduler never
               // closed opens view-only (see `openCronRun`, #88443).
               <button
-                className="flex h-7 w-full cursor-pointer items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none"
+                className="flex h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none"
                 key={run.id}
                 onClick={() => openCronRun(run, onOpenSession)}
                 type="button"
               >
                 <span className="truncate text-(--linear-text-primary)">{label}</span>
-                <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">{time}</span>
+                <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">{time}</span>
               </button>
             )
           })}

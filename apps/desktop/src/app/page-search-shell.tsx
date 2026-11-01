@@ -29,7 +29,6 @@ interface PageSearchShellProps extends React.ComponentProps<'section'> {
   searchValue?: string
   /** Hide the search field when there's nothing to search (empty dataset). */
   searchHidden?: boolean
-  tabsAlign?: 'center' | 'start'
   /** Right-aligned control in the header's trailing cell (e.g. a refresh button)
    *  so mouse users get a visible affordance for the refresh hotkey. */
   searchTrailingAction?: ReactNode
@@ -38,20 +37,18 @@ interface PageSearchShellProps extends React.ComponentProps<'section'> {
 function ShellTabs({
   tabs,
   activeTab,
-  onTabChange,
-  align
+  onTabChange
 }: {
   tabs: PageShellTab[]
   activeTab?: string
   onTabChange?: (id: string) => void
-  align?: 'center' | 'start'
 }) {
   return (
     <ResponsiveTabs
       onChange={id => onTabChange?.(id)}
       tabs={tabs}
       value={activeTab ?? tabs[0]?.id ?? ''}
-      wideClassName={align === 'start' ? 'justify-start' : 'justify-center'}
+      wideClassName="justify-center"
     />
   )
 }
@@ -68,7 +65,6 @@ export function PageSearchShell({
   searchHints,
   searchValue,
   searchHidden = false,
-  tabsAlign = 'center',
   searchTrailingAction,
   ...props
 }: PageSearchShellProps) {
@@ -99,26 +95,13 @@ export function PageSearchShell({
         className={cn(
           'shrink-0 pt-(--titlebar-height)',
           // One hairline under the whole header (Linear's header rule).
-          tabsAlign === 'center' && hasHeader && 'border-b-[0.5px] border-(--linear-border-primary)'
+          hasHeader && 'border-b-[0.5px] border-(--linear-border-primary)'
         )}
       >
         {(hasTabs || !searchHidden) && (
-          <div
-            className={cn(
-              'grid items-center gap-3',
-              tabsAlign === 'start'
-                ? 'grid-cols-[minmax(0,1fr)_auto_auto] px-6 pt-6 pb-2'
-                : // Linear's page header: 44px, 8px left / 12px right, hairline below.
-                  'h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] pr-3 pl-2'
-            )}
-          >
-            <div
-              className={cn(
-                'flex min-w-0 items-center justify-start',
-                tabsAlign === 'start' && 'col-start-2 row-start-1 justify-end',
-                searchHidden && tabsAlign === 'start' && 'hidden'
-              )}
-            >
+          // Linear's page header: 44px, 8px left / 12px right, hairline below.
+          <div className="grid h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 pr-3 pl-2">
+            <div className="flex min-w-0 items-center justify-start">
               {!searchHidden && onSearchChange && (
                 <SearchField
                   containerClassName="w-64 max-w-[45vw]"
@@ -131,24 +114,13 @@ export function PageSearchShell({
               )}
             </div>
             {hasTabs ? (
-              <div
-                className={cn(
-                  'flex min-w-0 items-center',
-                  tabsAlign === 'start' ? 'col-start-1 row-start-1 justify-start' : 'justify-center'
-                )}
-                data-tour="page-tabs"
-              >
-                <ShellTabs activeTab={activeTab} align={tabsAlign} onTabChange={onTabChange} tabs={tabs!} />
+              <div className="flex min-w-0 items-center justify-center" data-tour="page-tabs">
+                <ShellTabs activeTab={activeTab} onTabChange={onTabChange} tabs={tabs!} />
               </div>
             ) : (
               <span />
             )}
-            <div
-              className={cn(
-                'flex min-w-0 items-center justify-end gap-1.5',
-                tabsAlign === 'start' && 'col-start-3 row-start-1'
-              )}
-            >
+            <div className="flex min-w-0 items-center justify-end gap-1.5">
               {searchTrailingAction}
             </div>
           </div>

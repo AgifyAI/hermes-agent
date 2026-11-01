@@ -75,7 +75,7 @@ export function ToolRow({ expanded, on, onExpand, onToggle, preview = false, rea
 
   return (
     <div
-      className={cn('grid', locked && 'bg-(--linear-hover-control)', expanded && 'bg-(--ui-row-open-background)')}
+      className={cn('grid', locked && 'bg-(--linear-hover-control)', expanded && 'bg-(--linear-hover-row)')}
       data-slot="tool-row"
       data-tool={tool.slug}
     >

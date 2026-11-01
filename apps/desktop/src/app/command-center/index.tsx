@@ -396,13 +396,13 @@ export function CommandCenterView({
           <div className={cn('flex min-h-0 flex-1 flex-col', PAGE_INSET_X)}>
             {section === 'sessions' ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="-mx-3 min-h-0 flex-1 overflow-y-auto">
                   {!sessionListHasResults ? (
                     <EmptyPanel description={debouncedQuery ? cc.noResults : cc.noSessions} />
                   ) : (
-                    // Linear list rows bleed 12px past the gutter so titles
-                    // line up with the breadcrumb.
-                    <ul className="-mx-3 flex flex-col">
+                    // The scroller bleeds 12px past the gutter so titles line up
+                    // with the breadcrumb and the hover fill keeps its radius.
+                    <ul className="flex flex-col">
                       {filteredSessions.map(session => {
                         const pinId = sessionPinId(session)
                         const pinned = pinnedSessionIds.includes(pinId)
@@ -747,7 +747,7 @@ function UsageStat({ hint, label, value }: { hint?: string; label: string; value
   return (
     <div className="min-w-0">
       <div className="text-xs font-medium text-(--linear-text-tertiary)">{label}</div>
-      <div className="mt-1 truncate text-xl font-medium text-(--linear-text-primary) tabular-nums">{value}</div>
+      <div className="mt-1 truncate text-[1.25rem] font-medium text-(--linear-text-primary) tabular-nums">{value}</div>
       {hint && <div className="mt-0.5 truncate text-[0.6875rem] text-(--linear-text-tertiary)">{hint}</div>}
     </div>
   )
