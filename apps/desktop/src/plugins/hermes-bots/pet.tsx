@@ -93,7 +93,7 @@ function PetThumb({ slug, spriteUrl, size = 40 }: PetThumbProps) {
           width: size,
           height: size,
           borderRadius: 6,
-          background: 'var(--chrome-action-hover, rgba(255,255,255,0.06))'
+          background: 'var(--linear-hover-control)'
         }}
       />
     )
@@ -151,14 +151,14 @@ export function PetTab({ image, onImage }: PetTabProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-4">
-        <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+        <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
       </div>
     )
   }
 
   if (!pets.length) {
     return (
-      <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">
+      <div className="px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">
         No pets in the petdex gallery. Run `hermes pets` to explore.
       </div>
     )
@@ -189,10 +189,9 @@ export function PetTab({ image, onImage }: PetTabProps) {
 
   return (
     <div className="grid w-full gap-2">
-      <div className="text-center text-[0.65rem] text-(--ui-text-quaternary)">{b.avatar.pickPet}</div>
+      <div className="text-center text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{b.avatar.pickPet}</div>
       <Input
-        className="h-7 text-xs"
-        onChange={event => {
+                onChange={event => {
           setQuery(event.target.value)
           setLimit(24)
         }}
@@ -214,7 +213,7 @@ export function PetTab({ image, onImage }: PetTabProps) {
         </Button>
       ) : null}
       {filtered.length === 0 ? (
-        <div className="py-3 text-center text-xs text-(--ui-text-quaternary)">No pets match.</div>
+        <div className="py-3 text-center text-xs font-[450] text-(--linear-text-quaternary)">No pets match.</div>
       ) : (
         <div
           className="overflow-y-auto"
@@ -229,8 +228,8 @@ export function PetTab({ image, onImage }: PetTabProps) {
             {visible.map(pet => (
               <RowButton
                 className={cn(
-                  'grid justify-items-center gap-1 rounded-md p-1.5 transition-colors hover:bg-(--chrome-action-hover)',
-                  selectedSlug === pet.slug && 'ring-1 ring-(--ui-accent)'
+                  'grid justify-items-center gap-1 rounded-md p-1.5 transition-colors hover:bg-(--linear-hover-control)',
+                  selectedSlug === pet.slug && 'ring-1 ring-(--linear-accent)'
                 )}
                 key={pet.slug}
                 onClick={() => {
@@ -253,14 +252,14 @@ export function PetTab({ image, onImage }: PetTabProps) {
                 }}
               >
                 <PetThumb size={40} slug={pet.slug} spriteUrl={pet.spritesheetUrl} />
-                <span className="w-full truncate text-center text-[0.6rem] text-(--ui-text-tertiary)">
+                <span className="w-full truncate text-center text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
                   {pet.displayName}
                 </span>
               </RowButton>
             ))}
           </div>
           {limit < ranked.length ? (
-            <div className="py-2 text-center text-[0.65rem] text-(--ui-text-quaternary)">{`Scroll for more (${limit} of ${ranked.length})`}</div>
+            <div className="py-2 text-center text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{`Scroll for more (${limit} of ${ranked.length})`}</div>
           ) : null}
         </div>
       )}

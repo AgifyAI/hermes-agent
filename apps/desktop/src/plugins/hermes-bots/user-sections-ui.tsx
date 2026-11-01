@@ -172,7 +172,7 @@ export function UserSectionHeader({
       <DropdownMenuTrigger asChild>
         <button
           aria-label={b.sections.options(name)}
-          className="shrink-0 rounded-md p-0.5 text-(--ui-text-quaternary) opacity-0 transition hover:text-foreground group-hover/section:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+          className="shrink-0 rounded-md p-0.5 text-(--linear-text-quaternary) opacity-0 transition hover:text-(--linear-text-primary) group-hover/section:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
           type="button"
         >
           <Codicon name="ellipsis" />
@@ -285,11 +285,11 @@ export function SectionDropZone({ children, isSource, nested, onDropBot }: Secti
     <div
       className={cn(
         'relative min-w-0 rounded-md transition-[background-color,box-shadow] duration-100',
-        nested && 'ml-2.5 border-l border-(--ui-stroke-tertiary) pl-1',
+        nested && 'ml-2.5 border-l-[0.5px] border-(--linear-border-panel) pl-1',
         // While a drag is live, every valid target gets a faint outline so the
         // user can see where a drop is allowed before hovering one.
-        armed && 'ring-1 ring-inset ring-(--ui-stroke-secondary)',
-        lit && 'bg-(--ui-accent)/10 ring-(--ui-accent)'
+        armed && 'ring-1 ring-inset ring-(--linear-border-secondary)',
+        lit && 'bg-(--linear-accent)/10 ring-(--linear-accent)'
       )}
       data-drop-over={lit ? 'true' : undefined}
       data-slot="bots-section"

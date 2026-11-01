@@ -190,12 +190,12 @@ export const GROUP_ACTIVITY_GLYPHS: Record<GroupActivityKind, string> = {
  *  work and real replies, destructive for failures and timeouts. */
 export function groupActivityTone(kind: GroupActivityKind) {
   if (kind === 'failed' || kind === 'timed-out') {
-    return 'text-destructive'
+    return 'text-(--linear-red)'
   }
 
   if (kind === 'working' || kind === 'replied' || kind === 'delivered') {
-    return 'text-(--ui-accent)'
+    return 'text-(--linear-accent)'
   }
 
-  return 'text-(--ui-text-tertiary)'
+  return 'text-(--linear-text-tertiary)'
 }

@@ -144,7 +144,7 @@ function removeCard(board: KanbanBoard, id: string): KanbanBoard {
 function Meta({ children, icon }: { children: ReactNode; icon: string }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <Codicon name={icon} size="0.7rem" />
+      <Codicon name={icon} size="0.75rem" />
       {children}
     </span>
   )
@@ -168,7 +168,7 @@ function CardFooter({ arc, task }: { arc: ArcState | null; task: KanbanTask }) {
   const meta = columnMeta(task.status)
 
   return (
-    <div className="flex items-center gap-2 whitespace-nowrap text-[0.625rem] text-(--ui-text-tertiary)">
+    <div className="flex items-center gap-2 whitespace-nowrap text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
       {arc === 'queued' && attached ? (
         // WHO is coming for the card. The arc only animates once the agent is
         // actually working; while queued, the named chip carries "attached".
@@ -203,23 +203,23 @@ function CardFooter({ arc, task }: { arc: ArcState | null; task: KanbanTask }) {
       )}
       {arc === 'stale' && (
         <Tip label={k.arcStale}>
-          <span className="shrink-0 cursor-help font-medium text-amber-500">{k.noHeartbeat}</span>
+          <span className="shrink-0 cursor-help font-medium text-(--linear-orange)">{k.noHeartbeat}</span>
         </Tip>
       )}
       {task.status === 'blocked' && task.block_kind && (
         // #124391: say WHY the card is blocked — the kind arrives on every
         // card payload; without it every blocked card reads identically.
         <Tip label={k.blockKindTip(task.block_kind)}>
-          <span className="inline-flex shrink-0 cursor-help items-center gap-1 text-destructive">
-            <Codicon name="debug-breakpoint-data-unverified" size="0.7rem" />
+          <span className="inline-flex shrink-0 cursor-help items-center gap-1 text-(--linear-red)">
+            <Codicon name="debug-breakpoint-data-unverified" size="0.75rem" />
             {task.block_kind}
           </span>
         </Tip>
       )}
       {unassignedReady && !fallback && (
         <Tip label={k.wontRunTip}>
-          <span className="inline-flex shrink-0 cursor-help items-center gap-1 text-amber-500">
-            <Codicon name="debug-disconnect" size="0.7rem" />
+          <span className="inline-flex shrink-0 cursor-help items-center gap-1 text-(--linear-orange)">
+            <Codicon name="debug-disconnect" size="0.75rem" />
             {k.wontRun}
           </span>
         </Tip>
@@ -234,15 +234,15 @@ function CardFooter({ arc, task }: { arc: ArcState | null; task: KanbanTask }) {
         {Boolean(task.comment_count) && <Meta icon="comment">{task.comment_count}</Meta>}
         {links > 0 && <Meta icon="references">{links}</Meta>}
         {task.warnings && task.warnings.count > 0 && (
-          <span className="inline-flex items-center gap-0.5 text-destructive">
-            <Codicon name="warning" size="0.7rem" />
+          <span className="inline-flex items-center gap-0.5 text-(--linear-red)">
+            <Codicon name="warning" size="0.75rem" />
             {task.warnings.count}
           </span>
         )}
         {created && !task.assignee && !unassignedReady ? (
-          <span className="text-(--ui-text-quaternary)">{created}</span>
+          <span className="text-(--linear-text-quaternary)">{created}</span>
         ) : null}
-        <span className="min-w-0 truncate font-mono text-(--ui-text-quaternary)">{shortId(task.id)}</span>
+        <span className="min-w-0 truncate font-mono text-(--linear-text-quaternary)">{shortId(task.id)}</span>
       </div>
     </div>
   )
@@ -279,11 +279,12 @@ function Card({
       <ContextMenuTrigger asChild>
         <div
           className={cn(
-            'group relative flex cursor-grab flex-col gap-2 rounded-md border border-(--ui-stroke-tertiary) border-l-2 bg-(--ui-bg-elevated) p-2.5',
-            // Hover matches the provider-picker rows: a quiet primary fill;
-            // selected = the theme's focus color (same as a focused input).
-            'transition-colors hover:bg-primary/[0.06] active:cursor-grabbing',
-            selected && 'border-(--dt-composer-ring) bg-[color-mix(in_srgb,var(--dt-composer-ring)_7%,transparent)]',
+            'group relative flex cursor-grab flex-col gap-2 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-2.5 shadow-(--linear-shadow-card)',
+            // Linear's card recipe. Hover is the control wash (the row wash is
+            // invisible on a dark card); selected = the focus colour, as on a
+            // focused input.
+            'transition-colors hover:bg-(--linear-hover-control) active:cursor-grabbing',
+            selected && 'bg-[color-mix(in_srgb,var(--linear-focus)_7%,var(--linear-bg-card))] ring-1 ring-(--linear-focus)',
             dragging && 'opacity-40'
           )}
           draggable
@@ -297,7 +298,7 @@ function Card({
             event.dataTransfer.setDragImage(event.currentTarget, event.nativeEvent.offsetX, event.nativeEvent.offsetY)
             setDragging(true)
           }}
-          style={{ '--kanban-tone': meta.tone, borderLeftColor: meta.tone } as CSSProperties}
+          style={{ '--kanban-tone': meta.tone } as CSSProperties}
         >
           {/* Machine-activity arc: animates ONLY while an agent is actually on
               the card (claimed + working; amber when the heartbeat is gone).
@@ -308,22 +309,22 @@ function Card({
             <span aria-hidden className={cn('kanban-arc', arc === 'stale' && 'kanban-arc--stale')} />
           )}
           <KanbanCardBadges card={task} tenants={tenants} />
-          <span className="line-clamp-2 text-[0.8125rem] font-medium leading-snug text-foreground">
+          <span className="line-clamp-2 text-[0.8125rem] font-medium leading-snug text-(--linear-text-primary)">
             {task.title || task.id}
           </span>
           {summary && (
-            <span className="line-clamp-2 text-[0.6875rem] leading-snug text-(--ui-text-tertiary)">{summary}</span>
+            <span className="line-clamp-2 text-xs leading-snug font-[450] text-(--linear-text-tertiary)">{summary}</span>
           )}
           <CardFooter arc={arc} task={task} />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onSelect={() => onOpen(task.id)}>
-          <Codicon name="link-external" size="0.85rem" />
+          <Codicon name="link-external" size="0.875rem" />
           {k.open}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => onToggleSelect(task.id)}>
-          <Codicon name={selected ? 'close' : 'check-all'} size="0.85rem" />
+          <Codicon name={selected ? 'close' : 'check-all'} size="0.875rem" />
           {selected ? k.deselect : k.select(formatModifierToken('mod'))}
         </ContextMenuItem>
         <ContextMenuSeparator />
@@ -337,7 +338,7 @@ function Card({
           ))}
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => onDelete(task.id)} variant="destructive">
-          <Codicon name="trash" size="0.85rem" />
+          <Codicon name="trash" size="0.875rem" />
           {k.delete}
         </ContextMenuItem>
       </ContextMenuContent>
@@ -424,7 +425,7 @@ function Column({
     }
   }
 
-  const wash = over && !locked ? 'bg-(--ui-bg-quinary)' : 'bg-[color-mix(in_srgb,var(--ui-bg-quinary)_50%,transparent)]'
+  const wash = over && !locked ? 'bg-(--linear-hover-control)' : 'bg-[color-mix(in_srgb,var(--linear-hover-control)_50%,transparent)]'
 
   // Collapsed = a thin vertical rail: dot, sideways label, count. Still a live
   // drop target (drop straight onto the rail); click expands. The dot sits in
@@ -436,7 +437,7 @@ function Column({
         {...dragHandlers}
         aria-label={k.expand(label)}
         className={cn(
-          'flex h-full w-8 shrink-0 flex-col items-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-(--ui-bg-quinary)',
+          'flex h-full w-8 shrink-0 flex-col items-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-(--linear-hover-control)',
           wash
         )}
         onClick={onToggle}
@@ -445,11 +446,11 @@ function Column({
         <span className="grid h-5 shrink-0 place-items-center">
           <span className="size-1.5 rounded-full" style={{ backgroundColor: meta.tone }} />
         </span>
-        <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-(--ui-text-tertiary) [writing-mode:vertical-rl]">
+        <span className="text-xs font-medium text-(--linear-text-tertiary) [writing-mode:vertical-rl]">
           {label}
         </span>
         {column.tasks.length > 0 && (
-          <span className="text-[0.625rem] tabular-nums text-(--ui-text-quaternary)">{column.tasks.length}</span>
+          <span className="text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-quaternary)">{column.tasks.length}</span>
         )}
       </button>
     )
@@ -463,14 +464,14 @@ function Column({
       <header className="mb-1.5 flex h-5 items-center gap-1.5 px-1">
         <span className="size-1.5 rounded-full" style={{ backgroundColor: meta.tone }} />
         <Tip label={columnHelp(k, column.name)}>
-          <span className="cursor-help text-[0.6875rem] font-medium uppercase tracking-wide text-(--ui-text-tertiary)">
+          <span className="cursor-help text-xs font-medium text-(--linear-text-tertiary)">
             {label}
           </span>
         </Tip>
-        <span className="text-[0.625rem] tabular-nums text-(--ui-text-quaternary)">{column.tasks.length}</span>
+        <span className="text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-quaternary)">{column.tasks.length}</span>
         <button
           aria-label={k.collapse(label)}
-          className="ml-auto grid size-5 place-items-center rounded text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--chrome-action-hover) hover:text-foreground focus-visible:opacity-100 group-hover/col:opacity-100"
+          className="ml-auto grid size-5 place-items-center rounded-(--linear-radius-control) text-(--linear-text-tertiary) opacity-0 transition-opacity hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) focus-visible:opacity-100 group-hover/col:opacity-100"
           onClick={onToggle}
           type="button"
         >
@@ -481,7 +482,7 @@ function Column({
         {lanes
           ? lanes.map(([assignee, tasks]) => (
               <div className="flex flex-col gap-2" key={assignee}>
-                <div className="flex items-center gap-1.5 px-1 pt-1 text-[0.625rem] text-(--ui-text-quaternary)">
+                <div className="flex items-center gap-1.5 px-1 pt-1 text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                   {assignee !== UNASSIGNED_LANE && <Avatar name={assignee} size="0.875rem" />}
                   {assignee}
                   <span className="tabular-nums">{tasks.length}</span>
@@ -520,15 +521,15 @@ function Column({
         {!locked && (
           <button
             aria-label={k.newTaskIn(label)}
-            className="flex shrink-0 items-center justify-center rounded-md border border-dashed border-(--ui-stroke-secondary) py-1.5 text-(--ui-text-tertiary) opacity-0 transition-[opacity,color,border-color] group-hover/col:opacity-100 hover:border-(--ui-text-quaternary) hover:bg-(--chrome-action-hover) hover:text-foreground focus-visible:opacity-100"
+            className="flex shrink-0 items-center justify-center rounded-md border border-dashed border-(--linear-border-secondary) py-1.5 text-(--linear-text-tertiary) opacity-0 transition-[opacity,color,border-color] group-hover/col:opacity-100 hover:border-(--linear-text-quaternary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) focus-visible:opacity-100"
             onClick={() => onAdd(column.name)}
             type="button"
           >
-            <Codicon name="add" size="0.8rem" />
+            <Codicon name="add" size="0.875rem" />
           </button>
         )}
         {column.tasks.length === 0 && (
-          <div className="pointer-events-none absolute inset-0 grid place-items-center text-[0.6875rem] text-(--ui-text-quaternary)">
+          <div className="pointer-events-none absolute inset-0 grid place-items-center text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
             {k.empty}
           </div>
         )}
@@ -745,7 +746,7 @@ function NewTaskDialog({
                 placeholder={boardDefaultDir || k.workspaceInherit}
                 value={workspacePath}
               />
-              <span className="text-[0.625rem] text-(--ui-text-quaternary)">
+              <span className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                 {boardDefaultDir ? k.workspaceInheritDir(boardDefaultDir) : k.workspaceInheritGeneric}
               </span>
             </Field>
@@ -776,7 +777,7 @@ function NewTaskDialog({
 
           <Field label={k.model}>
             <ModelOverrideField onChange={setModelOverride} value={modelOverride} />
-            <span className="text-[0.625rem] text-(--ui-text-quaternary)">{k.modelHint}</span>
+            <span className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{k.modelHint}</span>
           </Field>
 
           {parents.length > 0 && (
@@ -797,19 +798,19 @@ function NewTaskDialog({
             </Field>
           )}
 
-          <label className="flex cursor-pointer items-center gap-2 text-[0.75rem] text-(--ui-text-secondary)">
+          <label className="flex cursor-pointer items-center gap-2 text-xs font-[450] text-(--linear-text-secondary)">
             <Switch aria-label={k.goalMode} checked={goalMode} onCheckedChange={setGoalMode} size="xs" />
             {k.goalMode}
           </label>
 
-          {error && <span className="text-[0.75rem] text-destructive">{error}</span>}
+          {error && <span className="text-xs text-(--linear-red)">{error}</span>}
         </div>
         <DialogFooter>
-          <div className="mr-auto flex items-center gap-1 text-[0.75rem] text-(--ui-text-tertiary)">
+          <div className="mr-auto flex items-center gap-1 text-xs font-[450] text-(--linear-text-tertiary)">
             {estimate?.ok ? (
               <>
                 <Tip label={estimate.rationale || k.roughEstimate}>
-                  <span className="font-medium tabular-nums text-(--ui-text-secondary)">
+                  <span className="font-medium tabular-nums text-(--linear-text-secondary)">
                     ~{compactNumber(estimate.est_tokens)} {k.tokUnit}
                     {estimate.complexity ? ` · ${k.complexity[estimate.complexity] ?? estimate.complexity}` : ''}
                   </span>
@@ -822,7 +823,7 @@ function NewTaskDialog({
                     size="icon-xs"
                     variant="ghost"
                   >
-                    <Codicon name="refresh" size="0.7rem" spinning={estMut.isPending} />
+                    <Codicon name="refresh" size="0.75rem" spinning={estMut.isPending} />
                   </Button>
                 </Tip>
               </>
@@ -870,7 +871,7 @@ function Intro() {
 
   return (
     <div
-      className="mx-4 mb-2 flex flex-col items-start gap-1.5 rounded-lg bg-(--ui-bg-quinary) px-3 py-2.5 text-[0.75rem] leading-relaxed text-(--ui-text-secondary)"
+      className="mx-4 mb-2 flex flex-col items-start gap-1.5 rounded-lg bg-(--linear-hover-control) px-3 py-2.5 text-xs font-[450] leading-relaxed text-(--linear-text-secondary)"
       data-selectable-text="true"
     >
       <p className="min-w-0">{k.introBody}</p>
@@ -906,18 +907,18 @@ function FilterMenu({
   const active = Boolean(assignee || tenant || archived)
   const lanesByProfile = useValue($lanesByProfile)
 
-  const check = (on: boolean) => (on ? <Codicon className="ml-auto" name="check" size="0.8rem" /> : null)
+  const check = (on: boolean) => (on ? <Codicon className="ml-auto" name="check" size="0.875rem" /> : null)
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           aria-label={k.filters}
-          className={cn(active && 'bg-(--ui-control-active-background) text-foreground')}
+          className={cn(active && 'bg-(--linear-segment-selected) text-(--linear-text-primary)')}
           size="icon-xs"
           variant="ghost"
         >
-          <Codicon name="filter" size="0.85rem" />
+          <Codicon name="filter" size="0.875rem" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -1027,15 +1028,15 @@ function SelectionBar({
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center px-4">
-      {/* Flat overlay: stroke + elevated surface do the separating, no shadow. */}
-      <div className="pointer-events-auto flex items-center gap-1 rounded-lg border border-(--ui-stroke-secondary) bg-(--ui-bg-elevated) py-1 pr-1 pl-3">
-        <span className="mr-1 text-xs tabular-nums text-(--ui-text-secondary)">{k.nSelected(selected.size)}</span>
+      {/* Floats over the board: Linear's menu surface. */}
+      <div className="pointer-events-auto flex items-center gap-1 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) py-1 pr-1 pl-3 shadow-(--linear-shadow-menu)">
+        <span className="mr-1 text-xs font-[450] tabular-nums text-(--linear-text-secondary)">{k.nSelected(selected.size)}</span>
 
         <DropdownMenu onOpenChange={open => setMenu(open ? 'move' : null)} open={menu === 'move'}>
           <DropdownMenuTrigger asChild>
             <Button disabled={busy} size="xs" variant="ghost">
               {k.moveToShort}
-              <Codicon name="chevron-down" size="0.7rem" />
+              <Codicon name="chevron-down" size="0.75rem" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center">
@@ -1054,7 +1055,7 @@ function SelectionBar({
           <DropdownMenuTrigger asChild>
             <Button disabled={busy} size="xs" variant="ghost">
               {k.assign}
-              <Codicon name="chevron-down" size="0.7rem" />
+              <Codicon name="chevron-down" size="0.75rem" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center">
@@ -1078,7 +1079,7 @@ function SelectionBar({
           {k.archive}
         </Button>
         <Button
-          className="text-destructive"
+          className="text-(--linear-red)"
           disabled={busy}
           onClick={() => bulkDelete.mutate()}
           size="xs"
@@ -1089,7 +1090,7 @@ function SelectionBar({
 
         <Tip label={k.clearSelection}>
           <Button aria-label={k.clearSelection} onClick={onClear} size="icon-xs" variant="ghost">
-            <Codicon name="close" size="0.8rem" />
+            <Codicon name="close" size="0.875rem" />
           </Button>
         </Tip>
       </div>
@@ -1342,10 +1343,10 @@ export function KanbanBoardPage() {
   }
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-(--ui-surface-background)">
+    <div className="relative flex h-full flex-col overflow-hidden bg-(--linear-bg-panel)">
       <header className="flex shrink-0 flex-wrap items-center gap-2 px-4 py-2">
-        <h1 className="text-sm font-semibold text-foreground">{k.title}</h1>
-        <span className="rounded-full bg-(--ui-bg-quaternary) px-1.5 py-px text-[0.625rem] tabular-nums text-(--ui-text-tertiary)">
+        <h1 className="text-[0.9375rem] leading-[23px] font-medium text-(--linear-text-primary)">{k.title}</h1>
+        <span className="rounded-full bg-(--linear-hover-control) px-1.5 py-px text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-tertiary)">
           {total}
         </span>
         {/* The full page projects this into its page header; a split tile has
@@ -1369,16 +1370,16 @@ export function KanbanBoardPage() {
           <Tip label={k.orchestrationSettings}>
             <Button
               aria-label={k.orchestrationSettings}
-              className={cn(settingsOpen && 'bg-(--ui-control-active-background) text-foreground')}
+              className={cn(settingsOpen && 'bg-(--linear-segment-selected) text-(--linear-text-primary)')}
               onClick={() => setSettingsOpen(!settingsOpen)}
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name="organization" size="0.85rem" />
+              <Codicon name="organization" size="0.875rem" />
             </Button>
           </Tip>
           <Button onClick={() => setAddStatus('triage')} size="sm">
-            <Codicon name="add" size="0.8rem" />
+            <Codicon name="add" size="0.875rem" />
             {k.newTask}
           </Button>
         </div>
@@ -1399,8 +1400,8 @@ export function KanbanBoardPage() {
       ) : total === 0 ? (
         <div className="grid flex-1 place-items-center px-4 text-center">
           <div className="flex flex-col items-center gap-2">
-            <Codicon className="text-(--ui-text-quaternary)" name="project" size="1.25rem" />
-            <p className="text-xs text-(--ui-text-tertiary)">{search || tenant || assignee ? k.noMatch : k.noTasks}</p>
+            <Codicon className="text-(--linear-text-quaternary)" name="project" size="1.25rem" />
+            <p className="text-xs font-[450] text-(--linear-text-tertiary)">{search || tenant || assignee ? k.noMatch : k.noTasks}</p>
             <Button className="mt-0.5" onClick={() => setAddStatus('triage')} size="sm" variant="outline">
               <Codicon name="add" size="0.75rem" />
               {k.newTask}

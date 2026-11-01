@@ -237,22 +237,22 @@ export interface KanbanProfile {
  *  the backend's BOARD_COLUMNS; anything the backend adds renders via the
  *  fallback. */
 export const COLUMN_META: Record<string, { codicon: string; tone: string }> = {
-  triage: { codicon: 'inbox', tone: 'var(--ui-text-tertiary)' },
-  todo: { codicon: 'circle-outline', tone: 'var(--ui-text-secondary)' },
-  scheduled: { codicon: 'watch', tone: '#a78bfa' },
-  ready: { codicon: 'play-circle', tone: '#60a5fa' },
-  running: { codicon: 'sync', tone: '#34d399' },
-  blocked: { codicon: 'error', tone: '#f87171' },
-  review: { codicon: 'eye', tone: '#fbbf24' },
-  done: { codicon: 'pass', tone: 'var(--ui-text-tertiary)' },
-  archived: { codicon: 'archive', tone: 'var(--ui-text-quaternary)' }
+  triage: { codicon: 'inbox', tone: 'var(--linear-text-tertiary)' },
+  todo: { codicon: 'circle-outline', tone: 'var(--linear-text-secondary)' },
+  scheduled: { codicon: 'watch', tone: 'var(--linear-accent)' },
+  ready: { codicon: 'play-circle', tone: 'var(--linear-blue)' },
+  running: { codicon: 'sync', tone: 'var(--linear-green)' },
+  blocked: { codicon: 'error', tone: 'var(--linear-red)' },
+  review: { codicon: 'eye', tone: 'var(--linear-yellow)' },
+  done: { codicon: 'pass', tone: 'var(--linear-text-tertiary)' },
+  archived: { codicon: 'archive', tone: 'var(--linear-text-quaternary)' }
 }
 
 export const columnMeta = (name: string) =>
-  COLUMN_META[name] ?? { codicon: 'circle-outline', tone: 'var(--ui-text-secondary)' }
+  COLUMN_META[name] ?? { codicon: 'circle-outline', tone: 'var(--linear-text-secondary)' }
 
 export const SEVERITY_TONE: Record<Diagnostic['severity'], string> = {
-  critical: 'var(--destructive, #f87171)',
-  error: 'var(--destructive, #f87171)',
-  warning: '#fbbf24'
+  critical: 'var(--linear-red)',
+  error: 'var(--linear-red)',
+  warning: 'var(--linear-orange)'
 }

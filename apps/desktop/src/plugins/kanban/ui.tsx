@@ -3,6 +3,7 @@
 
 import {
   atom,
+  Button,
   coarseElapsed,
   Codicon,
   DropdownMenu,
@@ -174,10 +175,10 @@ export function Avatar({ name, size = '1.25rem' }: { name: string; size?: string
 
   return (
     <span
-      className="grid shrink-0 place-items-center rounded-full font-semibold"
+      className="grid shrink-0 place-items-center rounded-full font-medium"
       style={{
-        backgroundColor: color ? profileColorSoft(color, 22) : 'var(--ui-bg-quaternary)',
-        color: color ?? 'var(--ui-text-secondary)',
+        backgroundColor: color ? profileColorSoft(color, 22) : 'var(--linear-hover-control)',
+        color: color ?? 'var(--linear-text-secondary)',
         fontSize: '0.5625rem',
         height: size,
         width: size
@@ -206,15 +207,17 @@ export function StatusMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[0.6875rem] font-semibold uppercase tracking-wide transition-[filter] hover:brightness-105"
+        <Button
+          className="transition-[filter] hover:brightness-105"
+          size="xs"
           style={{ backgroundColor: `color-mix(in srgb, ${meta.tone} 15%, transparent)`, color: meta.tone }}
           type="button"
+          variant="chip"
         >
           <span className="size-1.5 rounded-full" style={{ backgroundColor: meta.tone }} />
           {columnLabel(k, status)}
-          <Codicon name="chevron-down" size="0.7rem" />
-        </button>
+          <Codicon name="chevron-down" size="0.75rem" />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {columns
@@ -223,7 +226,7 @@ export function StatusMenu({
             <DropdownMenuItem key={name} onSelect={() => onMove(name)}>
               <span className="size-2 rounded-full" style={{ backgroundColor: columnMeta(name).tone }} />
               {columnLabel(k, name)}
-              {name === status && <Codicon className="ml-auto" name="check" size="0.8rem" />}
+              {name === status && <Codicon className="ml-auto" name="check" size="0.875rem" />}
             </DropdownMenuItem>
           ))}
       </DropdownMenuContent>
@@ -231,16 +234,16 @@ export function StatusMenu({
   )
 }
 
-/** Priority as the board card shows it: an amber up-arrow + number when
+/** Priority as the board card shows it: an orange up-arrow + number when
  *  raised, a muted bare number at 0. Shared by the card and the task modal. */
 export function PriorityGlyph({ priority }: { priority: number }) {
   if (priority <= 0) {
-    return <span className="text-(--ui-text-quaternary)">{priority}</span>
+    return <span className="text-(--linear-text-quaternary)">{priority}</span>
   }
 
   return (
-    <span className="inline-flex items-center gap-0.5 text-amber-500">
-      <Codicon name="arrow-up" size="0.7rem" />
+    <span className="inline-flex items-center gap-0.5 text-(--linear-orange)">
+      <Codicon name="arrow-up" size="0.75rem" />
       {priority}
     </span>
   )
@@ -248,7 +251,7 @@ export function PriorityGlyph({ priority }: { priority: number }) {
 
 // The board's one field/section-label style — hoisted so Section (here), the
 // create dialog's Field, and the orchestration panel all read identically.
-export const FIELD_LABEL = 'text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-(--ui-text-quaternary)'
+export const FIELD_LABEL = 'text-xs font-medium text-(--linear-text-tertiary)'
 
 export function Section({ action, children, label }: { action?: ReactNode; children: ReactNode; label: string }) {
   return (
@@ -262,8 +265,8 @@ export function Section({ action, children, label }: { action?: ReactNode; child
   )
 }
 
-// Tinted advisory panel: a `tone`-washed body with a matching left rule and a
-// tone-colored icon+title header. Shared by the drawer's diagnostics and its
+// Tinted advisory panel: a `tone`-washed body with a tone-colored icon+title
+// header. Shared by the drawer's diagnostics and its
 // ready-but-unassigned warning so both read identically.
 export function Callout({
   children,
@@ -278,11 +281,11 @@ export function Callout({
 }) {
   return (
     <div
-      className="flex flex-col gap-2 rounded-md p-2.5"
-      style={{ backgroundColor: `color-mix(in srgb, ${tone} 7%, transparent)`, borderLeft: `2px solid ${tone}` }}
+      className="flex flex-col gap-2 rounded-(--linear-radius-card) p-2.5"
+      style={{ backgroundColor: `color-mix(in srgb, ${tone} 10%, transparent)` }}
     >
-      <div className="flex items-start gap-1.5 text-[0.75rem] font-medium" style={{ color: tone }}>
-        <Codicon className="mt-px shrink-0" name={icon} size="0.8rem" />
+      <div className="flex items-start gap-1.5 text-[0.8125rem] font-medium" style={{ color: tone }}>
+        <Codicon className="mt-px shrink-0" name={icon} size="0.875rem" />
         <span>{title}</span>
       </div>
       {children}

@@ -201,7 +201,7 @@ function TaskMarkdown({ text }: { text: string }) {
 function MetaRow({ children, label }: { children: ReactNode; label: string }) {
   return (
     <Section label={label}>
-      <div className="min-w-0 text-[0.75rem] text-(--ui-text-secondary) [overflow-wrap:anywhere]">{children}</div>
+      <div className="min-w-0 text-xs font-[450] text-(--linear-text-secondary) [overflow-wrap:anywhere]">{children}</div>
     </Section>
   )
 }
@@ -217,7 +217,7 @@ function WorkspaceValue({ kind, path }: { kind: null | string | undefined; path:
             {kind}
           </Badge>
         )}
-        <span className="font-mono text-[0.6875rem] leading-snug text-(--ui-text-tertiary)">{path}</span>
+        <span className="font-mono text-[0.6875rem] font-[450] leading-snug text-(--linear-text-tertiary)">{path}</span>
       </div>
       <CopyButton
         appearance="icon"
@@ -270,7 +270,7 @@ function Diagnostics({
             title={`${diag.title}${diag.count > 1 ? ` ×${diag.count}` : ''}`}
             tone={tone}
           >
-            <p className="whitespace-pre-wrap text-[0.6875rem] leading-relaxed text-(--ui-text-secondary)">
+            <p className="whitespace-pre-wrap text-[0.6875rem] font-[450] leading-relaxed text-(--linear-text-secondary)">
               {diag.detail}
             </p>
             {actions.length > 0 && (
@@ -282,7 +282,7 @@ function Diagnostics({
                     size="xs"
                     variant={action.suggested ? 'secondary' : 'outline'}
                   >
-                    {action.kind === 'cli_hint' && <Codicon name="copy" size="0.7rem" />}
+                    {action.kind === 'cli_hint' && <Codicon name="copy" size="0.75rem" />}
                     {action.label}
                   </Button>
                 ))}
@@ -313,7 +313,7 @@ function AssigneeMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded px-1 py-0.5 text-left transition-colors hover:bg-(--chrome-action-hover)"
+          className="-mx-1 inline-flex max-w-full items-center gap-1.5 rounded-(--linear-radius-control) px-1 py-0.5 text-left transition-colors hover:bg-(--linear-hover-control)"
           type="button"
         >
           {current ? (
@@ -322,9 +322,9 @@ function AssigneeMenu({
               <span className="truncate">{current}</span>
             </>
           ) : (
-            <span className="text-(--ui-text-quaternary)">{k.unassigned}</span>
+            <span className="text-(--linear-text-quaternary)">{k.unassigned}</span>
           )}
-          <Codicon className="shrink-0 text-(--ui-text-quaternary)" name="chevron-down" size="0.65rem" />
+          <Codicon className="shrink-0 text-(--linear-text-quaternary)" name="chevron-down" size="0.75rem" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -332,7 +332,7 @@ function AssigneeMenu({
           <DropdownMenuItem key={profile.name} onSelect={() => onReassign(profile.name)}>
             <Avatar name={profile.name} size="0.875rem" />
             {profile.name}
-            {profile.name === current && <Codicon className="ml-auto" name="check" size="0.8rem" />}
+            {profile.name === current && <Codicon className="ml-auto" name="check" size="0.875rem" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -391,7 +391,7 @@ function CommentComposer({
     <div className="flex flex-col gap-1.5">
       <div className="relative">
         <Textarea
-          className="field-sizing-content max-h-40 resize-none pr-9 text-[0.8125rem]"
+          className="field-sizing-content max-h-40 resize-none pr-9"
           onChange={event => setBody(event.target.value)}
           onKeyDown={event => {
             if (isSubmitEnter(event) && !event.shiftKey) {
@@ -405,22 +405,22 @@ function CommentComposer({
         <Tip label={sendLabel}>
           <Button
             aria-label={sendLabel}
-            className="absolute top-1 right-1 text-muted-foreground/80 hover:text-foreground"
+            className="absolute top-1 right-1 text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
             disabled={empty}
             onClick={submit}
             size="icon-xs"
             type="button"
             variant="ghost"
           >
-            <Codicon name="arrow-up" size="0.85rem" />
+            <Codicon name="arrow-up" size="0.875rem" />
           </Button>
         </Tip>
       </div>
       {running && onRequeue && (
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[0.625rem] leading-tight text-(--ui-text-quaternary)">{k.deliveredLive}</span>
+          <span className="text-[0.6875rem] font-[450] leading-tight text-(--linear-text-quaternary)">{k.deliveredLive}</span>
           <Button className="shrink-0" disabled={empty} onClick={requeue} size="xs" variant="outline">
-            <Codicon name="debug-restart" size="0.7rem" />
+            <Codicon name="debug-restart" size="0.75rem" />
             {k.requeueWithNote}
           </Button>
         </div>
@@ -454,7 +454,7 @@ function DescriptionSection({ body, onSave }: { body: null | string | undefined;
       {editing ? (
         <div className="flex flex-col gap-1.5">
           <Textarea
-            className="min-h-24 text-[0.75rem]"
+            className="min-h-24"
             onChange={event => setDraft(event.target.value)}
             value={draft}
           />
@@ -473,7 +473,7 @@ function DescriptionSection({ body, onSave }: { body: null | string | undefined;
       ) : body ? (
         <TaskMarkdown text={body} />
       ) : (
-        <p className="text-[0.8125rem] text-(--ui-text-quaternary)">{k.noDescription}</p>
+        <p className="text-[0.8125rem] text-(--linear-text-quaternary)">{k.noDescription}</p>
       )}
     </Section>
   )
@@ -557,7 +557,7 @@ function AttachmentsSection({
             size="icon-xs"
             variant="ghost"
           >
-            <Codicon name={pending ? 'sync' : 'cloud-upload'} size="0.8rem" spinning={pending} />
+            <Codicon name={pending ? 'sync' : 'cloud-upload'} size="0.875rem" spinning={pending} />
           </Button>
         </>
       }
@@ -566,13 +566,13 @@ function AttachmentsSection({
       {attachments.length > 0 ? (
         <ul className="flex flex-col gap-1">
           {attachments.map(attachment => (
-            <li className="flex items-center gap-1.5 text-[0.75rem] text-(--ui-text-tertiary)" key={attachment.id}>
+            <li className="flex items-center gap-1.5 text-xs font-[450] text-(--linear-text-tertiary)" key={attachment.id}>
               <AttachmentDownload attachment={attachment} onDownload={onDownload} />
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[0.75rem] text-(--ui-text-quaternary)">{k.noAttachments}</p>
+        <p className="text-xs font-[450] text-(--linear-text-quaternary)">{k.noAttachments}</p>
       )}
     </Section>
   )
@@ -607,11 +607,11 @@ function EstimateSection({ id }: { id: string }) {
       {result?.ok ? (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-[0.8125rem]">
-            <span className="font-medium tabular-nums text-(--ui-text-secondary)">
+            <span className="font-medium tabular-nums text-(--linear-text-secondary)">
               ~{compactNumber(result.est_tokens)} {k.tokUnit}
             </span>
             {result.complexity && (
-              <span className="text-(--ui-text-tertiary)">
+              <span className="text-(--linear-text-tertiary)">
                 · {k.complexity[result.complexity] ?? result.complexity}
               </span>
             )}
@@ -629,7 +629,7 @@ function EstimateSection({ id }: { id: string }) {
             </Tip>
           </div>
           {result.rationale && (
-            <p className="text-[0.6875rem] leading-relaxed text-(--ui-text-quaternary)">{result.rationale}</p>
+            <p className="text-[0.6875rem] font-[450] leading-relaxed text-(--linear-text-quaternary)">{result.rationale}</p>
           )}
         </div>
       ) : (
@@ -639,7 +639,7 @@ function EstimateSection({ id }: { id: string }) {
             {est.isPending ? k.estimating : k.estimateEffort}
           </Button>
           <Tip label={k.estimateTipLong}>
-            <span className="text-[0.625rem] text-(--ui-text-quaternary)">{k.makesModelCall}</span>
+            <span className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{k.makesModelCall}</span>
           </Tip>
         </div>
       )}
@@ -669,7 +669,7 @@ function LinkChips({
           <Tip key={linked} label={label} placement="row">
             <button
               aria-label={label}
-              className="max-w-full truncate rounded bg-(--ui-bg-quaternary) px-1.5 py-0.5 text-[0.6875rem] text-(--ui-text-secondary) transition-colors hover:bg-(--chrome-action-hover) hover:text-foreground"
+              className="max-w-full truncate rounded-(--linear-radius-control) bg-(--linear-hover-control) px-1.5 py-0.5 text-[0.6875rem] font-[450] text-(--linear-text-secondary) transition-colors hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
               onClick={() => onOpen(linked)}
               type="button"
             >
@@ -719,8 +719,8 @@ function FeedTabs({
 
   const help = (
     <Tip label={running ? k.commentsHelpRunning : k.commentsHelp}>
-      <span className="grid size-5 place-items-center rounded text-(--ui-text-quaternary) hover:text-(--ui-text-secondary)">
-        <Codicon name="question" size="0.8rem" />
+      <span className="grid size-5 place-items-center rounded-(--linear-radius-control) text-(--linear-text-quaternary) hover:text-(--linear-text-secondary)">
+        <Codicon name="question" size="0.875rem" />
       </span>
     </Tip>
   )
@@ -733,9 +733,9 @@ function FeedTabs({
             <ul className="flex flex-col gap-3">
               {detail.comments.map(comment => (
                 <li className="flex flex-col gap-0.5" key={comment.id}>
-                  <div className="flex items-baseline gap-2 text-[0.75rem]">
-                    <span className="font-medium text-(--ui-text-secondary)">{comment.author}</span>
-                    <span className="text-[0.625rem] text-(--ui-text-quaternary)">{ago(comment.created_at)}</span>
+                  <div className="flex items-baseline gap-2 text-xs">
+                    <span className="font-medium text-(--linear-text-secondary)">{comment.author}</span>
+                    <span className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{ago(comment.created_at)}</span>
                   </div>
                   <TaskMarkdown text={comment.body} />
                 </li>
@@ -753,13 +753,13 @@ function FeedTabs({
 
               return (
                 <li className="flex items-baseline gap-2 text-[0.6875rem]" key={event.id}>
-                  <span className="shrink-0 text-(--ui-text-secondary)">{label}</span>
+                  <span className="shrink-0 text-(--linear-text-secondary)">{label}</span>
                   {extra && (
-                    <span className="min-w-0 truncate text-[0.625rem] text-(--ui-text-quaternary)" title={extra}>
+                    <span className="min-w-0 truncate text-[0.6875rem] font-[450] text-(--linear-text-quaternary)" title={extra}>
                       {extra}
                     </span>
                   )}
-                  <span className="ml-auto shrink-0 text-(--ui-text-quaternary)">{ago(event.created_at)}</span>
+                  <span className="ml-auto shrink-0 text-(--linear-text-quaternary)">{ago(event.created_at)}</span>
                 </li>
               )
             })}
@@ -778,11 +778,11 @@ function FeedTabs({
                     <Badge size="xs" variant={failed ? 'destructive' : 'muted'}>
                       {run.outcome ?? run.status}
                     </Badge>
-                    {run.profile && <span className="text-(--ui-text-tertiary)">{run.profile}</span>}
+                    {run.profile && <span className="text-(--linear-text-tertiary)">{run.profile}</span>}
                     {duration(run.started_at, run.ended_at) && (
-                      <span className="text-(--ui-text-quaternary)">{duration(run.started_at, run.ended_at)}</span>
+                      <span className="text-(--linear-text-quaternary)">{duration(run.started_at, run.ended_at)}</span>
                     )}
-                    <span className="ml-auto shrink-0 text-(--ui-text-quaternary)">
+                    <span className="ml-auto shrink-0 text-(--linear-text-quaternary)">
                       {ago(run.ended_at ?? run.started_at)}
                     </span>
                   </div>
@@ -790,7 +790,7 @@ function FeedTabs({
                     <p
                       className={cn(
                         'line-clamp-2 whitespace-pre-wrap',
-                        run.error ? 'text-destructive' : 'text-(--ui-text-quaternary)'
+                        run.error ? 'text-(--linear-red)' : 'text-(--linear-text-quaternary)'
                       )}
                     >
                       {run.error ?? run.summary}
@@ -979,10 +979,10 @@ export function TaskDrawer({
             {task ? (
               <StatusMenu columns={columns} onMove={move} status={task.status} />
             ) : (
-              <span className="font-mono text-sm text-(--ui-text-tertiary)">{shortId(id)}</span>
+              <span className="font-mono text-[0.8125rem] text-(--linear-text-tertiary)">{shortId(id)}</span>
             )}
             {task && (
-              <span className="font-mono text-[0.625rem] text-(--ui-text-quaternary)" data-selectable-text="true">
+              <span className="font-mono text-[0.6875rem] font-[450] text-(--linear-text-quaternary)" data-selectable-text="true">
                 {shortId(task.id)}
               </span>
             )}
@@ -1001,7 +1001,7 @@ export function TaskDrawer({
                         host.notify({ kind: 'info', message: k.copiedId(task.id) })
                       }}
                     >
-                      <Codicon name="copy" size="0.85rem" />
+                      <Codicon name="copy" size="0.875rem" />
                       {k.copyTaskId}
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -1010,19 +1010,19 @@ export function TaskDrawer({
                         host.notify({ kind: 'info', message: k.copiedTitle })
                       }}
                     >
-                      <Codicon name="copy" size="0.85rem" />
+                      <Codicon name="copy" size="0.875rem" />
                       {k.copyTitle}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={mutate(() => patchTask(task.id, { status: 'archived' }), onClose)}>
-                      <Codicon name="archive" size="0.85rem" />
+                      <Codicon name="archive" size="0.875rem" />
                       {k.archive}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-destructive"
+                      className="text-(--linear-red)"
                       onSelect={mutate(() => deleteTask(task.id), onClose)}
                     >
-                      <Codicon name="trash" size="0.85rem" />
+                      <Codicon name="trash" size="0.875rem" />
                       {k.delete}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -1051,7 +1051,7 @@ export function TaskDrawer({
                 <div className="flex flex-col gap-5">
                   {task.status === 'ready' && !task.assignee && !defaultAssignee && (
                     <Callout title={k.readyUnassignedTitle} tone={SEVERITY_TONE.warning}>
-                      <p className="text-[0.6875rem] leading-relaxed text-(--ui-text-secondary)">
+                      <p className="text-[0.6875rem] font-[450] leading-relaxed text-(--linear-text-secondary)">
                         {k.readyUnassignedBody}
                       </p>
                     </Callout>
@@ -1099,7 +1099,7 @@ export function TaskDrawer({
                   />
                 </div>
               </div>
-              <aside className="flex w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l border-(--ui-stroke-tertiary) px-4 pb-5">
+              <aside className="flex w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l-[0.5px] border-(--linear-border-panel) px-4 pb-5">
                 <MetaRow label={k.assignee}>
                   <AssigneeMenu
                     current={task.assignee}
@@ -1118,7 +1118,7 @@ export function TaskDrawer({
                 {task.status === 'blocked' && task.block_kind && (
                   <MetaRow label={k.blockReason}>
                     <Tip label={k.blockKindTip(task.block_kind)}>
-                      <span className="cursor-help text-destructive">{task.block_kind}</span>
+                      <span className="cursor-help text-(--linear-red)">{task.block_kind}</span>
                     </Tip>
                   </MetaRow>
                 )}
@@ -1134,7 +1134,7 @@ export function TaskDrawer({
                 )}
                 {task.last_failure_error && (
                   <MetaRow label={k.lastFailureError}>
-                    <span className="whitespace-pre-wrap font-mono text-[0.65rem] leading-snug text-(--ui-text-tertiary)">
+                    <span className="whitespace-pre-wrap font-mono text-[0.6875rem] font-[450] leading-snug text-(--linear-text-tertiary)">
                       {task.last_failure_error}
                     </span>
                   </MetaRow>

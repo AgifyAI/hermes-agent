@@ -448,14 +448,14 @@ export function RoutineDetailDialog({ job, onClose, open }: RoutineDetailDialogP
         </DialogHeader>
         <div className="grid gap-3.5">
           {issue ? (
-            <div className="rounded-md border border-(--ui-stroke-secondary) px-3 py-2 text-xs leading-5 text-(--ui-accent)">
+            <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-xs leading-5 text-(--linear-accent)">
               {issue}
             </div>
           ) : null}
           <div className="grid gap-1.5">
             {rows.map(row => (
               <div className="flex items-baseline justify-between gap-3 text-xs" key={row.label}>
-                <span className="shrink-0 text-(--ui-text-tertiary)">{row.label}</span>
+                <span className="shrink-0 text-(--linear-text-tertiary)">{row.label}</span>
                 <span className="min-w-0 truncate text-right">{row.value}</span>
               </div>
             ))}
@@ -463,7 +463,7 @@ export function RoutineDetailDialog({ job, onClose, open }: RoutineDetailDialogP
           {instruction
             ? labeled(
                 b.cron.instruction,
-                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-(--ui-stroke-secondary) px-3 py-2 text-xs leading-5 text-(--ui-text-secondary)">
+                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-md border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-xs font-[450] leading-5 text-(--linear-text-secondary)">
                   {instruction}
                 </div>
               )
@@ -543,8 +543,8 @@ export function RoutineRow({ job, onOpen, owner }: RoutineRowProps) {
       // ellipsized (#91623). The chain has to be unbroken — one `auto` in it
       // re-pins the whole row.
       className={cn(
-        'group grid min-w-0 gap-1.5 rounded-lg border border-(--ui-stroke-secondary) p-2.5 transition-colors',
-        'hover:border-(--ui-stroke-primary, var(--ui-stroke-secondary))'
+        'group grid min-w-0 gap-1.5 rounded-lg border-[0.5px] border-(--linear-border-secondary) p-2.5 transition-colors',
+        'hover:border-(--linear-border-tertiary)'
       )}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -552,17 +552,16 @@ export function RoutineRow({ job, onOpen, owner }: RoutineRowProps) {
         /* and delete control are siblings, so opening the details can never */
         /* swallow a toggle (and a nested button would be invalid markup). */}
         <RowButton
-          className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:text-foreground"
+          className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:text-(--linear-text-primary)"
           onClick={() => onOpen?.(job)}
         >
-          {/* `--ui-success` rather than a literal emerald: the token is rotated
-              toward the accent, so a column of active dots can't fight the
-              theme — the same reason the session status dots use it. */}
+          {/* The status token rather than a literal emerald, like the session
+              status dots. */}
           <span
             aria-hidden
-            className={cn('size-1.5 shrink-0 rounded-full', active ? 'bg-(--ui-success)' : 'bg-(--ui-text-quaternary)')}
+            className={cn('size-1.5 shrink-0 rounded-full', active ? 'bg-(--linear-green)' : 'bg-(--linear-text-quaternary)')}
           />
-          <span className={cn('min-w-0 flex-1 truncate text-xs font-medium', !active && 'text-(--ui-text-tertiary)')}>
+          <span className={cn('min-w-0 flex-1 truncate text-[0.8125rem] font-medium', !active && 'text-(--linear-text-tertiary)')}>
             {routineTitle(job, b.cron)}
           </span>
         </RowButton>
@@ -588,18 +587,18 @@ export function RoutineRow({ job, onOpen, owner }: RoutineRowProps) {
           pane can't fit both on one line the next-run label wraps to a second
           line instead of being cut to "next in 4" (#89534). */}
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-3.5">
-        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-(--ui-stroke-secondary) px-1.5 py-0.5 text-[0.65rem] text-(--ui-text-tertiary)">
-          <Codicon className="text-[0.7rem]" name="calendar" />
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border-[0.5px] border-(--linear-border-secondary) px-1.5 py-0.5 text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
+          <Codicon className="text-xs" name="calendar" />
           {scheduleLabel(job.schedule)}
         </span>
-        <span className="ml-auto shrink-0 whitespace-nowrap text-[0.65rem] text-(--ui-text-quaternary)">
+        <span className="ml-auto shrink-0 whitespace-nowrap text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
           {active && job.next_run_at
             ? `${nextRunOverdueMs(job) === null ? c.next : c.overdueSince} ${relativeTime(new Date(job.next_run_at).getTime())}`
             : c.states.paused}
         </span>
       </div>
       {legacyUnsafe ? (
-        <div className="rounded-md border border-(--ui-stroke-secondary) px-2 py-1.5 text-[0.65rem] leading-4 text-(--ui-accent)">
+        <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) px-2 py-1.5 text-[0.6875rem] leading-4 text-(--linear-accent)">
           {b.cron.legacyUnsafe}
         </div>
       ) : null}
@@ -897,7 +896,7 @@ function SchedulePicker({ state, setState }: SchedulePickerProps) {
       ) : null}
       {state.freq === 'advanced' ? (
         <Input
-          className="h-8 font-mono text-xs"
+          className="font-mono"
           onChange={event =>
             upd({
               raw: event.target.value
@@ -909,9 +908,9 @@ function SchedulePicker({ state, setState }: SchedulePickerProps) {
       ) : null}
       {state.freq !== 'once' && state.freq !== 'advanced' ? (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-(--ui-text-tertiary)">{b.cron.stopAfter}</span>
+          <span className="text-xs font-[450] text-(--linear-text-tertiary)">{b.cron.stopAfter}</span>
           <Input
-            className="h-7 w-16 text-xs"
+            className="w-16"
             onChange={event =>
               upd({
                 repeatN: event.target.value.replace(/[^0-9]/g, '').slice(0, 4)
@@ -920,10 +919,10 @@ function SchedulePicker({ state, setState }: SchedulePickerProps) {
             placeholder="∞"
             value={state.repeatN}
           />
-          <span className="text-xs text-(--ui-text-tertiary)">{b.cron.runsHint}</span>
+          <span className="text-xs font-[450] text-(--linear-text-tertiary)">{b.cron.runsHint}</span>
         </div>
       ) : null}
-      <div className="text-[0.65rem] text-(--ui-text-quaternary)">{`${scheduleSummary(state, b.cron, timeLabel)} \u00b7 ${composeSchedule(state) || '\u2014'}`}</div>
+      <div className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{`${scheduleSummary(state, b.cron, timeLabel)} \u00b7 ${composeSchedule(state) || '\u2014'}`}</div>
     </div>
   )
 }
@@ -1102,12 +1101,12 @@ export function CreateRoutineDialog({ bot, open, onClose }: CreateRoutineDialogP
               }
             ])
           )}
-          <label className="flex items-center gap-2 text-xs text-(--ui-text-tertiary) cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs font-[450] text-(--linear-text-tertiary) cursor-pointer select-none">
             <Checkbox checked={continuity} onCheckedChange={value => setContinuity(Boolean(value))} />
             {b.cron.continuity}
           </label>
           {error ? (
-            <div className="rounded-md border border-(--ui-stroke-secondary) px-3 py-2 text-xs text-(--ui-accent)">
+            <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-xs text-(--linear-accent)">
               {error}
             </div>
           ) : null}
@@ -1262,7 +1261,7 @@ export function RoutinesPane() {
         <BotFace color={avatarColor(color, bot)} image={image} name={bot} shape={shape} size={22} />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-baseline gap-1.5 truncate">
-            <div className="truncate text-xs font-semibold">
+            <div className="truncate text-[0.8125rem] font-medium">
               {displayName(
                 {
                   name: bot
@@ -1271,10 +1270,10 @@ export function RoutinesPane() {
               )}
             </div>
             {showsHandle(bot, meta, owner) ? (
-              <span className="shrink-0 font-mono text-[0.65rem] text-(--ui-text-quaternary)">{`@${botHandle(bot, owner)}`}</span>
+              <span className="shrink-0 font-mono text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{`@${botHandle(bot, owner)}`}</span>
             ) : null}
           </div>
-          <div className="text-[0.65rem] uppercase tracking-wider text-(--ui-text-quaternary)">{c.title}</div>
+          <div className="text-xs font-[450] text-(--linear-text-tertiary)">{c.title}</div>
         </div>
         <Tip label={c.newCron}>
           <Button aria-label={c.newCron} onClick={openCreate} size="icon-xs" variant="ghost">
@@ -1282,15 +1281,15 @@ export function RoutinesPane() {
           </Button>
         </Tip>
       </div>
-      <div className="mx-3 border-t border-(--ui-stroke-secondary)" />
+      <div className="mx-3 border-t-[0.5px] border-(--linear-border-secondary)" />
       {staleNotice ? (
-        <div className="mx-3 mt-2 rounded-md bg-(--chrome-action-hover) px-2 py-1.5 text-[0.6875rem] text-(--ui-text-tertiary)">
+        <div className="mx-3 mt-2 rounded-md bg-(--linear-hover-control) px-2 py-1.5 text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
           {staleNotice}
         </div>
       ) : null}
       {isLoading && !view.all.length ? (
         <div className="flex flex-1 items-center justify-center">
-          <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+          <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
         </div>
       ) : error && !view.all.length ? (
         <PanelEmpty

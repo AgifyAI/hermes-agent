@@ -86,14 +86,14 @@ const TONE_ICON: Record<PortalTone, string> = {
 }
 
 const TONE_DOT: Record<PortalTone, string> = {
-  live: 'bg-emerald-500',
-  human: 'bg-red-500',
-  other: 'bg-amber-500',
-  off: 'bg-(--ui-text-quaternary)',
-  missing: 'bg-(--ui-text-quaternary)',
-  unsupported: 'bg-(--ui-text-quaternary)',
-  unavailable: 'bg-(--ui-text-quaternary)',
-  unknown: 'bg-(--ui-text-quaternary)'
+  live: 'bg-(--linear-green)',
+  human: 'bg-(--linear-red)',
+  other: 'bg-(--linear-yellow)',
+  off: 'bg-(--linear-text-quaternary)',
+  missing: 'bg-(--linear-text-quaternary)',
+  unsupported: 'bg-(--linear-text-quaternary)',
+  unavailable: 'bg-(--linear-text-quaternary)',
+  unknown: 'bg-(--linear-text-quaternary)'
 }
 
 export function useScreenPortalState(bot: RosterRow) {
@@ -187,21 +187,21 @@ export function ScreenPortal({ bot }: { bot: RosterRow }) {
   return (
     <button
       aria-label={`${t.screen.portalTitle}: ${subtitle}`}
-      className="group flex w-full items-center gap-2 rounded-md border border-(--ui-stroke-secondary) bg-(--chrome-action-hover)/40 px-2 py-1.5 text-left transition-colors hover:bg-(--chrome-action-hover)"
+      className="group flex w-full items-center gap-2 rounded-md border-[0.5px] border-(--linear-border-secondary) bg-(--linear-hover-control)/40 px-2 py-1.5 text-left transition-colors hover:bg-(--linear-hover-control)"
       onClick={() => openBotScreen(bot, null)}
       type="button"
     >
-      <span className="relative grid size-7 shrink-0 place-items-center rounded bg-black/70 text-white/90">
+      <span className="relative grid size-7 shrink-0 place-items-center rounded-(--linear-radius-control) bg-(--linear-bg-tertiary) text-(--linear-icon)">
         <Codicon name={TONE_ICON[tone]} />
         <span
-          className={`absolute -right-0.5 -top-0.5 size-2 rounded-full ring-2 ring-(--ui-bg-primary) ${TONE_DOT[tone]}`}
+          className={`absolute -right-0.5 -top-0.5 size-2 rounded-full ring-2 ring-(--linear-bg-tertiary) ${TONE_DOT[tone]}`}
         />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-medium">{t.screen.portalTitle}</span>
-        {subtitle ? <span className="block truncate text-[0.65rem] text-(--ui-text-tertiary)">{subtitle}</span> : null}
+        <span className="block truncate text-[0.8125rem] font-medium">{t.screen.portalTitle}</span>
+        {subtitle ? <span className="block truncate text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">{subtitle}</span> : null}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-[0.65rem] text-(--ui-text-tertiary) opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="flex shrink-0 items-center gap-1 text-[0.6875rem] font-[450] text-(--linear-text-tertiary) opacity-0 transition-opacity group-hover:opacity-100">
         {t.screen.portalOpen} <Codicon name="arrow-right" />
       </span>
     </button>

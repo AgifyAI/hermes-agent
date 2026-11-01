@@ -452,8 +452,8 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
     return (
       <div className="grid min-h-48 place-items-center p-6 text-center">
         <div className="flex max-w-md flex-col items-center gap-2">
-          <div className="text-sm font-medium">{t.screen.imageSwitchTitle}</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-[0.9375rem] leading-[23px] font-medium">{t.screen.imageSwitchTitle}</div>
+          <div className="text-xs font-[450] text-(--linear-text-tertiary)">
             {t.screen.imageSwitchBody(sw.current_image, sw.target_image)}
           </div>
           <div className="flex gap-2">
@@ -465,7 +465,7 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
               {t.screen.imageSwitchKeep}
             </Button>
           </div>
-          {error ? <div className="text-xs text-red-500">{error}</div> : null}
+          {error ? <div className="text-xs text-(--linear-red)">{error}</div> : null}
         </div>
       </div>
     )
@@ -475,13 +475,13 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
     return (
       <div className="grid min-h-48 place-items-center p-6 text-center">
         <div className="flex flex-col items-center gap-2">
-          <div className="text-sm font-medium">{t.screen.stoppedTitle}</div>
-          <div className="text-xs text-muted-foreground">{status.blocker ?? t.screen.stoppedBody}</div>
+          <div className="text-[0.9375rem] leading-[23px] font-medium">{t.screen.stoppedTitle}</div>
+          <div className="text-xs font-[450] text-(--linear-text-tertiary)">{status.blocker ?? t.screen.stoppedBody}</div>
           <Button disabled={busy || Boolean(status.blocker)} onClick={() => void start()} size="sm">
             {busy ? <GlyphSpinner /> : <Codicon name="play" />}
             {t.screen.start}
           </Button>
-          {error ? <div className="text-xs text-red-500">{error}</div> : null}
+          {error ? <div className="text-xs text-(--linear-red)">{error}</div> : null}
         </div>
       </div>
     )
@@ -491,18 +491,18 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center gap-2 border-b px-3 py-1.5 text-xs">
+      <div className="flex items-center gap-2 border-b-[0.5px] border-(--linear-border-panel) px-3 py-1.5 text-xs">
         <Codicon name="device-desktop" />
         <span className="font-medium">{t.screen.title}</span>
         {status?.display ? (
-          <span className="text-muted-foreground">
+          <span className="text-(--linear-text-tertiary)">
             {status.display} · {status.geometry}
           </span>
         ) : null}
         {status?.placement?.startsWith('terminal:') ? (
           // Where the desktop lives matters for what a takeover can reach: inside the terminal's sandbox,
           // not on the gateway host.
-          <span className="rounded bg-(--ui-bg-tertiary) px-1.5 py-0.5 text-muted-foreground">
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">
             {t.screen.placementSandbox(status.placement.slice('terminal:'.length))}
           </span>
         ) : null}
@@ -510,20 +510,20 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
         {lease?.holder === 'human' && lease.reason ? (
           // Why control was taken stays readable while the human acts.
           <span
-            className="max-w-[40%] truncate rounded bg-amber-500/15 px-2 py-0.5 text-amber-600 dark:text-amber-400"
+            className="max-w-[40%] truncate rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-[color-mix(in_srgb,var(--linear-orange)_14%,transparent)] text-(--linear-orange)"
             title={lease.reason}
           >
             <Codicon name="bell" /> {lease.reason}
           </span>
         ) : null}
         {iHold ? (
-          <span className="rounded bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400">
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-[color-mix(in_srgb,var(--linear-red)_12%,transparent)] text-(--linear-red)">
             {t.screen.youControl}
           </span>
         ) : humanOther ? (
-          <span className="rounded bg-muted px-2 py-0.5 text-muted-foreground">{t.screen.otherControls}</span>
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">{t.screen.otherControls}</span>
         ) : (
-          <span className="rounded bg-muted px-2 py-0.5 text-muted-foreground">{t.screen.agentControls}</span>
+          <span className="rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] bg-(--linear-bg-secondary) text-(--linear-text-tertiary)">{t.screen.agentControls}</span>
         )}
         {iHold ? (
           <Button disabled={busy} onClick={() => void handBack()} size="sm" variant="secondary">
@@ -560,7 +560,7 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
       </div>
       <div
         className={
-          iHold ? 'relative min-h-0 grow bg-black ring-2 ring-inset ring-red-500/70' : 'relative min-h-0 grow bg-black'
+          iHold ? 'relative min-h-0 grow bg-black ring-2 ring-inset ring-(--linear-red)' : 'relative min-h-0 grow bg-black'
         }
       >
         {/* data-terminal: the same keyboard-ownership marker the terminal pane uses, so the app's
@@ -574,12 +574,12 @@ export function BotScreenPane({ bot }: { bot: RosterRow }) {
           </div>
         ) : null}
         {evicted ? (
-          <div className="pointer-events-none absolute inset-x-0 top-0 bg-amber-950/80 px-3 py-1.5 text-center text-xs text-amber-100">
+          <div className="pointer-events-none absolute inset-x-0 top-0 bg-[color-mix(in_srgb,var(--linear-orange)_20%,var(--linear-bg-overlay))] px-3 py-1.5 text-center text-xs text-(--linear-text-primary)">
             {t.screen.controlTaken}
           </div>
         ) : null}
         {conn === 'error' && error ? (
-          <div className="absolute inset-x-0 bottom-0 bg-red-950/80 px-3 py-1.5 text-xs text-red-200">{error}</div>
+          <div className="absolute inset-x-0 bottom-0 bg-[color-mix(in_srgb,var(--linear-red)_20%,var(--linear-bg-overlay))] px-3 py-1.5 text-xs text-(--linear-text-primary)">{error}</div>
         ) : null}
         <ScreenNeedsHttps label={t.screen.needsHttps} />
       </div>

@@ -43,22 +43,22 @@ const LOCALES = {
 // Disk plugins are not scanned by Tailwind. Only plugin layout lives here;
 // Button, SearchField and Popover own their own chrome.
 const CSS = `
-.hermes-radio-bar{display:flex;align-items:center;gap:2px;height:100%;color:var(--ui-text-tertiary)}
-.hermes-radio-waveform{position:relative;height:24px;width:100%;font-family:var(--font-mono,monospace);font-size:12px;line-height:12px;color:var(--ui-text-tertiary);opacity:.45;overflow:hidden;flex-shrink:0}
+.hermes-radio-bar{display:flex;align-items:center;gap:2px;height:100%;color:var(--linear-text-tertiary)}
+.hermes-radio-waveform{position:relative;height:24px;width:100%;font-family:var(--font-mono,monospace);font-size:12px;line-height:12px;color:var(--linear-text-tertiary);opacity:.45;overflow:hidden;flex-shrink:0}
 .hermes-radio-waveform-layer{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--radio-columns),minmax(0,1fr));grid-auto-rows:12px}
 .hermes-radio-waveform-layer>span{text-align:center;min-width:0}
 .hermes-radio-waveform-layer:nth-child(1){opacity:.12}
 .hermes-radio-waveform-layer:nth-child(2){opacity:.28}
 .hermes-radio-waveform[data-compact=true]{width:40px;height:12px;margin-inline:2px}
 .hermes-radio-next{display:flex;align-items:center;width:12px;height:12px}
-.hermes-radio-waveform[data-active=true]{color:var(--ui-accent);opacity:1}
+.hermes-radio-waveform[data-active=true]{color:var(--linear-accent);opacity:1}
 .hermes-radio-signal{height:48px;padding:5px 6px 0;min-width:0}
-.hermes-radio-track{display:flex;align-items:center;gap:5px;height:19px;min-width:0;font-size:11px;line-height:16px;color:var(--ui-text-secondary)}
+.hermes-radio-track{display:flex;align-items:center;gap:5px;height:19px;min-width:0;font-size:11px;line-height:16px;color:var(--linear-text-secondary)}
 .hermes-radio-track-text{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
-.hermes-radio-track[data-track=true]{color:var(--ui-text-primary)}
+.hermes-radio-track[data-track=true]{color:var(--linear-text-primary)}
 .hermes-radio-artist{min-width:0;max-width:55%;flex-shrink:1;font-size:inherit;font-weight:inherit}
 .hermes-radio-artist>span{overflow:hidden;text-overflow:ellipsis}
-.hermes-radio-track-separator{flex-shrink:0;color:var(--ui-text-quaternary)}
+.hermes-radio-track-separator{flex-shrink:0;color:var(--linear-text-quaternary)}
 .hermes-radio-bar .radio-name{max-width:112px;min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .hermes-radio-bar .hermes-radio-action{width:16px;height:16px;padding:0;flex-shrink:0}
 .hermes-radio-action-icon{display:flex;align-items:center;justify-content:center;width:12px;height:12px;flex-shrink:0;overflow:hidden}
@@ -68,27 +68,27 @@ const CSS = `
 .hermes-radio-search-field{flex:1;min-width:0}
 .hermes-radio-search-field input{flex:1;width:0;min-width:0}
 .hermes-radio-search .hermes-radio-search-field{border:0}
-.hermes-radio-search-loader{display:flex;align-items:center;justify-content:center;width:16px;flex-shrink:0;font-size:12px;color:var(--ui-text-tertiary)}
+.hermes-radio-search-loader{display:flex;align-items:center;justify-content:center;width:16px;flex-shrink:0;font-size:12px;color:var(--linear-text-tertiary)}
 .hermes-radio-list{height:168px;max-height:calc(100dvh - 180px);min-height:80px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
-.hermes-radio-row{display:flex;align-items:center;gap:4px;border-radius:4px}
-.hermes-radio-row[data-current=true]{background:var(--chrome-action-hover)}
-.hermes-radio-row[data-current=true] .hermes-radio-row-name{color:var(--ui-accent)}
-.hermes-radio-row:hover{background:var(--chrome-action-hover)}
-.hermes-radio-row [aria-pressed=true]{color:var(--ui-accent)}
+.hermes-radio-row{display:flex;align-items:center;gap:4px;border-radius:var(--linear-radius-control)}
+.hermes-radio-row[data-current=true]{background:var(--linear-hover-overlay)}
+.hermes-radio-row[data-current=true] .hermes-radio-row-name{color:var(--linear-accent)}
+.hermes-radio-row:hover{background:var(--linear-hover-overlay)}
+.hermes-radio-row [aria-pressed=true]{color:var(--linear-accent)}
 .hermes-radio-pin{opacity:0;pointer-events:none}
 .hermes-radio-row:hover .hermes-radio-pin,.hermes-radio-row:focus-within .hermes-radio-pin{opacity:1;pointer-events:auto}
 @media(hover:none){.hermes-radio-pin{opacity:1;pointer-events:auto}}
-.hermes-radio-row-main{display:flex;align-items:center;gap:8px;flex:1;min-width:0;text-align:left;height:24px;padding:2px 6px;cursor:pointer;border-radius:4px}
-.hermes-radio-row-main:focus-visible{outline:1px solid var(--ui-accent);outline-offset:-1px}
-.hermes-radio-row-icon{display:flex;align-items:center;justify-content:center;width:14px;flex-shrink:0;color:var(--ui-text-tertiary);opacity:0}
+.hermes-radio-row-main{display:flex;align-items:center;gap:8px;flex:1;min-width:0;text-align:left;height:24px;padding:2px 6px;cursor:pointer;border-radius:var(--linear-radius-control)}
+.hermes-radio-row-main:focus-visible{outline:1px solid var(--linear-accent);outline-offset:-1px}
+.hermes-radio-row-icon{display:flex;align-items:center;justify-content:center;width:14px;flex-shrink:0;color:var(--linear-text-tertiary);opacity:0}
 .hermes-radio-row:hover .hermes-radio-row-icon,.hermes-radio-row:focus-within .hermes-radio-row-icon,.hermes-radio-row[data-current=true] .hermes-radio-row-icon{opacity:1}
-.hermes-radio-row[data-current=true] .hermes-radio-row-icon{color:var(--ui-accent)}
+.hermes-radio-row[data-current=true] .hermes-radio-row-icon{color:var(--linear-accent)}
 .hermes-radio-row-copy{min-width:0;flex:1}
-.hermes-radio-row-name{display:block;font-size:12px;line-height:17px;color:var(--ui-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hermes-radio-row-name{display:block;font-size:12px;line-height:17px;color:var(--linear-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hermes-radio-volume{display:flex;align-items:center;gap:4px;height:28px;padding:2px 2px 0}
 .hermes-radio-volume-space{flex:1;min-width:6px}
-.hermes-radio-volume input{width:76px;min-width:0;height:3px;accent-color:var(--ui-accent);cursor:pointer}
-.hermes-radio-error{font-size:11px;line-height:17px;color:var(--ui-text-secondary);padding:4px 4px 12px}
+.hermes-radio-volume input{width:76px;min-width:0;height:3px;accent-color:var(--linear-accent);cursor:pointer}
+.hermes-radio-error{font-size:11px;line-height:17px;color:var(--linear-text-secondary);padding:4px 4px 12px}
 `
 
 function httpsUrl(value) {

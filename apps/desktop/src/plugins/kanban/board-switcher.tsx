@@ -81,7 +81,7 @@ function ProjectPicker({ onChange, value }: { onChange: (id: string) => void; va
           ))}
         </SelectContent>
       </Select>
-      <span className="text-[0.6875rem] leading-relaxed text-(--ui-text-quaternary)">
+      <span className="text-[0.6875rem] font-[450] leading-relaxed text-(--linear-text-quaternary)">
         {k.projectHintPre}
         <span className="font-mono">{k.projectHintCmd}</span>.
       </span>
@@ -169,7 +169,7 @@ function BoardNameField({
         placeholder={k.boardNamePlaceholder}
         value={value}
       />
-      {slug && <span className="text-[0.6875rem] text-(--ui-text-quaternary)">{k.slug(slug)}</span>}
+      {slug && <span className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{k.slug(slug)}</span>}
     </label>
   )
 }
@@ -350,13 +350,13 @@ export function BoardSwitcher() {
               size="sm"
               variant="ghost"
             >
-              <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="project" size="0.8125rem" />
-              <span className="shrink-0 text-[0.6875rem] font-medium text-(--ui-text-tertiary)">{k.board}</span>
-              <span className="min-w-0 flex-1 truncate text-[0.75rem] font-medium leading-none">{label}</span>
+              <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="project" size="0.875rem" />
+              <span className="shrink-0 text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{k.board}</span>
+              <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium leading-none">{label}</span>
               {typeof current?.total === 'number' && (
-                <span className="text-[0.6875rem] tabular-nums text-(--ui-text-quaternary)">{current.total}</span>
+                <span className="text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-quaternary)">{current.total}</span>
               )}
-              <Codicon className="shrink-0 text-(--ui-text-tertiary)" name="chevron-down" size="0.8125rem" />
+              <Codicon className="shrink-0 text-(--linear-text-tertiary)" name="chevron-down" size="0.875rem" />
             </Button>
           </DropdownMenuTrigger>
         </Tip>
@@ -368,37 +368,37 @@ export function BoardSwitcher() {
             >
               {meta.name || meta.slug}
               {typeof meta.total === 'number' && (
-                <span className="text-[0.625rem] tabular-nums text-(--ui-text-quaternary)">{meta.total}</span>
+                <span className="text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-quaternary)">{meta.total}</span>
               )}
-              {meta.slug === currentSlug && <Codicon className="ml-auto" name="check" size="0.8rem" />}
+              {meta.slug === currentSlug && <Codicon className="ml-auto" name="check" size="0.875rem" />}
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
           {current && (
             <>
               <DropdownMenuItem onSelect={() => setRenameFor(current)}>
-                <Codicon name="edit" size="0.8rem" />
+                <Codicon name="edit" size="0.875rem" />
                 {k.renameDots}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setSettingsFor(current)}>
-                <Codicon name="settings-gear" size="0.8rem" />
+                <Codicon name="settings-gear" size="0.875rem" />
                 {k.settingsDots}
               </DropdownMenuItem>
             </>
           )}
           <DropdownMenuItem onSelect={() => setAdding(true)}>
-            <Codicon name="add" size="0.8rem" />
+            <Codicon name="add" size="0.875rem" />
             {k.newBoardDots}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {current && (
             <DropdownMenuItem onSelect={() => void runExport(current.slug)}>
-              <Codicon name="package" size="0.8rem" />
+              <Codicon name="package" size="0.875rem" />
               {k.exportDots}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onSelect={() => void runImport()}>
-            <Codicon name="cloud-download" size="0.8rem" />
+            <Codicon name="cloud-download" size="0.875rem" />
             {k.importDots}
           </DropdownMenuItem>
           {/* `default` is the fallback every board reverts to — the backend
@@ -407,7 +407,7 @@ export function BoardSwitcher() {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setDeleteFor(current)} variant="destructive">
-                <Codicon name="trash" size="0.8rem" />
+                <Codicon name="trash" size="0.875rem" />
                 {t.common.delete}
               </DropdownMenuItem>
             </>

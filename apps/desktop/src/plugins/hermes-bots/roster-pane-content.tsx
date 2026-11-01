@@ -73,16 +73,16 @@ export function renderRosterContent({
   return (
     <>
       {staleNotice ? (
-        <div className="mx-2.5 mb-1 rounded-md bg-(--chrome-action-hover) px-2 py-1.5 text-[0.6875rem] text-(--ui-text-tertiary)">
+        <div className="mx-2.5 mb-1 rounded-md bg-(--linear-hover-control) px-2 py-1.5 text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
           {staleNotice}
         </div>
       ) : null}
       {(isLoading || initialRosterLoading) && !roster.length ? (
         <div className="flex flex-1 items-center justify-center">
-          <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+          <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
         </div>
       ) : error && !roster.length ? (
-        <div className="grid gap-2 px-3 py-4 text-xs text-(--ui-text-tertiary)">
+        <div className="grid gap-2 px-3 py-4 text-xs font-[450] text-(--linear-text-tertiary)">
           <div>
             {gatewayUp
               ? b.roster.rosterUnavailable(error instanceof Error ? error.message : 'gateway error')
@@ -95,9 +95,9 @@ export function renderRosterContent({
       ) : roster.length === 0 ? (
         <PanelEmpty description={b.roster.emptyDesc} icon="hubot" title={b.roster.emptyTitle} />
       ) : allBotsHidden && !hiddenExpanded ? (
-        <div className="grid content-start gap-2 px-3 py-4 text-xs text-(--ui-text-tertiary)">
-          <div className="flex items-center gap-1.5 font-medium text-(--ui-text-secondary)">
-            <Codicon className="text-(--ui-text-quaternary)" name="eye-closed" />
+        <div className="grid content-start gap-2 px-3 py-4 text-xs font-[450] text-(--linear-text-tertiary)">
+          <div className="flex items-center gap-1.5 font-medium text-(--linear-text-secondary)">
+            <Codicon className="text-(--linear-text-quaternary)" name="eye-closed" />
             {b.roster.allHidden}
           </div>
           <p className="leading-relaxed">{b.roster.allHiddenDesc}</p>
@@ -136,25 +136,25 @@ export function renderRosterContent({
               : renderUserSections(rosterRows)}
             {showHiddenSection ? (
               <div
-                className="mt-1 border-t border-(--ui-stroke-tertiary) pt-1"
+                className="mt-1 border-t-[0.5px] border-(--linear-border-panel) pt-1"
                 key={'hidden-section'}
                 ref={hiddenSectionRef}
               >
                 {hasRosterConstraint ? (
-                  <div className="flex w-full items-center gap-1 px-2 py-1.5 text-[0.6875rem] font-medium text-(--ui-text-tertiary)">
+                  <div className="flex w-full items-center gap-1 px-2 py-1.5 text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                     <Codicon name="eye-closed" />
                     <span>Hidden</span>
-                    <span className="text-(--ui-text-quaternary)">{matchingHiddenBots.length}</span>
+                    <span className="text-(--linear-text-quaternary)">{matchingHiddenBots.length}</span>
                   </div>
                 ) : (
                   <RowButton
                     aria-expanded={hiddenExpanded}
-                    className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-[0.6875rem] font-medium text-(--ui-text-tertiary) transition-colors hover:bg-(--chrome-action-hover) hover:text-foreground"
+                    className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-left text-[0.6875rem] font-medium text-(--linear-text-tertiary) transition-colors hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
                     onClick={() => $showHiddenBots.set(!hiddenExpanded)}
                   >
                     <DisclosureCaret open={hiddenExpanded} />
                     <span>Hidden</span>
-                    <span className="text-(--ui-text-quaternary)">{hiddenBots.length}</span>
+                    <span className="text-(--linear-text-quaternary)">{hiddenBots.length}</span>
                   </RowButton>
                 )}
                 {showHiddenRows ? (
@@ -165,7 +165,7 @@ export function renderRosterContent({
                       matchingHiddenBots.map((bot: RosterRow) => renderBotRow(bot, 'hidden:'))
                     )
                   ) : (
-                    <div className="px-2 py-2 text-xs text-(--ui-text-quaternary)">{b.roster.noHiddenMatch}</div>
+                    <div className="px-2 py-2 text-xs font-[450] text-(--linear-text-quaternary)">{b.roster.noHiddenMatch}</div>
                   )
                 ) : null}
               </div>

@@ -101,8 +101,8 @@ function useLiveThumbnail(bot: RosterRow, running: boolean) {
 }
 
 const TONE_RING: Partial<Record<PortalTone, string>> = {
-  human: 'ring-2 ring-red-500/80',
-  other: 'ring-2 ring-amber-500/70'
+  human: 'ring-2 ring-(--linear-red)',
+  other: 'ring-2 ring-(--linear-yellow)'
 }
 
 export function ScreenHero({ bot, meta }: { bot: RosterRow; meta?: BotMeta | null }) {
@@ -146,7 +146,7 @@ function ScreenHeroContent({ bot, meta }: { bot: RosterRow; meta?: BotMeta | nul
   return (
     <button
       aria-label={`${t.screen.portalTitle}: ${caption}`}
-      className={`group relative block w-full overflow-hidden rounded-lg border border-(--ui-stroke-secondary) bg-black text-left ${TONE_RING[tone] ?? ''}`}
+      className={`group relative block w-full overflow-hidden rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-secondary) bg-black text-left ${TONE_RING[tone] ?? ''}`}
       onClick={() => openBotScreen(bot, meta ?? null)}
       ref={boxRef}
       style={{ aspectRatio: '16 / 10' }}
@@ -164,7 +164,7 @@ function ScreenHeroContent({ bot, meta }: { bot: RosterRow; meta?: BotMeta | nul
           src={dataUrl}
         />
       ) : (
-        <span className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent_70%)]">
+        <span className="absolute inset-0 grid place-items-center">
           <Codicon
             className="text-[2.25rem] text-white/30"
             name={running ? 'loading' : tone === 'missing' ? 'cloud-download' : 'vm'}
@@ -174,14 +174,14 @@ function ScreenHeroContent({ bot, meta }: { bot: RosterRow; meta?: BotMeta | nul
 
       <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/85 to-black/0 px-2.5 pb-2 pt-6 text-white">
         <span
-          className={`size-2 shrink-0 rounded-full ${running && !stale ? (tone === 'live' ? 'bg-emerald-400' : tone === 'human' ? 'bg-red-400' : 'bg-amber-400') : 'bg-white/40'}`}
+          className={`size-2 shrink-0 rounded-full ${running && !stale ? (tone === 'live' ? 'bg-(--linear-green)' : tone === 'human' ? 'bg-(--linear-red)' : 'bg-(--linear-yellow)') : 'bg-white/40'}`}
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-medium">{t.screen.portalTitle}</span>
-          <span className="block truncate text-[0.65rem] text-white/70">{caption}</span>
+          <span className="block truncate text-[0.8125rem] font-medium">{t.screen.portalTitle}</span>
+          <span className="block truncate text-[0.6875rem] text-white/70">{caption}</span>
         </span>
         {cta ? (
-          <span className="flex shrink-0 items-center gap-1 rounded-md bg-white/15 px-2 py-1 text-[0.65rem] font-medium backdrop-blur-sm transition-colors group-hover:bg-white/25">
+          <span className="flex h-6 shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 text-xs leading-4 font-medium transition-colors group-hover:bg-white/25">
             {cta} <Codicon name="arrow-right" />
           </span>
         ) : null}

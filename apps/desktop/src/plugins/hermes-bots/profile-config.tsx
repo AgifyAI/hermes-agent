@@ -79,14 +79,14 @@ export function CheckList({ items, onToggle, columns = 2 }: CheckListProps) {
     >
       {items.map(item => (
         <label
-          className="flex min-w-0 cursor-pointer items-center gap-1.5 py-0.5 text-xs text-(--ui-text-secondary)"
+          className="flex min-w-0 cursor-pointer items-center gap-1.5 py-0.5 text-xs font-[450] text-(--linear-text-secondary)"
           key={item.name}
           title={item.description || item.name}
         >
           <Checkbox checked={item.enabled} onCheckedChange={value => onToggle(item.name, Boolean(value))} />
           <span className="truncate">{item.name}</span>
           {item.tool_count ? (
-            <span className="shrink-0 text-[0.6rem] text-(--ui-text-quaternary)">{`${item.tool_count}`}</span>
+            <span className="shrink-0 text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{`${item.tool_count}`}</span>
           ) : null}
         </label>
       ))}
@@ -183,13 +183,13 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
   }
 
   if (unsupported) {
-    return <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">{b.editor.fullConfigHint}</div>
+    return <div className="px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">{b.editor.fullConfigHint}</div>
   }
 
   if (!state.loaded) {
     return (
       <div className="flex justify-center py-4">
-        <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+        <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
       </div>
     )
   }
@@ -317,7 +317,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
             model: state.model
           }}
         />
-        <div className="rounded-md border border-(--ui-stroke-secondary) px-3 py-2 text-xs text-(--ui-text-tertiary)">
+        <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-xs font-[450] text-(--linear-text-tertiary)">
           {b.editor.remoteCapabilitiesHint}
         </div>
         {labeled(
@@ -356,9 +356,8 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
       />
       {labeled(
         b.editor.skillsEnabled(enabledSkills, state.skills.length),
-        <div className="grid gap-1.5 rounded-md border border-(--ui-stroke-secondary) p-2">
+        <div className="grid gap-1.5 rounded-md border-[0.5px] border-(--linear-border-secondary) p-2">
           <Input
-            className="h-7 text-xs"
             onChange={event => setSkillFilter(event.target.value)}
             placeholder={b.tools.filterSkills}
             value={skillFilter}
@@ -394,7 +393,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
       )}
       {labeled(
         b.editor.toolsetsEnabled(enabledToolsets, state.toolsets.length),
-        <div className="rounded-md border border-(--ui-stroke-secondary) p-2">
+        <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) p-2">
           <div
             className="overflow-y-auto overscroll-contain"
             style={{
@@ -403,8 +402,8 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
           >
             <div className="grid gap-1.5">
               {state.toolsets.map(tset => (
-                <div className="rounded-md border border-(--ui-stroke-secondary) p-2" key={tset.name}>
-                  <label className="flex items-center gap-2 text-xs font-medium text-(--ui-text-secondary)">
+                <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) p-2" key={tset.name}>
+                  <label className="flex items-center gap-2 text-[0.8125rem] font-medium text-(--linear-text-secondary)">
                     <Checkbox
                       checked={!!tset.enabled}
                       onCheckedChange={value => toggleToolset(tset.name, Boolean(value))}
@@ -415,7 +414,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
                   /* picker / post-setup), scoped to THIS bot's profile, when */
                   /* the desktop build exposes it. Older builds: just the toggle. */}
                   {ToolsetConfigPanel ? (
-                    <div className="mt-1.5 border-t border-(--ui-stroke-secondary) pt-1.5">
+                    <div className="mt-1.5 border-t-[0.5px] border-(--linear-border-secondary) pt-1.5">
                       <ToolsetConfigPanel profile={backendScope} toolset={tset.name} />
                     </div>
                   ) : null}
@@ -427,7 +426,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
       )}
       {labeled(
         b.editor.mcpServers,
-        <div className="overflow-hidden rounded-md border border-(--ui-stroke-secondary)">
+        <div className="overflow-hidden rounded-md border-[0.5px] border-(--linear-border-secondary)">
           {ConnectorsTab && typeof host.getGateway === 'function' ? (
             <div
               className="overflow-y-auto overscroll-contain"
@@ -439,7 +438,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
               <ConnectorsTab gateway={host.getGateway()} profile={backendScope} />
             </div>
           ) : mcpList.length === 0 ? (
-            <div className="px-1 py-2 text-center text-xs text-(--ui-text-tertiary)">{b.tools.noMcpServers}</div>
+            <div className="px-1 py-2 text-center text-xs font-[450] text-(--linear-text-tertiary)">{b.tools.noMcpServers}</div>
           ) : (
             <div
               className="overflow-y-auto overscroll-contain"
@@ -455,7 +454,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
                     ((m.requires || []).length > 0 || (m.auth || '').toLowerCase() === 'oauth')
 
                   return (
-                    <label className="flex items-start gap-2 text-xs text-(--ui-text-secondary)" key={m.name}>
+                    <label className="flex items-start gap-2 text-xs font-[450] text-(--linear-text-secondary)" key={m.name}>
                       <Checkbox
                         checked={!!m.enabled}
                         disabled={needsSetup}
@@ -464,7 +463,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
                       <span className="min-w-0">
                         <span>{m.name}</span>
                         {m.fromCatalog && !needsSetup ? (
-                          <span className="ml-1.5 text-[0.65rem] text-(--ui-text-quaternary)">
+                          <span className="ml-1.5 text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                             {m.installed ? b.editor.catalogInstalled : b.editor.catalog}
                           </span>
                         ) : null}
@@ -472,7 +471,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
                           <McpSetupButton entry={m} onDone={() => toggleMcp(m.name, true)} profile={backendScope} />
                         ) : null}
                         {m.description ? (
-                          <div className="truncate text-[0.65rem] leading-4 text-(--ui-text-quaternary)">
+                          <div className="truncate text-[0.6875rem] font-[450] leading-4 text-(--linear-text-quaternary)">
                             {m.description}
                           </div>
                         ) : null}

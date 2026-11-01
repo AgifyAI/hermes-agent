@@ -81,7 +81,7 @@ export function BotChatEmpty({ sessionId }: { sessionId: string }) {
 
   return (
     <div
-      className="pointer-events-none flex w-full min-w-0 flex-col items-center justify-center px-0.5 py-6 text-center text-muted-foreground sm:px-6 lg:px-8"
+      className="pointer-events-none flex w-full min-w-0 flex-col items-center justify-center px-0.5 py-6 text-center text-(--linear-text-tertiary) sm:px-6 lg:px-8"
       data-slot="bot_chat_empty"
       // The name reads as the title of the chat, so it — not the stack as a
       // whole — is what should sit on the optical center line. Lifting the

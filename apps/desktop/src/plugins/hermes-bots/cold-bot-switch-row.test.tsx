@@ -54,6 +54,6 @@ it('spins the pending target row without stealing the highlight', () => {
   expect(bravoRow.querySelector('[role="status"]')?.getAttribute('aria-label')).toBe('Opening chat…')
   expect(alphaRow.getAttribute('aria-busy')).not.toBe('true')
   expect(alphaRow.querySelector('[role="status"]')).toBeNull()
-  expect(alphaRow.className).toContain('bg-(--ui-row-active-background)')
-  expect(bravoRow.className).not.toContain('bg-(--ui-row-active-background)')
+  expect(alphaRow.className).toContain('bg-(--linear-active-sidebar)')
+  expect(bravoRow.className).not.toContain('bg-(--linear-active-sidebar)')
 })

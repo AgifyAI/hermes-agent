@@ -106,9 +106,10 @@ export function ModelOverrideField({
       <DropdownMenuTrigger asChild>
         <Button
           className={cn(
-            'h-8 w-full justify-between gap-2 px-2.5 text-[0.75rem] font-normal',
-            isInherited(value) && 'text-(--ui-text-tertiary)'
+            'w-full justify-between gap-2',
+            isInherited(value) && 'text-(--linear-text-tertiary)'
           )}
+          size="lg"
           type="button"
           variant="outline"
         >
@@ -117,7 +118,7 @@ export function ModelOverrideField({
             {!isInherited(value) && (
               <span
                 aria-label={k.modelClear}
-                className="grid size-4 place-items-center rounded text-(--ui-text-tertiary) hover:text-foreground"
+                className="grid size-4 place-items-center rounded-(--linear-radius-control) text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                 onClick={event => {
                   // Clear without opening the menu.
                   event.preventDefault()
@@ -126,10 +127,10 @@ export function ModelOverrideField({
                 }}
                 role="button"
               >
-                <Codicon name="close" size="0.7rem" />
+                <Codicon name="close" size="0.75rem" />
               </span>
             )}
-            <Codicon className="opacity-50" name="chevron-down" size="0.7rem" />
+            <Codicon className="opacity-50" name="chevron-down" size="0.75rem" />
           </span>
         </Button>
       </DropdownMenuTrigger>
