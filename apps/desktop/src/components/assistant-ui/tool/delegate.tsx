@@ -36,22 +36,26 @@ const TICKER_DEPTH = 6
 function statusGlyph(status: DelegateRowStatus, label: string): ReactNode {
   if (isDelegateRowLive(status)) {
     return (
-      <GlyphSpinner ariaLabel={label} className="size-3.5 text-[0.95rem] text-(--ui-text-tertiary)" spinner="breathe" />
+      <GlyphSpinner
+        ariaLabel={label}
+        className="size-3.5 text-[0.95rem] text-(--linear-text-tertiary)"
+        spinner="breathe"
+      />
     )
   }
 
   if (status === 'failed' || status === 'interrupted') {
-    return <AlertCircle aria-label={label} className="size-3.5 text-destructive" />
+    return <AlertCircle aria-label={label} className="size-3.5 text-(--linear-red)" />
   }
 
   if (status === 'dispatched') {
     // Parked, not watched: the children outlived the turn that spawned them
     // and nothing in this transcript is streaming their progress. A spinner
     // here would claim a liveness we can't back up.
-    return <span aria-hidden className="size-1.5 rounded-full bg-(--ui-text-tertiary)" />
+    return <span aria-hidden className="size-1.5 rounded-full bg-(--linear-text-tertiary)" />
   }
 
-  return <CheckCircle2 aria-label={label} className="size-3.5 text-emerald-600/85 dark:text-emerald-400/85" />
+  return <CheckCircle2 aria-label={label} className="size-3.5 text-(--linear-green)/85" />
 }
 
 /**
@@ -93,14 +97,16 @@ function DelegateRowView({ row }: { row: DelegateRow }) {
   // and the whole card read as stacked ghosts (#105579). styles.css's own
   // invariant: the mark is per surface and never on a container.
   return (
-    <div className="grid min-w-0 max-w-full gap-0.5 rounded-xl border border-(--ui-stroke-tertiary) px-3 py-2">
+    <div className="grid min-w-0 max-w-full gap-0.5 rounded-xl border-[0.5px] border-(--linear-border-panel) px-3 py-2">
       <div className="flex min-w-0 max-w-full items-center gap-1.5" data-conversation-scaffold="">
         <span className={SCAFFOLD_GLYPH_CLASS}>{statusGlyph(row.status, statusLabel)}</span>
         <button
           className={cn(
             SCAFFOLD_LABEL_CLASS,
             'min-w-0 truncate text-left transition-colors',
-            open ? 'hover:text-foreground focus-visible:text-foreground focus-visible:outline-none' : 'cursor-default'
+            open
+              ? 'hover:text-(--linear-text-primary) focus-visible:text-(--linear-text-primary) focus-visible:outline-none'
+              : 'cursor-default'
           )}
           disabled={!open}
           onClick={open}

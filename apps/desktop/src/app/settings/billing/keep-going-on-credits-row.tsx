@@ -12,7 +12,7 @@ import { useBillingApi } from './api'
 import { BillingRefusalInline } from './inline-feedback'
 import { useStepUpFlow } from './use-step-up'
 
-const CAPTION = 'mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)]'
+const CAPTION = 'mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs'
 
 /**
  * Window plans: "Keep going on credits", the same account setting as the Portal's Billing > Topup
@@ -106,10 +106,10 @@ export function KeepGoingOnCreditsRow({ enabled }: { enabled: boolean }) {
 
   if (approving) {
     below = (
-      <div className={`${CAPTION} text-(--ui-text-tertiary)`}>
+      <div className={`${CAPTION} text-(--linear-text-tertiary)`}>
         <span>{copy.approveInBrowser}</span>
         {stepUp.verification?.code && (
-          <span className="font-mono text-[0.72rem] font-semibold text-foreground">{stepUp.verification.code}</span>
+          <span className="font-mono text-xs font-medium text-(--linear-text-primary)">{stepUp.verification.code}</span>
         )}
         {stepUp.verification && (
           <Button onClick={stepUp.openVerification} size="sm" type="button" variant="outline">
@@ -135,7 +135,7 @@ export function KeepGoingOnCreditsRow({ enabled }: { enabled: boolean }) {
     )
   } else if (retryValue !== null) {
     below = (
-      <div className={`${CAPTION} text-(--ui-text-tertiary)`}>
+      <div className={`${CAPTION} text-(--linear-text-tertiary)`}>
         <span>{copy.approvedRetry}</span>
         <Button
           onClick={() => {
@@ -155,9 +155,10 @@ export function KeepGoingOnCreditsRow({ enabled }: { enabled: boolean }) {
     )
   } else if (stepUp.message?.kind === 'error') {
     below = (
-      <div className={`${CAPTION} text-(--ui-text-tertiary)`}>
+      <div className={`${CAPTION} text-(--linear-text-tertiary)`}>
         <span>
-          <span className="font-medium text-foreground">{stepUp.message.title}:</span> {stepUp.message.text}
+          <span className="font-medium text-(--linear-text-primary)">{stepUp.message.title}:</span>{' '}
+          {stepUp.message.text}
         </span>
         <Button onClick={stepUp.dismiss} size="sm" type="button" variant="ghost">
           {t.settings.billing.stepUp.dismiss}

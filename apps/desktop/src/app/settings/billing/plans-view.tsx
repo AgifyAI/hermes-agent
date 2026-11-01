@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { type Translations, useI18n } from '@/i18n'
 import { openExternalLink } from '@/lib/external-link'
 import { ChevronLeft, ExternalLink } from '@/lib/icons'
-import { cn } from '@/lib/utils'
 
 import { Pill } from '../primitives'
 
@@ -72,7 +71,7 @@ function DowngradeConfirm({ flow, tier }: { flow: DowngradeFlow; tier: BillingPl
   }
 
   const { phase } = active
-  const captionCn = 'text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)'
+  const captionCn = 'text-xs text-(--linear-text-tertiary)'
   const refusal = phase.kind === 'previewFailed' || phase.kind === 'scheduleFailed' ? phase.refusal : null
   const busy = phase.kind === 'previewing' || phase.kind === 'scheduling'
   const message = previewMessage(phase, tier.name, t.settings.billing)
@@ -85,7 +84,7 @@ function DowngradeConfirm({ flow, tier }: { flow: DowngradeFlow; tier: BillingPl
   return (
     <div
       aria-live="polite"
-      className="flex min-w-0 flex-col gap-2 rounded-md bg-(--ui-bg-elevated) p-3 outline-none"
+      className="flex min-w-0 flex-col gap-2 rounded-(--linear-radius-control) bg-(--linear-bg-quaternary) p-3 outline-none"
       ref={panelRef}
       role="status"
       tabIndex={-1}
@@ -137,30 +136,21 @@ function PlanCard({ flow, tier }: { flow: DowngradeFlow; tier: BillingPlanTierVi
 
   return (
     <div
-      className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-lg p-4 outline-none',
-        isCurrent ? 'bg-(--ui-green)/10' : 'bg-(--ui-bg-quaternary)'
-      )}
+      className="flex min-w-0 flex-col gap-3 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 shadow-(--linear-shadow-card) outline-none"
       ref={cardRef}
       tabIndex={-1}
     >
       <div className="flex min-w-0 items-center gap-3">
         <TierArt name={tier.name} />
         <div className="min-w-0">
-          <div className="truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-            {tier.name}
-          </div>
-          <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+          <div className="truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{tier.name}</div>
+          <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">
             {t.settings.billing.perMonth(tier.priceDisplay)}
           </div>
         </div>
       </div>
 
-      {tier.creditsDisplay && (
-        <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {tier.creditsDisplay}
-        </div>
-      )}
+      {tier.creditsDisplay && <div className="text-xs text-(--linear-text-tertiary)">{tier.creditsDisplay}</div>}
 
       <div className="mt-auto min-w-0 pt-1">
         {isCurrent && <Pill tone="primary">{bp.current}</Pill>}
@@ -208,17 +198,16 @@ export function BillingPlansView({ onBack, tiers }: { onBack: () => void; tiers:
 
   return (
     <div className="@container">
-      <div className="mb-2.5 flex items-center gap-2 pt-2 text-[length:var(--conversation-text-font-size)] font-medium">
+      <div className="mb-4 flex items-center gap-2 text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">
         <Button
           aria-label={bp.backAria}
-          className="size-7 p-0 text-(--ui-text-tertiary)"
           disabled={flow.mutating}
           onClick={onBack}
-          size="sm"
+          size="icon"
           type="button"
           variant="ghost"
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-3.5" />
         </Button>
         <span>{bp.title}</span>
       </div>
@@ -230,7 +219,7 @@ export function BillingPlansView({ onBack, tiers }: { onBack: () => void; tiers:
           ))}
         </div>
       ) : (
-        <div className="rounded-xl bg-(--ui-bg-quaternary) p-4 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+        <div className="rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 text-xs text-(--linear-text-tertiary) shadow-(--linear-shadow-card)">
           {bp.empty}
         </div>
       )}

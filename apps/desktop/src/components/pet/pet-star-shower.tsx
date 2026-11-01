@@ -36,7 +36,7 @@ interface Star {
 }
 
 function readAccent(el: HTMLElement): string {
-  return getComputedStyle(el).getPropertyValue('--ui-accent').trim() || '#9aa0ff'
+  return getComputedStyle(el).getPropertyValue('--linear-accent').trim()
 }
 
 function sparkle(ctx: CanvasRenderingContext2D, size: number, rot: number, color: string): void {

@@ -14,8 +14,8 @@ import { cn } from '@/lib/utils'
 import { setSessionOwnerHint } from '@/store/session'
 import type { SessionOwnerRoute } from '@/store/session-request-router'
 
-import { OverlayView } from '../overlays/overlay-view'
-import { PanelEmpty } from '../overlays/panel'
+import { OVERLAY_PANEL_SURFACE, OverlayView } from '../overlays/overlay-view'
+import { PanelEmpty, PanelTitle } from '../overlays/panel'
 
 import { type ForeignImportResult, type ForeignPage, type ForeignPreview, foreignRequest } from './api'
 
@@ -112,8 +112,8 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
 
   return (
     <OverlayView
+      contentClassName={cn('mx-2 mb-2', OVERLAY_PANEL_SURFACE)}
       onClose={onClose}
-      rootClassName="bg-(--ui-bg-elevated)"
       titlebarActions={
         <Button
           aria-label={t.common.refresh}
@@ -133,10 +133,13 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
       }
     >
       <section aria-label={copy.title} className="session-import flex h-full min-h-0 flex-col">
-        <header className="px-8 pb-6 pt-12">
-          <h1 className="text-3xl font-semibold tracking-tight text-(--ui-text-primary)">{copy.title}</h1>
-          <p className="mt-2 text-sm text-(--ui-text-secondary)">{copy.subtitle}</p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-(--ui-text-secondary)">
+        {/* Linear's page title: 24px/500 on a 32px line, -0.16px tracking. */}
+        <header className="px-8 pt-12 pb-6">
+          <h1 className="text-[1.5rem] leading-8 font-medium tracking-[-0.16px] text-(--linear-text-primary)">
+            {copy.title}
+          </h1>
+          <p className="mt-1 text-[0.8125rem] text-(--linear-text-tertiary)">{copy.subtitle}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-(--linear-text-secondary) [&_.codicon]:text-(--linear-icon)">
             <span className="inline-flex items-center gap-2">
               <Codicon name="device-desktop" />
               {copy.readingFrom} {host ?? copy.connectedComputer}
@@ -147,14 +150,9 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
             </span>
           </div>
         </header>
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(17rem,0.85fr)_minmax(0,1.6fr)] border-t border-(--ui-stroke-tertiary) max-[760px]:grid-cols-1">
-          <aside
-            className={cn(
-              'flex min-h-0 flex-col bg-(--ui-sidebar-surface-background)',
-              selected && 'max-[760px]:hidden'
-            )}
-          >
-            <div className="flex flex-col gap-5 px-6 pb-4 pt-6">
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(17rem,0.85fr)_minmax(0,1.6fr)] border-t-[0.5px] border-(--linear-border-primary) max-[760px]:grid-cols-1">
+          <aside className={cn('flex min-h-0 flex-col border-r-[0.5px] border-(--linear-border-primary)', selected && 'max-[760px]:hidden')}>
+            <div className="flex flex-col gap-3 px-5 pt-5 pb-3">
               <SegmentedControl
                 onChange={value => {
                   setSource(value)
@@ -171,14 +169,14 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
               {rows.length > 0 && (
                 <SearchField
                   aria-label={copy.search}
-                  containerClassName="opacity-100"
                   onChange={setSearch}
                   placeholder={copy.search}
                   value={search}
+                  variant="box"
                 />
               )}
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-5">
+            <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-5">
               {sessions.isPending && <Loader className="mx-auto my-12" label={copy.scanning} />}
               {sessions.isError && (
                 <ErrorState className="p-5" description={copy.scanHelp} title={copy.scanError}>
@@ -209,12 +207,17 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
 
                 return (
                   <div key={row.id}>
-                    {newDate && <p className="px-3 pb-2 pt-5 text-xs font-medium text-(--ui-text-secondary)">{date}</p>}
+                    {newDate && (
+                      <p className="flex min-h-7 items-center px-3 pt-3 text-xs font-medium text-(--linear-text-tertiary)">
+                        {date}
+                      </p>
+                    )}
                     <button
                       aria-pressed={selected === row.id}
                       className={cn(
-                        'w-full cursor-pointer rounded-md px-3 py-4 text-start transition-colors hover:bg-(--chrome-action-hover) focus-visible:outline-2 focus-visible:outline-(--ui-accent)',
-                        selected === row.id && 'bg-(--chrome-action-hover)'
+                        // Linear's list row: 44px, radius 8, 13px/500 title.
+                        'flex h-11 w-full cursor-pointer items-center gap-2 rounded-(--linear-radius-control) px-3 text-start transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none',
+                        selected === row.id ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
                       )}
                       onClick={() => {
                         setSelected(row.id)
@@ -222,24 +225,23 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                       }}
                       type="button"
                     >
-                      <span className="mb-2 flex items-center gap-2 text-xs text-(--ui-text-secondary)">
-                        <Codicon name="comment-discussion" />
-                        {row.label}
-                        <span className="ms-auto tabular-nums">
-                          {row.turn_count} {copy.messages}
+                      <Codicon className="shrink-0 text-(--linear-icon)" name="comment-discussion" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.8125rem] leading-4 font-medium text-(--linear-text-primary)">
+                          {row.title}
+                        </span>
+                        <span className="block truncate text-xs leading-4 font-[450] text-(--linear-text-tertiary)">
+                          {[row.label, row.cwd || row.excerpt].filter(Boolean).join(' · ')}
                         </span>
                       </span>
-                      <span className="line-clamp-2 text-sm font-medium leading-5 text-(--ui-text-primary)">
-                        {row.title}
-                      </span>
-                      <span className="mt-1 block truncate text-xs leading-5 text-(--ui-text-secondary)">
-                        {row.cwd || row.excerpt}
+                      <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">
+                        {row.turn_count} {copy.messages}
                       </span>
                     </button>
                   </div>
                 )
               })}
-              {unreadable > 0 && <p className="px-3 py-4 text-xs text-(--ui-text-secondary)">{copy.skipped}</p>}
+              {unreadable > 0 && <p className="px-3 py-4 text-xs text-(--linear-text-tertiary)">{copy.skipped}</p>}
               {sessions.hasNextPage && (
                 <div className="flex justify-center pt-4">
                   <Button
@@ -264,8 +266,8 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                       {t.common.back}
                     </Button>
                   </div>
-                  <h2 className="text-xl font-medium leading-7 tracking-tight">{current.title}</h2>
-                  <p className="mt-2 text-xs text-(--ui-text-secondary)">
+                  <PanelTitle as="h2">{current.title}</PanelTitle>
+                  <p className="mt-1 text-xs font-[450] text-(--linear-text-tertiary)">
                     {current.label} · {current.turn_count} {copy.messages}
                   </p>
                 </div>
@@ -281,14 +283,15 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                   {preview.data && (
                     <div className="max-w-prose space-y-7">
                       {preview.data.truncated && (
-                        <p className="text-xs text-(--ui-text-secondary)">{copy.previewLimit}</p>
+                        <p className="text-xs text-(--linear-text-tertiary)">{copy.previewLimit}</p>
                       )}
                       {preview.data.messages.map((message, index) => (
                         <article className="min-w-0" key={index}>
-                          <p className="mb-2 text-xs font-semibold text-(--ui-text-secondary)">
+                          <p className="mb-1.5 text-xs font-medium text-(--linear-text-tertiary)">
                             {message.role === 'user' ? copy.you : current.label}
                           </p>
-                          <div className="text-sm leading-6 wrap-anywhere">
+                          {/* Linear's issue description: 15px/450 on 24px, secondary ink. */}
+                          <div className="text-[0.9375rem] leading-6 font-[450] wrap-anywhere text-(--linear-text-secondary)">
                             <MarkdownTextContent isRunning={false} previewOnly text={message.content} />
                           </div>
                         </article>
@@ -296,8 +299,8 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                     </div>
                   )}
                 </div>
-                <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-(--ui-stroke-tertiary) px-8 py-5">
-                  <p className="max-w-xs text-xs leading-5 text-(--ui-text-secondary)">
+                <footer className="flex flex-wrap items-center justify-between gap-4 border-t-[0.5px] border-(--linear-border-primary) px-8 py-4">
+                  <p className="max-w-xs text-xs leading-5 font-[450] text-(--linear-text-tertiary)">
                     {preview.data?.already_imported ? copy.snapshot : copy.copyNotice}
                   </p>
                   <Button disabled={pending || !preview.data || preview.isError} onClick={() => void continueSession()}>
@@ -305,7 +308,7 @@ export function SessionImportView({ owner, onClose, onOpenSession }: SessionImpo
                     <Codicon name="arrow-right" />
                   </Button>
                   {error && (
-                    <div className="w-full text-sm text-destructive" role="alert">
+                    <div className="w-full text-[0.8125rem] text-(--linear-red)" role="alert">
                       {copy.importError} {error}
                     </div>
                   )}

@@ -14,6 +14,8 @@ import { StatusRow } from '@/app/command-palette/status-row'
 import { HUD_ITEM, HUD_TEXT } from '@/app/floating-hud'
 import { useGatewayRequest } from '@/app/gateway/hooks/use-gateway-request'
 import { PetThumb } from '@/components/pet/pet-thumb'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Check, Egg, Loader2, PawPrint } from '@/lib/icons'
@@ -74,11 +76,11 @@ export function PetPalettePage({ search, onGenerate }: PetPalettePageProps) {
   const mutating = Boolean(busy)
 
   return (
-    <div role="listbox">
+    <div className="p-1.5" role="listbox">
       {onGenerate && (
         <button
           className={cn(
-            'flex w-full items-center gap-2 rounded-md text-left text-foreground transition-colors hover:bg-(--chrome-action-hover)',
+            'flex w-full items-center gap-2 rounded-(--linear-radius-control) text-left text-(--linear-text-overlay) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-overlay) hover:text-(--linear-text-overlay-strong) hover:transition-none',
             HUD_ITEM,
             HUD_TEXT
           )}
@@ -86,14 +88,14 @@ export function PetPalettePage({ search, onGenerate }: PetPalettePageProps) {
           onMouseDown={event => event.preventDefault()}
           type="button"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-(--chrome-action-hover)">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-(--linear-radius-control) bg-(--linear-hover-overlay)">
             <Egg className="size-4" />
           </span>
           <span className="font-medium">{t.commandCenter.generatePet.title}</span>
         </button>
       )}
 
-      {error && <p className="px-2 pb-1 pt-1.5 text-[0.6875rem] text-(--ui-red)">{error}</p>}
+      {error && <p className="px-2 pb-1 pt-1.5 text-[0.6875rem] text-(--linear-red)">{error}</p>}
 
       {shown.length === 0 ? (
         <StatusRow text={copy.empty} />
@@ -105,10 +107,10 @@ export function PetPalettePage({ search, onGenerate }: PetPalettePageProps) {
           return (
             <button
               className={cn(
-                'flex w-full items-center gap-2 rounded-md text-left transition-colors hover:bg-(--chrome-action-hover) disabled:opacity-60',
+                'flex w-full items-center gap-2 rounded-(--linear-radius-control) text-left text-(--linear-text-overlay) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-overlay) hover:text-(--linear-text-overlay-strong) hover:transition-none disabled:opacity-60',
                 HUD_ITEM,
                 HUD_TEXT,
-                isActive && 'bg-(--chrome-action-hover)/70'
+                isActive && 'bg-(--linear-hover-overlay) text-(--linear-text-overlay-strong)'
               )}
               disabled={mutating && !isBusy}
               key={pet.slug}
@@ -128,21 +130,19 @@ export function PetPalettePage({ search, onGenerate }: PetPalettePageProps) {
                 <span className="flex items-center gap-1.5">
                   <span className="truncate font-medium">{pet.displayName}</span>
                   {pet.generated && (
-                    <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-px text-[0.625rem] font-medium text-primary">
-                      {copy.generatedTag}
-                    </span>
+                    <Badge className="shrink-0">{copy.generatedTag}</Badge>
                   )}
                 </span>
-                <span className="truncate text-[0.6875rem] text-muted-foreground/80">
+                <span className="truncate text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">
                   {pet.slug}
                   {pet.installed ? ` · ${copy.installed}` : ''}
                 </span>
               </span>
-              <span className="ml-auto flex shrink-0 items-center text-[0.6875rem] text-muted-foreground">
+              <span className="ml-auto flex shrink-0 items-center text-[0.6875rem] text-(--linear-text-tertiary)">
                 {isBusy ? (
                   <Loader2 className="size-3 animate-spin" />
                 ) : isActive ? (
-                  <Check className="size-3.5 text-foreground" />
+                  <Check className="size-3.5 text-(--linear-accent)" />
                 ) : null}
               </span>
             </button>
@@ -179,22 +179,19 @@ export function PetInlineToggle() {
   }
 
   return (
-    <button
+    <Button
       aria-label={enabled ? copy.turnOff : copy.turnOn}
       aria-pressed={enabled}
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors disabled:opacity-50',
-        enabled
-          ? 'bg-(--chrome-action-hover) text-foreground'
-          : 'text-muted-foreground hover:bg-(--chrome-action-hover)/60'
-      )}
+      className={cn('shrink-0', enabled && 'bg-(--linear-hover-overlay) text-(--linear-text-overlay-strong)')}
       disabled={Boolean(busy)}
       onClick={toggle}
       // Don't steal focus from the search input on click.
       onMouseDown={event => event.preventDefault()}
+      size="icon"
       type="button"
+      variant="ghost"
     >
-      {busy ? <Loader2 className="size-4 animate-spin" /> : <PawPrint className="size-4" />}
-    </button>
+      {busy ? <Loader2 className="animate-spin" /> : <PawPrint />}
+    </Button>
   )
 }

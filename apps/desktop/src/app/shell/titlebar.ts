@@ -73,7 +73,7 @@ export function titlebarToolsRightCss(
 // shared <Button size="icon-titlebar"> (used polymorphically via asChild) —
 // Button is the single source of button styling.
 export const titlebarButtonClass =
-  'text-muted-foreground/85 hover:bg-(--ui-control-hover-background) hover:text-foreground'
+  'text-(--linear-icon) hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary)'
 
 /** Shared flex shell for left/right/pane titlebar tool rows — no gap; 24px buttons abut. */
 export const titlebarToolClusterClass =
@@ -85,13 +85,13 @@ export function titlebarToolsWidthCss(toolCount: number): string {
 }
 
 export const titlebarHeaderBaseClass =
-  'pointer-events-none relative z-3 flex h-(--titlebar-height) w-full min-w-0 shrink-0 items-center justify-start gap-3 overflow-hidden border-b border-(--ui-stroke-tertiary) bg-(--ui-chat-surface-background) px-[max(0.75rem,var(--titlebar-content-inset,0rem))] pr-[calc(var(--titlebar-tools-right,0.75rem)+var(--titlebar-tools-width,0px)+0.75rem)]'
+  'pointer-events-none relative z-3 flex h-(--titlebar-height) w-full min-w-0 shrink-0 items-center justify-start gap-3 overflow-hidden border-b border-(--ui-stroke-tertiary) bg-(--linear-bg-panel) px-[max(0.75rem,var(--titlebar-content-inset,0rem))] pr-[calc(var(--titlebar-tools-right,0.75rem)+var(--titlebar-tools-width,0px)+0.75rem)]'
 
 // Title row inside the header — must stay in the flex truncate chain.
 export const titlebarHeaderTitleClass = 'min-w-0 flex-1 overflow-hidden'
 
 export const titlebarHeaderShadowClass =
-  "after:pointer-events-none after:absolute after:left-0 after:right-0 after:top-full after:h-4 after:bg-linear-to-b after:from-(--ui-chat-surface-background) after:to-transparent after:content-['']"
+  "after:pointer-events-none after:absolute after:left-0 after:right-0 after:top-full after:h-4 after:bg-linear-to-b after:from-(--linear-bg-panel) after:to-transparent after:content-['']"
 
 export function titlebarControlsPosition(
   windowButtonPosition: HermesConnection['windowButtonPosition'] | undefined,

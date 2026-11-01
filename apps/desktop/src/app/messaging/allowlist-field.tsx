@@ -116,19 +116,19 @@ export function AllowlistField({ field, fieldId, label, pending, onEdit, tools }
           <Tip label={m.removeListEntry}>
             <Button
               aria-label={m.removeListEntry}
-              className="size-8 shrink-0"
               disabled={lone}
               onClick={() => remove(row.id)}
+              size="icon-sm"
               variant="ghost"
             >
-              <X className="size-3.5" />
+              <X />
             </Button>
           </Tip>
         </div>
       ))}
       <div className="flex items-center gap-2">
-        <Button className="h-7 gap-1 px-2 text-xs" onClick={add} size="sm" variant="ghost">
-          <Plus className="size-3.5" />
+        <Button onClick={add} size="sm" variant="ghost">
+          <Plus />
           {m.addListEntry}
         </Button>
         <span className="flex-1" />

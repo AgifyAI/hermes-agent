@@ -70,8 +70,8 @@ it('fills only the current page when a third-level sub-page is open; its parent 
   const page = rail.getByRole('button', { name: 'About' })
 
   expect(page.getAttribute('aria-current')).toBe('page')
-  expect(page.className).toContain('bg-(--chrome-action-hover)')
+  expect(page.className).toContain('bg-(--linear-active-sidebar)')
   expect(parent.getAttribute('aria-current')).toBeNull()
-  expect(parent.className).toContain('bg-transparent')
-  expect(parent.className).toContain('font-medium')
+  expect(parent.className).not.toContain('bg-(--linear-active-sidebar)')
+  expect(parent.className).toContain('text-(--linear-text-primary)')
 })

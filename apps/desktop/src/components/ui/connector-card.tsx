@@ -37,10 +37,10 @@ export interface ConnectorRowProps {
 const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)`
 
 const MARKS = {
-  connected: { Icon: Check, className: 'text-emerald-600 dark:text-emerald-400' },
+  connected: { Icon: Check, className: 'text-(--linear-green)' },
   idle: { Icon: CircleIcon, className: 'text-(--ui-text-quaternary)' },
   // The spin is the only motion in the card; a reduced-motion reader keeps the mark, without it.
-  waiting: { Icon: Loader2, className: 'animate-spin text-primary motion-reduce:animate-none' }
+  waiting: { Icon: Loader2, className: 'animate-spin text-(--linear-accent) motion-reduce:animate-none' }
 } satisfies Record<ConnectorRowMark, { Icon: typeof Check; className: string }>
 
 export function ConnectorCard({ children, title }: { children: ReactNode; title: string }) {
@@ -72,9 +72,9 @@ export function ConnectorRow({ action, connector, cue, mark, markLabel }: Connec
         </span>
         <span className="flex w-22 shrink-0 justify-end">
           {action ? (
-            <span className="inline-flex h-6 w-22 items-stretch overflow-hidden rounded-md border border-primary/25 bg-primary/10 text-primary">
+            <span className="inline-flex h-6 w-22 items-stretch overflow-hidden rounded-full border-[0.5px] border-(--linear-accent)/25 bg-(--linear-accent)/10 text-(--linear-accent)">
               <Button
-                className="h-full w-full rounded-none px-2 text-xs font-medium text-primary hover:bg-primary/15 hover:text-primary"
+                className="h-full w-full rounded-none px-2 text-xs font-medium text-(--linear-accent) hover:bg-(--linear-accent)/15 hover:text-(--linear-accent)"
                 disabled={action.disabled}
                 loading={action.busy}
                 onClick={action.onClick}
@@ -109,7 +109,7 @@ export function ConnectorSummary({
           {connector.title || connector.name}
         </span>
         {meta ? (
-          <span className={cn(SCAFFOLD_META_CLASS, tone === 'ok' && 'text-emerald-600/85 dark:text-emerald-400/85')}>
+          <span className={cn(SCAFFOLD_META_CLASS, tone === 'ok' && 'text-(--linear-green)')}>
             {meta}
           </span>
         ) : null}

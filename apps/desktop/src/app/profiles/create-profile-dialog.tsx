@@ -19,7 +19,10 @@ import { useI18n } from '@/i18n'
 import { dropBrowserProfilePrefs } from '@/lib/browser-profile-prefs'
 import { AlertTriangle } from '@/lib/icons'
 import { slug } from '@/lib/sanitize'
+import { cn } from '@/lib/utils'
 import type { ProfileInfo } from '@/types/hermes'
+
+import { PANEL_ERROR_NOTICE } from '../overlays/panel'
 
 const PROFILE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/
 
@@ -124,7 +127,7 @@ export function CreateProfileDialog({
               onValueChange={value => setCloneFrom(value === '__none__' ? null : value)}
               value={cloneFrom ?? '__none__'}
             >
-              <SelectTrigger className="h-9 rounded-md" id="new-profile-clone-from">
+              <SelectTrigger id="new-profile-clone-from">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -150,7 +153,7 @@ export function CreateProfileDialog({
           </Field>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')}>
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span>{error}</span>
             </div>

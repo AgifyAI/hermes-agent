@@ -222,8 +222,8 @@ function StatusColumn({
 
 function Line({ action, label }: { action?: ReactNode; label: string }) {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-(--ui-stroke-tertiary) px-3.5 py-1.5">
-      <span className="min-w-0 flex-1 text-[0.7rem] text-(--ui-text-tertiary)">{label}</span>
+    <div className="flex shrink-0 items-center gap-2 border-b-[0.5px] border-(--linear-border-panel) px-3.5 py-1.5">
+      <span className="min-w-0 flex-1 text-[0.6875rem] text-(--linear-text-tertiary)">{label}</span>
       {action}
     </div>
   )
@@ -328,7 +328,7 @@ function DeprecatedToggle({ count, onToggle, shown }: { count: number; onToggle:
   const copy = t.connectorsPage.tools
 
   return (
-    <div className="flex shrink-0 border-t border-(--ui-stroke-tertiary) px-3.5 py-1">
+    <div className="flex shrink-0 border-t-[0.5px] border-(--linear-border-panel) px-3.5 py-1">
       <Button aria-pressed={shown} onClick={onToggle} size="xs" variant="text">
         {shown ? copy.hideDeprecated(count) : copy.showDeprecated(count)}
       </Button>
@@ -404,7 +404,7 @@ function ToolViewport({
   return (
     <div
       aria-label={label}
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain [overflow-anchor:none] outline-none focus-visible:ring-[0.1875rem] focus-visible:ring-ring/50"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain [overflow-anchor:none] outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)"
       data-slot="tools-viewport"
       onKeyDown={onKeyDown}
       onScroll={event => setScrollTop(event.currentTarget.scrollTop)}
@@ -413,7 +413,7 @@ function ToolViewport({
       tabIndex={0}
     >
       {tools.length === 0 ? (
-        <p className="px-3.5 py-8 text-center text-xs text-(--ui-text-tertiary)">{t.connectorsPage.tools.noMatch}</p>
+        <p className="px-3.5 py-8 text-center text-xs text-(--linear-text-tertiary)">{t.connectorsPage.tools.noMatch}</p>
       ) : null}
 
       <div className="relative" style={{ height: total }}>
@@ -515,11 +515,11 @@ function DirtyFooter({
 
   return (
     <div
-      className="flex shrink-0 items-center gap-2.5 border-t border-(--ui-stroke-tertiary) bg-(--ui-bg-chrome) px-3.5 py-2"
+      className="flex shrink-0 items-center gap-2.5 border-t-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-3.5 py-2"
       data-slot="tools-dirty-footer"
     >
-      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--theme-primary)" />
-      <span className="min-w-0 flex-1 truncate text-xs text-(--ui-text-primary)">
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--linear-accent)" />
+      <span className="min-w-0 flex-1 truncate text-xs text-(--linear-text-primary)">
         {copy.footerDirty(counts.off, counts.backOn)}
       </span>
       <Button disabled={saving} onClick={onDiscard} size="xs" variant="text">

@@ -152,7 +152,7 @@ function KindBadge({ kind }: { kind: PackageKind }) {
   const p = t.skills.plugins
 
   return (
-    <span className="inline-flex items-center gap-1 rounded border border-(--ui-stroke-tertiary) px-1.5 py-px text-[0.65rem] text-(--ui-text-tertiary)">
+    <span className="inline-flex items-center gap-1 rounded-(--linear-radius-kbd) border-[0.5px] border-(--linear-border-panel) px-1.5 py-px text-[0.6875rem] text-(--linear-text-tertiary)">
       {kind !== 'desktop' && <Package aria-hidden className="size-3" />}
       {kind !== 'agent' && <Monitor aria-hidden className="size-3" />}
       {kind === 'both' ? p.kindBoth : kind === 'agent' ? p.kindAgent : p.kindDesktop}
@@ -209,7 +209,7 @@ function ProvenancePill({ pkg }: { pkg: PluginPackage }) {
 function HalfCell({ label, labelContent, children }: { label: string; labelContent?: ReactNode; children: ReactNode }) {
   return (
     <div aria-label={label} className="flex w-full items-center gap-3" role="cell">
-      <span className="min-w-0 flex-1 text-xs text-(--ui-text-tertiary)">{labelContent ?? label}</span>
+      <span className="min-w-0 flex-1 text-xs text-(--linear-text-tertiary)">{labelContent ?? label}</span>
       {children}
     </div>
   )
@@ -217,7 +217,7 @@ function HalfCell({ label, labelContent, children }: { label: string; labelConte
 
 function Dash() {
   return (
-    <span aria-hidden className="w-9 text-center text-(--ui-text-quaternary)">
+    <span aria-hidden className="w-9 text-center text-(--linear-text-quaternary)">
       —
     </span>
   )
@@ -238,13 +238,13 @@ function UninstallRow({
   const p = t.skills.plugins
 
   return (
-    <div className="flex items-center gap-3 border-t border-(--ui-stroke-tertiary) pt-4">
-      <div className="min-w-0 flex-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+    <div className="flex items-center gap-3 border-t-[0.5px] border-(--linear-border-panel) pt-4">
+      <div className="min-w-0 flex-1 text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
         {note}
       </div>
       <Button
         aria-label={`${p.uninstall}: ${name}`}
-        className="text-destructive hover:text-destructive"
+        className="text-(--linear-red) hover:text-(--linear-red)"
         disabled={disabled}
         onClick={onUninstall}
         size="xs"
@@ -380,9 +380,9 @@ function PackageRow({
       >
         <div className="flex w-full min-w-0 flex-1 items-start gap-2" role="cell">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-[length:var(--conversation-text-font-size)] font-medium text-(--linear-text-primary)">
               <span>{pkg.name}</span>
-              {agent?.version && <span className="text-(--ui-text-quaternary)">v{agent.version}</span>}
+              {agent?.version && <span className="text-(--linear-text-quaternary)">v{agent.version}</span>}
               <KindBadge kind={pkg.kind} />
               <ProvenancePill pkg={pkg} />
               {agent?.portable && <Pill>{p.portableBadge}</Pill>}
@@ -397,7 +397,7 @@ function PackageRow({
               <div
                 className={cn(
                   'mt-0.5 text-[length:var(--conversation-caption-font-size)] break-words',
-                  desktop?.status === 'error' ? 'text-(--ui-danger,#f87171)' : 'text-(--ui-text-tertiary)'
+                  desktop?.status === 'error' ? 'text-(--linear-red)' : 'text-(--linear-text-tertiary)'
                 )}
               >
                 {desktop?.status === 'error' ? desktop.error : pkg.description}
@@ -407,7 +407,7 @@ function PackageRow({
             {unavailableServers.map(server =>
               server.sentence ? (
                 <div
-                  className="mt-0.5 text-[length:var(--conversation-caption-font-size)] break-words text-(--ui-text-secondary)"
+                  className="mt-0.5 text-[length:var(--conversation-caption-font-size)] break-words text-(--linear-text-secondary)"
                   key={server.name}
                 >
                   {server.sentence}
@@ -458,7 +458,7 @@ function PackageRow({
             />
           ) : pkg.desktopMissing ? (
             <Tip label={remoteBackend ? p.desktopHalfRemoteTip : p.desktopHalfPendingTip}>
-              <span className="text-[0.65rem] text-(--ui-text-tertiary)">
+              <span className="text-[0.6875rem] text-(--linear-text-tertiary)">
                 {remoteBackend ? p.desktopHalfRemote : p.desktopHalfPending}
               </span>
             </Tip>
@@ -472,7 +472,6 @@ function PackageRow({
             <>
               {agent.update_available && (
                 <Button
-                  className="h-5 px-1.5 text-[0.65rem]"
                   disabled={busy}
                   onClick={() => onAgentUpdate(agent)}
                   size="xs"
@@ -481,7 +480,7 @@ function PackageRow({
                   {p.updateToPin(updateTargetLabel(agent))}
                 </Button>
               )}
-              {busy && <Loader2 className="size-3.5 animate-spin text-(--ui-text-tertiary)" />}
+              {busy && <Loader2 className="size-3.5 animate-spin text-(--linear-text-tertiary)" />}
               {agentToggleable ? (
                 <Switch
                   aria-label={`${p.halfAgent}: ${pkg.name}`}
@@ -501,7 +500,6 @@ function PackageRow({
             <Tip label={desktop.packageOrigin?.repo ? p.installAgentHereTip(scopeLabel) : p.installAgentHereNoOrigin}>
               <span>
                 <Button
-                  className="h-5 px-1.5 text-[0.65rem]"
                   disabled={!desktop.packageOrigin?.repo}
                   onClick={() => installAgentHalfHere(desktop, scope)}
                   size="xs"

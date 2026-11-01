@@ -490,8 +490,7 @@ export const jaOverrides = {
       chatTextScaleDesc:
         'UI スケールを基準に、会話とメッセージ入力欄の文字を拡大縮小します。サイドバーや操作ボタンのサイズは変わりません。',
       title: '外観',
-      intro:
-        'デスクトップ専用の表示設定です。モードは明るさ、テーマはアクセントカラーとチャット面のスタイルを制御します。',
+      intro: 'デスクトップのみ。Hermes の外観は Linear に倣った 1 種類で、ライトとダークがあります。',
       colorMode: 'カラーモード',
       colorModeDesc: '固定モードを選ぶか、Hermes をシステム設定に合わせます。',
       toolViewTitle: 'ツール呼び出しの表示',
@@ -506,7 +505,7 @@ export const jaOverrides = {
       uiScaleDesc: (percent: number) =>
         `アプリ全体の文字と UI を拡大縮小します。Cmd/Ctrl と +、-、0 でも変更できます。現在: ${percent}%`,
       sessionDensityTitle: 'セッションリストの密度',
-      sessionDensityDesc: 'サイドバーのセッションタイトルの下に表示する情報量を選びます。',
+      sessionDensityDesc: 'サイドバーで日ごとのグループを区切る間隔を選びます。',
       sessionDensityCompact: 'コンパクト',
       sessionDensityComfortable: '標準',
       sessionDensityDetailed: '詳細',
@@ -533,29 +532,8 @@ export const jaOverrides = {
       chatFontPreview: 'プレビュー',
       chatFontSample: 'いろはにほへと ちりぬるを 0123456789',
       chatFontReset: '既定のフォントを使用',
-      translucencyTitle: 'ウィンドウの透過',
-      translucencyDesc: 'テキストも含めウィンドウ全体を透過させてデスクトップを表示します。',
-      translucencyGlassDesc: 'マットガラス: デスクトップが滑らかなぼかしとして透け、テキストは鮮明なまま。',
-      translucencyModeClear: 'クリア',
-      translucencyModeGlass: 'ガラス',
-      translucencyTintTitle: '色味',
-      translucencyFadeTitle: 'フェード',
-      translucencyFrostTitle: 'くもりの質感',
-      translucencyFrost: {
-        'under-window': '深い',
-        popover: 'やわらか',
-        titlebar: '明るい',
-        header: 'まぶしい'
-      },
-      translucencyScopeTitle: '適用範囲',
-      translucencyScope: {
-        window: 'ウィンドウ全体',
-        sidebar: 'サイドバーのみ'
-      },
       backdropTitle: 'チャット背景',
       backdropDesc: '会話の背後に表示される淡い彫像の画像。',
-      userBubbleTitle: 'メッセージの吹き出し',
-      userBubbleDesc: '自分のメッセージの透け具合。0 で不透明、100 で枠線だけが残ります。',
       textDirectionTitle: 'テキストの方向',
       textDirectionDesc:
         'チャットのメッセージと入力欄の文字方向を設定します。「自動」は各段落の最初の文字で判断します。混在したテキストの並びがおかしいときは方向を選んでください。コードは常に左から右に表示されます。',
@@ -597,20 +575,7 @@ export const jaOverrides = {
       productDesc: '読みやすいツール活動と簡潔な要約を表示します。',
       technical: 'テクニカル',
       technicalDesc: '生のツール引数、結果、低レベルの詳細を含めます。',
-      themeTitle: 'テーマ',
-      themeDesc: 'デスクトップ専用のパレットです。選択したモードの上に適用されます。',
-      themeProfileNote: profile =>
-        `「${profile}」プロファイルに保存されます。プロファイルごとに個別のテーマを保持します。`,
-      installTitle: 'VS Code から導入',
-      installDesc:
-        'Marketplace の拡張機能 ID（例: dracula-theme.theme-dracula）を貼り付けると、その配色テーマをデスクトップ用パレットに変換します。',
-      installPlaceholder: 'publisher.extension',
-      installButton: 'インストール',
-      installing: 'インストール中…',
-      installError: 'そのテーマをインストールできませんでした。',
-      installed: name => `「${name}」をインストールしました。`,
-      removeTheme: 'テーマを削除',
-      importedBadge: 'インポート済み',
+      themeProfileNote: profile => `${profile} プロファイルに保存されます。プロファイルごとにモードを保持します。`,
       pet: {
         title: 'ペット',
         intro:
@@ -1453,7 +1418,6 @@ export const jaOverrides = {
     commandCenter: 'コマンドセンター',
     appearance: '外観',
     settings: '設定',
-    changeTheme: 'テーマを変更',
     changeColorMode: 'カラーモードを変更…',
     pets: {
       title: 'ペット',
@@ -1498,18 +1462,6 @@ export const jaOverrides = {
       referenceImageInvalid: '参照画像を読み込めませんでした。PNG/JPG/WebP/GIF を試してください。',
       adopt: '迎え入れる',
       startOver: 'やり直す'
-    },
-    installTheme: {
-      title: 'テーマをインストール…',
-      pageTitle: 'テーマをインストール',
-      placeholder: 'VS Code Marketplace を検索...',
-      loading: 'Marketplace を検索中...',
-      error: 'Marketplace に接続できませんでした。',
-      empty: '一致するテーマがありません。',
-      install: 'インストール',
-      installing: 'インストール中...',
-      installed: 'インストール済み',
-      installs: count => `${count} 回インストール`
     },
     settingsFields: '設定フィールド',
     mcpServers: 'MCP サーバー',
@@ -2235,6 +2187,8 @@ export const jaOverrides = {
       ageHour: '時間',
       ageMin: '分'
     },
+    previousSessions: '過去のセッション',
+    noSessionsToday: '今日のセッションはまだありません',
     dateDivider: {
       today: '今日',
       yesterday: '昨日'

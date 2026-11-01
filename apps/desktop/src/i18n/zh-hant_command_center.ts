@@ -13,7 +13,6 @@ export const zhHantCommandCenter = {
     commandCenter: '命令中心',
     appearance: '外觀',
     settings: '設定',
-    changeTheme: '變更主題',
     changeColorMode: '變更色彩模式…',
     pets: {
       title: '寵物',
@@ -58,18 +57,6 @@ export const zhHantCommandCenter = {
       referenceImageInvalid: '無法讀取該參考圖片。請嘗試 PNG、JPG、WebP 或 GIF。',
       adopt: '領養',
       startOver: '重新開始'
-    },
-    installTheme: {
-      title: '安裝主題…',
-      pageTitle: '安裝主題',
-      placeholder: '搜尋 VS Code Marketplace...',
-      loading: '正在搜尋 Marketplace...',
-      error: '無法連接到 Marketplace。',
-      empty: '沒有符合的主題。',
-      install: '安裝',
-      installing: '安裝中...',
-      installed: '已安裝',
-      installs: count => `${count} 次安裝`
     },
     settingsFields: '設定欄位',
     mcpServers: 'MCP 伺服器',

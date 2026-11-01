@@ -39,7 +39,7 @@ export function DraftGrid({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="flex items-center justify-between text-xs text-(--linear-text-tertiary)">
         <span className={cn(generating && 'shimmer shimmer-color-primary opacity-40', !generating && 'invisible')}>
           {copy.generating}
         </span>
@@ -89,8 +89,8 @@ export function DraftGrid({
                     aria-label={copy.remix}
                     className={cn(
                       'absolute right-1 top-1 z-20',
-                      'text-(--ui-text-tertiary) opacity-10 transition',
-                      'hover:bg-transparent hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100'
+                      'text-(--linear-text-tertiary) opacity-10 transition-opacity',
+                      'hover:bg-transparent hover:text-(--linear-text-primary) focus-visible:opacity-100 group-hover:opacity-100'
                     )}
                     onClick={event => {
                       event.stopPropagation()
@@ -100,7 +100,7 @@ export function DraftGrid({
                     type="button"
                     variant="ghost"
                   >
-                    <Codicon name="git-branch" size={12} />
+                    <Codicon name="git-branch" size={14} />
                   </Button>
                 </Tip>
               )}

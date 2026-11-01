@@ -72,12 +72,7 @@ function BootFailureModal({
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content aria-describedby={undefined} aria-modal="true" asChild ref={setContentNode}>
-          <div
-            className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--ui-chat-surface-background) p-6"
-            // Masks the whole app on boot failure — must stay filled under window
-            // glass. Contract: `[data-glass-opaque]` in styles.css.
-            data-glass-opaque=""
-          >
+          <div className="fixed inset-0 z-(--z-setup) flex items-start justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pt-20 pb-6">
             <DialogPortalContainerContext.Provider value={contentNode}>
               {title ? <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title> : null}
               {children}
@@ -104,14 +99,14 @@ function WebappSignInOverlay() {
 
   return (
     <BootFailureModal onDismiss={() => undefined}>
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+      <div className="relative w-full max-w-[46.875rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <div className="flex items-start gap-3 px-5 py-4">
-          <LogIn className="mt-0.5 size-5" />
+          <LogIn className="mt-1.5 size-4 text-(--linear-icon)" />
           <div>
             <DialogPrimitive.Title asChild>
-              <h2 className="text-[0.9375rem] font-semibold tracking-tight">{copy.webappTitle}</h2>
+              <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{copy.webappTitle}</h2>
             </DialogPrimitive.Title>
-            <p className="mt-1 text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">{copy.webappDescription}</p>
+            <p className="mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">{copy.webappDescription}</p>
           </div>
         </div>
       </div>
@@ -506,20 +501,18 @@ export function BootFailureOverlay() {
   if (view === 'connect') {
     return (
       <BootFailureModal onDismiss={dismiss} title={copy.gatewaySettings}>
-        <div className="relative flex max-h-[86vh] w-full max-w-[46rem] flex-col overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+        <div className="relative flex max-h-[calc(100vh-6.5rem)] w-full max-w-[46.875rem] flex-col overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
           <DialogCloseButton />
           {/* Subtle back affordance (projects/overlay idiom): muted → foreground
               on hover, no divider. */}
-          <button
-            className="flex w-full items-center gap-1.5 px-4 pt-4 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
-            onClick={() => setView('recovery')}
-            type="button"
-          >
-            <ChevronLeft className="size-3.5" />
-            {copy.back}
-          </button>
+          <div className="px-3 pt-3">
+            <Button onClick={() => setView('recovery')} size="sm" type="button" variant="ghost">
+              <ChevronLeft />
+              {copy.back}
+            </Button>
+          </div>
           <div className="min-h-0 flex-1 pt-4">
-            <Suspense fallback={<Loader className="mx-auto my-16 size-6 text-(--ui-text-tertiary)" />}>
+            <Suspense fallback={<Loader className="mx-auto my-16 size-6 text-(--linear-text-tertiary)" />}>
               <GatewaySettings embedded />
             </Suspense>
           </div>
@@ -530,27 +523,27 @@ export function BootFailureOverlay() {
 
   return (
     <BootFailureModal onDismiss={dismiss}>
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+      <div className="relative w-full max-w-[46.875rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <DialogCloseButton />
         <div className="flex items-start gap-3 px-5 py-4 pr-12">
-          <ErrorIcon className="mt-0.5" size="1.25rem" />
+          <ErrorIcon className="mt-1.5" size="1rem" />
           <div>
             <DialogPrimitive.Title asChild>
-              <h2 className="text-[0.9375rem] font-semibold tracking-tight">
+              <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">
                 {remoteReauth ? copy.remoteTitle : cloudDown ? copy.cloudDownTitle : copy.title}
               </h2>
             </DialogPrimitive.Title>
-            <p className="mt-1 text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">
+            <p className="mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
               {remoteReauth ? copy.remoteDescription : cloudDown ? copy.cloudDownDescription : copy.description}
             </p>
           </div>
         </div>
 
         <div className="grid gap-4 p-5 pt-0">
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">
+          <div className="rounded-(--linear-radius-card) bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] px-3 py-2.5 text-[0.8125rem] leading-5 text-(--linear-red)">
             {failureCopy.headline}
             {failureCopy.rawDetail ? (
-              <details className="mt-2 text-muted-foreground">
+              <details className="mt-2 text-xs text-(--linear-text-tertiary)">
                 <summary className="cursor-pointer select-none font-medium">{copy.details}</summary>
                 <pre
                   className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[0.6875rem] leading-relaxed"
@@ -575,7 +568,7 @@ export function BootFailureOverlay() {
                 {copy.openLogs}
               </Button>
             </div>
-            {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+            {hint ? <p className="text-xs text-(--linear-text-tertiary)">{hint}</p> : null}
           </div>
 
           {logs.length > 0 ? (

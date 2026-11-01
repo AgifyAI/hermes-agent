@@ -193,7 +193,7 @@ export function GroupMemberPicker({ group, members, open, onClose }: GroupMember
               <RowButton
                 aria-checked={checked}
                 className={cn(
-                  'flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-(--chrome-action-hover)',
+                  'flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-(--linear-hover-control)',
                   disabled && 'cursor-not-allowed opacity-50'
                 )}
                 disabled={disabled}
@@ -214,12 +214,12 @@ export function GroupMemberPicker({ group, members, open, onClose }: GroupMember
                 role="checkbox"
               >
                 <Codicon
-                  className={cn(checked ? 'text-(--ui-accent)' : 'text-(--ui-text-quaternary)')}
+                  className={cn(checked ? 'text-(--linear-accent)' : 'text-(--linear-text-quaternary)')}
                   name={checked ? 'pass-filled' : 'circle-large-outline'}
                 />
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="truncate text-xs text-foreground">{displayName(bot, meta)}</div>
-                  <div className="truncate text-[0.625rem] text-(--ui-text-quaternary)">
+                  <div className="truncate text-xs text-(--linear-text-primary)">{displayName(bot, meta)}</div>
+                  <div className="truncate text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                     {`@${botHandle(bot.name, bot)}${bot.remoteSource && bot.connectionLabel ? ` · ${bot.connectionLabel}` : ''}`}
                   </div>
                 </div>

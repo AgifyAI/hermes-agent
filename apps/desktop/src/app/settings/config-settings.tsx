@@ -56,7 +56,7 @@ import { MemoryConnect } from './memory/connect'
 import { ProviderConfigPanel } from './memory/provider-config-panel'
 import { ModelSettings, ModelSettingsSkeleton } from './model-settings'
 import { OnboardingSettings } from './onboarding-settings'
-import { EmptyState, ListRow, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
+import { EmptyState, ListRow, SettingsCard, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
 import { SettingsProfileScope } from './profile-scope'
 import { QuickEntrySettings } from './quick-entry-settings'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
@@ -391,9 +391,9 @@ function ConfigSettingsInner({
   // selecting siblings or returning to the first page through the parent.
   const renderPage = (children: ReactNode) => (
     <SettingsContent>
-      <SettingsProfileScope className="mb-5" />
+      <SettingsProfileScope className="mb-8" />
       {activeSectionId === 'model' && (
-        <div className={showModelSettings ? 'mb-6' : undefined}>
+        <div className={showModelSettings ? 'mb-12' : undefined}>
           <ModelSettings onMainModelChanged={onMainModelChanged} scopeProfile={scopeProfile} subpage={subpage} />
         </div>
       )}
@@ -437,8 +437,8 @@ function ConfigSettingsInner({
     if (showModelSettings) {
       return (
         <SettingsContent>
-          <SettingsProfileScope className="mb-5" />
-          <div className="mb-6">
+          <SettingsProfileScope className="mb-8" />
+          <div className="mb-12">
             <ModelSettingsSkeleton subpage={subpage} />
           </div>
         </SettingsContent>
@@ -464,7 +464,7 @@ function ConfigSettingsInner({
           keeping the machine awake and the global Quick Entry chord are both
           power-user, this-computer-only knobs. */}
       {showDesktopSettings && (
-        <>
+        <SettingsCard>
           <ListRow
             action={
               <SegmentedControl
@@ -495,15 +495,23 @@ function ConfigSettingsInner({
           />
           <QuickEntrySettings />
           <OnboardingSettings />
-        </>
+        </SettingsCard>
       )}
       {/* Device-local attach/preview byte cap (main-process IPC guard). Chat is
           where image-attachment behavior already lives, so this sits above the
           schema fields for that section. */}
-      {showAttachments ? <AttachmentSizeSetting /> : null}
+      {showAttachments ? (
+        <SettingsCard>
+          <AttachmentSizeSetting />
+        </SettingsCard>
+      ) : null}
       {/* Shared metrics are two coupled opt-ins with a consent side effect, so they
           go through their own RPC rather than the generic field autosave. */}
-      {showSharedMetrics ? <SharedMetricsSettings /> : null}
+      {showSharedMetrics ? (
+        <SettingsCard>
+          <SharedMetricsSettings />
+        </SettingsCard>
+      ) : null}
       {/* Routing picks the strategy and owns its routes; the subagent model row below is the
           Default strategy's route and goes inert while another strategy decides. */}
       <DelegationRoutingSlot
@@ -513,17 +521,23 @@ function ConfigSettingsInner({
         writeScope={writeScope}
       />
       {activeSectionId === 'voice' ? (
-        <ListRow description={c.voiceShortcutHintDesc} title={c.voiceShortcutHintTitle} />
+        <SettingsCard>
+          <ListRow description={c.voiceShortcutHintDesc} title={c.voiceShortcutHintTitle} />
+        </SettingsCard>
       ) : null}
       {showEmptyState ? (
         <EmptyState description={c.emptyDesc} title={c.emptyTitle} />
       ) : visibleFields.length === 0 ? null : (
-        <div className="grid gap-1">
+        <SettingsCard>
           {visibleFields.map(([key, field]) => (
-            <div className="scroll-mt-6 rounded-lg" id={`setting-field-${key}`} key={key}>
+            <div className="scroll-mt-6 rounded-(--linear-radius-control)" id={`setting-field-${key}`} key={key}>
               {key === 'delegation.model' ? (
                 <SubagentModelGate scope={writeScope ?? scopeProfile}>
-                  <DelegationRouteRow config={config} onConfigChange={updateConfig} scope={writeScope ?? scopeProfile} />
+                  <DelegationRouteRow
+                    config={config}
+                    onConfigChange={updateConfig}
+                    scope={writeScope ?? scopeProfile}
+                  />
                 </SubagentModelGate>
               ) : (
                 <ConfigField
@@ -553,7 +567,7 @@ function ConfigSettingsInner({
               ) : null}
             </div>
           ))}
-        </div>
+        </SettingsCard>
       )}
     </>
   )
@@ -618,9 +632,7 @@ function AttachmentSizeSetting() {
             type="number"
             value={draft}
           />
-          <span className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-            {c.attachmentSizeUnit}
-          </span>
+          <span className="text-xs text-(--linear-text-tertiary)">{c.attachmentSizeUnit}</span>
         </div>
       }
       description={c.attachmentSizeDesc}

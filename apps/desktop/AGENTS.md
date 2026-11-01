@@ -142,29 +142,15 @@ transcript. If motion is masking latency, remove the motion, don't tune it.
 
 ## Iterate in the dev loop, not by reinstalling
 
-`apps/desktop` compiles into the installed `Hermes.app`: editing a file here
-changes nothing in the app the user opens. Do not answer a UI change by
-rebuilding and copying the bundle after every edit — that loop is slow and makes
-source edits look "missing" whenever the old build is opened.
+For renderer work run `npm run dev` (quit the installed app first: single-instance lock); `src/`
+edits hot-reload. Rebuild and replace `Hermes.app` only when the user asks. Long form: `ENGINEERING.md`.
 
-For any renderer work, use the documented dev loop:
+For any visible change, follow the skill `.agents/skills/hermes-desktop-ui`.
 
-```bash
-# Quit the installed app first: it holds the single-instance lock.
-cd apps/desktop
-npm run dev
-```
+## Delivery in this fork (AgifyAI)
 
-Vite serves this working tree and Electron loads it, so `src/` edits hot-reload
-in about a second. The dev window reuses the normal app data (connections,
-profiles, sessions), so it shows the same backend as the installed app. Changes
-under `electron/` (main process) need a dev restart; renderer changes do not.
-
-Only build and replace the installed bundle (`npm run build && npm run pack`,
-then copy `release/<platform>-<arch>/Hermes.app` over `/Applications/Hermes.app`
-with the app quit) when the user explicitly wants the installed app to carry the
-change. State plainly that without that step the installed app still runs the
-previous build.
+No Linear ticket here (owner override). Branch + PR with `--repo AgifyAI/hermes-agent`, never on
+`NousResearch`. Account `AgifyAI` without `gh auth switch`: see `ENGINEERING.md`.
 
 ## Testing as a habit of proof
 

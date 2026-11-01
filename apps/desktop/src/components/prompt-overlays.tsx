@@ -120,7 +120,7 @@ function SudoDialog({ sessionId }: { sessionId: string | null }) {
 
   return (
     <Dialog onOpenChange={onOpenChange} open>
-      <DialogContent blurBackdrop={false} showCloseButton={false}>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle icon={Lock}>{copy.sudoTitle}</DialogTitle>
           <DialogDescription>{request.description ?? copy.sudoDesc}</DialogDescription>
@@ -130,7 +130,7 @@ function SudoDialog({ sessionId }: { sessionId: string | null }) {
           <Field label={t.assistant.approval.command}>
             <LogView
               aria-label={t.assistant.approval.command}
-              className="max-h-48 text-xs text-foreground"
+              className="max-h-48 text-xs text-(--linear-text-primary)"
               role="region"
               tabIndex={0}
             >
@@ -138,7 +138,7 @@ function SudoDialog({ sessionId }: { sessionId: string | null }) {
             </LogView>
           </Field>
         ) : (
-          <p className="text-xs text-(--ui-text-secondary)" role="status">
+          <p className="text-xs text-(--linear-text-secondary)" role="status">
             {copy.sudoCommandUnavailable}
           </p>
         )}
@@ -458,7 +458,7 @@ function VaultSaveLoginDialog({ sessionId }: { sessionId: string | null }) {
               value={password}
             />
           </Field>
-          <p className="text-xs text-muted-foreground">{copy.vaultSaveFootnote}</p>
+          <p className="text-xs text-(--linear-text-tertiary)">{copy.vaultSaveFootnote}</p>
           <DialogFooter>
             <Button disabled={submitting} onClick={() => void send('')} type="button" variant="ghost">
               {copy.vaultSaveDecline}
@@ -560,7 +560,7 @@ function VaultCodeDialog({ sessionId }: { sessionId: string | null }) {
               value={code}
             />
           </Field>
-          <p className="text-xs text-muted-foreground">{copy.vaultCodeFootnote}</p>
+          <p className="text-xs text-(--linear-text-tertiary)">{copy.vaultCodeFootnote}</p>
           <DialogFooter>
             <Button disabled={submitting} onClick={() => void send('')} type="button" variant="ghost">
               {copy.vaultCodeSkip}

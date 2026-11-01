@@ -116,7 +116,7 @@ export function ModelSelect({
         suffix={
           <Button
             aria-label={m.chooseFromList}
-            className="pointer-events-auto -my-1.5 -mr-1.5 text-muted-foreground"
+            className="pointer-events-auto -my-1.5 -mr-1.5 text-(--linear-text-tertiary)"
             onClick={() => setTyping(false)}
             size="icon-xs"
             type="button"
@@ -153,7 +153,7 @@ export function ModelSelect({
           </SelectItem>
         ))}
         <SelectSeparator />
-        <SelectItem className="text-muted-foreground" value={CUSTOM_ITEM}>
+        <SelectItem className="text-(--linear-text-tertiary)" value={CUSTOM_ITEM}>
           <span className="inline-flex items-center gap-1.5">
             <Plus className="size-3" />
             {m.customModel}

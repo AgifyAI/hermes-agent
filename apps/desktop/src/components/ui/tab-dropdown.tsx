@@ -36,7 +36,7 @@ export interface TabDropdownItem {
 }
 
 function TabDropdownIcon({ icon: Icon, indent }: { icon: IconComponent; indent?: boolean }) {
-  return <Icon className={cn('shrink-0 text-muted-foreground/80', indent ? 'size-3.5' : 'size-4')} />
+  return <Icon className={cn('shrink-0 text-(--linear-icon)', indent ? 'size-3.5' : 'size-4')} />
 }
 
 /** The Capabilities tab dropdown: a borderless "Label ⌄" trigger and a menu of
@@ -57,13 +57,13 @@ export function TabDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex h-7 cursor-pointer items-center gap-1.5 px-1 text-[length:var(--conversation-caption-font-size)] font-medium text-foreground [-webkit-app-region:no-drag]"
+          className="flex h-7 cursor-pointer items-center gap-1.5 rounded-full bg-(--linear-segment-selected) px-2.5 text-xs font-medium text-(--linear-text-primary) [-webkit-app-region:no-drag]"
           type="button"
         >
           {active?.icon && <TabDropdownIcon icon={active.icon} indent={active.indent} />}
           <span className="min-w-0 truncate">{active?.label}</span>
           {active?.meta !== undefined && <TextTabMeta>{tabMetaContent(active.meta)}</TextTabMeta>}
-          <Codicon className="text-muted-foreground" name="chevron-down" size="0.75rem" />
+          <Codicon className="text-(--linear-icon)" name="chevron-down" size="0.75rem" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className={cn('w-44', className)} sideOffset={6}>
@@ -71,13 +71,13 @@ export function TabDropdown({
           <Fragment key={item.id}>
             {item.separatorBefore && index > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
-              className={cn(item.indent && 'pl-6', item.active && 'text-foreground')}
+              className={cn(item.indent && 'pl-6', item.active && 'text-(--linear-text-primary)')}
               onSelect={item.onSelect}
             >
               {item.icon && <TabDropdownIcon icon={item.icon} indent={item.indent} />}
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
               {item.meta !== undefined && (
-                <span className="text-xs text-muted-foreground">{tabMetaContent(item.meta)}</span>
+                <span className="text-xs text-(--linear-text-tertiary)">{tabMetaContent(item.meta)}</span>
               )}
             </DropdownMenuItem>
           </Fragment>
@@ -112,15 +112,17 @@ export function ResponsiveTabs({
 }) {
   return (
     <>
-      <div className={cn('hidden min-w-0 flex-wrap items-center gap-x-2 gap-y-1 md:flex', wideClassName)}>
+      <div className={cn('hidden min-w-0 flex-wrap items-center gap-1 md:flex', wideClassName)} role="tablist">
         {tabs.map(tab => (
           <TextTab
             active={tab.id === value}
+            aria-selected={tab.id === value}
             // Names each tab by its own id, so a tour can walk them one by one
             // (`[data-tour="tab-images"]`) on every page that uses this row.
             data-tour={`tab-${tab.id}`}
             key={tab.id}
             onClick={() => onChange(tab.id)}
+            role="tab"
           >
             {tab.label}
             {tab.meta !== undefined && <TextTabMeta>{tabMetaContent(tab.meta)}</TextTabMeta>}

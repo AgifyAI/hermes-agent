@@ -42,7 +42,7 @@ export function ClarifyToolSettled(props: ToolCallMessagePartProps) {
               <p
                 className={cn(
                   'whitespace-pre-wrap leading-(--conversation-line-height)',
-                  blank ? 'italic text-(--ui-text-tertiary)' : 'text-(--ui-text-secondary)'
+                  blank ? 'italic text-(--linear-text-tertiary)' : 'text-(--linear-text-secondary)'
                 )}
                 data-clarify-answer=""
               >

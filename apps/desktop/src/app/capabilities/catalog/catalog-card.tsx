@@ -48,25 +48,12 @@ export function CatalogImage({ src, className }: { src: string; className?: stri
   )
 }
 
-// Shared classes, not per-card inline custom properties: identical declarations
-// let the style engine reuse computed styles across cards. catalog.css paints them.
-const CARD_ACCENTS = [
-  '[--catalog-accent:var(--ui-blue)]',
-  '[--catalog-accent:var(--ui-orange)]',
-  '[--catalog-accent:var(--ui-purple)]',
-  '[--catalog-accent:var(--ui-green)]',
-  '[--catalog-accent:var(--ui-red)]',
-  '[--catalog-accent:var(--ui-cyan)]',
-  '[--catalog-accent:var(--ui-yellow)]'
-]
-
 export type CatalogCardVariant = 'default' | 'hero' | 'showcase' | 'compact' | 'horizontal'
 
 interface CatalogCardProps {
   variant?: CatalogCardVariant
   entry: CatalogEntry
   action: ReactNode
-  accentIndex: number
   onOpen: (entry: CatalogEntry) => void
   onCategory: (category: string) => void
   onTag: (tag: string) => void
@@ -91,13 +78,11 @@ function CatalogCardFooter({ entry, action, hero }: { entry: CatalogEntry; actio
   )
 }
 
-export function CatalogCard({ entry, action, accentIndex, onOpen, onCategory, onTag, onSearch, variant = 'default', style }: CatalogCardProps) {
+export function CatalogCard({ entry, action, onOpen, onCategory, onTag, onSearch, variant = 'default', style }: CatalogCardProps) {
   return (
     <article
-      className={cn(
-        'group relative flex min-w-0 flex-col overflow-hidden rounded-lg border',
-        CARD_ACCENTS[accentIndex % CARD_ACCENTS.length]
-      )}
+      // Surface, radius and shadow come from catalog.css (Linear's card).
+      className="group relative flex min-w-0 flex-col overflow-hidden"
       data-catalog-card
       data-catalog-editorial-art={(variant !== 'hero' && isEditorialArt(entry)) || undefined}
       data-catalog-variant={variant}
@@ -111,17 +96,17 @@ export function CatalogCard({ entry, action, accentIndex, onOpen, onCategory, on
             would otherwise paint over it and swallow the click. */}
         {variant !== 'hero' && <span className="relative z-10 shrink-0">{action}</span>}
       </div>}
-      <div className="catalog-card-copy flex min-h-0 w-full flex-col gap-2 p-3">
+      <div className="catalog-card-copy flex min-h-0 w-full flex-col gap-1.5 p-4">
         <div className="flex min-w-0 items-center gap-2.5">
           {/* Its ::after stretches over the whole card, so any empty spot opens the
               detail; real controls sit above it (`relative`). One focus stop per card. */}
           <RowButton
             aria-haspopup="dialog"
             aria-label={entry.name}
-            className="min-w-0 flex-1 text-left font-semibold leading-snug after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-primary focus-visible:after:-outline-offset-2"
+            className="min-w-0 flex-1 text-left font-medium leading-snug text-(--linear-text-primary) after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-1 focus-visible:after:outline-(--linear-focus) focus-visible:after:-outline-offset-1"
             onClick={() => onOpen(entry)}
           >
-            <span className="catalog-card-title line-clamp-2 min-w-0 break-words text-lg">{variant === 'default' ? entry.name : catalogLabel(entry.name)}</span>
+            <span className="catalog-card-title line-clamp-2 min-w-0 break-words text-[0.8125rem]">{variant === 'default' ? entry.name : catalogLabel(entry.name)}</span>
           </RowButton>
           {variant === 'default' && action && (
             <span className="relative shrink-0 opacity-[.66] transition-opacity group-hover:opacity-100 group-hover:transition-none group-focus-within:opacity-100 group-focus-within:transition-none">
@@ -131,17 +116,17 @@ export function CatalogCard({ entry, action, accentIndex, onOpen, onCategory, on
         </div>
         {/* In a fixed-height grid cell the description is what gives way. */}
         <div className="flex min-h-0 min-w-0 flex-col gap-2">
-          {variant === 'default' && <span className="flex w-full items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+          {variant === 'default' && <span className="flex w-full items-center gap-2 text-xs text-(--linear-text-tertiary)">
             <span className="min-w-0 flex-1 truncate">{entry.author || catalogLabel(entry.source)}</span>
             <CatalogHeaderMeta entry={entry} />
             <CatalogRating entry={entry} />
           </span>}
-          <span className="catalog-card-description line-clamp-4 min-h-0 text-[length:var(--conversation-caption-font-size)] leading-relaxed text-(--ui-text-secondary)">
+          <span className="catalog-card-description line-clamp-4 min-h-0 text-xs leading-normal font-[450] text-(--linear-text-secondary)">
             {entry.description}
           </span>
         </div>
       </div>
-      {variant === 'default' && <div className="catalog-card-metadata px-3 pb-3 [&_button]:relative">
+      {variant === 'default' && <div className="catalog-card-metadata px-4 pb-3 [&_button]:relative">
         <CatalogMetadata
           entry={entry}
           onCategory={onCategory}
@@ -151,7 +136,7 @@ export function CatalogCard({ entry, action, accentIndex, onOpen, onCategory, on
         />
       </div>}
       {variant !== 'default' && <CatalogCardFooter action={action} entry={entry} hero={variant === 'hero'} />}
-      {variant === 'default' && <div className="catalog-card-dates mt-auto px-3 pb-3">
+      {variant === 'default' && <div className="catalog-card-dates mt-auto px-4 pb-4">
         <CatalogDates entry={entry} />
       </div>}
     </article>

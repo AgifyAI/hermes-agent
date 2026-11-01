@@ -104,7 +104,7 @@ export function AccountsSection({
   return (
     <section
       aria-label={copy.heading}
-      className="grid max-h-[40vh] shrink-0 overflow-y-auto overscroll-y-contain border-b border-(--ui-stroke-tertiary) px-3.5 py-1"
+      className="grid max-h-[40vh] shrink-0 overflow-y-auto overscroll-y-contain border-b-[0.5px] border-(--linear-border-panel) px-3.5 py-1"
       data-slot="connector-accounts"
     >
       {accounts.map(account =>
@@ -217,7 +217,7 @@ function RetiredFold({
 }) {
   return (
     <details className="group py-1.5" data-slot="connector-accounts-retired">
-      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[0.72rem] text-(--ui-text-tertiary)">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs text-(--linear-text-tertiary)">
         <Codicon
           className="shrink-0 transition-transform duration-100 group-open:rotate-90"
           name="chevron-right"
@@ -330,11 +330,11 @@ function AliasEditor({
         </Button>
       </div>
       {error ? (
-        <p className="text-[0.7rem] text-destructive" role="alert">
+        <p className="text-[0.6875rem] text-(--linear-red)" role="alert">
           {error}
         </p>
       ) : hint ? (
-        <p className="text-[0.7rem] text-(--ui-text-tertiary)">{hint}</p>
+        <p className="text-[0.6875rem] text-(--linear-text-tertiary)">{hint}</p>
       ) : null}
     </form>
   )

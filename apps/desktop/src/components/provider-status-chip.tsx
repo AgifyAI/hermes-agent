@@ -82,8 +82,7 @@ function PoolUsageTip({ accounts, copy }: { accounts: PoolAccountView[]; copy: M
               <span
                 className={cn(
                   'shrink-0 tabular-nums opacity-65',
-                  // The bubble inverts the theme, so its warning tone does too.
-                  limited && 'text-amber-300 opacity-100 dark:text-amber-700'
+                  limited && 'text-(--linear-orange) opacity-100'
                 )}
               >
                 {status}
@@ -97,7 +96,7 @@ function PoolUsageTip({ accounts, copy }: { accounts: PoolAccountView[]; copy: M
               )}
             >
               <span
-                className={cn('block h-full rounded-full bg-current/55', low && 'bg-amber-300 dark:bg-amber-700')}
+                className={cn('block h-full rounded-full bg-current/55', low && 'bg-(--linear-yellow)')}
                 style={{ width: `${width}%` }}
               />
             </span>

@@ -14,7 +14,7 @@ export function StepUpInlineAction({ flow }: { flow: ReturnType<typeof useStepUp
   if (flow.verification) {
     return (
       <span className="inline-flex min-w-0 flex-wrap items-center gap-2">
-        <span className="font-mono text-[0.72rem] font-semibold text-foreground">{flow.verification.code}</span>
+        <span className="font-mono text-xs font-medium text-(--linear-text-primary)">{flow.verification.code}</span>
         <Button onClick={flow.openVerification} size="sm" type="button" variant="outline">
           {b.openVerification}
           <ExternalLink className="size-3.5" />
@@ -59,9 +59,9 @@ export function BillingRefusalInline({ refusal }: { refusal: BillingRefusal | nu
   const portalUrl = resolved.action.type === 'portal' ? resolved.action.url : undefined
 
   return (
-    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-(--linear-text-tertiary)">
       <span>
-        <span className="font-medium text-foreground">{resolved.title}:</span> {resolved.message}
+        <span className="font-medium text-(--linear-text-primary)">{resolved.title}:</span> {resolved.message}
       </span>
       {resolved.action.type === 'step_up' && <StepUpInlineAction flow={stepUp} />}
       {portalUrl && (

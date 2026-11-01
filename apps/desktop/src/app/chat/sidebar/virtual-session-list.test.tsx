@@ -5,7 +5,7 @@ import type { SessionInfo } from '@/hermes'
 import type { SidebarListRow } from '@/lib/session-date-groups'
 import { $sessionListDensity } from '@/store/session-list-density'
 
-import { SESSION_CARD_ROW_ESTIMATE_PX, sessionRowEstimate } from './session-row-details'
+import { SESSION_CARD_ROW_ESTIMATE_PX, SESSION_ROW_ESTIMATE_PX } from './session-row-details'
 import { VirtualSessionList } from './virtual-session-list'
 
 // The virtualizer is mocked with a STABLE instance (the real hook returns
@@ -99,7 +99,7 @@ describe('VirtualSessionList row measurement', () => {
 
     // Dividers keep their own fixed estimate in every mode.
     expect(estimateSize(0)).toBe(28)
-    expect(estimateSize(1)).toBe(sessionRowEstimate('compact'))
+    expect(estimateSize(1)).toBe(SESSION_ROW_ESTIMATE_PX)
 
     rerender(<VirtualSessionList {...defaultProps} card />)
 
@@ -118,7 +118,7 @@ describe('VirtualSessionList row measurement', () => {
     const oneTitleLine = 17.6
 
     expect(SESSION_CARD_ROW_ESTIMATE_PX).toBeGreaterThanOrEqual(
-      sessionRowEstimate('detailed') + onePreviewLine + oneTitleLine
+      SESSION_ROW_ESTIMATE_PX + onePreviewLine + oneTitleLine
     )
   })
 })

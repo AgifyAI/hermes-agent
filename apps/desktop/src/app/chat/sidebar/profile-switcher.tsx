@@ -823,7 +823,7 @@ function EditSoulDialog({
             {gatewayLabel && profileName ? p.fleet.onGateway(profileName, gatewayLabel) : profileName} · SOUL.md
           </DialogTitle>
         </DialogHeader>
-        {missing && <p className="text-xs text-muted-foreground">{p.soulMissing}</p>}
+        {missing && <p className="text-xs text-(--linear-text-tertiary)">{p.soulMissing}</p>}
         <div className="h-80">
           {!loading && profileName && (
             <CodeEditor
@@ -856,7 +856,7 @@ function AddProfileButton({ label, onClick }: { label: string; onClick: () => vo
     <Tip label={label}>
       <button
         aria-label={label}
-        className="grid size-5 shrink-0 place-items-center rounded-[3px] text-(--ui-text-tertiary) opacity-55 transition hover:bg-(--ui-control-hover-background) hover:text-foreground hover:opacity-100"
+        className="grid size-5 shrink-0 place-items-center rounded-(--linear-radius-pill) text-(--linear-icon) opacity-55 transition hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:opacity-100"
         onClick={onClick}
         type="button"
       >
@@ -874,7 +874,7 @@ function ImportProfileButton({ label }: { label: string }) {
     <Tip label={label}>
       <button
         aria-label={label}
-        className="grid size-5 shrink-0 place-items-center rounded-[3px] text-(--ui-text-tertiary) opacity-55 transition hover:bg-(--ui-control-hover-background) hover:text-foreground hover:opacity-100"
+        className="grid size-5 shrink-0 place-items-center rounded-(--linear-radius-pill) text-(--linear-icon) opacity-55 transition hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:opacity-100"
         onClick={() => void runImportProfileFlow()}
         type="button"
       >
@@ -927,7 +927,7 @@ function ProfileDropdown({
       <DropdownMenuTrigger asChild>
         <Button
           aria-label={p.title}
-          className="min-w-0 flex-1 justify-between overflow-hidden px-1 text-(--ui-text-secondary) data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground"
+          className="min-w-0 flex-1 justify-between overflow-hidden px-1 text-(--linear-text-sidebar) data-[state=open]:bg-(--linear-active-sidebar) data-[state=open]:text-(--linear-text-primary)"
           data-slot="profile-dropdown"
           size="xs"
           type="button"
@@ -1129,8 +1129,8 @@ function ProfilePill({
         aria-label={accessibleLabel}
         aria-pressed={active}
         className={cn(
-          'bg-transparent text-(--ui-text-tertiary) hover:bg-(--ui-control-hover-background) hover:text-foreground',
-          active && 'bg-(--ui-control-active-background) text-foreground',
+          'bg-transparent text-(--linear-icon) hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary)',
+          active && 'bg-(--linear-active-sidebar) text-(--linear-text-primary)',
           muted && 'opacity-40 hover:opacity-100',
           summary && !active && 'relative'
         )}
@@ -1189,9 +1189,9 @@ function FleetDivider({
       data-reachable={reachable}
       data-slot="profile-rail-divider"
     >
-      {!first && <span className="h-3 w-px bg-(--ui-stroke-tertiary)" />}
+      {!first && <span className="h-3 w-px bg-(--linear-border-secondary)" />}
       <ConnectionGlyph connection={connection} />
-      {!reachable && <span className="size-1.5 rounded-full bg-amber-500" data-slot="profile-rail-unreachable" />}
+      {!reachable && <span className="size-1.5 rounded-full bg-(--linear-yellow)" data-slot="profile-rail-unreachable" />}
     </span>
   )
 
@@ -1302,7 +1302,7 @@ function RestSquare({
 }) {
   const { t } = useI18n()
   const p = t.profiles
-  const hue = color ?? 'var(--ui-text-quaternary)'
+  const hue = color ?? 'var(--linear-text-quaternary)'
   const [pickerOpen, setPickerOpen] = useState(false)
   const label = p.fleet.onGateway(agent.profile, agent.connectionLabel)
 
@@ -1379,7 +1379,7 @@ function RestSquare({
             <span>{p.editSoul}</span>
           </ContextMenuItem>
           <ContextMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-(--linear-red) focus:text-(--linear-red)"
             onSelect={onDelete}
             variant="destructive"
           >
@@ -1454,7 +1454,7 @@ function ProfileSquare({
 }: ProfileSquareProps) {
   const { t } = useI18n()
   const p = t.profiles
-  const hue = color ?? 'var(--ui-text-quaternary)'
+  const hue = color ?? 'var(--linear-text-quaternary)'
   const [pickerOpen, setPickerOpen] = useState(false)
   const pressTimer = useRef<null | number>(null)
   const suppressClick = useRef(false)
@@ -1491,7 +1491,7 @@ function ProfileSquare({
 
   const base = CSS.Transform.toString(transform)
   const ring = active ? `inset 0 0 0 1.5px ${hue}` : ''
-  const lift = isDragging ? '0 6px 16px -4px rgb(0 0 0 / 0.4)' : ''
+  const lift = isDragging ? 'var(--linear-shadow-menu)' : ''
 
   const pickColor = (next: null | string) => {
     onRecolor(next)
@@ -1575,7 +1575,7 @@ function ProfileSquare({
                     {remoteHost && (
                       <span
                         aria-hidden="true"
-                        className="absolute -right-0.5 -top-0.5 grid size-2 place-items-center rounded-full bg-(--ui-panel-background)"
+                        className="absolute -right-0.5 -top-0.5 grid size-2 place-items-center rounded-full bg-(--linear-bg-window)"
                         data-slot="profile-remote-badge"
                       >
                         <Codicon name="globe" size="0.5rem" />
@@ -1635,7 +1635,7 @@ function ProfileSquare({
             </ContextMenuItem>
           )}
           <ContextMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-(--linear-red) focus:text-(--linear-red)"
             onSelect={onDelete}
             variant="destructive"
           >

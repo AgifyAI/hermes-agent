@@ -56,7 +56,7 @@ export function WorkspaceAddButton({
     <Tip label={label}>
       <button
         aria-label={label}
-        className="grid size-4 shrink-0 place-items-center rounded-sm bg-transparent text-(--ui-text-quaternary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/workspace:opacity-100"
+        className="grid size-4 shrink-0 place-items-center rounded-(--linear-radius-pill) bg-transparent text-(--linear-text-quaternary) opacity-0 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) group-hover/workspace:opacity-100"
         onClick={onClick}
         onPointerDown={onPointerDown}
         type="button"
@@ -84,7 +84,7 @@ export function WorkspaceShowMoreRow({
   return (
     <SidebarRowShell>
       <SidebarRowBody
-        className="group/more w-full text-(--ui-text-tertiary) hover:text-foreground"
+        className="group/more w-full text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
         disabled={disabled}
         onClick={onClick}
       >
@@ -118,7 +118,7 @@ export function WorkspaceShowMoreButton({
     <Tip label={text}>
       <button
         aria-label={text}
-        className="mr-2 ml-auto grid size-5 place-items-center rounded-sm bg-transparent text-(--ui-text-tertiary) transition-colors hover:bg-(--ui-control-hover-background) hover:text-foreground"
+        className="mr-2 ml-auto grid size-5 place-items-center rounded-(--linear-radius-pill) bg-transparent text-(--linear-icon) transition-colors hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary)"
         onClick={onClick}
         type="button"
       >
@@ -178,7 +178,7 @@ export function WorkspaceMenu({ path, onRemove }: { path: null | string; onRemov
     <ActionsMenu ariaLabel={p.menu} contentClassName="w-48" items={items}>
       <button
         aria-label={p.menu}
-        className="grid size-4 shrink-0 place-items-center rounded-sm bg-transparent text-(--ui-text-quaternary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/workspace:opacity-100 data-[state=open]:opacity-100"
+        className="grid size-4 shrink-0 place-items-center rounded-(--linear-radius-pill) bg-transparent text-(--linear-text-quaternary) opacity-0 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) group-hover/workspace:opacity-100 data-[state=open]:opacity-100"
         onClick={event => event.stopPropagation()}
         type="button"
       >
@@ -223,7 +223,7 @@ export function StartWorkButton({ repoPath }: { repoPath: string }) {
     <Tip label={p.startWork}>
       <button
         aria-label={p.startWork}
-        className="grid size-4 shrink-0 place-items-center rounded-sm bg-transparent text-(--ui-text-quaternary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/section:opacity-100 focus-visible:opacity-100"
+        className="grid size-4 shrink-0 place-items-center rounded-(--linear-radius-pill) bg-transparent text-(--linear-text-quaternary) opacity-0 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) group-hover/section:opacity-100 focus-visible:opacity-100"
         // Publish the intent. The one WorktreeDialog in the sidebar renders it.
         // This button pins its own repo, so it targets this section.
         onClick={() => void openWorktreeDialog({ repoPath })}
@@ -260,8 +260,8 @@ export function WorkspaceHeader({
   return (
     <div
       className={cn(
-        'group/workspace flex min-h-6 items-center gap-1 px-2 pt-1 text-[0.6875rem]',
-        emphasis ? 'font-semibold text-(--ui-text-secondary)' : 'font-medium text-(--ui-text-tertiary)'
+        'group/workspace flex min-h-7 items-center gap-1 px-2 text-xs font-medium',
+        emphasis ? 'text-(--linear-text-secondary)' : 'text-(--linear-text-tertiary)'
       )}
       ref={ref}
       {...rest}
@@ -269,7 +269,7 @@ export function WorkspaceHeader({
       <button
         className={cn(
           'flex min-w-0 flex-1 items-center gap-1.5 bg-transparent text-left',
-          emphasis ? 'hover:text-foreground' : 'hover:text-(--ui-text-secondary)'
+          'hover:text-(--linear-text-primary)'
         )}
         onClick={onToggle}
         type="button"
@@ -277,7 +277,7 @@ export function WorkspaceHeader({
         <SidebarRowLead>{icon}</SidebarRowLead>
         <LaneLabel label={label} title={title ? `${label}\n${title}` : label} />
         <DisclosureCaret
-          className="shrink-0 text-(--ui-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
+          className="shrink-0 text-(--linear-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
           open={open}
         />
       </button>

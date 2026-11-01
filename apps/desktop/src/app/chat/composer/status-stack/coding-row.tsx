@@ -21,9 +21,6 @@ import { openWorktreeDialog, registerRepoStatusCwd, repoStatusForCwd, repoWorktr
 import { notifyError } from '@/store/notifications'
 import { $pullRequestsByBranch, branchPrKey, refreshPullRequests } from '@/store/pull-requests'
 
-// Tiny uppercase section header, matching the composer "+" menu's labels.
-const MENU_SECTION = 'text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-tertiary)'
-
 interface CodingStatusRowProps {
   /** Branch the current draft off into a fresh worktree + session, based on
    *  `base` (a branch name; omitted = current HEAD). The composer owns the
@@ -172,7 +169,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
 
     return (
       <>
-        <kit.Label className={MENU_SECTION}>{s.newBranch}</kit.Label>
+        <kit.Label>{s.newBranch}</kit.Label>
         {branchItems.map(item => renderActionItem(kit, item))}
         {switchTarget &&
           renderActionItem(kit, {
@@ -181,7 +178,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
             onSelect: () => void switchToBranch(switchTarget)
           })}
         <kit.Separator />
-        <kit.Label className={MENU_SECTION}>{s.worktrees}</kit.Label>
+        <kit.Label>{s.worktrees}</kit.Label>
         {worktreeItems.map(item => renderActionItem(kit, item))}
         {/* Create a fresh worktree off the current HEAD (the generic "spin up a
             worktree here", mirroring the sidebar's + button). */}
@@ -206,7 +203,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
         <StatusRow
           // The base "where am I working" strip is part of the composer surface
           // itself, so it inherits the composer's width and clipped top radius.
-          className="coding-status-bar min-h-7 rounded-t-[inherit] rounded-b-none border-b border-(--ui-stroke-tertiary) px-3.5 py-1.5 hover:bg-transparent"
+          className="coding-status-bar min-h-7 rounded-t-[inherit] rounded-b-none border-b-[0.5px] border-(--linear-border-panel) px-3.5 py-1.5 hover:bg-transparent"
           // Static branch glyph — never the loading spinner. This row only renders
           // once `status` exists, so a spinner here only ever fired on *refreshes*
           // of an already-loaded repo (window focus, turn settle), reading as an
@@ -215,7 +212,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
           // while the strip around it stays inert; size-3.5 fills the slot exactly.
           leading={
             <button className="flex size-3.5 items-center justify-center" onClick={onOpen} type="button">
-              <Codicon className="text-(--ui-green)" name="git-branch" size="0.8rem" />
+              <Codicon className="text-(--linear-green)" name="git-branch" size="0.8rem" />
             </button>
           }
         >
@@ -229,7 +226,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
                 so the button lays out nothing of its own: the label stays the
                 same flex child it always was, and the hit area is the text. */}
             <button className="contents" onClick={onOpen} type="button">
-              <span className="min-w-0 truncate text-xs font-normal text-muted-foreground/92" title={branchLabel}>
+              <span className="min-w-0 truncate text-xs font-normal text-(--linear-text-tertiary)" title={branchLabel}>
                 {branchLabel}
               </span>
             </button>
@@ -245,7 +242,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
             {resolvedRepoPath && (
               <div className="flex min-w-0 flex-1 items-center gap-0.5 opacity-0 transition-opacity group-hover/status-row:opacity-100 group-focus-within/status-row:opacity-100">
                 <span
-                  className="min-w-0 truncate font-mono text-[0.62rem] leading-4 text-muted-foreground/50"
+                  className="min-w-0 truncate font-mono text-[0.6875rem] leading-4 text-(--linear-text-quaternary)"
                   data-slot="coding-status-cwd"
                 >
                   {displayPath(resolvedRepoPath)}
@@ -253,7 +250,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
                 <CopyButton
                   appearance="icon"
                   buttonSize="icon-xs"
-                  className="pointer-events-none size-4 shrink-0 text-muted-foreground/50 hover:text-foreground group-hover/status-row:pointer-events-auto group-focus-within/status-row:pointer-events-auto"
+                  className="pointer-events-none size-4 shrink-0 text-(--linear-text-quaternary) hover:text-(--linear-text-primary) group-hover/status-row:pointer-events-auto group-focus-within/status-row:pointer-events-auto"
                   iconClassName="size-3"
                   label={fileMenu.copyPath}
                   side="top"
@@ -278,7 +275,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
               >
                 <Button
                   aria-label={s.newBranch}
-                  className="pointer-events-none size-4 shrink-0 text-muted-foreground/60 opacity-0 transition hover:text-foreground group-hover/status-row:pointer-events-auto group-hover/status-row:opacity-100 group-focus-within/status-row:pointer-events-auto group-focus-within/status-row:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
+                  className="pointer-events-none size-4 shrink-0 text-(--linear-text-quaternary) opacity-0 transition hover:text-(--linear-text-primary) group-hover/status-row:pointer-events-auto group-hover/status-row:opacity-100 group-focus-within/status-row:pointer-events-auto group-focus-within/status-row:opacity-100 data-[state=open]:pointer-events-auto data-[state=open]:opacity-100"
                   size="icon-xs"
                   variant="ghost"
                 >
@@ -294,7 +291,7 @@ export const CodingStatusRow = memo(function CodingStatusRow({
           {(status.ahead > 0 || status.behind > 0 || hasLineDelta || untrackedOnly) && (
             <button className="contents" onClick={onOpen} type="button">
               {(status.ahead > 0 || status.behind > 0) && (
-                <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[0.68rem] leading-4 text-muted-foreground/75 tabular-nums">
+                <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[0.6875rem] leading-4 text-(--linear-text-tertiary) tabular-nums">
                   {status.ahead > 0 && (
                     <span className="flex items-center gap-0.5" title={s.ahead(status.ahead)}>
                       <span aria-hidden>↑</span>
@@ -313,12 +310,12 @@ export const CodingStatusRow = memo(function CodingStatusRow({
               {hasLineDelta ? (
                 <DiffCount
                   added={status.added}
-                  className={`text-[0.72rem] leading-4 ${status.ahead === 0 && status.behind === 0 ? 'ml-auto' : ''}`}
+                  className={`text-xs leading-4 ${status.ahead === 0 && status.behind === 0 ? 'ml-auto' : ''}`}
                   removed={status.removed}
                 />
               ) : untrackedOnly ? (
                 <span
-                  className={`shrink-0 text-[0.72rem] leading-4 text-amber-500/90 ${status.ahead === 0 && status.behind === 0 ? 'ml-auto' : ''}`}
+                  className={`shrink-0 text-xs leading-4 text-(--linear-orange)/90 ${status.ahead === 0 && status.behind === 0 ? 'ml-auto' : ''}`}
                 >
                   {s.changed(status.untracked)}
                 </span>

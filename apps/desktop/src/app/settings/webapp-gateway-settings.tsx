@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n'
 import { Check, Loader2 } from '@/lib/icons'
 import { notifyError } from '@/store/notifications'
 
-import { ListRow, Pill, SettingsContent } from './primitives'
+import { ListRow, Pill, SettingsCard, SettingsContent } from './primitives'
 
 interface ServingHost {
   signedIn: boolean
@@ -57,28 +57,28 @@ export function WebappGatewaySettings({ embedded }: { embedded: boolean }) {
   return (
     <SettingsContent bare={embedded}>
       {host ? (
-        <ListRow
-          action={
-            host.signedIn ? (
-              <div className="flex items-center gap-2">
-                <Pill tone="primary">
-                  <Check className="size-3" />
-                  {g.signedIn}
-                </Pill>
-                <Button disabled={signingOut} onClick={() => void signOut(host.url)} variant="outline">
-                  {signingOut ? <Loader2 className="animate-spin" /> : null}
-                  {g.signOut}
-                </Button>
-              </div>
-            ) : null
-          }
-          description={host.url}
-          title={g.webappHostTitle}
-        />
+        <SettingsCard>
+          <ListRow
+            action={
+              host.signedIn ? (
+                <div className="flex items-center gap-2">
+                  <Pill tone="primary">
+                    <Check className="size-3" />
+                    {g.signedIn}
+                  </Pill>
+                  <Button disabled={signingOut} onClick={() => void signOut(host.url)} variant="outline">
+                    {signingOut ? <Loader2 className="animate-spin" /> : null}
+                    {g.signOut}
+                  </Button>
+                </div>
+              ) : null
+            }
+            description={host.url}
+            title={g.webappHostTitle}
+          />
+        </SettingsCard>
       ) : null}
-      <p className="mt-2 max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {g.webappHostDesc}
-      </p>
+      <p className="mt-4 px-4 text-xs text-(--linear-text-tertiary)">{g.webappHostDesc}</p>
     </SettingsContent>
   )
 }

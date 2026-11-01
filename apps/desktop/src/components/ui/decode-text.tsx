@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
  *
  * Typography (mono, small, uppercase, wide tracking) is baked in; color comes
  * from the caller via className/text color so the same primitive works on the
- * boot overlay (--theme-primary) and quiet surfaces (--ui-text-quaternary).
+ * boot overlay (--linear-accent) and quiet surfaces (--ui-text-quaternary).
  */
 
 export const DECODE_SCRAMBLE_CHARS = '/\\|-_=+<>~:*'

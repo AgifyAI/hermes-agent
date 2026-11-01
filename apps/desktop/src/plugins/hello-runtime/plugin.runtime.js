@@ -27,7 +27,7 @@ function RuntimeChip({ prefs }) {
   return jsx(Tip, {
     label: `Loaded at RUNTIME through blob import + SDK injection (gateway: ${gateway})`,
     children: jsxs('span', {
-      className: cn('inline-flex h-full items-center gap-1 px-1.5 text-[0.6875rem]', 'text-(--ui-text-tertiary)'),
+      className: cn('inline-flex h-full items-center gap-1 px-1.5 text-[0.6875rem]', 'text-(--linear-text-tertiary)'),
       children: [
         jsx('span', { 'aria-hidden': true, children: '⚡' }),
         label === 'word' ? jsx('span', { children: 'runtime' }) : null
@@ -105,7 +105,7 @@ export default {
                 }),
                 jsx(ListRow, {
                   action: jsx('span', {
-                    className: 'text-[length:var(--conversation-caption-font-size)] text-(--ui-text-secondary)',
+                    className: 'text-[length:var(--conversation-caption-font-size)] text-(--linear-text-secondary)',
                     children: GATEWAY_STATUS[gateway] ?? String(gateway)
                   }),
                   description: 'The chip reads this live through host.state.gateway.',

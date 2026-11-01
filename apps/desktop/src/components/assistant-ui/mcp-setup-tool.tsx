@@ -41,7 +41,7 @@ import { parseMaybeObject } from './tool/fallback-model/format'
 type SetupAction = McpTarget['action']
 type SetupCopy = ReturnType<typeof useI18n>['t']['assistant']['mcpSetup']
 
-const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)`
+const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary)`
 
 const TITLE = {
   authorize: (copy: SetupCopy) => copy.authorizeTitle,
@@ -207,8 +207,8 @@ export function McpSetupPending(props: ToolCallMessagePartProps) {
   if (!live || !request) {
     return (
       <div className={cn(SHELL_CLASS, 'my-1.5 flex items-center gap-2')} data-slot="connector-card">
-        <Loader2 aria-hidden className="size-4 animate-spin text-(--ui-text-tertiary)" />
-        <span className="text-(--ui-text-tertiary)">{TITLE[action](copy)}</span>
+        <Loader2 aria-hidden className="size-4 animate-spin text-(--linear-text-tertiary)" />
+        <span className="text-(--linear-text-tertiary)">{TITLE[action](copy)}</span>
       </div>
     )
   }

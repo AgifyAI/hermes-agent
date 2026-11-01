@@ -1,7 +1,6 @@
 import type { Translations } from '@/i18n'
 import { NATIVE_NOTIFICATION_KINDS } from '@/store/native-notifications'
 import { canUseQuickEntry } from '@/store/quick-entry'
-import { TRANSLUCENCY_SUPPORTED } from '@/store/translucency'
 
 import type { AppearanceSubpageId } from './appearance-subpages'
 import { nativeHostOnly } from './other-subpages'
@@ -68,7 +67,11 @@ export const SETTINGS_MANIFEST = {
     ),
     tips: appearanceSetting('general', ['tips', 'hints', 'coach marks', 'onboarding', 'help'], 'tips'),
     tours: appearanceSetting('general', ['tour', 'walkthrough', 'guide', 'onboarding', 'help'], 'tours'),
-    theme: appearanceSetting('theme', ['color mode', 'skin', 'light', 'dark'], 'theme'),
+    theme: {
+      subpage: 'theme',
+      keywords: ['color mode', 'theme', 'light', 'dark', 'system'],
+      copy: t => ({ label: t.settings.appearance.colorMode, description: t.settings.appearance.colorModeDesc })
+    },
     uiScale: appearanceSetting('typography', ['zoom', 'size'], 'uiScale'),
     chatTextScale: appearanceSetting('typography', ['chat', 'text', 'font', 'size', 'scale', 'zoom'], 'chatTextScale'),
     chatFont: appearanceSetting('typography', ['font', 'typeface', 'family', 'text'], 'chatFont'),
@@ -99,10 +102,6 @@ export const SETTINGS_MANIFEST = {
       available: () => Boolean(window.hermesDesktop?.minimizeToTray),
       copy: t => ({ label: t.settings.config.minimizeToTrayTitle, description: t.settings.config.minimizeToTrayDesc })
     },
-    translucency: {
-      ...appearanceSetting('window-layout', ['opacity', 'transparent', 'glass', 'blur'], 'translucency'),
-      available: () => TRANSLUCENCY_SUPPORTED
-    },
     backdrop: appearanceSetting('window-layout', ['background', 'blur'], 'backdrop'),
     fileBrowser: appearanceSetting(
       'window-layout',
@@ -114,7 +113,6 @@ export const SETTINGS_MANIFEST = {
       ['composer', 'floating', 'drag', 'popout', 'pop out', 'dock', 'lock', 'peel', 'input'],
       'composerPopout'
     ),
-    userBubble: appearanceSetting('chat-display', ['opacity', 'transparent', 'message', 'bubble'], 'userBubble'),
     textDirection: appearanceSetting(
       'chat-display',
       ['rtl', 'ltr', 'right to left', 'left to right', 'bidi', 'arabic', 'hebrew', 'persian', 'align'],

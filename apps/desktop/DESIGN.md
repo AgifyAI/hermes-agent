@@ -1,10 +1,15 @@
 # Desktop Design System
 
 Conventions for the Electron desktop app (`apps/desktop`). Read this before
-adding a component, overlay, or style. The rule of thumb: **one source per
-concern, tokens over literals, flat over boxed.** If you reach for a raw color,
-a one-off shadow, a bespoke button, or a hardcoded `px-*` on a control — stop,
-there's already a primitive for it.
+adding a component, overlay, or style. Hermes Desktop looks like **Linear**:
+every size, colour, radius, shadow and motion below is measured from the Linear
+desktop app and recorded in
+[`docs/linear-design-reference.md`](./docs/linear-design-reference.md). The rule
+of thumb: **one source per concern, Linear tokens over literals, the primitive
+owns the look.** If you reach for a raw color, a one-off shadow, a bespoke
+button, or a hardcoded `px-*` on a control — stop, there's already a primitive
+for it. If a value you need is not in the reference, measure it in Linear; do
+not guess.
 
 This file owns the visual and interaction contract. Read
 [`AGENTS.md`](./AGENTS.md) for architecture, state, resolver, transport, and
@@ -24,16 +29,17 @@ one-off at the call site.
 
 ## Principles
 
-1. **Flat, not boxed.** No card-in-card, no divider borders inside a panel.
-   Group with whitespace and a single hairline, never nested rounded boxes.
-2. **Borderless elevation for floating panels.** Overlays float on
-   `shadow-nous` + a `--stroke-nous` hairline, not thick framed boxes. In-panel
-   structure may use token hairlines sparingly.
+1. **Linear's structure.** A window surface carrying the navigation, one inset
+   content panel, cards only where Linear has cards (settings groups, catalog
+   tiles), lists as 44px rows. No card-in-card, no decorative gradients, no blur.
+2. **Hairline elevation.** Every raised surface is a `0.5px` hairline plus one of
+   Linear's four shadows (`--linear-shadow-low|card|menu|dialog`). No per-surface
+   `shadow-[…]` inventions.
 3. **One primitive per concern.** One `Button`, one set of control variants,
    one `SearchField`, one `Loader`, one `ErrorState`. Migrate onto them; don't
    fork.
-4. **Tokens, not literals.** Reference CSS vars (`--ui-*`, `--shadow-nous`,
-   `--theme-*`), never raw hex / ad-hoc rgba in components.
+4. **Tokens, not literals.** Reference `--linear-*` (or an alias of it), never
+   raw hex / rgba / palette classes (`emerald-500`) in components.
 5. **Style lives in the primitive.** Variants and sizes own padding, radius,
    color, chrome. Call sites pass a `variant`/`size`, not `className` overrides
    that re-specify those.
@@ -51,7 +57,8 @@ one-off at the call site.
   remain in shell chrome. Do not hide a distinct product noun inside an
   unrelated page.
 - **Route overlays are short tasks.** Settings, Command Center, Cron, Profiles,
-  Agents, and Starmap render as `OverlayView` cards and return to the previous
+  Agents, and Starmap render as full-window `OverlayView` pages (window colour,
+  content in one `OVERLAY_PANEL_SURFACE` panel) and return to the previous
   route on close. Model/session pickers and dialogs layer above the current
   surface; they are not navigation stacks.
 - **Panes are working context.** Preview, files, review, and terminal remain
@@ -77,31 +84,41 @@ Navigation must preserve context. A background session finishing, a tool result
 arriving, or a project refresh may update badges and cached data; it must not
 replace the foreground transcript or steal focus.
 
+## Shell
+
+The window paints `--linear-bg-window`; navigation (the sessions sidebar, any
+`placement: 'left'` pane) sits flush on it. Every other pane body is Linear's
+**content panel** (`PaneBody panel`): `--linear-bg-panel`, radius 12, a 0.5px
+`--linear-border-panel` hairline, `--linear-shadow-low`, 8px off the right and
+bottom. Pane tabs are Linear's tab pills: 26px, radius 8, 12px/500, padding
+10px; the active one takes `--linear-bg-tab` and `--linear-shadow-low`, the
+others are bare labels that take the control wash on hover.
+
 ## Surfaces & elevation
 
-Floating panels (base `Dialog`, route overlays, boot/install/update surfaces,
-model-picker, onboarding, prompt overlays, notifications) use:
+| Surface | Fill | Edge | Shadow | Radius |
+| --- | --- | --- | --- | --- |
+| Content panel | `--linear-bg-panel` | `--linear-border-panel` | `--linear-shadow-low` | 12 |
+| Settings / catalog card | `--linear-bg-card` | in the shadow | `--linear-shadow-card` | 10 |
+| Menu, popover, select, toast | `--linear-bg-overlay` | `--linear-border-overlay` (toast: transparent) | `--linear-shadow-menu` (toast: none) | 12 |
+| Tooltip, tab | `--linear-bg-overlay` / `--linear-bg-tab` | `--linear-border-overlay` | `--linear-shadow-low` | 8 |
+| Command palette | `--linear-bg-overlay` | `--linear-border-overlay` | `--linear-shadow-dialog` | 12 |
+| Dialog / modal | `--linear-bg-card` | `--linear-border-overlay` | `--linear-shadow-dialog` | 21 |
+| Scrim | `--linear-scrim`, no blur | | | |
 
-```
-shadow-nous           /* downward-weighted, layered contact→ambient falloff */
-border-(--stroke-nous) /* currentColor hairline, theme-adaptive */
-```
-
-Both are CSS vars in `src/styles.css` — tune in one place, everything inherits.
-Don't add per-overlay `shadow-[…]` or `border-(--ui-stroke-secondary)`
+`shadow-nous` and `--stroke-nous` remain as aliases of the menu shadow and the
+overlay hairline for older call sites. Don't add per-overlay `shadow-[…]`
 one-offs; if elevation needs to change, change the token.
 
-Menus and popovers use their own shared `shadow-md` +
-`--ui-stroke-secondary` primitive treatment. Every floating list —
+Every floating list —
 `DropdownMenu`, `Select`, and Popover + cmdk pickers
 (`<PopoverContent variant="menu">` + `<Command variant="menu">`) — paints
 through `src/components/ui/menu.ts`, so a list reads the same wherever it
 opens. Typed fields with suggestions use `ComboboxInput`, never
 `<input list>` + `<datalist>` (Chromium paints that as its own OS popup).
 
-Drag affordances may use tokenized
-dashed targets and local blur. These are semantic surface classes, not licenses
-for call-site shadow or border inventions.
+Drag affordances use tokenized dashed targets, without blur. These are semantic
+surface classes, not licenses for call-site shadow or border inventions.
 
 **Queued cards:** `CardStack` (`src/components/ui/card-stack.tsx`) consumes a live,
 keyed list, retaining the current item when more arrive. Inline and floating
@@ -136,41 +153,71 @@ On macOS the tray lives in the menu bar; the Dock icon hides only when no normal
 window remains visible and returns on restore. If the tray is unavailable,
 ordinary minimize/close behavior is retained rather than hiding an unreachable app.
 
-## Window glass
+## One look: Linear
 
-Glass defaults to **29% Tint, Sidebar only** in both light and dark appearances.
-Fade defaults to zero so the content column and text stay opaque. Native frost
-keeps its platform/appearance defaults. Explicitly saved settings take precedence;
-changing defaults must not overwrite a user's existing choices. The shared
-`apps/shared/src/translucency.ts` resolver owns these defaults for both the
-renderer and Electron's first window paint.
+Hermes Desktop has a single appearance, measured from the Linear desktop app
+([`docs/linear-design-reference.md`](./docs/linear-design-reference.md)), in
+light and dark. The only appearance choice is the mode (light, dark, system),
+stored per profile (`themes/context.tsx`). There are no theme presets, accent
+colours, window glass, user or VS Code themes, and Desktop ignores the
+backend's terminal skin. UI Scale, Chat Text Size and the chat font stay
+adjustable. Windows are opaque and paint Linear's window colour
+(`WINDOW_CHROME`) on their first frame.
 
 ## Stroke & color tokens
 
+Every colour is a static `--linear-*` token in `src/styles.css` (`:root` for
+light, `:root.dark` for dark), named after Linear's own variables. The older
+`--ui-*`, `--dt-*`, `--chrome-*`, `--stroke-nous` and `--shadow-nous` names are
+aliases onto that layer, so existing call sites follow it.
+
 | Token | Use |
 | --- | --- |
-| `--ui-stroke-primary…quaternary` | hairlines, in descending strength |
-| `--ui-stroke-tertiary` | the default in-panel divider / list hairline — and every bordered surface in the transcript |
-| `--stroke-nous` | the overlay hairline (pairs with `shadow-nous`) |
-| `--ui-text-primary / -secondary / -tertiary` | text hierarchy |
-| `--ui-bg-quaternary` | soft control fill (secondary button) |
+| `--linear-bg-window` / `--ui-bg-sidebar` | window and sidebar background |
+| `--linear-bg-panel` / `--ui-bg-chrome` | the main content panel |
+| `--linear-bg-card`, `--linear-bg-overlay`, `--linear-bg-tab` | cards; menus, popovers, toasts, tooltips; the active tab |
+| `--linear-bg-input`, `--linear-bg-select(-hover)`, `--linear-bg-chip(-hover)`, `--linear-bg-toolbar(-hover)` | control fills |
+| `--linear-hover-row`, `--linear-hover-control`, `--linear-hover-overlay`, `--linear-hover-sidebar`, `--linear-active-sidebar` | hover / active washes |
+| `--linear-border-primary…tertiary`, `--linear-border-panel`, `--linear-border-overlay`, `--linear-border-input`, `--linear-border-kbd` | hairlines (`border-[0.5px]`) |
+| `--linear-text-primary / -secondary / -tertiary / -quaternary / -hint`, `--linear-text-sidebar`, `--linear-icon` | text and icon hierarchy |
+| `--linear-accent(-hover)`, `--linear-on-accent`, `--linear-focus`, `--linear-selection` | the one accent (Linear indigo), focus ring, selection |
+| `--linear-red/green/blue/yellow/orange/cyan/pink` | status colours |
+| `--linear-switch-off(-hover)`, `--linear-switch-thumb` | the measured switch |
+| `--linear-radius-control` 8 · `-card` 10 · `-overlay` 12 · `-modal` 21 · `-kbd` 4 · `-pill` | radii |
+| `--linear-speed-quick` .1s · `-regular` .25s · `-slow` .35s · `-highlight-out` .15s | motion |
 | `--ui-widget-surface-background` | fill for inline chat widgets (`WIDGET_SHELL_CLASS`) |
-| `--chrome-action-hover` | hover fill for quiet controls |
-| `--theme-primary`, `--ui-accent` | brand/accent |
 
-Never hardcode `border-gray-*`, `bg-white`, `text-black`, etc. The two tiles in
-`BrandMark` (white in light mode, `#0d1117` in dark) are the sanctioned literals
-(the mark needs a fixed backdrop).
+Never hardcode `border-gray-*`, `bg-white`, `text-black`, etc. Colours that are
+content rather than chrome are the only sanctioned literals:
+
+- the two `BrandMark` tiles (white in light mode, `#0d1117` in dark), which need
+  a fixed backdrop;
+- third-party brand colours in `messaging/platform-icon.tsx`;
+- `bg-white` behind the Telegram QR code, which must stay scannable;
+- the graph drawing in `starmap/` and the pet's stars and ground shadow;
+- `NOUS_BLUE` in `billing/tier-art.tsx` and the drawn avatars in
+  `plugins/hermes-bots/avatar.tsx`, which are illustrations;
+- `bg-white` behind browser previews, which show external pages;
+- `bg-black` behind video, computed `rgba()` on the image canvas, and the hearts'
+  fixed particle colour;
+- `oklch(from var(--bb-tint) …)` in `butterbar.css`, which computes black or white
+  ink from the tint;
+- the `#000` mask in `churn-bar.tsx`, where only its alpha counts.
 
 ## Buttons — one component
 
 `src/components/ui/button.tsx` is the single source. Pick a `variant` + `size`;
 do **not** pass `h-*`, `px-*`, `py-*`, or icon-size overrides.
 
-**Variants:** `default` (primary), `destructive`, `secondary` (soft fill —
-the default non-primary look), `outline` (transparent + 1px inset ring, no
-fill/shadow), `ghost`, `floating` (a control loose from any surface — opaque
-popover fill + `shadow-md`, hover lifts the glyph only), `link`, `text`
+Every button is a Linear pill (radius 9999, 12px/500, transparent hairline,
+disabled opacity .6). Measured heights: primary 28px (padding 10px), secondary
+and large 32px (padding 12px), ghost/xs 24px, icon buttons 28/24/32px.
+
+**Variants:** `default` (primary — accent fill + `--linear-shadow-low`),
+`destructive`, `secondary` (toolbar fill — the default non-primary look),
+`outline` (transparent + hairline ring, no fill/shadow), `chip` (Linear's
+property chip), `ghost`, `floating` (a control loose from any surface —
+overlay fill + hairline + menu shadow), `link`, `text`
 (boxless quiet inline — "Cancel", "Clear"), `textStrong` (bold underlined
 inline affordance — "Change", "Open logs").
 `grip` is the quiet, fill-free drawer handle; pair it with size `grip` for a
@@ -210,7 +257,8 @@ trigger within 300ms opens instantly. The cooldown starts on close, so a
 hover a second later waits again. Once triggered, entrance has no animation.
 Exit fades over 100ms and moves 0.125rem toward the anchor; reduced motion
 disables the exit animation. `OverflowTip` stays on its own longer delay
-(list titles must not trail while scanning). Bubbles use a 0.25rem radius.
+(list titles must not trail while scanning). Bubbles are Linear's tooltip: 28px,
+radius 8, overlay surface and hairline, low shadow, 11px/450, no arrow.
 
 **Tooltip placement.** Choose intent through `placement`: `control` above (default), `toolbar` below, `row` to the right, and `left-rail` / `right-rail` inward. Explicit `side` and `align` override the preference. Radix flips and shifts for collisions, keeps the arrow attached, and hides detached triggers. Controls and toolbars use their owning pane as a boundary; row descriptions and rails may extend into the window. Use `boundary="viewport"` for an intentional escape. Short labels size to content; descriptions wrap within 24rem and the available space, in one rounded bubble.
 
@@ -225,16 +273,18 @@ context-dependent (e.g. "Show" / "Hide"). Never hardcode combos; always use
 `useKeybindHint` or `TipKeybindLabel`.
 
 Notes:
-- Text buttons are square (no radius) and sized by padding + line-height (no
-  fixed heights). Only icon buttons carry the shared 4px radius.
-- SVGs inherit `size-3.5` (`size-3` at `xs`). Don't re-set icon size.
+- `link` / `text` / `textStrong` are boxless inline text and carry no radius.
+- SVGs inherit Linear's 14px icon (`size-3.5`; 16px at `icon-lg`). Don't
+  re-set icon size.
 - Polymorph with `asChild` when the button must render as a link/Slot.
 
 ## Badges — one component
 
-`src/components/ui/badge.tsx`. Variants: `default` (tinted primary), `muted`,
-`warn`, `destructive`, `outline`, `solid` (primary fill — icon-corner counts).
-Sizes: `default`, `xs`, `overlay` (titlebar glyph counts).
+`src/components/ui/badge.tsx`. Pills, 11px/450 like Linear's count badges.
+Variants: `default` (tinted accent), `muted`, `warn`, `destructive`, `outline`,
+`solid` (accent fill — icon-corner counts). Sizes: `default`, `xs`, `overlay`
+(titlebar glyph counts). `Kbd` keys are Linear's: 17px, radius 4, hairline
+`--linear-border-kbd`, 11px hint colour.
 
 ## Profile rail
 
@@ -245,23 +295,27 @@ and profile drag gestures temporarily remove the mask so the dragged square stay
 
 ## Context-sensitive dialogs
 
-Sudo password dialogs keep the backdrop unblurred (`DialogContent`'s
-`blurBackdrop={false}`) and show the complete, selectable command before the
+Sudo password dialogs show the complete, selectable command before the
 password field. Long commands wrap and scroll; missing backend context is
-explicit, never inferred from another tool row. Other dialogs retain the shared
-blurred backdrop.
+explicit, never inferred from another tool row. Every dialog uses Linear's
+modal: `--linear-scrim` behind it, no backdrop blur, title 18px/600.
 
 ## Form controls
 
 - **`controlVariants`** (`src/components/ui/control.ts`) is the shared shape for
-  `Input` / `Textarea` / `SelectTrigger`. New text-entry controls compose it.
-- **`SearchField`** — borderless, underline-on-focus, auto-width. The only
-  search input. Don't build boxed search bars; don't wrap it in a bordered tile.
-  Empty lists hide their search field.
+  `Input` / `Textarea` / `SelectTrigger`: Linear's text input (32px, padding
+  6px 12px, radius 8, hairline `--linear-border-input`, 13px, focus colour on
+  the border). Selects are Linear's select button (fill, no border, 30px).
+  New text-entry controls compose it.
+- **`SearchField`** — the only search input. `boxed` follows Linear's text
+  input; the bare variant is borderless for in-list filters. Empty lists hide
+  their search field.
 - **`SegmentedControl`** — the choice control for small mutually-exclusive sets
   (color mode, tool-call display, usage period). Replaces radio piles and
   pill rows.
-- **`Switch`** (`size="xs"`) — bare, with `aria-label`. No bordered text wrapper.
+- **`Switch`** — Linear's measured 30×20 pill: grey `--linear-switch-off`
+  track, accent when on, 14px `--linear-switch-thumb` inset 3px, no shadow.
+  Bare, with `aria-label`; `size="xs"` for dense rows.
 - **`FanMenu`** (`src/components/ui/fan-menu.tsx`) — one hub control that
   fans sibling toggles out on hover: `direction` `vertical` | `horizontal`
   (split around the hub) | `arc`. Discs are `Button` `floating` off /
@@ -287,6 +341,8 @@ focusing its composer.
 - **Gutters:** `PAGE_INSET_X` (`src/app/layout-constants.ts`) for page side
   padding; `PAGE_INSET_NEG_X` to bleed a child to the edge. Don't hardcode
   `px-6`/`px-8` on pages.
+- **Tabs in a page header:** `TextTab` / `ResponsiveTabs` are a left-aligned
+  segmented pill (`role="tablist"`), sentence case, search beside them.
 - **Master/detail overlays:** `OverlaySplitLayout` + `OverlaySidebar` /
   `OverlayMain`. Cron, profiles, etc. ride this — don't rebuild a titlebar
   shell.
@@ -301,10 +357,11 @@ focusing its composer.
   counts under breadcrumb-owned chrome; embedded callers keep their headings.
   Narrow windows keep every destination available in the shared navigation dropdown.
   Search and saved field links resolve to the owning child before highlighting.
-- **Rows:** `ListRow` (settings `primitives.tsx`) for label/description/action
-  rows. Flat, flush-left; no per-row indentation that fights flush headers.
-- **No dividers between rows** unless the list genuinely needs them; prefer
-  spacing. When you do need one, it's a single `--ui-stroke-tertiary` hairline.
+- **Rows:** `ListRow` inside `SettingsCard` (settings `primitives.tsx`), under a
+  `SettingsSection`: card radius 10, `--linear-bg-card`, `--linear-shadow-card`;
+  rows padded 16, label 13px/500, description 12px/450 tertiary.
+- **Dividers:** the card draws one hairline between its rows. Don't add your own,
+  and don't nest a card in a card.
 
 ## Panel titlebars
 
@@ -328,12 +385,12 @@ status dots after 400ms, without changing tab widths. Hints follow the same
 binding and hovered/focused-zone resolver as the number shortcuts.
 
 Tab close buttons fade the label with a content mask, not a painted gradient.
-The tab reads its surface token directly so glass tint is painted only once.
+Tabs are Linear pills (see Shell); the active pill is the only filled one.
 
 Sticky user messages clip covered scrolling content, including the gap above
 them. Their wrappers stay unpainted; only the rounded user bubble owns a fill.
 Clipping follows the pinned prompt and its live height without changing layout,
-so glass and message-bubble transparency do not reveal scrolling text.
+so scrolling text never shows through.
 
 ## Feedback & empty/error/loading states
 
@@ -378,11 +435,11 @@ from their root base tokens; do not multiply the global tokens or nest CSS zoom.
 - **Inline widgets** — a tool result that renders as a panel the user reads or
   acts on (clarify, artifact card) wears `WIDGET_SHELL_CLASS`
   (`src/components/chat/widget-shell.ts`): shared radius, the
-  `--ui-widget-surface-background` fill, no border. Its actions sit *outside*
+  `--ui-widget-surface-background` fill, one `--linear-border-panel` hairline, no
+  shadow. Its actions sit *outside*
   the panel, below it. Don't give one widget its own radius or fill.
 - Bordered surfaces in the transcript (tables, fences, callouts, attachments)
-  use `--ui-stroke-tertiary`. Not `border-border` — that's the app-wide
-  default and reads too hot against the thread.
+  use one hairline: `--linear-border-panel`, like fenced code.
 - Interactive directive chips in the composer expose their action on hover.
   The action stays visible for a 500ms grace period while the pointer crosses
   from the chip to the floating pill; leaving both dismisses it.
@@ -467,7 +524,7 @@ from their root base tokens; do not multiply the global tokens or nest CSS zoom.
 - **`BrandMark`** (`src/components/brand-mark.tsx`) is the brand glyph — the
   `nous-girl` mark on a fixed tile, theme-aware: black girl on white in light
   mode, white girl on the `#0d1117` dark tile in dark mode (keyed off
-  `renderedMode` so bright surfaces in dark skins stay on the light mark).
+  `resolvedMode`).
   The marks are generated by `scripts/generate_icons.py` from the girl SVGs
   + squircle backgrounds (`assets/nous-girl-*.svg` × `assets/backgrounds/`).
   It replaced scattered Sparkles glyphs in updates / onboarding / about. Use it
@@ -484,8 +541,7 @@ from their root base tokens; do not multiply the global tokens or nest CSS zoom.
 - Hover paints instantly; only the return eases. Put the transition on the
   resting state and drop it while hovered (`transition-colors duration-100
   hover:transition-none`, or the CSS equivalent on `:hover`). A group that
-  dims siblings goes instant too. Exceptions are named, e.g. the catalog
-  card's arc border fades in and out.
+  dims siblings goes instant too.
 - Choreographed exits (e.g. onboarding's "matrix" fade-down) stagger per-element
   then settle the surface — the outer container's fade is *delayed* so it
   doesn't swallow the inner animation. Don't let a global fade race the detail.
@@ -575,15 +631,16 @@ The detailed state contract lives in the scoped
 - [ ] Reuse a primitive (`Button`, `SearchField`, `SegmentedControl`,
       `ListRow`, `Loader`, `ErrorState`, `LogView`, `ConfirmDialog`) instead of
       forking one?
-- [ ] Tokens (`--ui-*`, `shadow-nous`, `--stroke-nous`) — zero raw colors /
-      one-off shadows?
+- [ ] Linear tokens (`--linear-*`) — zero raw colors / one-off shadows, and
+      every value traceable to `docs/linear-design-reference.md`?
 - [ ] No `className` overriding a primitive's padding / size / radius / chrome?
 - [ ] Tips only where hover teaches something new (no kebab / menu-trigger
       tips; unlabeled chrome that needs discovery gets `<Tip>` + `aria-label`)?
 - [ ] No native `title=` on buttons?
 - [ ] Keybind hints on tipped buttons use `useKeybindHint` / `TipKeybindLabel`?
-- [ ] Overlay uses `shadow-nous` + `border-(--stroke-nous)`, no hard border?
-- [ ] Flat — no card-in-card, no gratuitous row dividers?
+- [ ] Overlay uses the surface table above (overlay fill, 0.5px hairline, the
+      matching Linear shadow), no blur?
+- [ ] Linear's structure — no card-in-card, no gratuitous row dividers?
 - [ ] No automatic navigation, focus steal, or pane opening from background
       events?
 - [ ] Direct manipulation paints immediately and rolls back cleanly on failure?
@@ -597,17 +654,15 @@ The detailed state contract lives in the scoped
 
 ## Chat reference: Linear Desktop
 
-The conversation and its portaled composer use `app/chat/linear-chat.css`.
-The native Linear chat was inspected in Chrome DevTools on 2026-10-28:
+The conversation and its portaled composer use `app/chat/linear-chat.css`, which
+holds only chat-specific rules on top of the global `--linear-*` layer. The
+native Linear chat was inspected in Linear's DevTools on 2026-10-28:
 Inter Variable 4.1, 15px/24px body text at weight 450, 10px composer radius,
 12px composer padding, 24px controls, and a maximum conversation width of
-821px. Light surface, text, border and shadow values are measured LCH values.
-Dark colors adapt the shipped Linear dark surface palette; accent colors are
-adaptations, not measurements of Linear's enabled send button.
+821px.
 
 The editor stays above its existing controls. The model picker, attachments,
 voice, queue, inline editing and floating composer retain their existing actions.
-The HUD, navigation shell and other destinations keep their own styles.
-Custom chat fonts, theme-specific fonts, message bubble transparency and native
-glass remain effective. Browser touch controls retain their 44px targets.
+A custom chat font layers in front of Inter. Browser touch controls retain
+their 44px targets.
 Inter is bundled with its SIL Open Font License in `public/licenses/Inter-LICENSE.txt` (copied into Desktop builds).

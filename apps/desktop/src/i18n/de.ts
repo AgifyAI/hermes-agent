@@ -587,6 +587,8 @@ export const deOverrides = {
       'session.slot.8': 'Zu letzter Session 8 wechseln',
       'session.slot.9': 'Zu letzter Session 9 wechseln',
       'session.focusSearch': 'Sessions durchsuchen',
+      'session.rename': 'Unterhaltung umbenennen',
+      'view.reload': 'Fenster neu laden',
       'session.togglePin': 'Aktuelle Session anheften / lösen',
       'session.archive': 'Aktuelle Session archivieren',
       'workspace.newWorktree': 'Neues Worktree',
@@ -967,7 +969,7 @@ export const deOverrides = {
       chatTextScaleDesc:
         'Skaliert Unterhaltungstext und Nachrichteneingabe relativ zur UI-Skalierung. Seitenleisten und Bedienelemente behalten ihre Größe.',
       title: 'Darstellung',
-      intro: 'Nur für Desktop. Modus ist die Helligkeit; Theme ist Farbpalette und Chat-Design.',
+      intro: 'Nur Desktop. Hermes hat ein einziges Erscheinungsbild nach dem Vorbild von Linear, hell und dunkel.',
       colorMode: 'Farbmodus',
       colorModeDesc: 'Wählen Sie einen festen Modus oder lassen Sie Hermes Ihrer Systemeinstellung folgen.',
       toolViewTitle: 'Tool-Aufruf-Anzeige',
@@ -983,7 +985,7 @@ export const deOverrides = {
       uiScaleDesc: (percent: number) =>
         `Skaliert Text und Bedienelemente in der gesamten App. Cmd/Ctrl mit +, - und 0 funktioniert ebenfalls. Aktuell: ${percent}%.`,
       sessionDensityTitle: 'Dichte der Session-Liste',
-      sessionDensityDesc: 'Wählen Sie, wie viel Kontext unter den Session-Titeln in der Seitenleiste erscheint.',
+      sessionDensityDesc: 'Lege fest, wie viel Abstand zwischen den Tagesgruppen in der Seitenleiste liegt.',
       sessionDensityCompact: 'Kompakt',
       sessionDensityComfortable: 'Komfortabel',
       sessionDensityDetailed: 'Detailreich',
@@ -1010,32 +1012,8 @@ export const deOverrides = {
       chatFontPreview: 'Vorschau',
       chatFontSample: 'Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. 0123456789',
       chatFontReset: 'Standardschrift verwenden',
-      translucencyTitle: 'Fenster-Transluzenz',
-      translucencyDesc:
-        'Sehen Sie Ihren Desktop durch das ganze Fenster hindurch, einschließlich Text. Für hell und dunkel separat abgestimmt.',
-      translucencyGlassDesc:
-        'Mattglas: Der Desktop scheint als weicher Blur durch, während der Text scharf bleibt. Für hell und dunkel separat abgestimmt.',
-      translucencyModeClear: 'Klar',
-      translucencyModeGlass: 'Glas',
-      translucencyTintTitle: 'Tönung',
-      translucencyFadeTitle: 'Verblassen',
-      translucencyFrostTitle: 'Frost',
-      translucencyFrost: {
-        'under-window': 'Tief',
-        popover: 'Weich',
-        titlebar: 'Hell',
-        header: 'Glanz'
-      },
-      translucencyScopeTitle: 'Bereich',
-      translucencyScope: {
-        window: 'Ganzes Fenster',
-        sidebar: 'Nur Seitenleiste'
-      },
       backdropTitle: 'Chat-Hintergrund',
       backdropDesc: 'Das zarte Statuenbild hinter der Konversation.',
-      userBubbleTitle: 'Nachrichten-Blase',
-      userBubbleDesc:
-        'Wie durchsichtig Ihre eigenen Nachrichten sind. Bei 0 deckend; bei 100 bleibt nur die Kontur übrig.',
       textDirectionTitle: 'Textrichtung',
       textDirectionDesc:
         'Legt die Schreibrichtung von Chatnachrichten und Eingabefeld fest. Auto richtet sich nach dem ersten Buchstaben jedes Absatzes; wählen Sie eine Richtung, wenn gemischter Text falsch ausgerichtet ist. Code bleibt immer linksläufig.',
@@ -1077,20 +1055,7 @@ export const deOverrides = {
       productDesc: 'Menschlich verständliche Tool-Aktivität mit knappen Zusammenfassungen.',
       technical: 'Technisch',
       technicalDesc: 'Rohe Tool-Argumente/-Ergebnisse und Low-Level-Details einbeziehen.',
-      themeTitle: 'Theme',
-      themeDesc: 'Nur Desktop-Paletten. Der gewählte Modus wird oben drauf angewendet.',
-      themeSearchPlaceholder: 'Ihre Themes oder den VS Code Marketplace durchsuchen…',
-      themeProfileNote: profile => `Für das Profil ${profile} gespeichert — jedes Profil behält sein eigenes Theme.`,
-      installTitle: 'Aus VS Code installieren',
-      installDesc:
-        'Fügen Sie eine Marketplace-Erweiterungs-ID ein (z. B. dracula-theme.theme-dracula), um ihr Farbschema in eine Desktop-Palette umzuwandeln.',
-      installPlaceholder: 'publisher.extension',
-      installButton: 'Installieren',
-      installing: 'Wird installiert…',
-      installError: 'Dieses Theme konnte nicht installiert werden.',
-      installed: name => `„${name}“ installiert.`,
-      removeTheme: 'Theme entfernen',
-      importedBadge: 'Importiert',
+      themeProfileNote: profile => `Für das Profil ${profile} gespeichert — jedes Profil behält seinen eigenen Modus.`,
       pet: {
         title: 'Haustier',
         intro:
@@ -2675,7 +2640,6 @@ export const deOverrides = {
     commandCenter: 'Command Center',
     appearance: 'Darstellung',
     settings: 'Einstellungen',
-    changeTheme: 'Design wechseln',
     changeColorMode: 'Farbmodus wechseln…',
     pets: {
       title: 'Pets',
@@ -2721,18 +2685,6 @@ export const deOverrides = {
       referenceImageInvalid: 'Das Referenzbild konnte nicht gelesen werden. Probieren Sie ein PNG, JPG, WebP oder GIF.',
       adopt: 'Adoptieren',
       startOver: 'Neu beginnen'
-    },
-    installTheme: {
-      title: 'Design installieren…',
-      pageTitle: 'Design installieren',
-      placeholder: 'VS Code Marketplace durchsuchen...',
-      loading: 'Marketplace wird durchsucht...',
-      error: 'Der Marketplace konnte nicht erreicht werden.',
-      empty: 'Keine passenden Designs.',
-      install: 'Installieren',
-      installing: 'Wird installiert...',
-      installed: 'Installiert',
-      installs: count => `${count} Installationen`
     },
     settingsFields: 'Einstellungsfelder',
     mcpServers: 'MCP-Server',
@@ -3449,6 +3401,7 @@ export const deOverrides = {
     created: 'Cron erstellt',
     updated: 'Cron aktualisiert',
     failedLoad: 'Cron-Jobs konnten nicht geladen werden',
+    failedRuns: 'Laufverlauf konnte nicht geladen werden',
     failedUpdate: 'Cron-Job konnte nicht aktualisiert werden',
     failedTrigger: 'Cron-Job konnte nicht ausgelöst werden',
     failedDelete: 'Cron-Job konnte nicht gelöscht werden',
@@ -3691,6 +3644,8 @@ export const deOverrides = {
       ageHour: 'h',
       ageMin: 'Min'
     },
+    previousSessions: 'Frühere Sessions',
+    noSessionsToday: 'Heute noch keine Sessions',
     dateDivider: {
       today: 'Heute',
       yesterday: 'Gestern'

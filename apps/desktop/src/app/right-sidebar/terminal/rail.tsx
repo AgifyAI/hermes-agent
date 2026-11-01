@@ -29,7 +29,7 @@ import {
 } from './terminals'
 
 const RAIL_ACTION =
-  'grid size-6 place-items-center rounded text-(--ui-text-tertiary) transition-colors hover:bg-(--chrome-action-hover) hover:text-foreground focus-visible:bg-(--chrome-action-hover) focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring [-webkit-app-region:no-drag]'
+  'grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none focus-visible:bg-(--linear-hover-control) focus-visible:text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) [-webkit-app-region:no-drag]'
 
 /** Thin icon "bookmark" strip blended into the terminal surface, shown whenever a
  *  terminal exists. Each square is a tab (name + hotkey on hover); close via the
@@ -44,7 +44,7 @@ export function TerminalRail() {
 
   return (
     <div
-      className="group/rail relative z-40 flex h-full w-9 shrink-0 flex-col items-center border-l border-(--ui-stroke-quaternary) bg-(--ui-terminal-surface-background)"
+      className="group/rail relative z-40 flex h-full w-9 shrink-0 flex-col items-center border-l-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel)"
       // The rail sits at the pane's outer edge, under the collapsed sidebars'
       // hover-reveal triggers; mark it so those triggers go pointer-transparent
       // while it's hovered (see the suppression rules in styles.css) and a reach
@@ -73,11 +73,11 @@ export function TerminalRail() {
           >
             <button
               aria-label={t.rightSidebar.terminalNew}
-              className={cn(RAIL_ACTION, 'size-7 text-(--ui-text-quaternary)')}
+              className={cn(RAIL_ACTION, 'size-7 text-(--linear-text-quaternary)')}
               onClick={() => createTerminal()}
               type="button"
             >
-              <Codicon name="add" size="0.8125rem" />
+              <Codicon name="add" size="0.875rem" />
             </button>
           </Tip>
         </li>
@@ -91,7 +91,7 @@ export function TerminalRail() {
             onClick={() => setTerminalTakeover(false)}
             type="button"
           >
-            <Codicon name="chevron-down" size="0.8125rem" />
+            <Codicon name="chevron-down" size="0.875rem" />
           </button>
         </Tip>
       </div>
@@ -118,7 +118,7 @@ function TerminalRailItem({ active, canCloseOthers, index, term, toggleHint }: T
           {active && (
             <span
               aria-hidden="true"
-              className="absolute inset-y-0.5 right-0 w-0.5 rounded-l-sm bg-(--ui-stroke-primary)"
+              className="absolute inset-y-0.5 right-0 w-0.5 rounded-l-sm bg-(--linear-border-tertiary)"
             />
           )}
           <Tip
@@ -129,10 +129,10 @@ function TerminalRailItem({ active, canCloseOthers, index, term, toggleHint }: T
               aria-label={label}
               aria-selected={active}
               className={cn(
-                'grid size-7 place-items-center rounded-md transition-colors',
+                'grid size-7 place-items-center rounded-full transition-colors duration-(--linear-speed-quick) hover:transition-none',
                 active
-                  ? 'bg-(--chrome-action-hover) text-foreground'
-                  : 'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+                  ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
+                  : 'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)'
               )}
               {...middleClickHandlers(() => closeTerminal(term.id))}
               // ⌘-click closes (the pane-tab gesture); a plain click selects.
@@ -141,7 +141,7 @@ function TerminalRailItem({ active, canCloseOthers, index, term, toggleHint }: T
               type="button"
             >
               <Codicon
-                className={cn(term.kind === 'agent' && !active && 'text-primary')}
+                className={cn(term.kind === 'agent' && !active && 'text-(--linear-accent)')}
                 name={term.kind === 'agent' ? 'agent' : 'terminal'}
                 size="0.875rem"
               />

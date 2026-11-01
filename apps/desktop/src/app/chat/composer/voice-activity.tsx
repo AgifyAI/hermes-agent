@@ -177,25 +177,26 @@ export function VoiceActivity({ state }: { state: VoiceActivityState }) {
     <div
       aria-live="polite"
       className={cn(
-        'flex h-8 items-center gap-2 rounded-xl border border-border/55 bg-muted/55 px-2.5 text-xs text-muted-foreground',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-sm'
+        'flex h-8 items-center gap-2 rounded-xl border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) px-2.5 text-xs text-(--linear-text-tertiary)'
       )}
       role="status"
     >
       <div
         className={cn(
           'flex size-5 shrink-0 items-center justify-center rounded-full',
-          recording ? 'bg-primary/15 text-primary' : 'bg-primary/10 text-primary'
+          recording
+            ? 'bg-(--linear-accent)/15 text-(--linear-accent)'
+            : 'bg-(--linear-accent)/10 text-(--linear-accent)'
         )}
       >
         {recording ? <Mic className={iconSize.xs} /> : <Loader2 className={cn('animate-spin', iconSize.xs)} />}
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="truncate font-medium text-foreground/85" title={state.partial || undefined}>
+        <span className="truncate font-medium text-(--linear-text-secondary)" title={state.partial || undefined}>
           {state.partial || title}
         </span>
-        <span aria-hidden="true" className="font-mono text-[0.6875rem] text-muted-foreground/85">
+        <span aria-hidden="true" className="font-mono text-[0.6875rem] text-(--linear-text-tertiary)">
           {formatElapsed(state.elapsedSeconds)}
         </span>
       </div>
@@ -225,27 +226,20 @@ export function VoicePlaybackActivity() {
     <div
       aria-live="polite"
       className={cn(
-        'flex h-8 items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-2.5 text-xs text-primary',
-        'shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-sm'
+        'flex h-8 items-center gap-2 rounded-xl border-[0.5px] border-(--linear-accent)/20 bg-(--linear-accent)/10 px-2.5 text-xs text-(--linear-accent)'
       )}
       role="status"
     >
-      <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+      <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-(--linear-accent)/15 text-(--linear-accent)">
         {preparing ? <Loader2 className={cn('animate-spin', iconSize.xs)} /> : <Volume2 className={iconSize.xs} />}
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="truncate font-medium text-foreground/85">{title}</span>
+        <span className="truncate font-medium text-(--linear-text-secondary)">{title}</span>
         {!preparing && <PlaybackWaveform audioElement={playback.audioElement} />}
       </div>
 
-      <Button
-        className="h-6 shrink-0 gap-1 rounded-full px-2 text-[0.6875rem]"
-        onClick={stopVoicePlayback}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
+      <Button onClick={stopVoicePlayback} size="xs" type="button" variant="ghost">
         <VolumeX className={iconSize.xs} />
         Stop
       </Button>

@@ -868,9 +868,6 @@ export const UserEditComposer: FC<UserEditComposerProps> = ({ cwd, gateway, sess
       <StickyHumanMessageContainer>
         <div
           className="composer-human-message-container human-execution-message-top relative flex w-full items-start rounded-md bg-(--ui-chat-surface-background)"
-          // A raised box over the transcript field: under window glass it keeps
-          // a near-opaque fill instead of thinning with the field behind it.
-          data-glass-raised=""
           onBlur={handleEditBlur}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -892,7 +889,7 @@ export const UserEditComposer: FC<UserEditComposerProps> = ({ cwd, gateway, sess
           <div
             className={cn(
               USER_BUBBLE_BASE_CLASS,
-              'ui-prompt-input__container relative border-(--ui-stroke-secondary) data-[expanded=true]:min-h-20',
+              'ui-prompt-input__container relative border-(--linear-border-secondary) data-[expanded=true]:min-h-20',
               COMPOSER_DROP_FADE_CLASS,
               dragActive && COMPOSER_DROP_ACTIVE_CLASS
             )}
@@ -956,7 +953,7 @@ export const UserEditComposer: FC<UserEditComposerProps> = ({ cwd, gateway, sess
             </ComposerPrimitive.Input>
             {staging && (
               <span
-                className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-background/80 px-1.5 py-0.5 text-[0.62rem] text-muted-foreground backdrop-blur-[1px]"
+                className="pointer-events-none absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) px-1.5 py-0.5 text-[0.6875rem] text-(--linear-text-tertiary)"
                 data-slot="aui_edit-staging"
               >
                 <Loader2Icon className="size-3 animate-spin" />

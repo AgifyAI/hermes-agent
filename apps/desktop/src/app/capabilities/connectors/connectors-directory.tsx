@@ -85,13 +85,13 @@ export function ConnectorsDirectory({
               ) : null}
 
               {segmentFellBack ? (
-                <span className="text-[0.7rem] text-(--ui-text-tertiary)">
+                <span className="text-[0.6875rem] text-(--linear-text-tertiary)">
                   {copy.page.segmentNoMatch(segmentLabel(filter.segment))}
                 </span>
               ) : null}
 
               {hiddenMatches > 0 ? (
-                <span className="flex items-center gap-1 text-[0.7rem] text-(--ui-text-tertiary)">
+                <span className="flex items-center gap-1 text-[0.6875rem] text-(--linear-text-tertiary)">
                   {copy.page.matchesElsewhere(hiddenMatches)}
                   <Button onClick={() => set({ segment: 'all' })} size="xs" variant="text">
                     {copy.page.showAllMatches}
@@ -110,7 +110,7 @@ export function ConnectorsDirectory({
           <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <span className="font-medium">{copy.page.hostedFailedTitle}</span>
             <span className="opacity-80">{copy.page.hostedFailedBody}</span>
-            <Button className="text-destructive" onClick={onRetryHosted} size="xs" variant="text">
+            <Button className="text-(--linear-red)" onClick={onRetryHosted} size="xs" variant="text">
               {copy.page.retry}
             </Button>
           </span>
@@ -186,7 +186,7 @@ function Group({
         <div>
           <h2>
             {group.id === 'local' ? where : copy[group.id]}
-            <span className="ml-2 font-normal tabular-nums text-(--ui-text-tertiary)">{group.cards.length}</span>
+            <span className="ml-2 font-normal tabular-nums text-(--linear-text-tertiary)">{group.cards.length}</span>
           </h2>
           {group.id === 'connected' && showsAttentionFirst(group) ? <p>{copy.connectedNote}</p> : null}
           {group.id === 'off' ? <p>{copy.offNote}</p> : null}

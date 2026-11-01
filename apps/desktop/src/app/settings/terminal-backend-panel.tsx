@@ -119,7 +119,7 @@ export function TerminalBackendPanel({ onConfiguredChange, profile }: TerminalBa
 
   if (loading && !data) {
     return (
-      <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 px-1 text-xs text-(--linear-text-tertiary)">
         <Loader2 className="size-3.5 animate-spin" />
         {copy.loading}
       </div>
@@ -133,7 +133,7 @@ export function TerminalBackendPanel({ onConfiguredChange, profile }: TerminalBa
   return (
     <div className="grid gap-1.5">
       <div className="flex items-baseline justify-between gap-2 px-0.5">
-        <span className="text-[0.72rem] font-medium">{copy.sectionTitle}</span>
+        <span className="text-xs font-medium text-(--linear-text-tertiary)">{copy.sectionTitle}</span>
         <Button disabled={loading} onClick={() => void refresh()} size="sm" variant="text">
           <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} />
         </Button>
@@ -143,10 +143,10 @@ export function TerminalBackendPanel({ onConfiguredChange, profile }: TerminalBa
           <button
             aria-pressed={backend.active}
             className={cn(
-              'grid gap-0.5 rounded-lg border px-2.5 py-2 text-left transition',
+              'grid gap-[3px] rounded-(--linear-radius-control) border-[0.5px] px-3 py-2.5 text-left transition',
               backend.active
-                ? 'border-(--ui-stroke-secondary) bg-(--ui-bg-tertiary)'
-                : 'border-transparent bg-background/55 hover:bg-accent/40'
+                ? 'border-(--linear-border-secondary) bg-(--linear-bg-quaternary)'
+                : 'border-transparent hover:bg-(--linear-hover-row)'
             )}
             disabled={selecting !== null}
             key={backend.name}
@@ -154,7 +154,7 @@ export function TerminalBackendPanel({ onConfiguredChange, profile }: TerminalBa
             type="button"
           >
             <span className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium">{backend.label}</span>
+              <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{backend.label}</span>
               <StatusPill backend={backend} />
               {backend.active && (
                 <Pill tone="primary">
@@ -164,9 +164,9 @@ export function TerminalBackendPanel({ onConfiguredChange, profile }: TerminalBa
               )}
               {selecting === backend.name && <Loader2 className="size-3 animate-spin" />}
             </span>
-            <span className="text-[0.68rem] text-muted-foreground">{backend.description}</span>
+            <span className="text-xs text-(--linear-text-tertiary)">{backend.description}</span>
             {backend.status !== 'ready' && backend.detail && (
-              <span className="flex items-start gap-1 text-[0.68rem] text-amber-600 dark:text-amber-300">
+              <span className="flex items-start gap-1 text-xs text-(--linear-orange)">
                 <AlertTriangle className="mt-0.5 size-3 shrink-0" />
                 {backend.detail}
                 {backend.active && ` ${copy.needsSetupHint}`}

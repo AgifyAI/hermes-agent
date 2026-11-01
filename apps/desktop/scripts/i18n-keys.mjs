@@ -45,7 +45,6 @@ async function loadEnglishCatalog(source) {
     '@hermes/shared/billing': join(source, 'apps/shared/src/billing-types.ts'),
     '@hermes/shared/color': join(source, 'apps/shared/src/color.ts'),
     '@hermes/shared/i18n': join(source, 'apps/shared/src/i18n.ts'),
-    '@hermes/shared/translucency': join(source, 'apps/shared/src/translucency.ts'),
     '@hermes/shared': join(source, 'apps/shared/src/index.ts'),
     '@': join(app, 'src')
   }

@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 
 import type { TimeAxis } from './time-axis'
@@ -102,7 +103,7 @@ function buildStars(axis: TimeAxis): Star[] {
 // in StarMap drives it with zero per-frame JS.
 export const Timeline = memo(function Timeline({
   axis,
-  memoryColor = 'var(--theme-secondary)',
+  memoryColor = 'var(--linear-cyan)',
   onScrub,
   onTogglePlay,
   playing,
@@ -178,18 +179,19 @@ export const Timeline = memo(function Timeline({
     }
   }
 
-  const colorFor = (kind: Star['kind']) => (kind === 'skill' ? 'var(--theme-primary)' : memoryColor)
+  const colorFor = (kind: Star['kind']) => (kind === 'skill' ? 'var(--linear-accent)' : memoryColor)
 
   return (
     <div className="pointer-events-auto flex w-[28rem] max-w-full items-center gap-3 [-webkit-app-region:no-drag]">
-      <button
+      <Button
         aria-label={playing ? 'Pause' : 'Play timeline'}
-        className="flex size-5 shrink-0 items-center justify-center text-foreground/75 transition-colors hover:text-foreground"
         onClick={onTogglePlay}
+        size="icon-xs"
         type="button"
+        variant="ghost"
       >
-        <Codicon name={playing ? 'debug-pause' : 'triangle-right'} size={playing ? '0.8rem' : '0.95rem'} />
-      </button>
+        <Codicon name={playing ? 'debug-pause' : 'triangle-right'} size="0.875rem" />
+      </Button>
 
       <div
         aria-label="Timeline scrubber"
@@ -208,7 +210,7 @@ export const Timeline = memo(function Timeline({
         {/* Dashed midline — a faint horizontal axis the stars ride over. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-foreground/5"
+          className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-dashed border-(--linear-border-primary)"
         />
 
         {/* Dim constellation — the unrevealed future. */}
@@ -263,7 +265,7 @@ export const Timeline = memo(function Timeline({
         <div aria-hidden className="absolute inset-0">
           {ringStops.map((stop, i) => (
             <div
-              className={`pointer-events-none absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--theme-primary)] ${INACTIVE_MARKER_CLASS}`}
+              className={`pointer-events-none absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--linear-accent)] ${INACTIVE_MARKER_CLASS}`}
               key={i}
               ref={el => {
                 if (el) {
@@ -278,7 +280,7 @@ export const Timeline = memo(function Timeline({
         {/* Playhead — a thin white sweep line. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-foreground"
+          className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-(--linear-text-primary)"
           style={{ left: 'calc(var(--starmap-reveal, 1) * 100%)' }}
         />
       </div>

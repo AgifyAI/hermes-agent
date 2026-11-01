@@ -86,7 +86,6 @@ function Harness({ tile = false }: { tile?: boolean }) {
     getRoutedStoredSessionId: () => null,
     getRuntimeIdForStoredSession: () => null,
     getRouteToken: () => 'token',
-    handleSkinCommand: () => '',
     openMemoryGraph: () => undefined,
     refreshSessions: async () => undefined,
     requestGateway,

@@ -135,31 +135,31 @@ export function McpInstallDeepLinkDialog() {
 
         <div className="flex flex-col gap-3">
           {request.transport === 'stdio' && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className="flex items-start gap-2 rounded-md border-[0.5px] border-(--linear-red)/40 bg-(--linear-red)/10 px-3 py-2 text-xs text-(--linear-red)">
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span>{m.deepLinkStdioWarning}</span>
             </div>
           )}
 
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <label className="flex flex-col gap-1 text-xs text-(--linear-text-tertiary)">
             {m.name}
             <Input onChange={event => setName(event.target.value)} value={name} />
           </label>
 
-          {!nameValid && <p className="text-xs text-destructive">{m.deepLinkNameInvalid}</p>}
+          {!nameValid && <p className="text-xs text-(--linear-red)">{m.deepLinkNameInvalid}</p>}
           {nameValid && nameConflict && (
-            <p className="text-xs text-destructive">{m.deepLinkNameConflict(trimmedName)}</p>
+            <p className="text-xs text-(--linear-red)">{m.deepLinkNameConflict(trimmedName)}</p>
           )}
 
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <div className="flex flex-col gap-1 text-xs text-(--linear-text-tertiary)">
             {m.serverJson}
-            <pre className="max-h-64 overflow-auto rounded-md border border-border bg-muted/40 p-2 font-mono text-xs whitespace-pre-wrap break-all text-foreground">
+            <pre className="max-h-64 overflow-auto rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-secondary) p-2 font-mono text-xs whitespace-pre-wrap break-all text-(--linear-text-primary)">
               {JSON.stringify(request.config, null, 2)}
             </pre>
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className="flex items-start gap-2 rounded-md border-[0.5px] border-(--linear-red)/30 bg-(--linear-red)/10 px-3 py-2 text-xs text-(--linear-red)">
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span>{error}</span>
             </div>

@@ -34,7 +34,7 @@ export function CatalogAddButton({ name, installed, installing, disabled, onInst
       size={labeled ? 'xs' : 'icon-xs'}
       variant={labeled ? 'outline' : 'ghost'}
     >
-      {installing ? <Loader2 className="animate-spin text-(--ui-text-tertiary)" /> : installed ? <Check /> : <Plus />}
+      {installing ? <Loader2 className="animate-spin text-(--linear-text-tertiary)" /> : installed ? <Check /> : <Plus />}
       {labeled && (installing ? t.catalog.installing : installed ? t.catalog.installed : t.catalog.install)}
     </Button>
   )

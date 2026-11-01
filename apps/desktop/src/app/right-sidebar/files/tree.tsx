@@ -268,9 +268,9 @@ function ProjectTreeRowContainer({ attrs, children, innerRef, node }: RowRendere
 }
 
 const CHANGE_TINT: Record<RepoChangeKind, string> = {
-  added: 'text-(--ui-green)',
-  conflicted: 'text-(--ui-red)',
-  modified: 'text-(--ui-yellow)'
+  added: 'text-(--linear-green)',
+  conflicted: 'text-(--linear-red)',
+  modified: 'text-(--linear-blue)'
 }
 
 function ProjectTreeRow({
@@ -308,9 +308,9 @@ function ProjectTreeRow({
       aria-expanded={isFolder ? node.isOpen : undefined}
       aria-selected={node.isSelected}
       className={cn(
-        'group/row row-hover flex h-full select-none items-center gap-1 border border-transparent px-3 text-xs font-normal leading-(--file-tree-row-height) text-(--ui-text-secondary) hover:text-foreground',
-        node.isSelected && 'bg-(--ui-row-active-background) text-foreground',
-        isPlaceholder && 'pointer-events-none italic text-muted-foreground/70'
+        'group/row row-hover flex h-full select-none items-center gap-1 border border-transparent px-3 text-xs font-normal leading-(--file-tree-row-height) text-(--linear-text-secondary) hover:text-(--linear-text-primary)',
+        node.isSelected && 'bg-(--linear-active-sidebar) text-(--linear-text-primary)',
+        isPlaceholder && 'pointer-events-none italic text-(--linear-text-quaternary)'
       )}
       draggable={!isPlaceholder && !editing}
       onClick={event => {
@@ -364,7 +364,7 @@ function ProjectTreeRow({
     >
       {/* No chevron column — the folder icon (open/closed) already carries the
           expand state, so the extra glyph was pure noise. */}
-      <span aria-hidden className="flex w-3.5 items-center justify-center text-(--ui-text-tertiary)">
+      <span aria-hidden className="flex w-3.5 items-center justify-center text-(--linear-text-tertiary)">
         {isPlaceholder && !isErrorPlaceholder ? (
           <Codicon name="loading" size="0.75rem" spinning />
         ) : isErrorPlaceholder ? (

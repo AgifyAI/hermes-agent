@@ -276,27 +276,27 @@ interface InstallControlsProps {
 function InstallControls(props: InstallControlsProps) {
   const scope = props.plugin ? (
     <Section title={props.m.includesHeading}>
-      <div className="grid gap-2 rounded-lg border border-(--ui-stroke-tertiary) px-3 py-2">
+      <div className="grid gap-2 rounded-lg border-[0.5px] border-(--linear-border-panel) px-3 py-2">
         <label className="flex items-start gap-3">
           <Checkbox checked={props.agentHalf} onCheckedChange={value => props.onAgentHalfChange(value === true)} />
-          <span className="font-medium text-foreground">{props.m.agentLabel}</span>
+          <span className="font-medium text-(--linear-text-primary)">{props.m.agentLabel}</span>
         </label>
         <label className="grid gap-1 pl-7">
-          <span className={cn(CAPTION, 'text-foreground')}>{props.m.profileLabel}</span>
+          <span className={cn(CAPTION, 'text-(--linear-text-primary)')}>{props.m.profileLabel}</span>
           {props.profileSelect}
         </label>
       </div>
       {props.hasDesktopHalf ? (
-        <label className="flex items-start gap-3 rounded-lg border border-(--ui-stroke-tertiary) px-3 py-2">
+        <label className="flex items-start gap-3 rounded-lg border-[0.5px] border-(--linear-border-panel) px-3 py-2">
           <Checkbox checked={props.desktopHalf} onCheckedChange={value => props.onDesktopHalfChange(value === true)} />
-          <span className="font-medium text-foreground">{props.m.desktopLabel}</span>
+          <span className="font-medium text-(--linear-text-primary)">{props.m.desktopLabel}</span>
         </label>
       ) : null}
-      {props.nothingSelected ? <p className={cn(CAPTION, 'text-destructive')}>{props.m.selectComponent}</p> : null}
+      {props.nothingSelected ? <p className={cn(CAPTION, 'text-(--linear-red)')}>{props.m.selectComponent}</p> : null}
     </Section>
   ) : (
     <label className="grid gap-1">
-      <span className={cn(CAPTION, 'text-foreground')}>{props.m.profileLabel}</span>
+      <span className={cn(CAPTION, 'text-(--linear-text-primary)')}>{props.m.profileLabel}</span>
       {props.profileSelect}
     </label>
   )
@@ -307,17 +307,17 @@ function InstallControls(props: InstallControlsProps) {
       <div className="grid gap-3">
         {props.plugin ? (
           <label className="flex items-center justify-between gap-3">
-            <span className={cn(CAPTION, 'text-foreground')}>{props.m.enableAgent}</span>
+            <span className={cn(CAPTION, 'text-(--linear-text-primary)')}>{props.m.enableAgent}</span>
             <Switch checked={props.enable} disabled={!props.agentHalf} onCheckedChange={props.onEnableChange} />
           </label>
         ) : null}
         <label className="flex items-center justify-between gap-3">
-          <span className={cn(CAPTION, 'text-foreground')}>{props.m.forceReinstall}</span>
+          <span className={cn(CAPTION, 'text-(--linear-text-primary)')}>{props.m.forceReinstall}</span>
           <Switch checked={props.force} onCheckedChange={props.onForceChange} />
         </label>
         {props.plugin ? (
           <label className="grid gap-1">
-            <span className={cn(CAPTION, 'text-foreground')}>{props.m.pinToCommit}</span>
+            <span className={cn(CAPTION, 'text-(--linear-text-primary)')}>{props.m.pinToCommit}</span>
             <Input
               aria-invalid={props.pinInvalid || undefined}
               aria-label={props.m.pinToCommit}
@@ -328,7 +328,7 @@ function InstallControls(props: InstallControlsProps) {
               spellCheck={false}
               value={props.pin}
             />
-            <span className={cn(CAPTION, props.pinInvalid ? 'text-destructive' : 'text-(--ui-text-tertiary)')}>
+            <span className={cn(CAPTION, props.pinInvalid ? 'text-(--linear-red)' : 'text-(--linear-text-tertiary)')}>
               {props.pinInvalid ? props.m.pinToCommitInvalid : props.m.pinToCommitHint}
             </span>
           </label>
@@ -339,15 +339,15 @@ function InstallControls(props: InstallControlsProps) {
 }
 
 const SCAN_TONE = {
-  failed: 'text-destructive',
-  passed: 'text-emerald-600 dark:text-emerald-400',
-  warnings: 'text-amber-600 dark:text-amber-400'
+  failed: 'text-(--linear-red)',
+  passed: 'text-(--linear-green)',
+  warnings: 'text-(--linear-orange)'
 } as const
 
 function Section({ children, title }: { children: ReactNode; title: string }) {
   return (
     <section className="grid gap-2">
-      <h3 className={cn(CAPTION, 'font-medium text-foreground')}>{title}</h3>
+      <h3 className={cn(CAPTION, 'font-medium text-(--linear-text-primary)')}>{title}</h3>
       {children}
     </section>
   )
@@ -362,8 +362,10 @@ function Facts({ mono = true, rows }: { mono?: boolean; rows: [string, null | st
         .filter((row): row is [string, string] => Boolean(row[1]))
         .map(([label, value]) => (
           <div className="contents" key={label}>
-            <dt className="text-(--ui-text-tertiary)">{label}</dt>
-            <dd className={cn('text-foreground', mono ? 'break-all font-mono' : 'wrap-anywhere')}>{value}</dd>
+            <dt className="text-(--linear-text-tertiary)">{label}</dt>
+            <dd className={cn('text-(--linear-text-primary)', mono ? 'break-all font-mono' : 'wrap-anywhere')}>
+              {value}
+            </dd>
           </div>
         ))}
     </dl>

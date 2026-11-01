@@ -100,6 +100,15 @@
   src: url('../../../node_modules/@nous-research/ui/dist/fonts/Collapse-Bold.woff2') format('woff2');
 }
 
+/* Inter Variable — Linear's UI face (docs/linear-design-reference.md § Typography). */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/InterVariable.woff2') format('woff2');
+}
+
 /* JetBrains Mono — bundled terminal font (Apache-2.0) so bold/italic share the
    regular face's metrics instead of squeezing against a system fallback. */
 @font-face {
@@ -125,6 +134,8 @@
 }
 
 @theme inline {
+  /* Linear's normal weight (Inter variable). */
+  --font-weight-normal: 450;
   --color-background: var(--dt-background);
   --color-foreground: var(--dt-foreground);
   --color-card: var(--dt-card);
@@ -153,14 +164,17 @@
 
   --spacing-mul: var(--dt-spacing-mul, 1);
 
-  --radius-xs: calc(var(--radius-scalar) * 0.125rem);
-  --radius-sm: calc(var(--radius-scalar) * 0.5rem);
-  --radius-md: calc(var(--radius-scalar) * 0.625rem);
-  --radius-lg: calc(var(--radius-scalar) * 0.75rem);
-  --radius-xl: calc(var(--radius-scalar) * 1rem);
-  --radius-2xl: calc(var(--radius-scalar) * 1.5rem);
-  --radius-3xl: calc(var(--radius-scalar) * 2rem);
-  --radius-4xl: calc(var(--radius-scalar) * 2.5rem);
+  /* Linear's radius set: 4 (kbd), 8 (controls), 10 (cards), 12 (overlays),
+     21 (modals). Utilities map onto it so existing classes land on a real
+     Linear value. */
+  --radius-xs: var(--linear-radius-kbd);
+  --radius-sm: var(--linear-radius-kbd);
+  --radius-md: var(--linear-radius-control);
+  --radius-lg: var(--linear-radius-control);
+  --radius-xl: var(--linear-radius-card);
+  --radius-2xl: var(--linear-radius-overlay);
+  --radius-3xl: var(--linear-radius-overlay);
+  --radius-4xl: var(--linear-radius-modal);
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -171,82 +185,124 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
 
-  --shadow-xs: 0 0.0625rem 0.125rem color-mix(in srgb, #000 5%, transparent);
-  --shadow-sm:
-    0 0 0 0.0625rem color-mix(in srgb, var(--dt-foreground) 6%, transparent),
-    0 0.125rem 0.5rem color-mix(in srgb, #000 4%, transparent);
-  --shadow-md:
-    0 0 0 0.0625rem color-mix(in srgb, var(--dt-foreground) 8%, transparent),
-    0 0.25rem 1rem color-mix(in srgb, #000 8%, transparent),
-    0 1rem 2rem -1.5rem color-mix(in srgb, #000 18%, transparent);
-  /* Soft floating shadow for borderless modals/overlays. Single top light
-     source: every layer is centered (x=0) and cast downward, with negative
-     spread that grows with the blur so each layer is pulled horizontally inward
-     — the shadow pools below the panel instead of bleeding out every side.
-     Layered (contact → ambient) for a smooth, natural falloff. */
-  --shadow-nous:
-    0 0.125rem 0.25rem -0.125rem color-mix(in srgb, #000 7%, transparent),
-    0 0.5rem 0.75rem -0.375rem color-mix(in srgb, #000 6%, transparent),
-    0 1.25rem 1.75rem -0.875rem color-mix(in srgb, #000 6%, transparent),
-    0 2.25rem 3rem -1.75rem color-mix(in srgb, #000 0%, transparent);
-  /* Hairline border paired with --shadow-nous on borderless overlays.
-     currentColor resolves per-element, so it adapts to text color/theme. */
-  --stroke-nous: color-mix(in srgb, currentColor 3%, transparent);
-  --shadow-lg:
-    inset 0 0.0625rem 0 color-mix(in srgb, #fff 28%, transparent),
-    0 0 0 0.0625rem color-mix(in srgb, var(--dt-foreground) 8%, transparent),
-    0 0.75rem 2rem color-mix(in srgb, #000 12%, transparent);
-  --shadow-composer: 0 0.0625rem 0.125rem color-mix(in srgb, #000 5%, transparent);
+  --shadow-xs: var(--linear-shadow-low);
+  --shadow-sm: var(--linear-shadow-low);
+  --shadow-md: var(--linear-shadow-menu);
+  --shadow-lg: var(--linear-shadow-dialog);
+  /* Floating overlays (popovers, palettes, dialogs) and the hairline that
+     pairs with them. */
+  --shadow-nous: var(--linear-shadow-dialog);
+  --shadow-composer: var(--linear-shadow-low);
 }
 
 @layer base {
   :root {
     color-scheme: light;
 
-    --theme-foreground: #17171a;
-    --theme-primary: #0053fd;
-    --theme-secondary: color-mix(in srgb, #0053fd 7%, #ffffff);
-    --theme-accent-soft: color-mix(in srgb, #0053fd 10%, #ffffff);
-    --theme-midground: #0053fd;
-    --theme-warm: #cf806d;
-    --theme-background-seed: #f8faff;
-    --theme-sidebar-seed: #f3f7ff;
-    --theme-card-seed: #ffffff;
-    --theme-elevated-seed: #ffffff;
-    --theme-bubble-seed: color-mix(in srgb, #0053fd 6%, #ffffff);
-    --theme-neutral-chrome: #f3f3f3;
-    --theme-neutral-sidebar: #f3f3f3;
-    --theme-neutral-card: #fcfcfc;
-    --theme-mix-chrome: 92%;
-    --theme-mix-sidebar: 100%;
-    --theme-mix-card: 22%;
-    --theme-mix-elevated: 28%;
-    --theme-mix-bubble: 0%;
-    --theme-fill-primary-accent-mix: 16%;
-    --theme-fill-secondary-accent-mix: 11%;
-    --theme-fill-tertiary-accent-mix: 8%;
-    --theme-fill-quaternary-accent-mix: 5%;
-    --theme-fill-quinary-accent-mix: 3%;
-    --theme-stroke-primary-accent-mix: 24%;
-    --theme-stroke-secondary-accent-mix: 16%;
-    --theme-stroke-tertiary-accent-mix: 10%;
-    --theme-stroke-quaternary-accent-mix: 6%;
-    --theme-row-hover-accent-mix: 4%;
-    --theme-row-active-accent-mix: 8%;
-    --theme-control-hover-accent-mix: 6%;
-    --theme-control-active-accent-mix: 8%;
+    /* ── Linear: the one token layer ────────────────────────────────────
+       Every value is measured from the Linear desktop app (light theme);
+       see docs/linear-design-reference.md. `:root.dark` swaps the same names
+       for Linear's dark values. Everything below (--ui-*, --dt-*, shadcn
+       aliases) is wired onto these and never carries a colour of its own. */
+    --linear-bg-window: lch(94.44% 0.5 282);
+    --linear-bg-panel: lch(97.94% 0.5 282);
+    --linear-bg-secondary: lch(92.44% 0.5 282);
+    --linear-bg-tertiary: lch(90.94% 0.5 282);
+    --linear-bg-quaternary: lch(94.44% 0.5 282);
+    --linear-bg-card: lch(100% 0 282);
+    --linear-bg-overlay: lch(100% 0 282);
+    --linear-bg-input: lch(100% 0 282);
+    --linear-bg-chip: lch(100% 0 282);
+    --linear-bg-chip-hover: lch(95.886% 0 282);
+    --linear-bg-select: lch(100% 0 282);
+    --linear-bg-select-hover: lch(95.886% 0 282);
+    --linear-bg-toolbar: lch(99.99% 0.5 282);
+    --linear-bg-toolbar-hover: lch(95.883% 0.157 282);
+    --linear-bg-tab: lch(100% 0.5 282);
+    --linear-border-primary: lch(95.24% 0 282);
+    --linear-border-secondary: lch(88.49% 0 282);
+    --linear-border-tertiary: lch(84.44% 0 282);
+    --linear-border-panel: lch(89.84% 0 282);
+    --linear-border-overlay: lch(91.9% 0 282);
+    --linear-border-input: lch(86.5% 0 282);
+    --linear-border-kbd: lch(91.9% 0 282);
+    --linear-text-primary: lch(9.794% 0 282);
+    --linear-text-secondary: lch(19.588% 1.25 282);
+    --linear-text-tertiary: lch(39.176% 1.25 282);
+    --linear-text-quaternary: lch(64.64% 1.25 282);
+    --linear-text-overlay: lch(20% 1 282);
+    --linear-text-overlay-strong: lch(10% 0 282);
+    --linear-text-hint: lch(40% 1 282);
+    --linear-text-sidebar: lch(37.776% 1.25 282);
+    --linear-text-chip: lch(9.794% 0 282);
+    --linear-icon: lch(19.588% 1.25 282);
+    --linear-hover-control: lch(94.854% 0.5 282);
+    --linear-hover-control-raised: lch(94.854% 0.5 282);
+    --linear-hover-row: lch(94.44% 0.5 282);
+    --linear-hover-sidebar: lch(91.64% 0.5 282);
+    --linear-hover-sidebar-icon: lch(0% 0 0 / 0.06);
+    --linear-active-sidebar: lch(89.54% 0.5 282);
+    --linear-hover-overlay: lch(95% 0 282);
+    --linear-segment-selected: lch(93.483% 0.5 282);
+    --linear-segment-rest: lch(99.997% 0.5 282);
+    --linear-accent: lch(53% 52.26 286.91);
+    --linear-accent-hover: lch(47% 50.26 286.91);
+    --linear-switch-off: lch(82.484% 0.054 281.837);
+    --linear-switch-off-hover: lch(76.978% 0.076 281.838);
+    --linear-switch-thumb: lch(100% 5 286.91);
+    --linear-on-accent: lch(100% 5 286.91);
+    --linear-focus: #6d78d5;
+    --linear-selection: color-mix(in srgb, #5b5c5e 20%, transparent);
+    --linear-scrollbar: lch(64.94% 1.25 282);
+    --linear-scrollbar-hover: lch(65.44% 1.25 282);
+    --linear-scrim: lch(0% 0 0 / 0.25);
+    /* Linear's label / status palette (its stylesheet) and diff colours. */
+    --linear-red: lch(50% 73 29);
+    --linear-green: lch(60% 64.37 141.95);
+    --linear-blue: lch(72% 70 267);
+    --linear-yellow: lch(75% 90 85);
+    --linear-orange: #fc7840;
+    --linear-cyan: #26b5ce;
+    --linear-pink: #fa607a;
+    --linear-shadow-low: lch(0% 0 0 / 0.02) 0 3px 6px -2px, lch(0% 0 0 / 0.04) 0 1px 1px;
+    --linear-shadow-menu:
+      lch(0% 0 0 / 0.02) 0 6px 18px, lch(0% 0 0 / 0.04) 0 3px 9px, lch(0% 0 0 / 0.04) 0 1px 1px;
+    --linear-shadow-dialog:
+      lch(0% 0 0 / 0.08) 0 9px 48px, lch(0% 0 0 / 0.1) 0 6px 24px, lch(0% 0 0 / 0.04) 0 1px 1px;
+    --linear-shadow-card:
+      lch(0% 0 0 / 0.088) 0 0 0 0.5px, lch(0% 0 0 / 0.02) 0 3px 6px -2px, lch(0% 0 0 / 0.04) 0 1px 1px;
+    --linear-font-sans:
+      'Inter Variable', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto,
+      'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji',
+      emoji;
+    --linear-font-mono:
+      'Berkeley Mono', 'SFMono-Regular', 'SF Mono', 'JetBrains Mono', 'Cascadia Code', 'DejaVu Sans Mono',
+      'Liberation Mono', 'Noto Sans Mono', ui-monospace, Menlo, Consolas, monospace, 'Apple Color Emoji',
+      'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', emoji;
+    --linear-radius-kbd: 4px;
+    --linear-radius-control: 8px;
+    --linear-radius-card: 10px;
+    --linear-radius-overlay: 12px;
+    --linear-radius-modal: 21px;
+    --linear-radius-pill: 9999px;
+    --linear-speed-quick: 0.1s;
+    --linear-speed-regular: 0.25s;
+    --linear-speed-slow: 0.35s;
+    --linear-speed-highlight-out: 0.15s;
+    --linear-ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    --ui-base: var(--theme-foreground);
-    --ui-accent: var(--theme-midground);
-    --ui-accent-secondary: var(--theme-primary);
-    --ui-warm: var(--theme-warm);
-    --ui-red: #cf2d56;
-    --ui-orange: #db704b;
-    --ui-yellow: #c08532;
-    --ui-green: #1f8a65;
-    --ui-cyan: #4c7f8c;
-    --ui-blue: #0053fd;
-    --ui-purple: #9e94d5;
+    --ui-base: var(--linear-text-primary);
+    --ui-accent: var(--linear-accent);
+    --ui-accent-secondary: var(--linear-accent);
+    --ui-warm: var(--linear-orange);
+    --ui-red: var(--linear-red);
+    --ui-orange: var(--linear-orange);
+    --ui-yellow: var(--linear-yellow);
+    --ui-green: var(--linear-green);
+    --ui-cyan: var(--linear-cyan);
+    --ui-blue: var(--linear-blue);
+    --ui-purple: var(--linear-accent);
+    --ui-success: var(--linear-green);
     --context-usage-system: color-mix(in srgb, var(--ui-base) 55%, transparent);
     --context-usage-tools: var(--ui-purple);
     --context-usage-rules: var(--ui-green);
@@ -294,129 +350,53 @@
     --z-onboarding-popover: 1310;
     --z-setup: 1400;
     --z-crash: 1500;
-    --ui-bg-chrome: color-mix(
-      in srgb,
-      var(--theme-background-seed) var(--theme-mix-chrome),
-      var(--theme-neutral-chrome)
-    );
-    --ui-bg-sidebar: color-mix(
-      in srgb,
-      var(--theme-sidebar-seed) var(--theme-mix-sidebar),
-      var(--theme-neutral-sidebar)
-    );
-    --ui-bg-editor: color-mix(in srgb, var(--theme-card-seed) var(--theme-mix-card), var(--theme-neutral-card));
-    --ui-bg-elevated: color-mix(
-      in srgb,
-      var(--theme-elevated-seed) var(--theme-mix-elevated),
-      var(--theme-neutral-card)
-    );
-    --ui-bg-card: color-mix(in srgb, var(--ui-accent) 4%, color-mix(in srgb, var(--ui-base) 4%, transparent));
-    --ui-bg-input: #fcfcfc;
-    --ui-bg-primary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-fill-primary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 10%, transparent)
-    );
-    --ui-bg-secondary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-fill-secondary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 7%, transparent)
-    );
-    --ui-bg-tertiary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-fill-tertiary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 5%, transparent)
-    );
-    --ui-bg-quaternary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-fill-quaternary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 4%, transparent)
-    );
-    --ui-bg-quinary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-fill-quinary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 3%, transparent)
-    );
-    --ui-row-hover-background: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-row-hover-accent-mix),
-      color-mix(in srgb, var(--ui-base) 3%, transparent)
-    );
-    --ui-row-active-background: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-row-active-accent-mix),
-      color-mix(in srgb, var(--ui-base) 5%, transparent)
-    );
+    --ui-bg-chrome: var(--linear-bg-panel);
+    --ui-bg-sidebar: var(--linear-bg-window);
+    --ui-bg-editor: var(--linear-bg-card);
+    --ui-bg-elevated: var(--linear-bg-overlay);
+    --ui-bg-card: var(--linear-bg-card);
+    --ui-bg-input: var(--linear-bg-input);
+    /* Fill ladder, strongest first. */
+    --ui-bg-primary: var(--linear-bg-tertiary);
+    --ui-bg-secondary: var(--linear-bg-secondary);
+    --ui-bg-tertiary: var(--linear-bg-quaternary);
+    --ui-bg-quaternary: var(--linear-hover-control);
+    --ui-bg-quinary: var(--linear-hover-control);
+    --ui-row-hover-background: var(--linear-hover-row);
+    --ui-row-active-background: var(--linear-active-sidebar);
     /* Open in a pane, but not the FOCUSED one: the active band at reduced
        strength, so every session on screen is marked and the one you're in
-       still wins. Mixed from the active token so a theme tunes both at once. */
-    --ui-row-open-background: color-mix(in srgb, var(--ui-row-active-background) 28%, transparent);
-    --ui-control-hover-background: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-control-hover-accent-mix),
-      color-mix(in srgb, var(--ui-base) 4%, transparent)
-    );
-    --ui-control-active-background: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-control-active-accent-mix),
-      color-mix(in srgb, var(--ui-base) 5%, transparent)
-    );
-    --ui-text-primary: color-mix(in srgb, var(--ui-base) 94%, transparent);
-    --ui-text-secondary: color-mix(in srgb, var(--ui-base) 74%, transparent);
-    --ui-text-tertiary: color-mix(in srgb, var(--ui-base) 54%, transparent);
-    --ui-text-quaternary: color-mix(in srgb, var(--ui-base) 36%, transparent);
+       still wins. */
+    --ui-row-open-background: color-mix(in srgb, var(--ui-row-active-background) 40%, transparent);
+    --ui-control-hover-background: var(--linear-hover-control);
+    --ui-control-active-background: var(--linear-segment-selected);
+    --ui-text-primary: var(--linear-text-primary);
+    --ui-text-secondary: var(--linear-text-secondary);
+    --ui-text-tertiary: var(--linear-text-tertiary);
+    --ui-text-quaternary: var(--linear-text-quaternary);
     /* Transcript scaffolding — thinking headers, settled tool runs, the live
-       activity ticker. One colour for all of them (see `ScaffoldRow`), pitched
-       between the secondary and tertiary greys those lines used to pick
-       individually, and dimmed once more by the fade rule below so the prose
-       reading column stays primary. */
-    --conversation-scaffold-text: color-mix(in srgb, var(--ui-base) 64%, transparent);
-    --conversation-scaffold-meta: color-mix(in srgb, var(--ui-base) 44%, transparent);
-    --ui-stroke-primary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-stroke-primary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 10%, transparent)
-    );
-    --ui-stroke-secondary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-stroke-secondary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 7%, transparent)
-    );
-    --ui-stroke-tertiary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-stroke-tertiary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 5%, transparent)
-    );
-    --ui-stroke-quaternary: color-mix(
-      in srgb,
-      var(--ui-accent) var(--theme-stroke-quaternary-accent-mix),
-      color-mix(in srgb, var(--ui-base) 3%, transparent)
-    );
-    --ui-sash-hover-border: color-mix(in srgb, var(--ui-accent) 18%, var(--ui-stroke-tertiary));
-    --ui-sash-hover-background: color-mix(in srgb, var(--ui-accent) 6%, transparent);
+       activity ticker. One colour for all of them (see `ScaffoldRow`). */
+    --conversation-scaffold-text: var(--linear-text-tertiary);
+    --conversation-scaffold-meta: var(--linear-text-quaternary);
+    --ui-stroke-primary: var(--linear-border-tertiary);
+    --ui-stroke-secondary: var(--linear-border-secondary);
+    --ui-stroke-tertiary: var(--linear-border-panel);
+    --ui-stroke-quaternary: var(--linear-border-primary);
+    --ui-sash-hover-border: var(--linear-border-tertiary);
+    --ui-sash-hover-background: var(--linear-hover-control);
     --ui-surface-background: var(--ui-bg-editor);
     --ui-sidebar-surface-background: var(--ui-bg-sidebar);
     --ui-chat-surface-background: var(--ui-bg-chrome);
     --ui-editor-surface-background: var(--ui-bg-chrome);
-    /* The integrated terminal wears the transcript's background, not the
-       editor's — it reads as part of the conversation surface. Its own token so
-       the two can diverge without dragging the terminal along, and so a skin
-       gets one knob for it. xterm's canvas can't use a var, so the probe in
-       terminal/selection.ts resolves this same name to a concrete rgb. */
-    --ui-terminal-surface-background: var(--ui-chat-surface-background);
-    /* Inline chat widgets (clarify, artifact card) — the card fill in light
-       mode, nudged down in dark so a widget settles into the transcript
-       instead of glowing above it (see the `.dark` override). */
-    --ui-widget-surface-background: var(--ui-bg-editor);
-    --ui-chat-bubble-background: color-mix(
-      in srgb,
-      var(--theme-bubble-seed) var(--theme-mix-bubble),
-      var(--theme-neutral-card)
-    );
-    --ui-chat-bubble-opaque-background: var(--ui-bg-editor);
-    --ui-inline-code-background: color-mix(in srgb, #141414 5%, transparent);
-    --ui-inline-code-foreground: color-mix(in srgb, #141414 88%, transparent);
-    --ui-selection-background: color-mix(in srgb, #ffd24a 55%, transparent);
+    /* The integrated terminal wears the transcript's background. xterm's canvas
+       can't use a var, so the probe in terminal/selection.ts resolves this same
+       name to a concrete rgb. */
+    --ui-widget-surface-background: var(--linear-bg-card);
+    --ui-chat-bubble-background: var(--linear-bg-quaternary);
+    --ui-chat-bubble-opaque-background: var(--linear-bg-quaternary);
+    --ui-inline-code-background: var(--linear-bg-secondary);
+    --ui-inline-code-foreground: var(--linear-text-secondary);
+    --ui-selection-background: var(--linear-selection);
 
     --dt-background: var(--ui-bg-chrome);
     --dt-foreground: var(--ui-text-primary);
@@ -424,81 +404,45 @@
     --dt-card-foreground: var(--ui-text-primary);
     --dt-muted: var(--ui-bg-tertiary);
     --dt-muted-foreground: var(--ui-text-tertiary);
-    --dt-popover: color-mix(in srgb, var(--ui-bg-elevated) 96%, transparent);
-    --dt-popover-foreground: var(--ui-text-primary);
-    --dt-primary: var(--theme-primary);
-    --dt-primary-foreground: #fcfcfc;
-    /* Boot-paint fallbacks. themes/context.tsx replaces --dt-primary-solid with
-       the hue deepened until #fcfcfc clears AA on it; until it runs, the raw
-       primary is the closest honest guess. */
-    --dt-primary-solid: var(--theme-primary);
-    --dt-primary-solid-foreground: #fcfcfc;
-    --dt-secondary: var(--theme-secondary);
+    --dt-popover: var(--linear-bg-overlay);
+    --dt-popover-foreground: var(--linear-text-overlay);
+    --dt-primary: var(--linear-accent);
+    --dt-primary-foreground: var(--linear-on-accent);
+    --dt-primary-hover: var(--linear-accent-hover);
+    --dt-primary-solid: var(--linear-accent);
+    --dt-primary-solid-foreground: var(--linear-on-accent);
+    --dt-secondary: var(--linear-hover-control);
     --dt-secondary-foreground: var(--ui-text-secondary);
-    --dt-accent: var(--theme-accent-soft);
-    --dt-accent-foreground: var(--ui-text-primary);
+    --dt-accent: var(--linear-hover-overlay);
+    --dt-accent-foreground: var(--linear-text-overlay-strong);
     --dt-border: var(--ui-stroke-secondary);
-    --dt-input: var(--ui-stroke-primary);
-    /* THE single knob for input-field borders: the resting alpha (% of the ring
-       color). Hover doubles it; focus/open go full. 0% = invisible at rest. */
-    --dt-input-border: 7%;
-    /* Knob for input-field background fill: alpha (% of --dt-card) across all
-       states. 100% = fully opaque, lower = translucent over the blurred chrome. */
-    --dt-input-bg: 0%;
-    /* Classic recessed "inset" — a crisp 1px inner shadow at the TOP edge.
-       :root.dark bumps the alpha since a dark card swallows shadow. Removed on
-       focus (the focus border carries the state). */
-    --dt-input-inset: inset 0 1px 1px color-mix(in srgb, #000 10%, transparent);
-    /* Hovered inactive tab: deepen it AWAY from the lighter active surface, so
-       hover can never be mistaken for selected. Dark mode needs more — black
-       over a dark gutter shows less. */
-    --ui-tab-hover-darken: 2.5%;
-    --dt-ring: var(--ui-stroke-primary);
-    --dt-midground: var(--theme-midground);
-    /* Scrollbars carry no theme colour: the accent-tinted thumb read as a
-       coloured element in the corner of every list. Same lightness as the
-       midground so each theme still gets a thumb that sits right against its
-       own surfaces — chroma 0 is the only thing removed. */
-    --dt-scrollbar-thumb: oklch(from var(--dt-midground) l 0 h);
+    --dt-input: var(--linear-border-input);
+    /* Input-field border alpha (% of the ring colour) at rest; hover doubles
+       it, focus/open go full. Linear's field border is a solid hairline, so
+       the knob is pinned to the measured border via --dt-input. */
+    /* Hovered inactive tab: deepen it AWAY from the lighter active surface. */
+    --dt-ring: var(--linear-focus);
+    --dt-midground: var(--linear-accent);
+    --dt-midground-foreground: var(--linear-on-accent);
+    --dt-scrollbar-thumb: var(--linear-scrollbar);
     --dt-composer-ring: var(--ui-base);
-    --dt-destructive: #cf2d56;
-    --dt-destructive-foreground: #ffffff;
+    --dt-destructive: var(--linear-red);
+    --dt-destructive-foreground: lch(100% 0 282);
     --dt-sidebar-bg: var(--ui-bg-sidebar);
     --dt-sidebar-border: var(--ui-stroke-secondary);
-    /* `--user-bubble-keep` is the Settings → Appearance → Message Bubble lever
-       (store/user-bubble-transparency.ts): the share of the theme's bubble
-       fill to keep. Unset at the default, so the mix is a no-op and the bubble
-       is the theme's fill exactly as before. The border stays put either way —
-       at full transparency the outline is what still marks your turn. */
-    --dt-user-bubble: color-mix(in srgb, var(--ui-chat-bubble-background) var(--user-bubble-keep, 100%), transparent);
+    --dt-user-bubble: var(--ui-chat-bubble-background);
     --dt-user-bubble-border: var(--ui-stroke-tertiary);
 
-    --dt-font-sans:
-      'Segoe WPC', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif,
-      'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', emoji;
+    --dt-font-sans: var(--linear-font-sans);
     /* Key caps always use the native UI face — never theme typography overrides. */
-    --dt-font-kbd: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
-    /* JetBrains Mono first — the face we bundle (@font-face above) and the
-       terminal's primary — so code/diff match the terminal on every platform
-       instead of drifting to a system Cascadia Code where it's installed. The
-       extra Linux mono fallbacks preserve Latin Extended glyphs (#61392:
-       Vietnamese and other non-Latin diacritics) as monospace when a theme
-       display font does not cover them. */
-    --dt-font-mono:
-      'JetBrains Mono', 'Cascadia Code', 'Cascadia Mono', 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono',
-      'Noto Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace, 'Apple Color Emoji', 'Segoe UI Emoji',
-      'Segoe UI Symbol', 'Noto Color Emoji', emoji;
+    --dt-font-kbd: var(--linear-font-sans);
+    --dt-font-mono: var(--linear-font-mono);
     --dt-base-size: 1rem;
     --dt-line-height: 1.5;
-    --dt-letter-spacing: 0;
+    --dt-letter-spacing: -0.1px;
     --dt-spacing-mul: 1;
 
-    --radius: 0.75rem;
-    /* Effective value everywhere: the chat backdrop used to force 0.2 onto the
-       root element at runtime (an ungated leva slider default), so this 0.6
-       only ever applied to the windows that don't mount the backdrop. Pinned
-       to the value the app actually renders at. */
-    --radius-scalar: 0.2;
+    --radius: var(--linear-radius-overlay);
 
     /* Space under last message vs overlay composer — driven by the measured composer DOCK height (see
        composer/index.tsx), which covers the micro-action strip, the status stack, the composer, and the
@@ -571,7 +515,7 @@
     --image-preview-max-width: 40rem;
     --image-preview-height: clamp(26.25rem, calc(var(--vsq) * 140), 40rem);
 
-    --sidebar-width: 14.8125rem;
+    --sidebar-width: 13.75rem;
     --chat-min-width: 28rem;
     --titlebar-control-size: 24px;
     --titlebar-control-height: 24px;
@@ -586,207 +530,82 @@
     --sidebar-accent-foreground: var(--dt-accent-foreground);
     --sidebar-border: var(--dt-sidebar-border);
     --sidebar-ring: var(--dt-ring);
-    --sidebar-edge-border: color-mix(in srgb, var(--ui-base) 7.5%, transparent);
+    --sidebar-edge-border: transparent;
     --chrome-action-hover: var(--ui-control-hover-background);
 
     --midground: var(--dt-midground);
     --background: var(--dt-background);
     --foreground: var(--dt-foreground);
 
-    --warm-glow: color-mix(in srgb, var(--ui-warm) 32%, color-mix(in srgb, var(--ui-accent) 6%, transparent));
-    /* `--noise-opacity-mul` is set per-mode by `applyTheme()`. */
-    --noise-opacity-mul: 1;
+    --warm-glow: color-mix(in srgb, var(--ui-warm) 32%, transparent);
+    --noise-opacity-mul: 0;
     --backdrop-invert-mul: 1;
   }
 
   :root.dark {
-    /* Per-mode mix knobs — overridden inline by `applyTheme()` per skin. */
-    --theme-mix-chrome: 74%;
-    --theme-mix-card: 38%;
-    --theme-mix-elevated: 46%;
-    --theme-mix-bubble: 46%;
-    --theme-neutral-chrome: #0d0d0e;
-    --theme-neutral-sidebar: #0a0a0b;
-    --theme-neutral-card: #161618;
+    color-scheme: dark;
 
-    /* Dark-only accent palette overrides. */
-    --ui-red: #e75e78;
-    --ui-green: #55a583;
-    --ui-cyan: #6f9ba6;
+    --linear-bg-window: lch(2.595% 0.4 272);
+    --linear-bg-panel: lch(5.52% 0.4 272);
+    --linear-bg-secondary: lch(7.32% 0.85 272);
+    --linear-bg-tertiary: lch(8.22% 1.3 272);
+    --linear-bg-quaternary: lch(9.345% 0.85 272);
+    --linear-bg-card: lch(9.232% 0.85 272);
+    --linear-bg-overlay: lch(12.72% 0.85 272);
+    --linear-bg-input: lch(9.23% 0.85 272);
+    --linear-bg-chip: lch(17.574% 1.589 272);
+    --linear-bg-chip-hover: lch(22.202% 1.975 272);
+    --linear-bg-select: lch(13.861% 1.139 272);
+    --linear-bg-select-hover: lch(18.49% 1.525 272);
+    --linear-bg-toolbar: lch(10.149% 0.593 272);
+    --linear-bg-toolbar-hover: lch(14.777% 1.075 272);
+    --linear-bg-tab: lch(11.595% 2.2 272);
+    --linear-border-primary: lch(9.84% 1.48 272);
+    --linear-border-secondary: lch(14.16% 1.48 272);
+    --linear-border-tertiary: lch(16.32% 1.48 272);
+    --linear-border-panel: lch(13.08% 1.48 272);
+    --linear-border-overlay: lch(25.68% 1.93 272);
+    --linear-border-input: lch(30.83% 1.93 272);
+    --linear-border-kbd: lch(20.28% 1.93 272);
+    --linear-text-primary: lch(100% 0 272);
+    --linear-text-secondary: lch(90.451% 1.2 272);
+    --linear-text-tertiary: lch(61.803% 1.2 272);
+    --linear-text-quaternary: lch(36.975% 1.2 272);
+    --linear-text-overlay: lch(91.178% 1.425 272);
+    --linear-text-overlay-strong: lch(100% 0 272);
+    --linear-text-hint: lch(64.714% 1.425 272);
+    --linear-text-sidebar: lch(60.621% 1.2 272);
+    --linear-text-chip: lch(91.2% 1.65 272);
+    --linear-icon: lch(90.155% 1.2 272);
+    --linear-hover-control: lch(14.006% 0.593 272);
+    --linear-hover-control-raised: lch(21.431% 1.493 272);
+    --linear-hover-row: lch(9.345% 0.85 272);
+    --linear-hover-sidebar: lch(8.445% 1.3 272);
+    --linear-hover-sidebar-icon: lch(10.149% 0.689 272);
+    --linear-active-sidebar: lch(13.845% 1.3 272);
+    --linear-hover-overlay: lch(20.82% 1.3 272);
+    --linear-segment-selected: lch(16.706% 0.979 272);
+    --linear-segment-rest: lch(10.149% 0.593 272);
+    --linear-accent: lch(47.918% 59.303 288.421);
+    --linear-accent-hover: lch(52.418% 61.103 288.421);
+    --linear-switch-off: lch(47.551% 0.913 271.998);
+    --linear-switch-off-hover: lch(56.238% 1.008 271.999);
+    --linear-switch-thumb: lch(100% 5 288.421);
+    --linear-scrollbar: lch(37.275% 1.2 272);
+    --linear-scrollbar-hover: lch(37.275% 1.2 272);
+    --linear-scrim: lch(0% 0 0 / 0.4);
+    --linear-shadow-low: lch(0% 0 0 / 0.3) 0 0.5px 1px 1px;
+    --linear-shadow-menu:
+      lch(0% 0 0 / 0.125) 0 3px 8px, lch(0% 0 0 / 0.125) 0 2px 5px, lch(0% 0 0 / 0.125) 0 1px 1px;
+    --linear-shadow-dialog:
+      lch(0% 0 0 / 0.1) 0 4px 40px, lch(0% 0 0 / 0.125) 0 3px 20px, lch(0% 0 0 / 0.125) 0 3px 12px,
+      lch(0% 0 0 / 0.125) 0 2px 8px, lch(0% 0 0 / 0.125) 0 1px 1px;
+    --linear-shadow-card: lch(100% 0 0 / 0.083) 0 0 0 0.5px, lch(0% 0 0 / 0.3) 0 0.5px 1px 1px;
+
     --ui-diff-add-foreground: color-mix(in srgb, var(--ui-green) 62%, #fff);
     --ui-diff-remove-foreground: color-mix(in srgb, var(--ui-red) 62%, #fff);
-
-    --sidebar-edge-border: color-mix(in srgb, var(--ui-base) 12%, transparent);
     --composer-ring-strength: 1.3;
     --backdrop-invert-mul: 0;
-    /* Dark mode: a dark card needs a stronger black inset to show the recess. */
-    --dt-input-inset: inset 0 1px 1px color-mix(in srgb, #000 38%, transparent);
-    --ui-tab-hover-darken: 6%;
-    /* Dark needs a lighter resting border than light mode. */
-    --dt-input-border: 4%;
-
-    --ui-inline-code-background: color-mix(in srgb, #ffffff 7%, transparent);
-    --ui-inline-code-foreground: color-mix(in srgb, #ffffff 88%, transparent);
-    --ui-selection-background: color-mix(in srgb, #ffd24a 38%, transparent);
-    /* A dark card sits ABOVE the chrome (#161618 over #0d0d0e), so an inline
-       widget wearing the raw card fill reads as a lit panel. Take it down a
-       touch — still clearly a surface, no longer the brightest thing in the
-       transcript. Derived from the card so every skin follows its own seed. */
-    --ui-widget-surface-background: color-mix(in srgb, var(--ui-bg-editor) 88%, #000);
-  }
-
-  /* ── Window glass (Settings → Appearance → Window Translucency: Glass) ──
-     Set on <html> by store/translucency.ts; chat windows on a glass-capable
-     OS (macOS vibrancy, Windows 11 DWM acrylic/mica). The native material
-     composites BELOW the web contents; the page normally buries it under
-     fully opaque surfaces.
-
-     ONE PAINTER: <body> paints the glass tint exactly once, at
-     `--translucency-glass-keep` (set inline from the Tint slider, linear to
-     zero — the top of the lever is bare material), and the field tokens
-     (chat / sidebar / editor surface) go fully transparent. The field
-     surfaces NEST — body > pane container > chat section > transcript
-     wrapper all wear these tokens — so thinning the tokens themselves stacks
-     the tint once per layer and a session pane ends up near-opaque (~0.93 at
-     60%) while the landing page, with fewer layers, reads far clearer. With a
-     single painter the field alpha is the same number on every route. Raised
-     content (cards, popovers, bubbles, the composer) keeps its own opaque
-     fills over full-contrast text; regions still read distinct through their
-     borders and the material itself. Unlike Clear, nothing on the page fades
-     — the separate Fade lever does that natively, at the window level, and
-     defaults to off.
-
-     The boot script in index.html pins an opaque inline background on <html>
-     before first paint; it has to go transparent here or it sits behind the
-     translucent <body> and blocks the material. The terminal surface is
-     pinned back to the opaque chrome mix: xterm resolves its surface var to a
-     concrete color for its canvas (see right-sidebar/terminal/selection.ts),
-     which does not composite page alpha. */
-  :root[data-hermes-glass] {
-    background-color: transparent !important;
-    --ui-chat-surface-background: transparent;
-    --ui-sidebar-surface-background: transparent;
-    --ui-editor-surface-background: transparent;
-    --ui-terminal-surface-background: var(--ui-bg-chrome);
-  }
-
-  :root[data-hermes-glass] body {
-    background: color-mix(in srgb, var(--ui-bg-chrome) var(--translucency-glass-keep, 100%), transparent);
-  }
-
-  /* Sidebar scope (the Finder shape): glass rail, opaque content column.
-     <body> stays the one painter but splits at the rail's visual edge — the
-     store publishes it as --glass-rail-edge (live-tracked through collapse
-     animation and pane resizes). Left of the seam: the normal glass mix.
-     Right of it: the full opaque chrome. A hard gradient stop, so there is
-     no smear across the seam; RTL mirrors via html[dir='rtl']. The content
-     column's own surfaces stay transparent (they'd double-paint the tint
-     otherwise) — the body backdrop alone restores the opaque look. */
-  :root[data-hermes-glass][data-hermes-glass-scope='sidebar'] body {
-    background: linear-gradient(
-      to right,
-      color-mix(in srgb, var(--ui-bg-chrome) var(--translucency-glass-keep, 100%), transparent)
-        var(--glass-rail-edge, 0px),
-      var(--ui-bg-chrome) var(--glass-rail-edge, 0px)
-    );
-  }
-
-  :root[data-hermes-glass][data-hermes-glass-scope='sidebar'][dir='rtl'] body {
-    background: linear-gradient(
-      to left,
-      color-mix(in srgb, var(--ui-bg-chrome) var(--translucency-glass-keep, 100%), transparent)
-        var(--glass-rail-edge, 0px),
-      var(--ui-bg-chrome) var(--glass-rail-edge, 0px)
-    );
-  }
-
-  /* The app shell's two full-window opaque painters (the contrib controller
-     root and the SidebarProvider wrapper) sit between <body> and every
-     surface. Their fills are Tailwind utilities (bg-(--ui-bg-chrome) /
-     bg-background), which cascade-layer above these base rules — hence the
-     !important. Clearing them makes <body> the window's only field paint. */
-  :root[data-hermes-glass] [data-contrib-shell],
-  :root[data-hermes-glass] [data-slot='sidebar-wrapper'] {
-    background-color: transparent !important;
-  }
-
-  /* Surfaces that MASK sibling content must stay filled under glass — a
-     see-through mask reads as text bleeding through text, not as glass.
-     Anything that paints over its own siblings declares `data-glass-opaque`
-     at its call site (the diff gutter, a dragged sidebar row), rather than
-     styles.css reaching in by class name. */
-  :root[data-hermes-glass] [data-glass-opaque] {
-    --ui-chat-surface-background: var(--ui-bg-chrome);
-    --ui-editor-surface-background: var(--ui-bg-chrome);
-    --ui-sidebar-surface-background: var(--ui-bg-sidebar);
-  }
-
-  /* Content RAISED above the field (overlay cards, the inline edit box) runs
-     counter to it: near-opaque over a glass field, never thinner than the
-     field itself — max() covers low slider values where the field still keeps
-     more than 94%. The card wears the chat token and its internal nav asides
-     wear the sidebar token, so both come back as almost-solid fills and the
-     two-tone layout survives. */
-  :root[data-hermes-glass] [data-glass-raised] {
-    --ui-chat-surface-background: color-mix(
-      in srgb,
-      var(--ui-bg-chrome) max(94%, var(--translucency-glass-keep, 100%)),
-      transparent
-    );
-    --ui-sidebar-surface-background: color-mix(
-      in srgb,
-      var(--ui-bg-sidebar) max(94%, var(--translucency-glass-keep, 100%)),
-      transparent
-    );
-    --ui-editor-surface-background: var(--ui-bg-chrome);
-  }
-
-  /* The status bar spans the rail AND the content column. Transparent, it
-     showed the body's hard stop through itself, and the seam cut whichever
-     item sat on it (the free-tier chip, in the guided window). Finder's
-     shape: the bar belongs to the opaque content column across the full
-     width, and the rail's glass ends at its top edge. Window scope has no
-     seam, so the bar stays transparent there. */
-  :root[data-hermes-glass][data-hermes-glass-scope='sidebar'] [data-slot='statusbar'] {
-    --ui-sidebar-surface-background: var(--ui-bg-chrome);
-  }
-
-  /* Clear mode (native window opacity) fades EVERYTHING in the window
-     uniformly, so when an overlay opens over a session two layers of text
-     fade by the same amount and fight through the overlay's light default
-     scrim (bg-black/22 + 2px blur). While clear is active, the scrim works
-     for a living: darken it and widen the blur so the covered transcript
-     drops away and the overlay's own text is the only line of type in front
-     of the desktop. Set on <html> by store/translucency.ts whenever
-     mode='clear' and intensity > 0; !important because the utility classes
-     live in a later cascade layer. */
-  :root[data-hermes-clear] [data-overlay-surface] {
-    background-color: rgb(0 0 0 / 0.55) !important;
-    backdrop-filter: blur(0.5rem) !important;
-  }
-
-  /* Translucency peek: while the user holds the intensity slider (or for a
-     short pulse after a frost/area/mode click) the entire overlay layer —
-     scrim, blur and near-opaque card as ONE group — ghosts down so the live
-     window behind it becomes the preview. The layer keeps pointer events:
-     a held drag keeps delivering to the slider it started on. Opacity is
-     the one property that fades the scrim, its backdrop-blur and the card
-     together without relayout. Asymmetric easing: quick reveal while the
-     hand is on the control, unhurried return.
-
-     Both the peek and its return are scoped to a settings overlay that has
-     ARMED the interaction ([data-translucency-peek-scope], set by the
-     appearance row). An unscoped `[data-overlay-surface] { transition:
-     opacity … }` would tax every overlay in the app — command center, cron,
-     agents, model picker — with a 420ms opacity transition for the life of
-     the process, to serve one slider. */
-  :root [data-overlay-surface]:has([data-translucency-peek-scope]) {
-    transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  :root[data-hermes-translucency-peek] [data-overlay-surface]:has([data-translucency-peek-scope]) {
-    opacity: 0.08;
-    transition: opacity 160ms cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   * {
@@ -814,11 +633,14 @@
     color: var(--dt-foreground);
     font-family: var(--dt-font-sans);
     font-size: 0.8125rem;
+    font-weight: 450;
     line-height: var(--dt-line-height, 1.55);
     letter-spacing: var(--dt-letter-spacing, 0);
     -webkit-user-select: none;
     user-select: none;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'calt';
   }
 
   button,
@@ -1025,14 +847,6 @@
   display: none;
 }
 
-:root:not([style*='--theme-asset-bg:']) .theme-default-filler {
-  display: block;
-}
-
-:root[style*='--theme-asset-bg:'] .theme-default-filler {
-  display: none;
-}
-
 /* ─────────────────────────────────────────────────────────────────────────
    Composer placeholder.
 
@@ -1108,7 +922,7 @@
 
   [class*='rounded-full'],
   [class*=':rounded-full'] {
-    border-radius: calc(var(--radius-scalar) * 9999rem);
+    border-radius: var(--linear-radius-pill);
   }
 }
 
@@ -1543,21 +1357,12 @@ code {
   filter: brightness(1.08) saturate(1.06);
 }
 
-/* Shared input chrome — mirrors composer hover/focus FX. Unlayered to beat Tailwind utilities. */
-/* Border strength is driven by the single --dt-input-border alpha knob (× the
-   theme's tuned ring color); hover doubles it and focus triples it. Only the
-   border-color animates — animating the translucent background over the window's
-   backdrop-blur flickers (badly on textareas), so the bg fill snaps instead.
-   (:focus is declared after :hover so a focused+hovered field shows focus.) */
+/* Shared input chrome: Linear's text input (fill, hairline, focus colour).
+   Unlayered to beat Tailwind utilities. */
 .desktop-input-chrome {
-  background: color-mix(in srgb, var(--dt-card) var(--dt-input-bg), transparent);
-  border-color: color-mix(in srgb, var(--dt-composer-ring) var(--dt-input-border), transparent);
-  box-shadow: var(--dt-input-inset);
-  transition: border-color 200ms ease-out;
-}
-
-.desktop-input-chrome:hover {
-  border-color: color-mix(in srgb, var(--dt-composer-ring) calc(var(--dt-input-border) * 2), transparent);
+  background: var(--linear-bg-input);
+  border-color: var(--linear-border-input);
+  transition: border-color var(--linear-speed-quick) ease-out;
 }
 
 /* `[data-state='open']` keeps the trigger looking focused while its dropdown is
@@ -1565,13 +1370,13 @@ code {
 .desktop-input-chrome:focus,
 .desktop-input-chrome:focus-within,
 .desktop-input-chrome[data-state='open'] {
-  border-color: var(--dt-composer-ring);
+  border-color: var(--linear-focus);
   box-shadow: none;
   outline: none;
 }
 
 .desktop-input-chrome[aria-invalid='true'] {
-  border-color: var(--dt-destructive);
+  border-color: var(--linear-red);
 }
 
 /* Drag in progress (sash resize, console resize, tab drag): webview/iframe
@@ -2523,18 +2328,19 @@ button[data-slot='aui_msg-reactions']:not([data-reacted])[data-state='open'] {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  border: 1px solid color-mix(in srgb, var(--dt-destructive) 30%, transparent);
-  border-radius: 9999px;
+  border: 0.5px solid color-mix(in srgb, var(--linear-red) 30%, transparent);
+  border-radius: var(--linear-radius-pill);
   background: transparent;
   padding: 0.1rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1.1rem;
-  color: color-mix(in srgb, var(--dt-destructive) 80%, var(--ui-text-secondary));
+  color: color-mix(in srgb, var(--linear-red) 80%, var(--linear-text-secondary));
   cursor: pointer;
 }
 
 .aui-error-action:hover {
-  background: color-mix(in srgb, var(--dt-destructive) 10%, transparent);
+  background: color-mix(in srgb, var(--linear-red) 10%, transparent);
 }
 
 .group:hover button[data-slot='aui_msg-reactions']:not([data-reacted]):hover,
@@ -3122,18 +2928,10 @@ button[data-slot='aui_msg-reactions'] svg {
    band went pale exactly where it should have been disappearing. Shaping it
    would need NSVisualEffectView.maskImage behind a native addon.
 
-   Under Glass the sheet wears the SAME paint the docked thread does:
-   `--ui-bg-chrome` kept at `--translucency-glass-keep`, the one number
-   store/translucency publishes from the Tint slider (see the
-   `[data-hermes-glass]` block). One painter, one token, one lever — the band
-   reads as the app's thread surface rather than as a HUD-only lookalike that
-   drifts the first time either side is touched.
-
-   With Glass off there is no material behind the window, so the sheet keeps
-   its own card tint. Heavier than the text in front of it, deliberately: with
-   no blur to separate the band from what it lies over, the sheet is the only
-   thing keeping half-opacity text off someone else's UI. Fade the words, keep
-   the paper. */
+   Where the platform gives no frost (Windows, Linux) the sheet keeps its own
+   tint. Heavier than the text in front of it, deliberately: with no blur to
+   separate the band from what it lies over, the sheet is the only thing keeping
+   half-opacity text off someone else's UI. Fade the words, keep the paper. */
 /* A DARK scrim, not the theme's card. The band's ink is white unconditionally
    (see above), so the sheet it lands on has to be dark in every theme —
    `--dt-card` is near-white on a light theme and would put white text on a white
@@ -3180,56 +2978,6 @@ button[data-slot='aui_msg-reactions'] svg {
   translate: none;
   opacity: 1;
   transition-duration: var(--hud-reveal);
-}
-
-/* ── Under Glass ─────────────────────────────────────────────────────────────
-   The band becomes the app's thread surface: the docked window's field mix,
-   over the platform material.
-
-   Keyed to `data-hermes-glass-on` — "the user's Glass setting is live" — and
-   NOT to `data-hermes-glass`, which additionally means "this window's field
-   surfaces may be rewritten" and is false here by design: the HUD is a
-   transparent window that owns its own backgrounds (isChatWindow). Two flags,
-   because the HUD wants the setting without the rewrite. */
-:root[data-hermes-glass-on] [data-hud-shell] [data-hud-glass] {
-  /* Same dark scrim under Glass. The docked thread's `--ui-bg-chrome` follows
-     the theme and goes near-white on a light one, which is the wrong paper for
-     this band's white ink — the HUD is over a game, not inside the app. */
-  background: rgb(12 14 18 / 0.55);
-}
-
-/* The band spans the window edge to edge under glass. The 8px side inset keeps
-   the sheet clear of the bar's corner controls when it is an opaque panel —
-   but the frost is the WINDOW, so an inset sheet leaves a hairline of bare
-   untinted material down both sides. Nothing to hold off the material's edge:
-   the window's own rounded corners are where the band ends. */
-/* Inset under Glass too — 6px, so the sheet is narrower than the bar and
-   centered under it. Full-bleed looked like a slab with two slivers beside the
-   bar's rounded bottom corners: the sheet's square top corners poked out past
-   the bar's silhouette, which is the gap down each side. Narrower than the bar
-   means the bar's shape is the widest thing in the HUD and nothing peeks. */
-:root[data-hermes-glass-on] [data-hud-shell] {
-  --hud-band-inset: 0.375rem;
-}
-
-/* Radius follows the edge the band hangs from, and this rule has to carry the
-   edge itself: `:root[data-hermes-glass-on] … [data-hud-glass]` outweighs the
-   `[data-hud-edge='top']` flip below (four compound parts against three), so a
-   radius set here unqualified wins everywhere and rounds the corners that meet
-   the bar while squaring the free ones. */
-:root[data-hermes-glass-on] [data-hud-shell] [data-hud-glass] {
-  border-radius: 0.75rem 0.75rem 0 0;
-}
-
-:root[data-hermes-glass-on] [data-hud-shell][data-hud-edge='top'] [data-hud-glass] {
-  border-radius: 0 0 0.75rem 0.75rem;
-}
-
-/* Engaged, the field steps up the same way the docked thread's does — but
-   never below the resting tint, so a high lever cannot make focusing the
-   composer paint MORE transparent than glancing at it. */
-:root[data-hermes-glass-on] [data-hud-shell][data-hud-typing] [data-hud-glass] {
-  background: rgb(12 14 18 / 0.72);
 }
 
 /* Engaged means the caret is in the composer, not merely that the window holds

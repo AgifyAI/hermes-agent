@@ -36,9 +36,14 @@ const noop = () => {}
 
 const noopAsync = async () => {}
 
+// Seconds; today's nominal day holds these rows so the flat sidebar renders
+// them under "Sessions" (older stamps land in the collapsed Previous sessions
+// section).
+const NOW = Math.floor(Date.now() / 1000)
+
 const sessionRows = [
-  makeSessionInfo({ id: 'tile-one', last_active: 2, profile: 'default', started_at: 1, title: 'Tile one' }),
-  makeSessionInfo({ id: 'tile-two', last_active: 2, profile: 'default', started_at: 1, title: 'Tile two' })
+  makeSessionInfo({ id: 'tile-one', last_active: NOW - 2, profile: 'default', started_at: NOW - 5, title: 'Tile one' }),
+  makeSessionInfo({ id: 'tile-two', last_active: NOW - 3, profile: 'default', started_at: NOW - 6, title: 'Tile two' })
 ]
 
 const renderSidebar = (pathname: string, currentView: AppView, onRetrySessions: () => Promise<void> = noopAsync) =>
@@ -64,7 +69,7 @@ const renderSidebar = (pathname: string, currentView: AppView, onRetrySessions: 
   )
 
 const currentButtons = () =>
-  screen.queryAllByRole('button').filter(button => button.classList.contains('bg-(--ui-control-active-background)'))
+  screen.queryAllByRole('button').filter(button => button.getAttribute('data-active') === 'true')
 
 const expectOnlyCurrent = (label: string | null) => {
   const button = label ? screen.getByRole('button', { name: label }) : null
@@ -77,7 +82,7 @@ const expectOnlySelectedSession = (title: string | null) => {
     .map(label => screen.queryByText(label)?.closest('.group.row-hover'))
     .filter(row => row !== undefined)
 
-  const selectedRows = rows.filter(row => row?.className.includes('bg-(--ui-row-active-background)'))
+  const selectedRows = rows.filter(row => row?.className.includes('bg-(--linear-active-sidebar)'))
   const expected = title ? [screen.getByText(title).closest('.group.row-hover')] : []
 
   expect(selectedRows).toEqual(expected)
@@ -361,7 +366,7 @@ describe('ChatSidebar merged session sources', () => {
     } as NonNullable<typeof $connectionsRegistry.value>)
     $profiles.set([{ name: 'default', is_default: true }] as typeof $profiles.value)
     $sessions.set([])
-    $messagingSessions.set([telegramThread('tg-one', 60), telegramThread('tg-two', 30)])
+    $messagingSessions.set([telegramThread('tg-one', NOW - 60), telegramThread('tg-two', NOW - 120)])
     $messagingTruncated.set(false)
     $sessionsLoading.set(false)
   })
@@ -409,6 +414,44 @@ describe('ChatSidebar merged session sources', () => {
     expect(screen.queryByPlaceholderText('Search sessions…')).toBeNull()
   })
 
+  it('keeps earlier days folded under Previous sessions until opened', () => {
+    const older = new Date()
+    older.setDate(older.getDate() - 2)
+
+    $sessions.set([
+      makeSessionInfo({ id: 'today', last_active: NOW, profile: 'default', title: 'Today chat' }),
+      makeSessionInfo({
+        id: 'older',
+        last_active: Math.floor(older.getTime() / 1000),
+        profile: 'default',
+        title: 'Older chat'
+      })
+    ])
+
+    renderSidebar('/', 'chat')
+
+    // Today stays in "Sessions"; the older day lives under the sibling parent,
+    // with its day section closed by default.
+    expect(screen.getByText('Sessions')).toBeTruthy()
+    expect(screen.getByText('Today chat')).toBeTruthy()
+    expect(screen.getByText('Previous sessions')).toBeTruthy()
+    expect(screen.queryByText('Older chat')).toBeNull()
+
+    // The Sessions block is a FIT, not a flexible pane: it keeps its own
+    // height and owns no scroller, so an expanded Previous sessions list can
+    // never squeeze or crop it. The shared outer scroller carries the stack.
+    const sessionsGroup = screen.getByText('Sessions').closest('[data-slot="sidebar-group"]') as HTMLElement
+    const sessionsContent = sessionsGroup.querySelector('[data-slot="sidebar-group-content"]') as HTMLElement
+
+    expect(sessionsGroup.className).toContain('shrink-0')
+    expect(sessionsContent.className).not.toContain('overflow-y-auto')
+    expect(sessionsContent.className).not.toContain('flex-1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^Show .* sessions$/ }))
+
+    expect(screen.getByText('Older chat')).toBeTruthy()
+  })
+
   it('still shows the blank state when a profile has nothing at all', () => {
     $messagingSessions.set([])
 
@@ -427,11 +470,11 @@ describe('ChatSidebar merged list ordering and owners', () => {
 
   // Newest first: the local chat leads, then the platform threads interleave.
   const threads = [
-    telegram('default-1', 'default', 50),
-    telegram('work-1', 'work', 40),
-    telegram('default-2', 'default', 30),
-    telegram('work-2', 'work', 20),
-    telegram('default-3', 'default', 10)
+    telegram('default-1', 'default', NOW - 10),
+    telegram('work-1', 'work', NOW - 20),
+    telegram('default-2', 'default', NOW - 30),
+    telegram('work-2', 'work', NOW - 40),
+    telegram('default-3', 'default', NOW - 50)
   ]
 
   let root: HTMLElement
@@ -456,7 +499,7 @@ describe('ChatSidebar merged list ordering and owners', () => {
       { name: 'work', is_default: false }
     ] as typeof $profiles.value)
     $sessions.set([
-      makeSessionInfo({ connection_id: 'local', id: 'desk', last_active: 60, profile: 'default', title: 'desk' })
+      makeSessionInfo({ connection_id: 'local', id: 'desk', last_active: NOW - 5, profile: 'default', title: 'desk' })
     ])
     $messagingSessions.set(threads)
     $messagingTruncated.set(false)
@@ -493,6 +536,10 @@ describe('ChatSidebar merged list ordering and owners', () => {
 
     expect(screen.getByText('work-1')).toBeTruthy()
     expect(screen.getByText('default-1')).toBeTruthy()
+    // Every row carries its profile mark, including the default profile, so the
+    // owner reads at a glance without opening anything.
+    expect(within(screen.getByText('work-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: work' })).toBeTruthy()
+    expect(within(screen.getByText('default-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: default' })).toBeTruthy()
     // No per-platform headings or owner groups in the flat view.
     expect(screen.queryByText('Telegram')).toBeNull()
 

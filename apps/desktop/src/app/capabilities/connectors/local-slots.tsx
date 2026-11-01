@@ -20,15 +20,15 @@ export function LocalAdvanced({ controller, name, onRemove }: LocalAdvancedProps
 
   return (
     <div className="grid min-h-0 gap-2">
-      <div className="h-56 overflow-hidden rounded-md border border-(--ui-stroke-tertiary)">
+      <div className="h-56 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-panel)">
         <McpJsonEditor controller={controller} highlightServer={name} />
       </div>
 
-      <div className="h-40 overflow-hidden rounded-md border border-(--ui-stroke-tertiary)">
+      <div className="h-40 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-panel)">
         <McpLogPane server={name} />
       </div>
 
-      <Button className="justify-self-start text-destructive" onClick={onRemove} size="xs" variant="text">
+      <Button className="justify-self-start text-(--linear-red)" onClick={onRemove} size="xs" variant="text">
         {m.remove}
       </Button>
     </div>

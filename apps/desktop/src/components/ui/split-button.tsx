@@ -88,7 +88,7 @@ export function SplitButton({
             >
               {action.icon}
               <span className="flex-1 truncate">{action.label}</span>
-              {action.id === value && <Codicon className="text-(--ui-text-tertiary)" name="check" size="0.75rem" />}
+              {action.id === value && <Codicon className="text-(--linear-text-tertiary)" name="check" size="0.75rem" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

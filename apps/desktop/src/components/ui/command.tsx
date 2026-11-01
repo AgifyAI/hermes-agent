@@ -4,7 +4,6 @@ import * as React from 'react'
 import { Codicon } from '@/components/ui/codicon'
 import { usePointerQuiet } from '@/components/ui/keyboard-first'
 import { menuItemClass } from '@/components/ui/menu'
-import { SearchIcon } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 type CommandVariant = 'default' | 'menu'
@@ -24,7 +23,7 @@ function Command({
       <CommandPrimitive
         className={cn(
           'flex h-full w-full flex-col overflow-hidden text-popover-foreground',
-          variant === 'menu' ? 'bg-transparent' : 'rounded-md bg-popover',
+          variant === 'menu' ? 'bg-transparent' : 'rounded-(--linear-radius-overlay) bg-(--linear-bg-overlay)',
           className
         )}
         data-slot="command"
@@ -46,12 +45,12 @@ function CommandInput({ className, right, ...props }: CommandInputProps) {
     // Same row as DropdownMenuSearch + its hairline: no icon, no box.
     return (
       <div
-        className="mb-1 flex items-center gap-2 border-b border-(--ui-stroke-tertiary) px-2 py-1.5"
+        className="mb-1.5 -mx-1.5 flex items-center gap-2 border-b-[0.5px] border-(--linear-border-overlay) px-3.5 pt-2.5 pb-[0.5625rem]"
         data-slot="command-input-wrapper"
       >
         <CommandPrimitive.Input
           className={cn(
-            'h-4 w-full bg-transparent text-xs leading-none text-foreground outline-none placeholder:text-(--ui-text-tertiary) disabled:cursor-not-allowed disabled:opacity-50',
+            'h-5 w-full bg-transparent text-[0.8125rem] leading-none text-(--linear-text-overlay) outline-none placeholder:text-(--linear-text-quaternary) disabled:cursor-not-allowed disabled:opacity-50',
             className
           )}
           data-slot="command-input"
@@ -64,11 +63,12 @@ function CommandInput({ className, right, ...props }: CommandInputProps) {
   }
 
   return (
-    <div className="flex h-11 items-center gap-2 border-b border-border px-3" data-slot="command-input-wrapper">
-      <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+    // Linear's ⌘K band: 46px (6px above a 40px field), no magnifier, no rule below;
+    // the typed text starts where row icons do (6px list inset + 12px row padding).
+    <div className="flex h-11.5 shrink-0 items-center gap-2 px-4.5 pt-1.5" data-slot="command-input-wrapper">
       <CommandPrimitive.Input
         className={cn(
-          'flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full bg-transparent py-[0.6875rem] text-[0.8125rem] text-(--linear-text-overlay) outline-none placeholder:text-(--linear-text-quaternary) disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         data-slot="command-input"
@@ -108,8 +108,8 @@ function CommandEmpty({ className, ...props }: React.ComponentProps<typeof Comma
     <CommandPrimitive.Empty
       className={cn(
         variant === 'menu'
-          ? 'px-2 py-3 text-center text-xs text-(--ui-text-tertiary)'
-          : 'py-6 text-center text-sm text-muted-foreground',
+          ? 'px-2 py-3 text-center text-[0.8125rem] text-(--linear-text-hint)'
+          : 'py-6 text-center text-[0.8125rem] text-(--linear-text-hint)',
         className
       )}
       data-slot="command-empty"
@@ -127,8 +127,8 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
         'overflow-hidden text-foreground **:[[cmdk-group-heading]]:sticky **:[[cmdk-group-heading]]:top-0 **:[[cmdk-group-heading]]:z-10',
         variant === 'menu'
           ? // menuLabelClass, spelled out so Tailwind can see it.
-            'p-0 **:[[cmdk-group-heading]]:bg-(--ui-bg-elevated) **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-(--ui-text-tertiary)'
-          : 'p-1 **:[[cmdk-group-heading]]:bg-popover **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground',
+            'p-0 **:[[cmdk-group-heading]]:bg-(--linear-bg-overlay) **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-(--linear-text-hint)'
+          : 'p-1.5 **:[[cmdk-group-heading]]:bg-(--linear-bg-overlay) **:[[cmdk-group-heading]]:px-3 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-(--linear-text-hint)',
         className
       )}
       data-slot="command-group"
@@ -142,7 +142,7 @@ function CommandSeparator({ className, ...props }: React.ComponentProps<typeof C
 
   return (
     <CommandPrimitive.Separator
-      className={cn('-mx-1 h-px', variant === 'menu' ? 'my-1 bg-(--ui-stroke-tertiary)' : 'bg-border', className)}
+      className={cn('-mx-1 h-px', variant === 'menu' ? '-mx-1.5 my-1.5 bg-(--linear-border-overlay)' : 'bg-(--linear-border-overlay)', className)}
       data-slot="command-separator"
       {...props}
     />
@@ -158,9 +158,9 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
         variant === 'menu'
           ? cn(
               menuItemClass,
-              'cursor-pointer data-[selected=true]:bg-(--ui-control-active-background) data-[selected=true]:text-foreground'
+              'cursor-pointer data-[selected=true]:bg-(--linear-hover-overlay) data-[selected=true]:text-(--linear-text-overlay-strong)'
             )
-          : 'relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground',
+          : "relative flex min-h-[2.875rem] cursor-default select-none items-center gap-2 rounded-(--linear-radius-control) px-3 text-[0.8125rem] text-(--linear-text-overlay) outline-none data-[selected=true]:bg-(--linear-hover-overlay) data-[selected=true]:text-(--linear-text-overlay-strong) [&_svg:not([class*='size-'])]:size-4",
         'data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
         className
       )}
@@ -178,7 +178,7 @@ function CommandItemCheck({ checked }: { checked: boolean }) {
 function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
-      className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+      className={cn('ml-auto text-[0.6875rem] font-medium text-(--linear-text-hint)', className)}
       data-slot="command-shortcut"
       {...props}
     />

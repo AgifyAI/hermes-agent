@@ -17,13 +17,13 @@ export function ChoiceLabel({ choice }: { choice: string }) {
 
   return (
     <>
-      {bare} <span className="text-(--ui-text-tertiary)">{RECOMMENDED_LABEL}</span>
+      {bare} <span className="text-(--linear-text-tertiary)">{RECOMMENDED_LABEL}</span>
     </>
   )
 }
 
 export const OPTION_ROW_CLASS =
-  'flex w-full items-start gap-2 rounded-[0.25rem] px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-50'
+  'flex w-full items-start gap-2 rounded-(--linear-radius-control) px-1.5 py-1 text-left disabled:cursor-not-allowed disabled:opacity-50'
 
 export function KeyBadge({
   char,
@@ -43,8 +43,8 @@ export function KeyBadge({
       className={cn(
         'mt-px',
         disabled && 'opacity-50',
-        selected && 'border-primary bg-primary text-white shadow-none',
-        !selected && preview && 'border-primary text-primary shadow-none'
+        selected && 'border-(--linear-accent) bg-(--linear-accent) text-(--linear-on-accent) shadow-none',
+        !selected && preview && 'border-(--linear-accent) text-(--linear-accent) shadow-none'
       )}
       size="sm"
     >
@@ -80,9 +80,9 @@ export function ChoiceButton({
       aria-pressed={selected}
       className={cn(
         OPTION_ROW_CLASS,
-        'text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-(--ui-text-primary)',
-        active && 'bg-(--chrome-action-hover) text-(--ui-text-primary)',
-        selected && 'text-(--ui-text-primary)'
+        'text-(--linear-text-secondary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)',
+        active && 'bg-(--linear-hover-control) text-(--linear-text-primary)',
+        selected && 'text-(--linear-text-primary)'
       )}
       data-choice
       data-highlighted={active || undefined}

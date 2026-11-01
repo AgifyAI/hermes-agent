@@ -251,11 +251,11 @@ export function PetGenerateContent() {
                 <ReferenceChip name={refName} onRemove={clearReference} src={refImage} />
               ) : (
                 <button
-                  className="ml-auto flex h-6 items-center gap-1.5 text-[0.6875rem] text-(--ui-text-tertiary) transition hover:text-foreground"
+                  className="ml-auto flex h-6 cursor-pointer items-center gap-1.5 text-xs font-medium text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) hover:transition-none"
                   onClick={() => fileRef.current?.click()}
                   type="button"
                 >
-                  <ImageIcon className="size-3" />
+                  <ImageIcon className="size-3.5" />
                   Add a reference
                 </button>
               )}

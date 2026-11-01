@@ -8,7 +8,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/i18n'
-import { BarChart3, CreditCard, ExternalLink, Package, Wrench } from '@/lib/icons'
+import { ExternalLink, Wrench } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 import { useRouteEnumParam } from '../../hooks/use-route-enum-param'
@@ -17,6 +17,7 @@ import {
   ListRowSkeleton,
   SectionHeading,
   SectionHeadingSkeleton,
+  SettingsCard,
   SettingsContent,
   SettingsSection
 } from '../primitives'
@@ -60,11 +61,15 @@ type BillingFixtureSelection = 'live' | BillingDevFixtureName
 function SummaryCard({ label, value, tone }: { label: string; tone?: 'muted' | 'primary'; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{label}</div>
+      <div className="text-xs text-(--linear-text-tertiary)">{label}</div>
       <div
         className={cn(
-          'mt-1 min-w-0 truncate text-lg font-semibold tabular-nums',
-          tone === 'primary' ? 'text-(--ui-green)' : tone === 'muted' ? 'text-(--ui-text-tertiary)' : 'text-foreground'
+          'mt-1 min-w-0 truncate text-[0.9375rem] font-medium tabular-nums',
+          tone === 'primary'
+            ? 'text-(--linear-green)'
+            : tone === 'muted'
+              ? 'text-(--linear-text-tertiary)'
+              : 'text-(--linear-text-primary)'
         )}
       >
         {value}
@@ -77,18 +82,20 @@ function NoticeCard({ notice }: { notice: BillingNoticeView }) {
   const warn = notice.tone === 'warn'
 
   return (
-    <div className={cn('mb-6 rounded-xl p-4', warn ? 'bg-(--ui-yellow)/10' : 'bg-(--ui-bg-quaternary)')}>
+    <div
+      className={cn(
+        'mb-8 rounded-(--linear-radius-card) p-4',
+        warn
+          ? 'border-[0.5px] border-(--linear-yellow) bg-[color-mix(in_srgb,var(--linear-yellow)_10%,transparent)]'
+          : 'bg-(--linear-bg-card) shadow-(--linear-shadow-card)'
+      )}
+    >
       <div
-        className={cn(
-          'text-[length:var(--conversation-text-font-size)] font-medium',
-          warn ? 'text-(--ui-yellow)' : 'text-foreground'
-        )}
+        className={cn('text-[0.8125rem] font-medium', warn ? 'text-(--linear-yellow)' : 'text-(--linear-text-primary)')}
       >
         {notice.title}
       </div>
-      <div className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {notice.message}
-      </div>
+      <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">{notice.message}</div>
       {notice.action &&
         (notice.action.onSelect ? (
           // In-app action (free-tier sign-in): a plain button, no external-link
@@ -118,9 +125,7 @@ function PaymentMethodAside({ row }: { row: BillingAccountRowView }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       {row.value && (
-        <span className="min-w-0 truncate text-[length:var(--conversation-caption-font-size)] font-normal text-(--ui-text-tertiary)">
-          {row.value}
-        </span>
+        <span className="min-w-0 truncate text-xs font-normal text-(--linear-text-tertiary)">{row.value}</span>
       )}
       {row.action && (
         <Button
@@ -149,13 +154,7 @@ function AccountRow({ billing, row }: { billing?: BillingStateResponse; row: Bil
   return (
     <ListRow
       action={<RowValue row={row} />}
-      below={
-        row.caption ? (
-          <div className="mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-            {row.caption}
-          </div>
-        ) : undefined
-      }
+      below={row.caption ? <div className="mt-1 text-xs text-(--linear-text-tertiary)">{row.caption}</div> : undefined}
       description={row.description}
       key={row.id}
       title={row.title}
@@ -267,11 +266,7 @@ function BuyCreditsOutcome({
   const stepUp = useStepUpFlow()
 
   if (busy) {
-    return (
-      <div className="mt-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {b.buyCredits.processing}
-      </div>
-    )
+    return <div className="mt-2 text-xs text-(--linear-text-tertiary)">{b.buyCredits.processing}</div>
   }
 
   if (!outcome) {
@@ -280,7 +275,7 @@ function BuyCreditsOutcome({
 
   if (outcome.kind === 'success') {
     return (
-      <div className="mt-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="mt-2 text-xs text-(--linear-text-tertiary)">
         {b.buyCredits.added(formatMoney(outcome.amountUsd ?? amount))}
       </div>
     )
@@ -288,7 +283,7 @@ function BuyCreditsOutcome({
 
   if (outcome.kind === 'ambiguous') {
     return (
-      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-(--linear-text-tertiary)">
         <span>
           {outcome.title}: {outcome.message}
         </span>
@@ -305,7 +300,7 @@ function BuyCreditsOutcome({
   const portalUrl = outcome.action?.type === 'portal' ? outcome.action.url : undefined
 
   return (
-    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-(--linear-text-tertiary)">
       <span>
         {outcome.title}: {outcome.message}
       </span>
@@ -347,10 +342,10 @@ function UsageBar({ bar, fallbackLabel }: { bar?: BillingUsageRowView['bar']; fa
     resolvedBar.state === 'danger'
       ? undefined
       : resolvedBar.state === 'warn'
-        ? 'bg-(--ui-yellow)'
+        ? 'bg-(--linear-yellow)'
         : isOk
-          ? 'bg-(--ui-green)'
-          : 'bg-muted-foreground/45'
+          ? 'bg-(--linear-green)'
+          : 'bg-(--linear-text-tertiary)/45'
 
   return (
     <Progress
@@ -367,26 +362,22 @@ function UsageBar({ bar, fallbackLabel }: { bar?: BillingUsageRowView['bar']; fa
 function UsageRow({ row }: { row: BillingUsageRowView }) {
   return (
     <div className="@container">
-      <div className="grid min-w-0 gap-2 py-3 @2xl:grid-cols-[minmax(0,180px)_minmax(0,1fr)_220px] @2xl:items-center @2xl:gap-4">
+      <div className="grid min-w-0 gap-2 py-4 @lg:grid-cols-[minmax(0,160px)_minmax(0,1fr)_minmax(0,max-content)] @lg:items-center @lg:gap-4">
         <div className="min-w-0">
-          <div className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-            {row.title}
-          </div>
-          <div className="mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-            {row.caption}
-          </div>
+          <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{row.title}</div>
+          <div className="mt-[3px] text-xs text-(--linear-text-tertiary)">{row.caption}</div>
         </div>
         <div className="min-w-0">
           <UsageBar bar={row.bar} fallbackLabel={row.title} />
         </div>
         <div
           className={cn(
-            'min-w-0 whitespace-nowrap text-[length:var(--conversation-text-font-size)] font-medium tabular-nums @2xl:w-[220px] @2xl:flex-none @2xl:text-right',
+            'min-w-0 whitespace-nowrap text-[0.8125rem] font-medium tabular-nums @lg:text-right',
             row.bar?.state === 'danger'
-              ? 'text-destructive'
+              ? 'text-(--linear-red)'
               : row.bar?.state === 'warn'
-                ? 'text-(--ui-yellow)'
-                : 'text-foreground'
+                ? 'text-(--linear-yellow)'
+                : 'text-(--linear-text-primary)'
           )}
         >
           {row.value}
@@ -411,15 +402,11 @@ function BillingFixtureSelect({
   const b = t.settings.billing
 
   return (
-    <div className="flex items-center gap-1.5 text-(--ui-text-tertiary)">
+    <div className="flex items-center gap-1.5 text-(--linear-text-tertiary)">
       <Wrench className="size-3.5 shrink-0" />
       <span className="text-xs font-normal">{b.preview}</span>
       <Select onValueChange={value => onValueChange(value as BillingFixtureSelection)} value={value}>
-        <SelectTrigger
-          aria-label="Billing preview fixture (dev only)"
-          className="h-7 w-36 border-dashed border-(--ui-stroke-secondary) bg-transparent px-2 text-xs font-normal text-(--ui-text-tertiary) shadow-none hover:bg-(--ui-bg-tertiary) focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=open]:bg-(--ui-bg-tertiary)"
-          size="sm"
-        >
+        <SelectTrigger aria-label="Billing preview fixture (dev only)" className="w-36" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent align="end">
@@ -451,7 +438,6 @@ function BillingHeader({
           <BillingFixtureSelect onValueChange={onFixtureChange} value={fixtureName} />
         ) : undefined
       }
-      icon={BarChart3}
       page
       title={t.settings.nav.billing}
     />
@@ -463,8 +449,8 @@ function BillingHeader({
 function BillingSkeleton() {
   return (
     <>
-      <div className="@container mb-6">
-        <div className="grid gap-3 @2xl:grid-cols-3">
+      <SettingsCard className="@container mb-12 py-4">
+        <div className="grid gap-3 @lg:grid-cols-3">
           {[0, 1, 2].map(i => (
             <div className="min-w-0 space-y-2" key={i}>
               <Skeleton className="h-3 w-24" />
@@ -472,14 +458,14 @@ function BillingSkeleton() {
             </div>
           ))}
         </div>
-      </div>
+      </SettingsCard>
       {[0, 1, 2].map(section => (
-        <section className="mb-6" key={section}>
+        <section className="not-first:mt-12" key={section}>
           <SectionHeadingSkeleton />
-          <div className="grid gap-1">
+          <SettingsCard>
             <ListRowSkeleton />
             <ListRowSkeleton />
-          </div>
+          </SettingsCard>
         </section>
       ))}
     </>
@@ -546,21 +532,21 @@ function BillingSettingsContent({
 
       {view.notice && <NoticeCard notice={view.notice} />}
 
-      <div className="@container mb-6">
-        <div className="grid gap-3 @2xl:grid-cols-3">
+      <SettingsCard className="@container mb-12 py-4">
+        <div className="grid gap-3 @lg:grid-cols-3">
           {view.summary.map(item => (
             <SummaryCard key={item.label} label={item.label} tone={item.tone} value={item.value} />
           ))}
         </div>
-      </div>
+      </SettingsCard>
 
       {view.plan && (
-        <SettingsSection icon={Package} title={b.sections.plan}>
-          <CurrentPlanCard onViewPlans={() => setSubView('plans')} plan={view.plan} />
+        <SettingsSection card={false} title={b.sections.plan}>
+          <SettingsCard>
+            <CurrentPlanCard onViewPlans={() => setSubView('plans')} plan={view.plan} />
+          </SettingsCard>
           {view.planFootnote && (
-            <div className="mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-              {view.planFootnote}
-            </div>
+            <div className="mt-3 px-4 text-xs text-(--linear-text-tertiary)">{view.planFootnote}</div>
           )}
         </SettingsSection>
       )}
@@ -568,7 +554,6 @@ function BillingSettingsContent({
       {(paymentRow || accountRows.length > 0 || billing?.keep_going_on_credits != null) && (
         <SettingsSection
           aside={paymentRow ? <PaymentMethodAside row={paymentRow} /> : undefined}
-          icon={CreditCard}
           title={b.sections.paymentAndCredits}
         >
           {accountRows.map(row => (
@@ -580,20 +565,16 @@ function BillingSettingsContent({
       )}
 
       {view.usageRows.length > 0 && (
-        <SettingsSection icon={BarChart3} meta={view.usagePlanName} title={b.sections.usage}>
-          <div className="@container">
-            {view.usageRows.map(row => (
-              <UsageRow key={row.id} row={row} />
-            ))}
-          </div>
+        <SettingsSection meta={view.usagePlanName} title={b.sections.usage}>
+          {view.usageRows.map(row => (
+            <UsageRow key={row.id} row={row} />
+          ))}
         </SettingsSection>
       )}
 
       {
         // no endpoint yet — NAS capability-board gap
-        FEATURE_BILLING_INVOICES ? (
-          <SectionHeading icon={BarChart3} title={t.settings.billing.sections.invoices} />
-        ) : null
+        FEATURE_BILLING_INVOICES ? <SectionHeading title={t.settings.billing.sections.invoices} /> : null
       }
     </SettingsContent>
   )

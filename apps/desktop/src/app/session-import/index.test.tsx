@@ -14,6 +14,7 @@ vi.mock('@/components/assistant-ui/markdown-text', () => ({
   MarkdownTextContent: ({ text }: { text: string }) => <p>{text}</p>
 }))
 vi.mock('../overlays/overlay-view', () => ({
+  OVERLAY_PANEL_SURFACE: '',
   OverlayView: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }))
 

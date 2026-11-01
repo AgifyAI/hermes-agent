@@ -49,9 +49,6 @@ export const COMPOSER_MINIMAL_PX = 180
 // which is when the composer should expand to the stacked layout.
 export const COMPOSER_SINGLE_LINE_MAX_PX = 36
 
-export const COMPOSER_FADE_BACKGROUND =
-  'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--dt-background) 10%, transparent))'
-
 // Quiet period after the last keystroke before persisting the draft;
 // unmount/pagehide flushes bypass it.
 export const DRAFT_PERSIST_DEBOUNCE_MS = 400

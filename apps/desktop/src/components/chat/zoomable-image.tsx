@@ -3,6 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { type ComponentProps, useEffect } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { useZoomPan } from '@/components/ui/use-zoom-pan'
 import { useImageDownload } from '@/hooks/use-image-download'
@@ -136,36 +137,40 @@ export function ImageLightbox({
         chrome={
           open && (
             <div
-              className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border/70 bg-background/85 p-1 shadow-lg backdrop-blur"
+              className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) p-1 shadow-(--linear-shadow-menu)"
               onClick={event => event.stopPropagation()}
               onPointerDown={event => event.stopPropagation()}
             >
-              <button
+              <Button
                 aria-label={copy.zoomOut}
-                className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                 disabled={scale <= 0.25}
                 onClick={() => zoomOut()}
+                size="icon-lg"
                 type="button"
+                variant="ghost"
               >
-                <ZoomOut className="size-4" />
-              </button>
-              <button
+                <ZoomOut />
+              </Button>
+              <Button
                 aria-label={copy.resetZoom}
-                className="min-w-14 rounded-full px-2 text-center text-xs font-medium tabular-nums text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="min-w-14 tabular-nums"
                 onClick={() => reset()}
+                size="sm"
                 type="button"
+                variant="ghost"
               >
                 {Math.round(scale * 100)}%
-              </button>
-              <button
+              </Button>
+              <Button
                 aria-label={copy.zoomIn}
-                className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                 disabled={scale >= 8}
                 onClick={() => zoomIn()}
+                size="icon-lg"
                 type="button"
+                variant="ghost"
               >
-                <ZoomIn className="size-4" />
-              </button>
+                <ZoomIn />
+              </Button>
             </div>
           )
         }
@@ -180,14 +185,14 @@ export function ImageLightbox({
         // attribute selector out-specifies the plain utilities — hence the
         // important utilities and the data-variant opt-out in styles.css.
         data-variant="media-lightbox"
-        overlayClassName="bg-black/60"
+        overlayClassName="bg-(--linear-scrim)"
         showCloseButton={false}
       >
         <div className="group/lightbox relative inline-block">
           <img
             alt={alt ?? ''}
             className={cn(
-              'block max-h-[calc(100vh-12rem)] max-w-[calc(100vw-12rem)] select-none rounded-lg object-contain shadow-2xl',
+              'block max-h-[calc(100vh-12rem)] max-w-[calc(100vw-12rem)] select-none rounded-lg object-contain shadow-(--linear-shadow-dialog)',
               panning && 'cursor-grabbing'
             )}
             onClick={onImageClick}
@@ -223,7 +228,7 @@ export function ImageActionButton({
     <button
       aria-label={saving ? copy.savingImage : copy.downloadImage}
       className={cn(
-        'absolute right-2 top-2 grid size-8 place-items-center rounded-full border border-border/70 bg-background/80 text-muted-foreground opacity-0 shadow-sm backdrop-blur transition-opacity hover:bg-accent hover:text-foreground focus-visible:opacity-100 disabled:opacity-50',
+        'absolute right-2 top-2 grid size-8 place-items-center rounded-full border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) text-(--linear-icon) opacity-0 shadow-(--linear-shadow-low) transition-opacity hover:bg-(--linear-hover-overlay) hover:text-(--linear-text-primary) focus-visible:opacity-100 disabled:opacity-50',
         className
       )}
       disabled={saving}

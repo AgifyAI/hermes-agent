@@ -39,7 +39,7 @@ interface DelegationModelProviderFieldProps {
   onChange: (next: DelegationModelProviderValue) => void
 }
 
-const ROW_CONTROL = 'w-full min-w-0 max-w-full @2xl:w-72'
+const ROW_CONTROL = 'w-full min-w-0 max-w-full @lg:w-64'
 
 /** A route draft belongs to the same immutable owner as the config that seeded it. */
 export function DelegationModelProviderField(props: DelegationModelProviderFieldProps) {
@@ -202,7 +202,7 @@ function RouteNotes({ draft }: { draft: DelegationRouteDraft }) {
   const { t } = useI18n()
   const s = t.settings.model.subagents
   const allowsParentModel = draft.mode !== INHERIT_VALUE && draft.mode !== MODEL_ONLY_VALUE
-  const note = 'text-xs text-muted-foreground'
+  const note = 'text-xs text-(--linear-text-tertiary)'
 
   return (
     <>
@@ -228,7 +228,7 @@ function CatalogRetry({ fetching, onRetry }: { fetching: boolean; onRetry: () =>
 
   return (
     <div className="flex flex-wrap items-center gap-2" role="status">
-      <p className="text-xs text-muted-foreground">{t.settings.model.subagents.catalogFailed}</p>
+      <p className="text-xs text-(--linear-text-tertiary)">{t.settings.model.subagents.catalogFailed}</p>
       <Button disabled={fetching} onClick={onRetry} size="xs" variant="secondary">
         {t.common.retry}
       </Button>
@@ -241,7 +241,7 @@ function ApplyBar({ draft, onApply }: { draft: DelegationRouteDraft; onApply: ()
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      <span className="text-xs text-muted-foreground">{t.settings.model.subagents.draftHint}</span>
+      <span className="text-xs text-(--linear-text-tertiary)">{t.settings.model.subagents.draftHint}</span>
       <Button onClick={draft.reset} size="sm" variant="text">
         {t.common.cancel}
       </Button>

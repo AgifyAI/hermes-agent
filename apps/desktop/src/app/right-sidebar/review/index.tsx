@@ -77,10 +77,8 @@ export function ReviewPane() {
     <aside
       aria-label={c.review}
       className={cn(
-        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--ui-stroke-secondary) bg-(--ui-sidebar-surface-background) pt-(--titlebar-height) text-(--ui-text-tertiary)',
-        panesFlipped
-          ? 'border-r shadow-[inset_-0.0625rem_0_0_color-mix(in_srgb,white_18%,transparent)]'
-          : 'border-l shadow-[inset_0.0625rem_0_0_color-mix(in_srgb,white_18%,transparent)]'
+        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--linear-border-panel) bg-(--linear-bg-panel) pt-(--titlebar-height) text-(--linear-text-tertiary)',
+        panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >
       {showChrome && (
@@ -99,7 +97,7 @@ export function ReviewPane() {
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name={treeMode === 'tree' ? 'list-flat' : 'list-tree'} size="0.8125rem" />
+              <Codicon name={treeMode === 'tree' ? 'list-flat' : 'list-tree'} size="0.875rem" />
             </Button>
           </Tip>
           <Tip label={c.stageAll}>
@@ -111,7 +109,7 @@ export function ReviewPane() {
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name="add" size="0.8125rem" />
+              <Codicon name="add" size="0.875rem" />
             </Button>
           </Tip>
           <Tip label={c.revertAll}>
@@ -123,7 +121,7 @@ export function ReviewPane() {
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name="discard" size="0.8125rem" />
+              <Codicon name="discard" size="0.875rem" />
             </Button>
           </Tip>
           <Tip label={t.rightSidebar.refreshTree}>
@@ -134,11 +132,11 @@ export function ReviewPane() {
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name="refresh" size="0.8125rem" spinning={loading} />
+              <Codicon name="refresh" size="0.875rem" spinning={loading} />
             </Button>
           </Tip>
           <Button aria-label={c.close} className={ACTION_BTN} onClick={closeReview} size="icon-xs" variant="ghost">
-            <Codicon name="close" size="0.8125rem" />
+            <Codicon name="close" size="0.875rem" />
           </Button>
         </RightSidebarSectionHeader>
       )}
@@ -162,15 +160,15 @@ export function ReviewPane() {
 
       {/* Selected file's diff — reuses the shiki-highlighted FileDiffPanel. */}
       {selectedFile && (
-        <div className="flex max-h-[55%] shrink-0 flex-col border-t border-(--ui-stroke-secondary)">
+        <div className="flex max-h-[55%] shrink-0 flex-col border-t-[0.5px] border-(--linear-border-panel)">
           <div className="flex items-center gap-1 px-2.5 py-1.5" data-suppress-pane-reveal-side="">
             <span
-              className="min-w-0 flex-1 truncate font-mono text-[0.66rem] text-(--ui-text-secondary)"
+              className="min-w-0 flex-1 truncate font-mono text-[0.6875rem] text-(--linear-text-secondary)"
               title={displayPath(selectedFile.path)}
             >
               {displayPath(selectedFile.path)}
             </span>
-            <DiffCount added={selectedFile.added} className="text-[0.64rem] leading-4" removed={selectedFile.removed} />
+            <DiffCount added={selectedFile.added} className="text-[0.6875rem] leading-4" removed={selectedFile.removed} />
             {isUncommitted && (
               <Tip label={selectedFile.staged ? c.unstage : c.stage}>
                 <Button
@@ -184,7 +182,7 @@ export function ReviewPane() {
                   size="icon-xs"
                   variant="ghost"
                 >
-                  <Codicon name={selectedFile.staged ? 'remove' : 'add'} size="0.8rem" />
+                  <Codicon name={selectedFile.staged ? 'remove' : 'add'} size="0.875rem" />
                 </Button>
               </Tip>
             )}
@@ -195,7 +193,7 @@ export function ReviewPane() {
               size="icon-xs"
               variant="ghost"
             >
-              <Codicon name="close" size="0.8rem" />
+              <Codicon name="close" size="0.875rem" />
             </Button>
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-1 pb-1">
@@ -206,7 +204,7 @@ export function ReviewPane() {
             ) : diff ? (
               <FileDiffPanel className="mx-0 mb-0 h-full max-h-none" diff={diff} path={selectedFile.path} virtualized />
             ) : (
-              <div className="py-6 text-center text-[0.66rem] text-muted-foreground/60">{c.noDiff}</div>
+              <div className="py-6 text-center text-xs text-(--linear-text-tertiary)">{c.noDiff}</div>
             )}
           </div>
         </div>
@@ -221,7 +219,7 @@ export function ReviewPane() {
             {revertingAll ? c.revertAllConfirm : c.revertConfirm}
             {!revertingAll && revertTarget?.path && (
               <span
-                className="mt-2 block truncate font-mono text-[0.7rem] text-(--ui-text-secondary)"
+                className="mt-2 block truncate font-mono text-[0.6875rem] text-(--linear-text-secondary)"
                 title={displayPath(revertTarget.path)}
               >
                 {displayPath(revertTarget.path)}

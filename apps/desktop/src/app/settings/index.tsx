@@ -12,6 +12,7 @@ import {
   Archive,
   BarChart3,
   Bell,
+  ChevronLeft,
   Cpu,
   Download,
   Globe,
@@ -41,7 +42,13 @@ import { $settingsScopeProfile } from '@/store/settings-scope'
 
 import { useRouteEnumParam } from '../hooks/use-route-enum-param'
 import { OverlayIconButton } from '../overlays/overlay-chrome'
-import { OverlayMain, OverlayNav, type OverlayNavGroup, OverlaySplitLayout } from '../overlays/overlay-split-layout'
+import {
+  OverlayMain,
+  OverlayNav,
+  type OverlayNavGroup,
+  OverlayNavItem,
+  OverlaySplitLayout
+} from '../overlays/overlay-split-layout'
 import { OverlayView } from '../overlays/overlay-view'
 
 import { AboutSettings } from './about-settings'
@@ -62,10 +69,10 @@ import {
   PluginSettingsPane,
   usePluginSettingsRoute
 } from './plugin-settings'
-import { SettingsBreadcrumbContext } from './primitives'
+import { SettingsBreadcrumbContext, SettingsPageTitleContext } from './primitives'
 import { PROVIDER_VIEWS, ProvidersSettings, type ProviderView } from './providers-settings'
 import { SessionsSettings } from './sessions-settings'
-import { SettingsSubpageHeader } from './subpage-navigation'
+import { settingsPageTitle, SettingsSubpageHeader } from './subpage-navigation'
 import { resolveSettingsSubpage, settingsSubpageIcon, settingsSubpages } from './subpages'
 import type { SettingsPageProps, SettingsView as SettingsViewId } from './types'
 import { vaultOwnerKey, VaultSettings } from './vault-settings'
@@ -502,20 +509,18 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   }, [])
 
   // Fake search pill riding the card's top edge, dead-center and half off it.
-  // Clicking (or just typing) opens the ⌘K palette scoped to settings; while
-  // the palette is up the pill hands over to it — grows slightly and fades,
-  // then fades back when the palette closes. It sits outside the raised card,
-  // so it needs its own opaque glass surface to mask the content underneath.
+  // Linear's settings search field at the top of the nav. Clicking (or just
+  // typing) opens the ⌘K palette scoped to settings; while the palette is up the
+  // field hands over to it, fading out and back when the palette closes.
   const searchCombo = bindingsFor('nav.commandPalette')[0]
   const paletteOpen = useStore($commandPaletteOpen)
 
   const searchPill = (
     <button
       className={cn(
-        'flex h-(--titlebar-control-height) items-center gap-1.5 rounded-full border border-(--ui-stroke-secondary) bg-(--ui-chat-surface-background) px-2.5 text-(--ui-text-tertiary) shadow-sm transition-all duration-200 ease-out hover:text-foreground motion-reduce:transition-none',
-        paletteOpen && 'pointer-events-none scale-110 opacity-0'
+        'mb-3 flex h-8 w-full shrink-0 items-center gap-2 rounded-(--linear-radius-control) bg-(--linear-bg-panel) px-2.5 text-(--linear-text-tertiary) shadow-(--linear-shadow-low) transition-opacity duration-200 ease-out hover:text-(--linear-text-primary) motion-reduce:transition-none',
+        paletteOpen && 'pointer-events-none opacity-0'
       )}
-      data-glass-opaque=""
       onClick={() => {
         triggerHaptic('open')
         openCommandPalettePage('settings')
@@ -523,8 +528,8 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
       tabIndex={paletteOpen ? -1 : undefined}
       type="button"
     >
-      <Search className="size-3" />
-      <span className="text-xs">{t.settings.search.pill}</span>
+      <Search className="size-3.5" />
+      <span className="min-w-0 flex-1 truncate text-left text-[0.8125rem] font-[450]">{t.settings.search.pill}</span>
       {searchCombo && <KbdCombo combo={searchCombo} size="sm" variant="ghost" />}
     </button>
   )
@@ -548,7 +553,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
       </Tip>
       <Tip label={t.settings.resetToDefaults}>
         <OverlayIconButton
-          className="hover:text-destructive"
+          className="hover:text-(--linear-red)"
           onClick={() => {
             triggerHaptic('warning')
             void resetConfig()
@@ -602,9 +607,24 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   )
 
   return (
-    <OverlayView closeLabel={t.settings.closeSettings} edgeBadge={searchPill} onClose={onClose}>
+    <OverlayView closeLabel={t.settings.closeSettings} onClose={onClose} railClose>
       <OverlaySplitLayout>
-        <OverlayNav footer={navFooter} groups={navGroups} />
+        <OverlayNav
+          footer={navFooter}
+          groups={navGroups}
+          header={
+            <>
+              <OverlayNavItem
+                active={false}
+                icon={ChevronLeft}
+                id="close-settings"
+                label={t.settings.closeSettings}
+                onClick={onClose}
+              />
+              {searchPill}
+            </>
+          }
+        />
 
         <OverlayMain className="px-0 pb-0">
           <SettingsBreadcrumbContext.Provider value>
@@ -612,7 +632,9 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
             {needsSubpageRedirect ? (
               <Navigate replace to={{ hash, pathname, search: `?${subpageSearch}` }} />
             ) : (
-              activeSettingsContent
+              <SettingsPageTitleContext.Provider value={settingsPageTitle(activeGroup, activeChild)}>
+                {activeSettingsContent}
+              </SettingsPageTitleContext.Provider>
             )}
           </SettingsBreadcrumbContext.Provider>
         </OverlayMain>

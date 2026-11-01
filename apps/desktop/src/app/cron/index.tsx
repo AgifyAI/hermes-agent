@@ -48,30 +48,28 @@ import { type Translations, useI18n } from '@/i18n'
 import { AlertTriangle } from '@/lib/icons'
 import { requestModelOptions } from '@/lib/model-options'
 import { asText } from '@/lib/text'
+import { cn } from '@/lib/utils'
 import { $cronFocusJobId, $cronJobs, invalidateCronJobsRequests, setCronFocusJobId } from '@/store/cron'
 import { $changeEventsAvailable, $cronChangeTick } from '@/store/live-sync'
 import { notify, notifyError } from '@/store/notifications'
 import { $profileScope, ALL_PROFILES } from '@/store/profile'
 
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
+import { DetailColumn, ListColumn, MasterDetail } from '../master-detail'
 import {
-  Panel,
+  PANEL_ERROR_NOTICE,
   PanelAction,
-  PanelAddButton,
   PanelBlock,
-  PanelBody,
-  PanelDetail,
   PanelEmpty,
-  PanelHeader,
-  PanelList,
   PanelListRow,
   type PanelMenuItem,
   PanelMeta,
   PanelPill,
   type PanelPillTone,
-  PanelSectionLabel
+  PanelSectionLabel,
+  PanelTitle
 } from '../overlays/panel'
-import type { SetStatusbarItemGroup } from '../shell/statusbar-controls'
+import { PageSearchShell } from '../page-search-shell'
 
 import { BlueprintSlotControl, blueprintSlotHelp, cleanBlueprintFieldError, initialBlueprintValues } from './blueprints'
 import { mutateAndRefreshCronJobs, refreshCronJobs, triggerAndRefreshCronJobs } from './cron-actions'
@@ -302,19 +300,21 @@ function matchesQuery(job: CronJob, q: string): boolean {
 }
 
 interface CronViewProps extends React.ComponentProps<'section'> {
-  onClose: () => void
   onOpenSession?: (sessionId: string, session?: SessionInfo) => void
-  setStatusbarItemGroup?: SetStatusbarItemGroup
 }
 
-export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setStatusbarItemGroup }: CronViewProps) {
+export function CronView({ onOpenSession, ...props }: CronViewProps) {
   const { t } = useI18n()
   const c = t.cron
-  // Source of truth is the shared atom (also fed by the controller poll), so the
-  // sidebar and this overlay never drift — a delete here clears the sidebar row
-  // immediately. `loading` only gates the first paint before the atom is filled.
+  // Source of truth is the shared atom (also fed by the controller poll), so
+  // the list and this page never drift, and a create/delete here updates every
+  // other surface immediately. `loading` only gates the first paint before the
+  // atom is filled.
   const jobs = useStore($cronJobs)
   const [loading, setLoading] = useState(jobs.length === 0)
+  // A failed first load must not render as "No scheduled jobs yet": that copy
+  // claims the account HAS no jobs, which the failed read never established.
+  const [loadError, setLoadError] = useState<unknown | null>(null)
   const [query, setQuery] = useState('')
   const [busyJobTokens, setBusyJobTokens] = useState<ReadonlyMap<string, symbol>>(() => new Map())
   const [triggeringJobKeys, setTriggeringJobKeys] = useState<ReadonlySet<string>>(() => new Set())
@@ -354,8 +354,8 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
 
   // Master/detail: the job whose schedule + run history fill the right pane.
   const [selectedJobId, setSelectedJobId] = useState<null | string>(null)
-  // Set when a job is opened from the sidebar so we scroll it into view once the
-  // row exists. Cleared after the scroll fires.
+  // Set when another surface asks for a specific job (review toast, keybind) so
+  // we scroll it into view once the row exists. Cleared after the scroll fires.
   const pendingScrollRef = useRef<null | string>(null)
   const focusJobId = useStore($cronFocusJobId)
 
@@ -363,8 +363,8 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
   const [pendingDelete, setPendingDelete] = useState<CronJob | null>(null)
 
   // Jobs live per-profile on disk and the list endpoint aggregates 'all' by
-  // default — scope the fetch to the sidebar's profile scope so this overlay
-  // and the sidebar (which share the $cronJobs atom) agree on what's shown.
+  // default — scope the fetch to the active profile scope so this page and
+  // every other cron surface sharing the $cronJobs atom agree on what's shown.
   const profileScope = useStore($profileScope)
   const profile = cronProfileForScope(profileScope)
 
@@ -374,6 +374,8 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
     if (stale) {
       return
     }
+
+    setLoadError(refreshError)
 
     if (refreshError) {
       notifyError(refreshError, c.failedLoad)
@@ -387,14 +389,14 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
   useEffect(() => {
     void refresh()
     // Fence the previous profile's request before the next profile effect, and
-    // fence every pending completion when the overlay unmounts.
+    // fence every pending completion when the page unmounts.
 
     return () => invalidateCronJobsRequests()
   }, [refresh])
 
-  // Sidebar → "open this job": resolve the focus id (or name) to a job, select
-  // it, queue a scroll, then clear the one-shot focus so re-opening cron
-  // normally doesn't re-trigger it.
+  // Another surface → "open this job": resolve the focus id (or name) to a job,
+  // select it, queue a scroll, then clear the one-shot focus so navigating back
+  // to the page normally doesn't re-trigger it.
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
   useEffect(() => {
     if (!focusJobId) {
@@ -440,7 +442,7 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
     [visibleJobs, selectedJobId]
   )
 
-  // Scroll a sidebar-opened job into view once its list row is mounted.
+  // Scroll a job another surface asked for into view once its row is mounted.
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
   useEffect(() => {
     const target = pendingScrollRef.current
@@ -679,34 +681,61 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
   }
 
   return (
-    <Panel closeLabel={c.close} onClose={onClose}>
-      <PanelHeader subtitle={c.count(totalCount)} title={c.title} />
-
+    <PageSearchShell
+      {...props}
+      onSearchChange={setQuery}
+      // Nothing to filter until either list has a row; the empty state owns the
+      // create action in that case.
+      searchHidden={!loading && totalCount === 0 && visibleBlueprints.length === 0}
+      searchHints={jobs
+        .map(jobTitle)
+        .filter(Boolean)
+        .slice(0, 5)
+        .map(title => t.common.tryHint(title))}
+      searchPlaceholder={c.search}
+      searchTrailingAction={
+        <Button onClick={() => setEditor({ mode: 'create' })}>
+          <Codicon name="add" size="0.875rem" />
+          {c.newCron}
+        </Button>
+      }
+      searchValue={query}
+    >
       {loading && jobs.length === 0 ? (
         <PageLoader label={c.loading} />
       ) : totalCount === 0 && visibleBlueprints.length === 0 ? (
-        <PanelEmpty
-          action={
-            <Button onClick={() => setEditor({ mode: 'create' })} size="sm">
-              {c.newCron}
-            </Button>
-          }
-          description={c.emptyDescNew}
-          icon="watch"
-          title={c.emptyTitleNew}
-        />
+        <div className="grid h-full place-items-center">
+          {loadError ? (
+            <PanelEmpty
+              action={
+                <Button onClick={() => void refresh()} size="sm" variant="outline">
+                  {t.common.retry}
+                </Button>
+              }
+              icon="warning"
+              title={c.failedLoad}
+            />
+          ) : (
+            <PanelEmpty
+              action={
+                <Button onClick={() => setEditor({ mode: 'create' })} size="sm">
+                  {c.newCron}
+                </Button>
+              }
+              description={c.emptyDescNew}
+              icon="watch"
+              title={c.emptyTitleNew}
+            />
+          )}
+        </div>
       ) : (
-        <PanelBody>
-          <PanelList
-            onSearchChange={setQuery}
-            searchHints={jobs
-              .map(jobTitle)
-              .filter(Boolean)
-              .slice(0, 5)
-              .map(title => t.common.tryHint(title))}
-            searchLabel={c.search}
-            searchPlaceholder={c.search}
-            searchValue={query}
+        <MasterDetail>
+          <ListColumn
+            header={
+              visibleJobs.length > 0 ? (
+                <PanelSectionLabel className="px-2">{c.count(visibleJobs.length)}</PanelSectionLabel>
+              ) : undefined
+            }
           >
             {visibleJobs.map(job => (
               <CronJobListRow
@@ -717,17 +746,23 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
                   { icon: 'edit', label: c.edit, onSelect: () => setEditor({ mode: 'edit', job }) },
                   { icon: 'trash', label: t.common.delete, onSelect: () => setPendingDelete(job), tone: 'danger' }
                 ]}
-                menuLabel={c.manage}
+                menuLabel={`${c.manage}: ${jobTitle(job)}`}
                 onSelect={() => setSelectedJobId(job.id)}
               />
             ))}
-            {visibleJobs.length === 0 && (
-              <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+            {visibleJobs.length === 0 && visibleBlueprints.length === 0 && (
+              <p className="px-2 py-4 text-center text-xs text-(--linear-text-tertiary)">
                 {query.trim() ? c.emptyTitleSearch : c.emptyTitleNew}
               </p>
             )}
-            <PanelAddButton label={c.newCron} onClick={() => setEditor({ mode: 'create' })} />
-            {visibleBlueprints.length > 0 && (
+            {blueprintsQuery.isError ? (
+              <div className="mt-3 flex items-center justify-between gap-2 px-2 text-xs text-(--linear-text-tertiary)">
+                <span className="min-w-0">{c.blueprints.failedLoad}</span>
+                <Button onClick={() => void blueprintsQuery.refetch()} size="sm" variant="ghost">
+                  {t.common.retry}
+                </Button>
+              </div>
+            ) : visibleBlueprints.length > 0 ? (
               <>
                 <PanelSectionLabel className="mt-3 px-2">{c.blueprints.tab}</PanelSectionLabel>
                 {visibleBlueprints.map(item => (
@@ -742,42 +777,46 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
                   />
                 ))}
               </>
-            )}
-          </PanelList>
+            ) : null}
+          </ListColumn>
 
-          {selectedJob ? (
-            <CronJobDetail
-              busy={busyJobTokens.has(selectedJob.id) || triggeringJobKeys.has(`${profile}:${selectedJob.id}`)}
-              c={c}
-              job={selectedJob}
-              onEdit={() => setEditor({ mode: 'edit', job: selectedJob })}
-              onOpenSession={onOpenSession}
-              onPauseResume={() => void handlePauseResume(selectedJob)}
-              onPendingRunSettled={settlePendingTrigger}
-              onTrigger={() => void handleTrigger(selectedJob)}
-              pendingJobKey={`${profile}:${selectedJob.id}`}
-              pendingRunAt={pendingTriggers.get(`${profile}:${selectedJob.id}`)}
-            />
-          ) : query.trim() ? (
-            // A search with no selected job: search-flavored copy is right.
-            <PanelEmpty description={c.emptyDescSearch} icon="search" />
-          ) : (
-            // No selection and no search — "Try a broader search query" here
-            // just confused people staring at an empty panel with zero jobs.
-            <PanelEmpty
-              action={
-                jobs.length === 0 ? (
-                  <Button onClick={() => setEditor({ mode: 'create' })} size="sm">
-                    {c.newCron}
-                  </Button>
-                ) : undefined
-              }
-              description={c.emptyDescNew}
-              icon="watch"
-              title={jobs.length === 0 ? c.emptyTitleNew : undefined}
-            />
-          )}
-        </PanelBody>
+          <DetailColumn>
+            {selectedJob ? (
+              <CronJobDetail
+                busy={busyJobTokens.has(selectedJob.id) || triggeringJobKeys.has(`${profile}:${selectedJob.id}`)}
+                c={c}
+                job={selectedJob}
+                onEdit={() => setEditor({ mode: 'edit', job: selectedJob })}
+                onOpenSession={onOpenSession}
+                onPauseResume={() => void handlePauseResume(selectedJob)}
+                onPendingRunSettled={settlePendingTrigger}
+                onTrigger={() => void handleTrigger(selectedJob)}
+                pendingJobKey={`${profile}:${selectedJob.id}`}
+                pendingRunAt={pendingTriggers.get(`${profile}:${selectedJob.id}`)}
+              />
+            ) : (
+              <div className="grid min-h-56 place-items-center">
+                {query.trim() ? (
+                  // The search is what emptied the detail, so search copy fits.
+                  <PanelEmpty description={c.emptyDescSearch} icon="search" />
+                ) : (
+                  // Only blueprint recipes survive the filter — no job exists
+                  // yet, and "try a broader search" would be a lie.
+                  <PanelEmpty
+                    action={
+                      <Button onClick={() => setEditor({ mode: 'create' })} size="sm">
+                        {c.newCron}
+                      </Button>
+                    }
+                    description={c.emptyDescNew}
+                    icon="watch"
+                    title={c.emptyTitleNew}
+                  />
+                )}
+              </div>
+            )}
+          </DetailColumn>
+        </MasterDetail>
       )}
 
       <CronEditorDialog
@@ -795,7 +834,7 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
           pendingDelete ? (
             <>
               {c.deleteDescPrefix}
-              <span className="font-medium text-foreground">{truncate(jobTitle(pendingDelete), 60)}</span>
+              <span className="font-medium text-(--linear-text-primary)">{truncate(jobTitle(pendingDelete), 60)}</span>
               {c.deleteDescSuffix}
             </>
           ) : null
@@ -806,7 +845,7 @@ export function CronView({ onClose, onOpenSession, setStatusbarItemGroup: _setSt
         open={pendingDelete !== null}
         title={c.deleteTitle}
       />
-    </Panel>
+    </PageSearchShell>
   )
 }
 
@@ -823,17 +862,24 @@ function CronJobListRow({
   menuLabel?: string
   onSelect: () => void
 }) {
+  const { t } = useI18n()
   const state = jobState(job)
 
   return (
     <PanelListRow
       active={active}
-      dotClassName={STATE_DOT[state] ?? 'bg-muted-foreground'}
+      dotClassName={STATE_DOT[state] ?? 'bg-(--linear-text-quaternary)'}
       menuItems={menuItems}
       menuLabel={menuLabel}
       onSelect={onSelect}
       rowKey={job.id}
-      title={jobTitle(job)}
+      // The dot is colour-only; name the state so the row still says it.
+      title={
+        <>
+          {jobTitle(job)}
+          <span className="sr-only">{` — ${t.cron.states[state] ?? state}`}</span>
+        </>
+      }
     />
   )
 }
@@ -872,15 +918,18 @@ function CronJobDetail({
   const modelOverride = jobModel(job)
 
   return (
-    <PanelDetail>
+    <>
       <header className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h3 className="text-[0.95rem] font-semibold tracking-tight text-foreground">{jobTitle(job)}</h3>
+            <PanelTitle>{jobTitle(job)}</PanelTitle>
             {scriptOnly && <PanelPill tone="muted">{c.scriptBadge}</PanelPill>}
             <PanelPill tone={STATE_TONE[state] ?? 'muted'}>{c.states[state] ?? state}</PanelPill>
           </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-1.5">
+            <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
+              {c.editJob}
+            </PanelAction>
             <PanelAction disabled={busy} icon={isPaused ? 'play' : 'debug-pause'} onClick={onPauseResume}>
               {isPaused ? c.resumeTitle : c.pauseTitle}
             </PanelAction>
@@ -910,14 +959,14 @@ function CronJobDetail({
         />
 
         {job.last_error ? (
-          <div className="space-y-1.5 rounded bg-destructive/10 p-2 text-[0.7rem] text-destructive">
+          <div className={cn(PANEL_ERROR_NOTICE, 'space-y-2 px-3 py-2.5 text-[0.8125rem]')}>
             <div className="flex items-start gap-1.5">
-              <AlertTriangle className="mt-px size-3 shrink-0" />
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
               <span className="min-w-0 break-words" title={job.last_error}>
                 {c.lastRunFailed} {lastErrorSummary(job.last_error)}
               </span>
             </div>
-            <div className="flex items-center gap-0.5 pl-4">
+            <div className="flex items-center gap-1.5 pl-5">
               <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
                 {c.editJob}
               </PanelAction>
@@ -930,7 +979,7 @@ function CronJobDetail({
       </header>
 
       {description ? (
-        <section className="space-y-1.5">
+        <section className="space-y-1">
           <PanelSectionLabel>{scriptOnly && !prompt ? c.scriptLabel : c.promptLabel}</PanelSectionLabel>
           <PanelBlock>{description}</PanelBlock>
         </section>
@@ -944,7 +993,7 @@ function CronJobDetail({
         pendingJobKey={pendingJobKey}
         pendingRunAt={pendingRunAt}
       />
-    </PanelDetail>
+    </>
   )
 }
 
@@ -989,7 +1038,12 @@ function CronJobRuns({
   pendingJobKey?: string
   pendingRunAt?: number
 }) {
+  const { t } = useI18n()
   const [runs, setRuns] = useState<null | SessionInfo[]>(null)
+  // A failed read is not "No runs yet": keep the last snapshot (if any) visible
+  // and say the list could not be read, with a way to retry now.
+  const [runsFailed, setRunsFailed] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
   const changeEventsAvailable = useStore($changeEventsAvailable)
   const cronChangeTick = useStore($cronChangeTick)
 
@@ -1006,6 +1060,7 @@ function CronJobRuns({
 
           if (!cancelled) {
             setRuns(result)
+            setRunsFailed(false)
 
             // The queued row is settled by the run this trigger produced:
             // any run that started after the click. Looking at the whole
@@ -1026,7 +1081,7 @@ function CronJobRuns({
         })
         .catch(() => {
           if (!cancelled) {
-            setRuns(prev => prev ?? [])
+            setRunsFailed(true)
           }
         })
 
@@ -1059,7 +1114,17 @@ function CronJobRuns({
       document.removeEventListener('visibilitychange', onVisible)
     }
     // cronChangeTick: a fired run moves jobs.json bookkeeping → reload now.
-  }, [changeEventsAvailable, cronChangeTick, jobId, onPendingRunSettled, pending, pendingJobKey, pendingRunAt])
+    // reloadToken: the inline Retry action re-runs the request immediately.
+  }, [
+    changeEventsAvailable,
+    cronChangeTick,
+    jobId,
+    onPendingRunSettled,
+    pending,
+    pendingJobKey,
+    pendingRunAt,
+    reloadToken
+  ])
 
   // Bounded life for the queued row: even on an event-capable backend (where
   // the fast poll above may be the only prober), the feedback disappears and
@@ -1075,27 +1140,50 @@ function CronJobRuns({
     return () => window.clearTimeout(timeoutId)
   }, [onPendingRunSettled, pendingJobKey, pendingRunAt])
 
+  const loadFailedNotice = (
+    <div
+      className={cn(
+        PANEL_ERROR_NOTICE,
+        'flex flex-wrap items-center justify-between gap-2 py-1 pr-1 pl-3 text-[0.8125rem]'
+      )}
+    >
+      <span className="flex min-w-0 items-center gap-1.5">
+        <AlertTriangle className="size-3.5 shrink-0" />
+        <span className="min-w-0">{c.failedRuns}</span>
+      </span>
+      <PanelAction icon="refresh" onClick={() => setReloadToken(token => token + 1)}>
+        {t.common.retry}
+      </PanelAction>
+    </div>
+  )
+
   return (
     <div>
-      <PanelSectionLabel className="mb-1.5">
+      <PanelSectionLabel className="mb-1">
         {c.runHistory}
         {runs && runs.length + (pending ? 1 : 0) > 0 ? ` · ${runs.length + (pending ? 1 : 0)}` : ''}
       </PanelSectionLabel>
       {runs === null && !pending ? (
-        <div className="flex items-center gap-1.5 py-1 text-xs text-muted-foreground">
-          <Codicon name="loading" size="0.75rem" spinning />
-        </div>
-      ) : runs?.length === 0 && !pending ? (
-        <div className="py-1 text-xs text-muted-foreground">{c.noRuns}</div>
+        runsFailed ? (
+          loadFailedNotice
+        ) : (
+          <div className="flex items-center gap-1.5 py-1 text-xs text-(--linear-text-tertiary)">
+            <Codicon name="loading" size="0.75rem" spinning />
+            <span className="sr-only">{t.common.loading}</span>
+          </div>
+        )
+      ) : runs?.length === 0 && !pending && !runsFailed ? (
+        <div className="py-1 text-[0.8125rem] text-(--linear-text-tertiary)">{c.noRuns}</div>
       ) : (
-        <div className="flex flex-col gap-px">
+        <div className="flex flex-col gap-0.5">
+          {runsFailed && loadFailedNotice}
           {pending && (
             // The queued row is transient feedback for a trigger the backend
             // accepted but has not turned into a session yet; it sits above
             // the authoritative rows and is replaced once one appears.
             <div
               aria-live="polite"
-              className="flex items-center justify-between gap-3 rounded-md px-2 py-1 text-xs text-muted-foreground"
+              className="flex h-7 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem] text-(--linear-text-tertiary)"
               data-slot="cron-run-pending"
               role="status"
             >
@@ -1103,41 +1191,44 @@ function CronJobRuns({
                 <Codicon name="loading" size="0.75rem" spinning />
                 <span className="truncate">{c.queuedRun}</span>
               </span>
-              <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">
+              <span className="shrink-0 text-xs text-(--linear-text-tertiary) tabular-nums">
                 {formatRunTime(pendingRunAt / 1000)}
               </span>
             </div>
           )}
-          {(runs ?? []).map(run =>
-            !isCronRunRow(run) ? (
-              // Output-doc rows have no backing session to open; show the
-              // recorded output preview without a chat-navigation affordance.
-              <div className="flex items-center justify-between gap-3 rounded-md px-2 py-1 text-xs" key={run.id}>
-                <span className="truncate text-foreground/85">
-                  {run.title?.trim() || run.preview?.trim() || run.id}
-                </span>
-                <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">
-                  {formatRunTime(run.last_active || run.started_at)}
-                </span>
-              </div>
-            ) : (
+          {(runs ?? []).map(run => {
+            const label = run.title?.trim() || run.preview?.trim() || run.id
+            const time = formatRunTime(run.last_active || run.started_at)
+
+            if (!isCronRunRow(run) || !onOpenSession) {
+              // Output-doc rows have no backing session to open; without a
+              // session opener a run row is informational too. Neither may
+              // render as a button that does nothing.
+              return (
+                <div
+                  className="flex h-11 items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-[0.8125rem] font-medium"
+                  key={run.id}
+                >
+                  <span className="truncate text-(--linear-text-secondary)">{label}</span>
+                  <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">{time}</span>
+                </div>
+              )
+            }
+
+            return (
               // One click to the run's transcript; a run the scheduler never
               // closed opens view-only (see `openCronRun`, #88443).
               <button
-                className="row-hover flex items-center justify-between gap-3 rounded-md px-2 py-1 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="flex h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none focus-visible:ring-1 focus-visible:ring-(--linear-focus) focus-visible:outline-none"
                 key={run.id}
-                onClick={onOpenSession ? () => openCronRun(run, onOpenSession) : undefined}
+                onClick={() => openCronRun(run, onOpenSession)}
                 type="button"
               >
-                <span className="truncate text-foreground/85">
-                  {run.title?.trim() || run.preview?.trim() || run.id}
-                </span>
-                <span className="shrink-0 text-[0.62rem] text-muted-foreground/55 tabular-nums">
-                  {formatRunTime(run.last_active || run.started_at)}
-                </span>
+                <span className="truncate text-(--linear-text-primary)">{label}</span>
+                <span className="shrink-0 text-xs font-[450] text-(--linear-text-tertiary) tabular-nums">{time}</span>
               </button>
             )
-          )}
+          })}
         </div>
       )}
     </div>
@@ -1183,7 +1274,7 @@ export function DeliverCheckboxes({
   return (
     <div
       aria-labelledby={`${id}-label`}
-      className="grid gap-2 rounded-md border border-input px-3 py-2.5"
+      className="grid gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-input) bg-(--linear-bg-input) px-3 py-2.5"
       id={id}
       role="group"
     >
@@ -1192,7 +1283,7 @@ export function DeliverCheckboxes({
         const checkboxId = `${id}-${index}`
 
         return (
-          <label className="flex items-center gap-2 text-sm" htmlFor={checkboxId} key={target.id}>
+          <label className="flex items-center gap-2 text-[0.8125rem]" htmlFor={checkboxId} key={target.id}>
             <Checkbox
               checked={checked}
               id={checkboxId}
@@ -1409,7 +1500,7 @@ function CronEditorDialog({
         {!isEdit && blueprintList.length > 0 && (
           <Field htmlFor="cron-template" label={c.blueprints.startFrom}>
             <Select onValueChange={setTemplateChoice} value={templateChoice}>
-              <SelectTrigger className="h-9 rounded-md" id="cron-template">
+              <SelectTrigger id="cron-template">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1417,7 +1508,7 @@ function CronEditorDialog({
                 {blueprintList.map(item => (
                   <SelectItem key={item.key} value={item.key}>
                     {item.title}
-                    {item.plugin && <span className="ml-1.5 text-muted-foreground">· {item.plugin}</span>}
+                    {item.plugin && <span className="ml-1.5 text-(--linear-text-tertiary)">· {item.plugin}</span>}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1459,7 +1550,7 @@ function CronEditorDialog({
             })}
 
             {error && (
-              <div className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')} role="alert">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -1505,7 +1596,7 @@ function CronEditorDialog({
             <div className="grid items-start gap-4 sm:grid-cols-2">
               <Field htmlFor="cron-frequency" label={c.frequencyLabel}>
                 <Select onValueChange={handleSchedulePresetChange} value={schedulePreset}>
-                  <SelectTrigger className="h-9 rounded-md" id="cron-frequency">
+                  <SelectTrigger id="cron-frequency">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1532,7 +1623,7 @@ function CronEditorDialog({
             {!scriptOnlyJob && (
               <Field htmlFor="cron-model" label={c.modelLabel} optional optionalLabel={c.optional}>
                 <Select onValueChange={setModelChoice} value={modelChoice}>
-                  <SelectTrigger className="h-9 rounded-md" id="cron-model">
+                  <SelectTrigger id="cron-model">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1573,16 +1664,16 @@ function CronEditorDialog({
                 <FieldHint>{c.customHint}</FieldHint>
               </Field>
             ) : (
-              <div className="rounded-md bg-(--ui-bg-quinary) px-3 py-2">
+              <div className="rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-medium text-foreground">{scheduleHint}</span>
-                  <span className="font-mono text-muted-foreground">{schedule}</span>
+                  <span className="font-medium text-(--linear-text-primary)">{scheduleHint}</span>
+                  <span className="font-mono text-(--linear-text-tertiary)">{schedule}</span>
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')} role="alert">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 <span>{error}</span>
               </div>

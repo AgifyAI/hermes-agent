@@ -109,7 +109,7 @@ function versionItem(
   toggleLabel: string
 ): StatusbarItem {
   return {
-    className: status.hasUpdate ? 'text-primary hover:text-primary' : undefined,
+    className: status.hasUpdate ? 'text-(--linear-accent) hover:text-(--linear-accent)' : undefined,
     hidden: status.unknown,
     icon: applying ? <Loader2 className="size-3 animate-spin" /> : <Hash className="size-3" />,
     id: `version-${target}`,
@@ -416,8 +416,8 @@ export function useStatusbarItems({
   const gatewayClassName = inferenceReady
     ? undefined
     : gatewayDegraded
-      ? 'text-amber-600 hover:text-amber-600'
-      : 'text-destructive hover:text-destructive'
+      ? 'text-(--linear-orange) hover:text-(--linear-orange)'
+      : 'text-(--linear-red) hover:text-(--linear-red)'
 
   const rollbackBody = t.settings.about.channel.rollbackBody
 
@@ -488,7 +488,7 @@ export function useStatusbarItems({
   const coreLeftStatusbarItems = useMemo<readonly StatusbarItem[]>(
     () => [
       {
-        className: `w-7 justify-center px-0${commandCenterOpen ? ' bg-accent/55 text-foreground' : ''}`,
+        className: `w-7 justify-center px-0${commandCenterOpen ? ' bg-(--linear-hover-sidebar-icon) text-(--linear-text-primary)' : ''}`,
         icon: <Command className="size-3.5" />,
         id: 'command-center',
         // The system icon: the way into every other surface, including the
@@ -538,7 +538,7 @@ export function useStatusbarItems({
         // solid and set off by a gap instead of touching the label.
         detail: (
           <span className="inline-flex items-center gap-2">
-            {trialModel && <span className="font-mono text-[0.625rem] text-muted-foreground/70">{trialModel}</span>}
+            {trialModel && <span className="font-mono text-[0.6875rem] text-(--linear-text-quaternary)">{trialModel}</span>}
             {/* The class merger drops Badge's own leading-none behind the size's
                 font-size class, so the badge grows to the inherited 1.5 leading and
                 overhangs an 11px label. Restating it here keeps it 11.6px tall. */}
@@ -603,8 +603,8 @@ export function useStatusbarItems({
       },
       {
         className: cn(
-          agentsOpen && 'bg-accent/55 text-foreground',
-          subagentsFailed > 0 && 'text-destructive hover:text-destructive'
+          agentsOpen && 'bg-(--linear-hover-sidebar-icon) text-(--linear-text-primary)',
+          subagentsFailed > 0 && 'text-(--linear-red) hover:text-(--linear-red)'
         ),
         detail:
           subagentsRunning > 0
@@ -697,7 +697,7 @@ export function useStatusbarItems({
         id: 'context-usage',
         label: contextUsage || '—',
         menuAlign: 'end',
-        menuClassName: 'w-auto border-(--ui-stroke-secondary) p-0',
+        menuClassName: 'w-auto border-(--linear-border-secondary) p-0',
         menuContent: (
           <ContextUsagePanel breakdown={contextBreakdown} loading={contextBreakdownLoading} usage={gaugeUsage} />
         ),
@@ -735,9 +735,9 @@ export function useStatusbarItems({
         // Window plans only: today's allowance (else the one that binds) at a glance; opens Billing.
         className:
           planUsed >= 0.8
-            ? 'text-red-600 dark:text-red-400'
+            ? 'text-(--linear-red)'
             : planUsed >= 0.5
-              ? 'text-amber-600 dark:text-amber-400'
+              ? 'text-(--linear-orange)'
               : undefined,
         hidden: !planGauge,
         icon: <Activity className="size-3" />,
@@ -761,7 +761,7 @@ export function useStatusbarItems({
       },
       {
         actionId: 'view.showTerminal',
-        className: `w-7 justify-center px-0${terminalShowing ? ' bg-accent/55 text-foreground' : ''}`,
+        className: `w-7 justify-center px-0${terminalShowing ? ' bg-(--linear-hover-sidebar-icon) text-(--linear-text-primary)' : ''}`,
         hidden: !chatOpen,
         icon: <Terminal className="size-3.5" />,
         id: 'terminal',

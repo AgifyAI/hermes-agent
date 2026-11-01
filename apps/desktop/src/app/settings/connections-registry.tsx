@@ -25,7 +25,15 @@ import { $activeConnectionId, setConnectionsRegistry } from '@/store/connections
 import { refreshFleetRoster } from '@/store/fleet-roster'
 import { notify, notifyError } from '@/store/notifications'
 
-import { EmptyState, ListRow, Pill, SectionHeading, SettingsBreadcrumbContext, ToggleRow } from './primitives'
+import {
+  EmptyState,
+  ListRow,
+  Pill,
+  SectionHeading,
+  SettingsBreadcrumbContext,
+  SettingsCard,
+  ToggleRow
+} from './primitives'
 
 const KIND_ICONS: Record<DesktopConnectionKind, typeof Globe> = {
   cloud: Cloud,
@@ -216,6 +224,31 @@ function scrollableAncestor(element: HTMLElement): HTMLElement | null {
  * instances / SSH hosts). Storage-level management — the active/primary
  * switchover UX is the connection-mode controls above this section.
  */
+function LaunchModeCard({
+  disabled,
+  launchMode,
+  onChange
+}: {
+  disabled: boolean
+  launchMode: DesktopConnectionsRegistry['launchMode']
+  onChange: (mode: 'last-used' | 'primary') => void
+}) {
+  const { t } = useI18n()
+  const s = t.settings.connections
+
+  return (
+    <SettingsCard className="mt-4">
+      <ToggleRow
+        checked={launchMode === 'last-used'}
+        description={s.launchModeDesc}
+        disabled={disabled}
+        label={s.launchModeTitle}
+        onChange={enabled => onChange(enabled ? 'last-used' : 'primary')}
+      />
+    </SettingsCard>
+  )
+}
+
 export function ConnectionsRegistrySection() {
   const hasBreadcrumb = useContext(SettingsBreadcrumbContext)
   const { t } = useI18n()
@@ -585,19 +618,17 @@ export function ConnectionsRegistrySection() {
   }
 
   return (
-    <div className={hasBreadcrumb ? undefined : 'mt-8 border-t border-border/60 pt-6'}>
-      <SectionHeading icon={Globe} page title={s.title} />
-      <p className="mb-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{s.intro}</p>
+    <div className={hasBreadcrumb ? undefined : 'mt-12'}>
+      <SectionHeading page title={s.title} />
+      <p className="mb-1 px-4 text-xs text-(--linear-text-tertiary)">{s.intro}</p>
       {/* Source selection lives in Sessions. Primary is the registry fallback,
           not an immediate workspace switch. */}
-      <p className="mb-4 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-        {s.stagedNote}
-      </p>
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{s.stagedNote}</p>
 
       {!loading && showSearch && (
         <Input
           aria-label={s.searchPlaceholder}
-          containerClassName="mt-3 mb-0 w-full max-w-sm"
+          containerClassName="mb-4 w-full max-w-sm"
           onChange={event => updateSearchQuery(event.target.value)}
           placeholder={s.searchPlaceholder}
           prefix={<SearchIcon className="size-3.5" />}
@@ -609,92 +640,98 @@ export function ConnectionsRegistrySection() {
       )}
 
       {loading ? (
-        <Loader className="mx-auto my-2 size-6 text-(--ui-text-tertiary)" label={t.common.loading} type="rose-curve" />
+        <Loader
+          className="mx-auto my-2 size-6 text-(--linear-text-tertiary)"
+          label={t.common.loading}
+          type="rose-curve"
+        />
       ) : !registry || registry.connections.length === 0 ? (
         <EmptyState title={s.empty} />
       ) : displayedConnections.length === 0 ? (
         <EmptyState title={s.noSearchResults} />
       ) : (
-        displayedConnections.map(conn => {
-          const Icon = KIND_ICONS[conn.kind]
-          const isCurrent = activeConnectionId === conn.id
-          const isPrimary = registry.primary === conn.id
-          const busy = busyId === conn.id
-          // Display-only: this connection is a second address for a backend
-          // already registered under another entry (same install_id).
-          const sameBackendPeer = sameBackendPeerLabel(conn, sortedConnections)
+        <SettingsCard>
+          {displayedConnections.map(conn => {
+            const Icon = KIND_ICONS[conn.kind]
+            const isCurrent = activeConnectionId === conn.id
+            const isPrimary = registry.primary === conn.id
+            const busy = busyId === conn.id
+            // Display-only: this connection is a second address for a backend
+            // already registered under another entry (same install_id).
+            const sameBackendPeer = sameBackendPeerLabel(conn, sortedConnections)
 
-          const baseDescription =
-            conn.kind === 'ssh'
-              ? `${kindMeta[conn.kind].label} · ${conn.user ? `${conn.user}@` : ''}${conn.host}${conn.port ? `:${conn.port}` : ''}`
-              : conn.url
-                ? `${kindMeta[conn.kind].label} · ${conn.url}`
-                : kindMeta[conn.kind].desc
+            const baseDescription =
+              conn.kind === 'ssh'
+                ? `${kindMeta[conn.kind].label} · ${conn.user ? `${conn.user}@` : ''}${conn.host}${conn.port ? `:${conn.port}` : ''}`
+                : conn.url
+                  ? `${kindMeta[conn.kind].label} · ${conn.url}`
+                  : kindMeta[conn.kind].desc
 
-          return (
-            <ListRow
-              action={
-                <div className="flex items-center gap-2">
-                  <Button
-                    disabled={testingId === conn.id}
-                    onClick={() => {
-                      triggerHaptic('selection')
-                      void test(conn)
-                    }}
-                    size="sm"
-                    variant="outline"
-                  >
-                    {testingId === conn.id ? <Loader2 className="animate-spin" /> : s.testConnection}
-                  </Button>
-                  {!isPrimary && (
-                    <Button disabled={busy} onClick={() => void makePrimary(conn.id)} size="sm" variant="outline">
-                      {s.makePrimary}
+            return (
+              <ListRow
+                action={
+                  <div className="flex items-center gap-2">
+                    <Button
+                      disabled={testingId === conn.id}
+                      onClick={() => {
+                        triggerHaptic('selection')
+                        void test(conn)
+                      }}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {testingId === conn.id ? <Loader2 className="animate-spin" /> : s.testConnection}
                     </Button>
-                  )}
-                  {conn.kind !== 'local' && (
-                    <>
-                      <Button
-                        aria-label={s.editConnection}
-                        onClick={() => openEditor(editorFromConnection(conn), conn)}
-                        size="icon-sm"
-                        variant="ghost"
-                      >
-                        <Pencil className="size-3.5" />
+                    {!isPrimary && (
+                      <Button disabled={busy} onClick={() => void makePrimary(conn.id)} size="sm" variant="outline">
+                        {s.makePrimary}
                       </Button>
-                      <Button
-                        aria-label={s.removeConnection}
-                        disabled={busy}
-                        onClick={() => setRemoveTarget(conn)}
-                        size="icon-sm"
-                        variant="ghost"
-                      >
-                        {busy ? <Loader2 className="animate-spin" /> : <Trash2 />}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              }
-              description={
-                sameBackendPeer ? `${baseDescription} · ${s.sameBackendHint(sameBackendPeer)}` : baseDescription
-              }
-              key={conn.id}
-              title={
-                <span className="flex items-center gap-2">
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{conn.label}</span>
-                  {isCurrent && <Pill tone="primary">{s.currentPill}</Pill>}
-                  {isPrimary && <Pill>{s.primaryPill}</Pill>}
-                  {conn.kind === 'local' && <Pill>{s.managedPill}</Pill>}
-                </span>
-              }
-            />
-          )
-        })
+                    )}
+                    {conn.kind !== 'local' && (
+                      <>
+                        <Button
+                          aria-label={s.editConnection}
+                          onClick={() => openEditor(editorFromConnection(conn), conn)}
+                          size="icon-sm"
+                          variant="ghost"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          aria-label={s.removeConnection}
+                          disabled={busy}
+                          onClick={() => setRemoveTarget(conn)}
+                          size="icon-sm"
+                          variant="ghost"
+                        >
+                          {busy ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                }
+                description={
+                  sameBackendPeer ? `${baseDescription} · ${s.sameBackendHint(sameBackendPeer)}` : baseDescription
+                }
+                key={conn.id}
+                title={
+                  <span className="flex items-center gap-2">
+                    <Icon className="size-4 shrink-0 text-(--linear-icon)" />
+                    <span className="truncate">{conn.label}</span>
+                    {isCurrent && <Pill tone="primary">{s.currentPill}</Pill>}
+                    {isPrimary && <Pill>{s.primaryPill}</Pill>}
+                    {conn.kind === 'local' && <Pill>{s.managedPill}</Pill>}
+                  </span>
+                }
+              />
+            )
+          })}
+        </SettingsCard>
       )}
 
       {editor ? (
-        <div className="mt-4 space-y-3 rounded-lg border border-border/60 p-4">
-          <div className="grid grid-cols-2 gap-2 @2xl:grid-cols-4">
+        <div className="mt-4 space-y-3 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 shadow-(--linear-shadow-card)">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {/* Kind is fixed once created (buttons disable on edit). On create
                 every kind is offered; Local is disabled while the managed
                 local entry exists (the registry holds at most one). */}
@@ -719,10 +756,10 @@ export function ConnectionsRegistrySection() {
               </Button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">{kindMeta[editor.kind].desc}</p>
-          {!editor.id && hasLocal ? <p className="text-xs text-muted-foreground">{s.localAddHint}</p> : null}
+          <p className="text-xs text-(--linear-text-tertiary)">{kindMeta[editor.kind].desc}</p>
+          {!editor.id && hasLocal ? <p className="text-xs text-(--linear-text-tertiary)">{s.localAddHint}</p> : null}
           {!editor.id && editor.kind === 'cloud' ? (
-            <p className="text-xs text-muted-foreground">{s.cloudAddHint}</p>
+            <p className="text-xs text-(--linear-text-tertiary)">{s.cloudAddHint}</p>
           ) : null}
 
           <ListRow
@@ -780,8 +817,8 @@ export function ConnectionsRegistrySection() {
           {(editor.kind === 'remote' || editor.kind === 'cloud') && (
             <div className="grid gap-2">
               <div>
-                <div className="text-sm font-medium">{s.headersTitle}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{s.headersDesc}</p>
+                <div className="text-[0.8125rem] font-medium">{s.headersTitle}</div>
+                <p className="mt-1 text-xs text-(--linear-text-tertiary)">{s.headersDesc}</p>
               </div>
               {editor.headers.map((row, index) => (
                 <div className="flex items-center gap-2" key={index}>
@@ -860,7 +897,7 @@ export function ConnectionsRegistrySection() {
             </>
           )}
 
-          {dupeError ? <p className="text-xs text-destructive">{dupeError}</p> : null}
+          {dupeError ? <p className="text-xs text-(--linear-red)">{dupeError}</p> : null}
 
           <div className="flex justify-end gap-2">
             <Button disabled={saving} onClick={() => openEditor(null)} size="sm" variant="ghost">
@@ -912,15 +949,11 @@ export function ConnectionsRegistrySection() {
           the launch behavior, and hiding the control there left hand-editing
           connections.json as the only recourse (#90174). */}
       {!loading && registry && (
-        <div className="mt-6 border-t border-border/60 pt-4">
-          <ToggleRow
-            checked={registry.launchMode === 'last-used'}
-            description={s.launchModeDesc}
-            disabled={launchModeBusy || !bridge?.setLaunchMode}
-            label={s.launchModeTitle}
-            onChange={enabled => void setLaunchMode(enabled ? 'last-used' : 'primary')}
-          />
-        </div>
+        <LaunchModeCard
+          disabled={launchModeBusy || !bridge?.setLaunchMode}
+          launchMode={registry.launchMode}
+          onChange={mode => void setLaunchMode(mode)}
+        />
       )}
 
       <ConfirmDialog

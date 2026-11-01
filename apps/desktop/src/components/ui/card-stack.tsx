@@ -74,7 +74,6 @@ export function CardStack<T>({
           animate={{ opacity: 0.6 }}
           aria-hidden="true"
           className={cn('pointer-events-none absolute inset-x-0', surfaceClassName)}
-          data-glass-opaque=""
           data-slot="card-stack-edge"
           initial={{ opacity: 0 }}
           style={{
@@ -225,7 +224,6 @@ function StackCard({
     >
       <motion.div
         className={cn(surfaceClassName, onSwipe && active && 'cursor-grab', dragging && 'cursor-grabbing')}
-        data-glass-opaque=""
         data-slot="card-stack-surface"
         onLostPointerCapture={() => {
           if (pointer.current) {

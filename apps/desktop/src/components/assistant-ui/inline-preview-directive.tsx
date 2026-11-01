@@ -182,11 +182,11 @@ export function intentAckMessage(token: string, id: number, ack: IntentAck) {
  *  the LIVE theme. Friendly names, not internal ones — this is the contract
  *  reference HTML / skills write against (`var(--foreground)` etc.). */
 const THEME_BRIDGE_TOKENS: Record<string, string> = {
-  '--foreground': '--ui-text-primary',
-  '--muted-foreground': '--ui-text-tertiary',
-  '--accent': '--ui-accent',
-  '--border': '--ui-stroke-tertiary',
-  '--card': '--ui-bg-editor'
+  '--foreground': '--linear-text-primary',
+  '--muted-foreground': '--linear-text-tertiary',
+  '--accent': '--linear-accent',
+  '--border': '--linear-border-panel',
+  '--card': '--linear-bg-card'
 }
 
 /** The app's resolved light/dark appearance, read from the SAME attribute

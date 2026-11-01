@@ -13,7 +13,6 @@ export function EmptyHint({ onExample }: EmptyHintProps) {
     <div className="flex max-w-[300px] flex-wrap place-content-center place-items-center gap-2">
       {EXAMPLE_PROMPTS.map(example => (
         <Button
-          className="h-auto w-fit rounded-full font-normal"
           key={example}
           onClick={() => onExample(`a ${example}`)}
           size="xs"

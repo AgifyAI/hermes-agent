@@ -1,3 +1,4 @@
+import { menuSurfaceClass } from '@/components/ui/menu'
 import { cn } from '@/lib/utils'
 
 /**
@@ -9,8 +10,8 @@ export const composerFill = 'bg-(--composer-fill)'
 
 const composerFillTransition = 'transition-[background-color] duration-150 ease-out'
 
-/** Paint for the frequently repainting editable surface. Keep backdrop filters
- *  off this hot path so typing does not re-blur the transcript each frame. */
+/** Paint for the frequently repainting editable surface. No backdrop filters:
+ *  Linear's composer is opaque, and typing must not re-blur the transcript. */
 export const composerInputSurface = cn(composerFill, composerFillTransition)
 // The `-z-10` paint layer behind the editable surface; hydrated and fallback composers share it.
 export const composerInputBacking = cn(
@@ -18,17 +19,10 @@ export const composerInputBacking = cn(
   composerInputSurface
 )
 
-/** Backdrop treatment for non-input composer chrome. Harmless when the fill
- *  goes opaque (drawer open) — nothing shows through to blur. */
-export const composerSurfaceGlass = cn(
-  'backdrop-blur-[0.75rem] backdrop-saturate-[1.12] [-webkit-backdrop-filter:blur(0.75rem)_saturate(1.12)]',
-  composerFillTransition
-)
-
 const composerDockEdge = (edge: 'bottom' | 'top') =>
-  cn('border border-border/65', edge === 'top' ? 'rounded-t-2xl border-b-0' : 'rounded-b-2xl border-t-0')
+  cn('border border-(--ui-stroke-secondary)', edge === 'top' ? 'rounded-t-xl border-b-0' : 'rounded-b-xl border-t-0')
 
-/** Glassy docked card — the status stack / queue. Paints the SAME
+/** Opaque docked card — the status stack / queue. Paints the SAME
  *  `--composer-fill` as the surface, so rest / scrolled / focused / drawer-open
  *  all match the composer by construction.
  *
@@ -36,24 +30,19 @@ const composerDockEdge = (edge: 'bottom' | 'top') =>
  * flexbox compresses the card to the cap and its own overflow-hidden clips
  * later status rows before the outer status stack gets anything to scroll. */
 export const composerDockCard = (edge: 'bottom' | 'top' = 'top') =>
-  cn('shrink-0', composerDockEdge(edge), composerFill, composerSurfaceGlass)
+  cn('shrink-0', composerDockEdge(edge), composerFill, composerFillTransition)
 
-/** Floating composer panel skin — the `/`·`@`·`?` completion drawer and the
- *  attach (`+`) menu. Glassy translucent card, hairline border, full radius,
- *  smallest type, soft nous shadow. Uses an explicit fill (not `--composer-fill`)
- *  so it renders identically whether mounted inside the composer or portaled out
- *  of it. Visual skin only — consumers add their own size/position/padding. */
-export const composerPanelCard = cn(
-  'rounded-2xl border border-border/65 shadow-nous text-[length:var(--conversation-tool-font-size)]',
-  'bg-[color-mix(in_srgb,var(--dt-card)_72%,transparent)]',
-  composerSurfaceGlass
-)
+/** Floating composer panel skin — the `/`·`@`·`?` completion drawer. It is a
+ *  Linear menu (`menuSurfaceClass`): opaque overlay surface, overlay hairline,
+ *  12px radius, menu shadow. Visual skin only — consumers add their own
+ *  size/position/padding. */
+export const composerPanelCard = menuSurfaceClass
 
 /**
  * A quiet control floating over composer content — the micro-action pills above
  * the surface, the Open affordance on a hovered link inside it. Full radius,
- * hairline border, the composer's own fill behind a blur so the text underneath
- * never shows through. Sized against the composer's control height so a pill
+ * hairline border, the composer's own opaque fill so the text underneath never
+ * shows through. Sized against the composer's control height so a pill
  * lines up with the chrome it floats above.
  *
  * Skin and size only; the call site owns position, width caps, and disabled
@@ -61,9 +50,9 @@ export const composerPanelCard = cn(
  */
 export const composerFloatingPill = cn(
   'inline-flex h-(--composer-control-size) shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-2.5',
-  'border border-border/65 bg-(--composer-fill) backdrop-blur-[0.75rem] [-webkit-backdrop-filter:blur(0.75rem)]',
-  'text-xs font-normal text-(--ui-text-secondary) transition-colors',
-  'hover:bg-(--chrome-action-hover) hover:text-foreground'
+  'border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip)',
+  'text-xs font-medium text-(--linear-text-chip) transition-colors duration-100',
+  'hover:bg-(--linear-bg-chip-hover) hover:transition-none'
 )
 
 /**

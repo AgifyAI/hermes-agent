@@ -129,14 +129,14 @@ export function MemoryConnect({ profile, provider }: { profile?: string; provide
   return (
     <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
       {phase === 'idle' && connected && (
-        <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-(--linear-text-tertiary)">
           <Check className="size-3" />
           {auth === 'apikey' ? 'api key set' : 'oauth set'}
         </span>
       )}
       {phase === 'pending' ? (
         <>
-          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 text-(--linear-text-tertiary)">
             <Loader2 className="size-3 animate-spin" />
             Waiting for browser consent…
           </span>
@@ -156,7 +156,7 @@ export function MemoryConnect({ profile, provider }: { profile?: string; provide
           {connectLabel}
         </Button>
       )}
-      {phase === 'error' && detail && <span className="text-destructive">{detail}</span>}
+      {phase === 'error' && detail && <span className="text-(--linear-red)">{detail}</span>}
     </span>
   )
 }

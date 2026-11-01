@@ -51,10 +51,10 @@ export function ToolsFilterBar({
   const chips = facets.length + hints.length + categories.length + quickActions.length
 
   return (
-    <div className="grid shrink-0 gap-2 border-b border-(--ui-stroke-tertiary) bg-(--ui-bg-chrome) px-3.5 py-2">
+    <div className="grid shrink-0 gap-2 border-b-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-3.5 py-2">
       <div className="flex items-center gap-3">
-        <span className="shrink-0 text-xs font-medium text-(--ui-text-primary)">{copy.title}</span>
-        <span className="shrink-0 tabular-nums text-[0.7rem] text-(--ui-text-tertiary)">{total}</span>
+        <span className="shrink-0 text-xs font-medium text-(--linear-text-primary)">{copy.title}</span>
+        <span className="shrink-0 tabular-nums text-[0.6875rem] text-(--linear-text-tertiary)">{total}</span>
 
         <Button className="shrink-0" onClick={onShowSummary} size="xs" variant="text">
           {copy.showSummary}
@@ -135,7 +135,7 @@ function FilterChip({
     <Button aria-pressed={selected} onClick={onClick} size="xs" variant={selected ? 'secondary' : 'ghost'}>
       {label}
       {count === undefined ? null : (
-        <span className={cn('tabular-nums', selected ? 'opacity-70' : 'text-(--ui-text-quaternary)')}>{count}</span>
+        <span className={cn('tabular-nums', selected ? 'opacity-70' : 'text-(--linear-text-quaternary)')}>{count}</span>
       )}
     </Button>
   )

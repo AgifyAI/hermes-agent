@@ -1,10 +1,17 @@
-import { isReasoningEffort } from '@hermes/shared'
+import type { ModelOptionProvider } from '@hermes/shared'
+import { isReasoningEffort, REASONING_EFFORT_VALUES } from '@hermes/shared'
+import type { Dispatch, SetStateAction } from 'react'
 import { useCallback, useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useI18n } from '@/i18n'
+import { findCatalogProvider } from '@/lib/model-options'
+import { cn } from '@/lib/utils'
 import type { AuxiliaryTaskAssignment, ModelAssignmentRequest } from '@/types/hermes'
 
+import { CONTROL_TEXT } from './constants'
+import { ModelSelect } from './model-select'
 import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
 // Built-in auxiliary tasks, in the order `_AUX_TASK_SLOTS` (hermes_cli/web_server_config.py)
@@ -106,11 +113,11 @@ export function AuxTaskRouteSummary({
   const autoLine = inheritLabel ? `${m.inheritsFrom(inheritLabel)} · ${effectiveRoute}` : m.autoUseMain
 
   return (
-    <span className="font-mono text-[0.68rem]">
+    <span className="font-mono text-[0.6875rem]">
       {isAuto ? autoLine : `${current.provider} · ${current.model || m.providerDefault}`}
-      {!isAuto && current.base_url && <span className="text-muted-foreground"> · {current.base_url}</span>}
+      {!isAuto && current.base_url && <span className="text-(--linear-text-tertiary)"> · {current.base_url}</span>}
       {effort && (
-        <span className="text-muted-foreground">
+        <span className="text-(--linear-text-tertiary)">
           {' · '}
           {effort === 'none'
             ? `${m.reasoning} ${m.reasoningOff}`
@@ -155,5 +162,96 @@ export function AuxFollowBaseButton({
     <Button disabled={disabled} onClick={onFollow} size="sm" variant="text">
       {t.settings.model.followTask(baseLabel)}
     </Button>
+  )
+}
+
+export interface AuxTaskDraft {
+  model: string
+  provider: string
+  reasoningEffort: string
+}
+
+/** The inline provider / model / reasoning editor under an auxiliary task row. */
+export function AuxTaskDraftEditor({
+  applying,
+  draft,
+  label,
+  models,
+  onApply,
+  onCancel,
+  onDraftChange,
+  providerOptions,
+  providers
+}: {
+  applying: boolean
+  draft: AuxTaskDraft
+  label: string
+  models: readonly string[]
+  onApply: () => void
+  onCancel: () => void
+  onDraftChange: Dispatch<SetStateAction<AuxTaskDraft>>
+  providerOptions: readonly ModelOptionProvider[]
+  providers: readonly ModelOptionProvider[]
+}) {
+  const { t } = useI18n()
+  const m = t.settings.model
+  const draftProvider = findCatalogProvider(providers, draft.provider)
+
+  return (
+    <div className="mt-2 grid gap-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          onValueChange={value => onDraftChange(prev => ({ ...prev, provider: value, model: '' }))}
+          value={draftProvider?.slug ?? draft.provider}
+        >
+          <SelectTrigger aria-label={`${label} provider`} className={cn('min-w-32', CONTROL_TEXT)}>
+            <SelectValue placeholder={m.provider} />
+          </SelectTrigger>
+          <SelectContent>
+            {providerOptions.map(provider => (
+              <SelectItem key={provider.slug || 'none'} value={provider.slug || 'none'}>
+                {provider.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <ModelSelect
+          aria-label={`${label} model`}
+          className="min-w-48"
+          models={models}
+          onValueChange={value => onDraftChange(prev => ({ ...prev, model: value }))}
+          provider={draftProvider}
+          providerSlug={draft.provider}
+          value={draft.model}
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-(--linear-text-tertiary)">{m.reasoning}</span>
+        <Select
+          onValueChange={value => onDraftChange(prev => ({ ...prev, reasoningEffort: value }))}
+          value={draft.reasoningEffort}
+        >
+          <SelectTrigger aria-label={`${label} reasoning effort`} className={cn('min-w-32', CONTROL_TEXT)}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__inherit__">{m.inheritMainEffort}</SelectItem>
+            {REASONING_EFFORT_VALUES.map(value => (
+              <SelectItem key={value} value={value}>
+                {value === 'none' ? m.reasoningOff : t.shell.modelOptions[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button disabled={!draft.provider || !draft.model || applying} onClick={onApply} size="sm">
+          {applying ? m.applying : t.common.apply}
+        </Button>
+        <Button onClick={onCancel} size="sm" variant="ghost">
+          {t.common.cancel}
+        </Button>
+      </div>
+    </div>
   )
 }

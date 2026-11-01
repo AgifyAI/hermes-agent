@@ -34,13 +34,15 @@ function userDismiss(id: string) {
 }
 
 const tone: Record<NotificationKind, { icon: IconComponent; iconClass: string; variant: ToneVariant }> = {
-  error: { icon: AlertCircle, iconClass: 'text-destructive', variant: 'destructive' },
-  warning: { icon: AlertTriangle, iconClass: 'text-primary', variant: 'warning' },
-  info: { icon: Info, iconClass: 'text-muted-foreground', variant: 'default' },
-  success: { icon: CheckCircle2, iconClass: 'text-primary', variant: 'success' }
+  error: { icon: AlertCircle, iconClass: 'text-(--linear-red)', variant: 'destructive' },
+  warning: { icon: AlertTriangle, iconClass: 'text-(--linear-orange)', variant: 'warning' },
+  info: { icon: Info, iconClass: 'text-(--linear-text-tertiary)', variant: 'default' },
+  success: { icon: CheckCircle2, iconClass: 'text-(--linear-green)', variant: 'success' }
 }
 
-const STACK_SURFACE = 'pointer-events-auto border border-(--stroke-nous) bg-popover/95 shadow-nous backdrop-blur-md'
+// Linear's toast (docs/linear-design-reference.md § Toast): overlay fill, 12px
+// radius, a transparent hairline and no shadow.
+const STACK_SURFACE = 'pointer-events-auto border-[0.5px] border-transparent bg-(--linear-bg-overlay)'
 
 function partitionNotifications(notifications: AppNotification[]) {
   const defaultStack: AppNotification[] = []
@@ -182,7 +184,7 @@ function BottomRightStack({
       aria-label={copy.region}
       className={cn(
         REGION_BASE,
-        'right-4 bottom-4 w-[min(24rem,calc(100%-2rem))] flex-col-reverse p-1',
+        'right-4 bottom-4 w-[min(22.25rem,calc(100%-2rem))] flex-col-reverse p-1',
         expanded && 'max-h-[70vh] overflow-y-auto overscroll-contain'
       )}
       role="region"
@@ -222,7 +224,7 @@ export function NotificationDeck({
       onSwipe={(notification, _side, action) => {
         void action.depart(() => userDismiss(notification.id))
       }}
-      surfaceClassName={cn(STACK_SURFACE, 'rounded-lg')}
+      surfaceClassName={cn(STACK_SURFACE, 'rounded-(--linear-radius-overlay)')}
       swipeDirections={['left', 'right']}
     >
       {(notification, action) => <NotificationItem notification={notification} stack={action} />}
@@ -277,7 +279,7 @@ function NotificationItem({ notification, stack }: { notification: AppNotificati
   return (
     <Alert
       aria-live={!stack.active ? 'off' : notification.kind === 'error' ? 'assertive' : 'polite'}
-      className="grid-cols-[auto_minmax(0,1fr)_auto] border-0 bg-transparent pr-2.5 text-xs shadow-none"
+      className="grid-cols-[auto_minmax(0,1fr)_auto] gap-x-2 border-0 bg-transparent p-3 text-[0.8125rem] shadow-none"
       role={notification.kind === 'error' ? 'alert' : 'status'}
       variant={styles.variant}
     >
@@ -294,7 +296,7 @@ function NotificationItem({ notification, stack }: { notification: AppNotificati
         )}
         <AlertDescription className="col-start-auto">
           <p className="m-0 wrap-break-word">{renderMessage(notification.message, accent)}</p>
-          {notification.meta && <p className="m-0 text-xs text-muted-foreground tabular-nums">{notification.meta}</p>}
+          {notification.meta && <p className="m-0 text-xs text-(--linear-text-tertiary) tabular-nums">{notification.meta}</p>}
           {hasDetail && <NotificationDetail detail={notification.detail || ''} />}
           {(notification.action || notification.secondaryAction) && (
             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -336,7 +338,7 @@ function NotificationItem({ notification, stack }: { notification: AppNotificati
       </div>
       <Button
         aria-label={copy.dismiss}
-        className="col-start-3 -mr-1 text-muted-foreground"
+        className="col-start-3 -mr-1 text-(--linear-text-tertiary)"
         disabled={stack.busy || !stack.active}
         onClick={() => {
           void stack.depart(() => userDismiss(notification.id))

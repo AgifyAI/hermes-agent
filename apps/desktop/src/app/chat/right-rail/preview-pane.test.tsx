@@ -1335,7 +1335,7 @@ describe('PreviewPane local HTML Render|Source toggle', () => {
     await waitFor(() => expect(rendered.getByRole('button', { name: 'DIFF' })).toBeTruthy(), {
       container: rendered.container
     })
-    const activeMode = (name: string) => rendered.getByRole('button', { name }).classList.contains('underline')
+    const activeMode = (name: string) => rendered.getByRole('button', { name }).getAttribute('data-active') === 'true'
 
     expect(activeMode('SOURCE')).toBe(true)
     expect(activeMode('DIFF')).toBe(false)

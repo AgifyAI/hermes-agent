@@ -123,13 +123,15 @@ export function FallbackModelsField({
 
   return (
     <div className="grid w-full gap-1.5">
-      {rows.length === 0 && <p className="text-xs text-muted-foreground">{m.fallbackEmpty}</p>}
+      {rows.length === 0 && <p className="text-xs text-(--linear-text-tertiary)">{m.fallbackEmpty}</p>}
       {rows.map((entry, index) => {
         const providerRow = providers.find(provider => provider.slug === entry.provider)
 
         return (
           <div className="flex flex-wrap items-center gap-2" key={index}>
-            <span className="w-4 shrink-0 text-center font-mono text-[0.7rem] text-muted-foreground">{index + 1}</span>
+            <span className="w-4 shrink-0 text-center font-mono text-[0.6875rem] text-(--linear-text-tertiary)">
+              {index + 1}
+            </span>
             <Select onValueChange={provider => updateRow(index, { provider, model: '' })} value={entry.provider}>
               <SelectTrigger className={cn('min-w-36', CONTROL_TEXT)}>
                 <SelectValue placeholder={m.provider} />

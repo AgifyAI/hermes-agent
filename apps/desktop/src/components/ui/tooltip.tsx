@@ -165,7 +165,6 @@ function TooltipContent(props: TooltipContentProps) {
 // "as before", and nothing ever re-resolved it (#114602, live pass).
 function PaneClippedContent({
   align,
-  arrowPadding = 6,
   children,
   className,
   collisionBoundary,
@@ -210,9 +209,10 @@ function PaneClippedContent({
   return (
     <TooltipPrimitive.Content
       align={align ?? preferred.align}
-      arrowPadding={arrowPadding}
       className={cn(
-        'tooltip-bubble pointer-events-none z-(--z-over-modal) w-fit select-none bg-foreground px-2 py-1 text-[0.6875rem] font-medium leading-[1.4] text-background',
+        // Linear's tooltip (docs/linear-design-reference.md § Tooltip): 28px,
+        // overlay surface + hairline, low shadow, 11px/450, no arrow.
+        'tooltip-bubble pointer-events-none z-(--z-over-modal) flex min-h-7 w-fit items-center gap-2 border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) px-2 py-[0.3125rem] text-[0.6875rem] font-[450] leading-4 text-(--linear-text-primary) shadow-(--linear-shadow-low) select-none',
         className
       )}
       collisionBoundary={collisionBoundary ?? pane ?? undefined}
@@ -231,11 +231,6 @@ function PaneClippedContent({
       <div className="tooltip-bubble-label" data-slot="tooltip-label">
         {children}
       </div>
-      <TooltipPrimitive.Arrow asChild height={5} width={10}>
-        <svg aria-hidden data-slot="tooltip-arrow" viewBox="0 0 10 5">
-          <path d="M0 0h10L5.7 4.3a1 1 0 0 1-1.4 0Z" />
-        </svg>
-      </TooltipPrimitive.Arrow>
     </TooltipPrimitive.Content>
   )
 }
@@ -385,7 +380,7 @@ function TipHintLabel({ text, hint }: TipHintLabelProps) {
   return (
     <>
       {text}
-      <span className="ms-2 opacity-55">{hint}</span>
+      <span className="text-(--linear-text-hint)">{hint}</span>
     </>
   )
 }

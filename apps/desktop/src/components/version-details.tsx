@@ -32,7 +32,7 @@ function ChannelRow({ action }: { action?: ReactNode }) {
 
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-muted-foreground">{c.detailsLabel}</dt>
+      <dt className="text-(--linear-text-tertiary)">{c.detailsLabel}</dt>
       <dd className="text-right">
         {label}
         {action && <> · {action}</>}
@@ -49,7 +49,7 @@ function SideVersionRow({ label, value }: { label: string; value?: string }) {
 
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
+      <dt className="text-(--linear-text-tertiary)">{label}</dt>
       <dd>v{shortVersion(value)}</dd>
     </div>
   )
@@ -93,19 +93,19 @@ export function VersionDetails({ version, channelAction }: { version: DesktopVer
           : null
 
   return (
-    <dl className="grid gap-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-3 text-sm">
+    <dl className="grid gap-2 rounded-(--linear-radius-card) bg-(--linear-bg-card) px-4 py-3 text-[0.8125rem] shadow-(--linear-shadow-card)">
       <div className="flex justify-between gap-4">
-        <dt className="text-muted-foreground">{u.versionDetailsVersion}</dt>
+        <dt className="text-(--linear-text-tertiary)">{u.versionDetailsVersion}</dt>
         <dd>
           {version.appVersion ? `v${shortVersion(version.appVersion)}` : u.versionUnavailable}
-          {version.dirty && <span className="text-warning"> (!)</span>}
+          {version.dirty && <span className="text-(--linear-orange)"> (!)</span>}
         </dd>
       </div>
       <SideVersionRow label={u.versionDetailsClient} value={version.clientVersion} />
       <SideVersionRow label={u.versionDetailsBackend} value={version.backendVersion} />
       {version.commit && (
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{u.versionDetailsCommit}</dt>
+          <dt className="text-(--linear-text-tertiary)">{u.versionDetailsCommit}</dt>
           <dd className="break-all text-right">
             <ExternalLink
               className="break-all font-mono text-xs"
@@ -114,14 +114,14 @@ export function VersionDetails({ version, channelAction }: { version: DesktopVer
             >
               {version.commit.slice(0, 14)}
             </ExternalLink>
-            {version.dirty && <span className="text-warning"> {u.versionDetailsUncommittedChanges}</span>}
+            {version.dirty && <span className="text-(--linear-orange)"> {u.versionDetailsUncommittedChanges}</span>}
           </dd>
         </div>
       )}
       <ChannelRow action={channelAction} />
       {source && (
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{u.versionDetailsBuildOrigin}</dt>
+          <dt className="text-(--linear-text-tertiary)">{u.versionDetailsBuildOrigin}</dt>
           <dd>
             {source}
             {version.branch && version.branch !== 'main' ? ` (${version.branch})` : ''}
@@ -130,19 +130,19 @@ export function VersionDetails({ version, channelAction }: { version: DesktopVer
       )}
       {distribution && (
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{u.versionDetailsDistribution}</dt>
+          <dt className="text-(--linear-text-tertiary)">{u.versionDetailsDistribution}</dt>
           <dd>{distribution}</dd>
         </div>
       )}
       {runtime && (
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{u.versionDetailsRuntime}</dt>
+          <dt className="text-(--linear-text-tertiary)">{u.versionDetailsRuntime}</dt>
           <dd className="break-all text-right">{runtime}</dd>
         </div>
       )}
       {version.installId && (
         <div className="flex justify-between gap-4">
-          <dt className="text-muted-foreground">{u.versionDetailsInstallId}</dt>
+          <dt className="text-(--linear-text-tertiary)">{u.versionDetailsInstallId}</dt>
           <dd className="break-all text-right font-mono text-xs">
             {version.installId} ({version.hermesRoot})
           </dd>

@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
-import { Download, Loader2, PawPrint, Pencil, Trash2 } from '@/lib/icons'
+import { Download, Loader2, Pencil, Trash2 } from '@/lib/icons'
 import { isSubmitEnter } from '@/lib/ime'
 import { selectableCardClass } from '@/lib/selectable-card'
 import { cn } from '@/lib/utils'
@@ -39,7 +39,7 @@ import {
 } from '@/store/pet-gallery'
 import { $gatewayState } from '@/store/session'
 
-import { ListRow, SectionHeading, ToggleRow } from './primitives'
+import { ListRow, Pill, SectionHeading, SettingsCard, ToggleRow } from './primitives'
 
 /**
  * Appearance opt-in for the floating petdex mascot. A thin view over the shared
@@ -117,18 +117,16 @@ export function PetSettings() {
 
   return (
     <div>
-      <SectionHeading icon={PawPrint} page title={copy.title} />
-      <p className="max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-        {copy.intro}
-      </p>
+      <SectionHeading page title={copy.title} />
+      <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{copy.intro}</p>
 
       {staleBackend && (
-        <p className="mt-2 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) px-3 py-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
+        <p className="mb-4 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2 text-xs text-(--linear-text-tertiary)">
           {copy.restartHint}
         </p>
       )}
 
-      <div className="mt-2">
+      <SettingsCard>
         <ToggleRow
           below={
             <>
@@ -148,7 +146,7 @@ export function PetSettings() {
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {Array.from({ length: 6 }, (_, i) => (
                       <div className="flex items-center gap-2.5 px-2.5 py-2" key={i}>
-                        <Skeleton className="size-10 shrink-0 rounded-md" />
+                        <Skeleton className="size-10 shrink-0 rounded-(--linear-radius-control)" />
                         <div className="min-w-0 flex-1 space-y-1.5">
                           <Skeleton className="h-3.5 w-24 max-w-full" />
                           <Skeleton className="h-3 w-16 max-w-full" />
@@ -157,13 +155,9 @@ export function PetSettings() {
                     ))}
                   </div>
                 ) : pets.length === 0 ? (
-                  <p className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-                    {copy.unreachable}
-                  </p>
+                  <p className="text-xs text-(--linear-text-tertiary)">{copy.unreachable}</p>
                 ) : shown.length === 0 ? (
-                  <p className="wrap-anywhere text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-                    {copy.noMatch(query)}
-                  </p>
+                  <p className="wrap-anywhere text-xs text-(--linear-text-tertiary)">{copy.noMatch(query)}</p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {shown.map(pet => {
@@ -189,21 +183,21 @@ export function PetSettings() {
                             />
                             <span className="min-w-0 flex-1">
                               <span className="flex items-center gap-1.5">
-                                <span className="truncate text-[length:var(--conversation-text-font-size)] font-medium">
-                                  {pet.displayName}
-                                </span>
+                                <span className="truncate text-[0.8125rem] font-medium">{pet.displayName}</span>
                                 {pet.generated && (
-                                  <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-px text-[0.625rem] font-medium text-primary">
+                                  <Pill className="shrink-0" tone="primary">
                                     {copy.generatedTag}
-                                  </span>
+                                  </Pill>
                                 )}
                               </span>
-                              <span className="block truncate text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+                              <span className="block truncate text-xs text-(--linear-text-tertiary)">
                                 {pet.slug}
                                 {pet.installed ? ` · ${copy.installedTag}` : ''}
                               </span>
                             </span>
-                            {isBusy && <Loader2 className="size-4 shrink-0 animate-spin text-(--ui-text-tertiary)" />}
+                            {isBusy && (
+                              <Loader2 className="size-4 shrink-0 animate-spin text-(--linear-text-tertiary)" />
+                            )}
                           </button>
                           {!isBusy && (pet.installed || pet.generated) && (
                             <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
@@ -243,9 +237,9 @@ export function PetSettings() {
                 )}
               </div>
               {/* Always-present status line so its appearance never shifts layout. */}
-              <p className="mt-2 min-h-4 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+              <p className="mt-2 min-h-4 text-xs text-(--linear-text-tertiary)">
                 {error ? (
-                  <span className="text-(--ui-red)">{error}</span>
+                  <span className="text-(--linear-red)">{error}</span>
                 ) : sorted.length > RENDER_CAP ? (
                   copy.countCapped(RENDER_CAP, sorted.length)
                 ) : (
@@ -276,7 +270,7 @@ export function PetSettings() {
                   step={0.05}
                   value={scale}
                 />
-                <span className="w-9 text-right text-[length:var(--conversation-caption-font-size)] tabular-nums text-(--ui-text-tertiary)">
+                <span className="w-9 text-right text-xs tabular-nums text-(--linear-text-tertiary)">
                   {`${Math.round(scale * 100)}%`}
                 </span>
               </div>
@@ -289,7 +283,7 @@ export function PetSettings() {
         {enabled && (
           <ToggleRow checked={roam} description={copy.roamDesc} label={copy.roamTitle} onChange={setPetRoam} />
         )}
-      </div>
+      </SettingsCard>
 
       <ConfirmDialog
         confirmLabel={copy.deleteConfirm}
@@ -360,17 +354,16 @@ function PetAction({
 }) {
   return (
     <Tip label={label}>
-      <button
+      <Button
         aria-label={label}
-        className={cn(
-          'grid size-6 place-items-center rounded-md bg-(--ui-bg-elevated)/80 text-(--ui-text-tertiary) backdrop-blur-sm transition',
-          danger ? 'hover:text-(--ui-red)' : 'hover:text-foreground'
-        )}
+        className={danger ? 'hover:text-(--linear-red)' : undefined}
         onClick={onClick}
+        size="icon-xs"
         type="button"
+        variant="floating"
       >
         {icon}
-      </button>
+      </Button>
     </Tip>
   )
 }

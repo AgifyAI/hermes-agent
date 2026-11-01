@@ -1,6 +1,4 @@
 import type { GatewayWsUrlResult } from '@hermes/shared'
-import type { HermesSkin } from '@hermes/shared/skin'
-import type { TranslucencyState } from '@hermes/shared/translucency'
 
 import type { ChallengeOutcome } from '../electron/challenge-window'
 import type { ScreenshotApi } from '../electron/command-screenshot-types'
@@ -408,20 +406,13 @@ declare global {
       setActiveWork?: (payload: HermesActiveWork) => void
       setTitleBarTheme?: (payload: HermesTitleBarTheme) => void
       setNativeTheme?: (mode: 'dark' | 'light' | 'system') => void
-      /** Main-process fact: this OS can back glass with a native material. */
-      glassSupported?: boolean
-      /** Main-process fact: this OS can do any translucency at all (not Linux). */
-      translucencySupported?: boolean
       /** Feature flag: the local-models UI is enabled. */
       localModelsEnabled?: boolean
       /** Dev-only launch flag (`--fresh-install`, unpackaged builds): onboarding treats this launch as a fresh install. */
       assumeFreshInstall?: boolean
-      /** Sanitized local `display.skin`, available before any gateway connects. */
-      localSkin?: { profile: string; skin: HermesSkin } | null
       /** This machine's shared UI preferences store (#145213): preload IPC natively,
        *  `/api/ui-preferences` on the Webapp. */
       uiPreferences?: UiPreferencesBridge
-      setTranslucency?: (payload: TranslucencyState) => void
       setKeepAwake?: (mode: KeepAwakeMode) => void
       onKeepAwakeOffer?: (callback: () => void) => () => void
       minimizeToTray?: {
@@ -731,14 +722,6 @@ declare global {
         run: (mode: DesktopUninstallMode) => Promise<DesktopUninstallResult>
         openAppsSettings: () => Promise<void>
       }
-      themes: {
-        // Download a VS Code Marketplace extension and return the raw color
-        // theme files it contributes. The renderer converts + persists them.
-        fetchMarketplace: (id: string) => Promise<DesktopMarketplaceThemeResult>
-        // Search the Marketplace for color-theme extensions. An empty query
-        // returns the most-installed themes.
-        searchMarketplace: (query: string) => Promise<DesktopMarketplaceSearchItem[]>
-      }
       // Find-in-page: delegates to Electron's webContents.findInPage on the
       // IPC sender's window so Cmd+F from a secondary session window
       // searches that window (not the primary). `onFoundInPage` returns the
@@ -765,28 +748,6 @@ export interface HermesPluginFolderGrant {
 export type HermesPluginFilesResult<T extends object = Record<string, unknown>> =
   | ({ ok: true } & T)
   | { ok: false; error: string; message: string }
-
-export interface DesktopMarketplaceSearchItem {
-  extensionId: string
-  displayName: string
-  publisher: string
-  description: string
-  installs: number
-}
-
-export interface DesktopMarketplaceThemeFile {
-  label: string
-  /** VS Code's `uiTheme` for this entry (vs-dark / vs / hc-black). */
-  uiTheme?: string
-  /** Raw theme JSON (JSONC) text, parsed + converted by the renderer. */
-  contents: string
-}
-
-export interface DesktopMarketplaceThemeResult {
-  extensionId: string
-  displayName: string
-  themes: DesktopMarketplaceThemeFile[]
-}
 
 export type HermesTerminalState = 'open' | 'reconnecting' | 'disconnected'
 

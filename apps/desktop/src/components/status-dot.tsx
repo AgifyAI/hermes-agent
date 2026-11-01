@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils'
 export type StatusTone = 'good' | 'muted' | 'warn' | 'bad'
 
 const TONE_BG: Record<StatusTone, string> = {
-  good: 'bg-primary',
-  muted: 'bg-muted-foreground/40',
-  warn: 'bg-amber-500',
-  bad: 'bg-destructive'
+  good: 'bg-(--linear-green)',
+  muted: 'bg-(--linear-text-quaternary)',
+  warn: 'bg-(--linear-yellow)',
+  bad: 'bg-(--linear-red)'
 }
 
 interface StatusDotProps extends ComponentProps<'span'> {

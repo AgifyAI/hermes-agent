@@ -13,7 +13,7 @@ import type { ReactNode } from 'react'
 export function labeled(label: ReactNode, control: ReactNode) {
   return (
     <div className="grid gap-1.5">
-      <label className="text-xs font-medium text-(--ui-text-secondary)">{label}</label>
+      <label className="text-[0.8125rem] font-medium text-(--linear-text-secondary)">{label}</label>
       {control}
     </div>
   )
@@ -29,7 +29,7 @@ const revealOnMount = (el: HTMLDivElement | null) => el?.scrollIntoView?.({ bloc
 export function ResizableFrame({ children }: { children: ReactNode }) {
   return (
     <div
-      className="resize-y overflow-auto rounded-md border border-(--ui-stroke-secondary)"
+      className="resize-y overflow-auto rounded-md border-[0.5px] border-(--linear-border-secondary)"
       ref={revealOnMount}
       style={{
         height: 'min(85vh, 960px)',

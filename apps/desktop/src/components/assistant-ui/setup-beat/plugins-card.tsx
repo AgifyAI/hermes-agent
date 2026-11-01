@@ -45,7 +45,7 @@ async function openInstall(name: string, title: string, profile: string): Promis
 }
 
 const PLUGIN_ICON = (
-  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-background text-muted-foreground">
+  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-(--linear-bg-panel) text-(--linear-text-tertiary)">
     <Puzzle className="size-4" />
   </span>
 )

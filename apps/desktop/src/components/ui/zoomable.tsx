@@ -44,7 +44,7 @@ export function Zoomable({ children, overlay, onCopy, label = 'Open full view', 
         </button>
         <span
           aria-hidden
-          className="pointer-events-none absolute right-2 top-2 grid size-8 place-items-center rounded-full border border-border/70 bg-background/80 text-muted-foreground opacity-0 shadow-sm backdrop-blur transition-opacity group-hover/zoomable:opacity-100"
+          className="pointer-events-none absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-(--linear-bg-overlay) text-(--linear-icon) opacity-0 shadow-(--linear-shadow-menu) transition-opacity group-hover/zoomable:opacity-100"
         >
           <Maximize className="size-4" />
         </span>
@@ -159,7 +159,7 @@ function Toolbar({
   }
 
   return (
-    <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border/70 bg-background/85 p-1 shadow-sm backdrop-blur">
+    <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-(--linear-bg-overlay) p-1 shadow-(--linear-shadow-menu)">
       <ToolbarButton label="Zoom out" onClick={zoomOut}>
         <ZoomOut className="size-4" />
       </ToolbarButton>
@@ -194,7 +194,7 @@ function ToolbarButton({ children, label, onClick }: { children: ReactNode; labe
     <Tip label={label}>
       <button
         aria-label={label}
-        className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="grid size-8 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
         onClick={onClick}
         type="button"
       >

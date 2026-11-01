@@ -94,12 +94,11 @@ export function QueuePanel({
     return (
       <StatusRow
         className={cn(
-          isEditing &&
-            'ring-1 ring-inset ring-[color-mix(in_srgb,var(--dt-composer-ring)_40%,transparent)] bg-accent/25'
+          isEditing && 'bg-(--linear-hover-control) ring-[0.5px] ring-inset ring-(--linear-border-tertiary)'
         )}
         dismiss={{ label: c.queueDelete, onDismiss: () => onDelete(entry.id) }}
         key={entry.id}
-        leading={<Codicon className="text-muted-foreground/70" name="comment" size="0.8rem" />}
+        leading={<Codicon className="text-(--linear-text-tertiary)" name="comment" size="0.8rem" />}
         trailing={
           <>
             {canExpand && (
@@ -141,21 +140,17 @@ export function QueuePanel({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              'text-[0.73rem] leading-4 text-foreground/92',
+              'text-xs leading-4 text-(--linear-text-secondary)',
               isExpanded ? 'max-h-40 overflow-y-auto whitespace-pre-wrap pr-1' : 'line-clamp-2 break-words'
             )}
           >
             {preview}
           </p>
           {(attachmentsCount > 0 || isEditing || lost) && (
-            <div className="mt-0.5 flex items-center gap-1.5 text-[0.64rem] text-muted-foreground/75">
+            <div className="mt-0.5 flex items-center gap-1.5 text-[0.6875rem] text-(--linear-text-tertiary)">
               {lost && <span data-slot="queue-lost-note">{c.queueLostNote}</span>}
               {attachmentsCount > 0 && <span>{c.attachments(attachmentsCount)}</span>}
-              {isEditing && (
-                <span className="text-[color-mix(in_srgb,var(--dt-composer-ring)_78%,var(--muted-foreground))]">
-                  {c.editingInComposer}
-                </span>
-              )}
+              {isEditing && <span className="text-(--linear-text-secondary)">{c.editingInComposer}</span>}
             </div>
           )}
         </div>
@@ -174,7 +169,7 @@ export function QueuePanel({
         parked ? (
           <Tip label={c.queueResumeTip}>
             <Button
-              className="text-muted-foreground/75 hover:text-foreground/90"
+              className="text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
               onClick={onResume}
               size="micro"
               type="button"
@@ -185,7 +180,9 @@ export function QueuePanel({
           </Tip>
         ) : undefined
       }
-      icon={<Codicon className="text-muted-foreground/70" name={paused ? 'debug-pause' : 'layers'} size="0.8rem" />}
+      icon={
+        <Codicon className="text-(--linear-text-tertiary)" name={paused ? 'debug-pause' : 'layers'} size="0.8rem" />
+      }
       label={paused ? c.queuedPaused(entries.length) : c.queued(entries.length)}
       preview={lostEntries.length > 0 ? lostEntries.map(renderRow) : undefined}
     >
@@ -228,7 +225,6 @@ function renderEntryActions({
     <Tip label={c.queueLostDiscardTip}>
       <Button
         aria-label={c.queueLostDiscard}
-        className="h-5 rounded-md px-1.5 text-[0.66rem]"
         data-slot="queue-lost-discard"
         onClick={() => onDiscardLost(entry.id)}
         size="micro"

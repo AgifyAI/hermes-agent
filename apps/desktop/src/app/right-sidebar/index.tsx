@@ -94,10 +94,8 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
     <aside
       aria-label={r.aria}
       className={cn(
-        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--ui-stroke-secondary) bg-(--ui-sidebar-surface-background) pt-(--titlebar-height) text-(--ui-text-tertiary)',
-        panesFlipped
-          ? 'border-r shadow-[inset_-0.0625rem_0_0_color-mix(in_srgb,white_18%,transparent)]'
-          : 'border-l shadow-[inset_0.0625rem_0_0_color-mix(in_srgb,white_18%,transparent)]'
+        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--linear-border-panel) bg-(--linear-bg-panel) pt-(--titlebar-height) text-(--linear-text-tertiary)',
+        panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >
       <FilesystemTab
@@ -134,10 +132,10 @@ interface FilesystemTabProps extends FileTreeBodyProps {
   showIgnored: boolean
 }
 
-// Sidebar palette + hover-reveal: header actions stay reachable while moving
+// Linear sidebar icon buttons + hover-reveal: header actions stay reachable while moving
 // from the project label to the action buttons.
 const HEADER_ACTION_CLASS =
-  'text-sidebar-foreground/70 hover:bg-sidebar-accent! hover:text-sidebar-accent-foreground! focus-visible:bg-sidebar-accent! focus-visible:text-sidebar-accent-foreground! focus-visible:ring-sidebar-ring'
+  'text-(--linear-text-tertiary) hover:bg-(--linear-hover-sidebar-icon)! hover:text-(--linear-text-primary)! focus-visible:bg-(--linear-hover-sidebar-icon)! focus-visible:text-(--linear-text-primary)!'
 
 const HEADER_ACTION_LABEL_REVEAL = `${HEADER_ACTION_CLASS} pointer-events-none opacity-0 transition-opacity focus-visible:pointer-events-auto focus-visible:opacity-100 group-focus-within/project-header:pointer-events-auto group-focus-within/project-header:opacity-100 group-hover/project-header:pointer-events-auto group-hover/project-header:opacity-100`
 
@@ -173,9 +171,9 @@ function FilesystemTab({
   if (!hasWorkspace) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
-        <SidebarPanelLabel className="pl-0 text-(--ui-text-quaternary)">{r.noProjectOpen}</SidebarPanelLabel>
-        <Button className="h-7 gap-1.5 text-xs" onClick={() => void openFolderAsProject()} size="sm" variant="outline">
-          <Codicon name="folder-opened" size="0.8125rem" />
+        <SidebarPanelLabel className="pl-0 text-(--linear-text-quaternary)">{r.noProjectOpen}</SidebarPanelLabel>
+        <Button onClick={() => void openFolderAsProject()} variant="outline">
+          <Codicon name="folder-opened" size="0.875rem" />
           {r.openFolder}
         </Button>
       </div>
@@ -199,7 +197,7 @@ function FilesystemTab({
             size="icon-xs"
             variant="ghost"
           >
-            <Codicon name={showIgnored ? 'eye' : 'eye-closed'} size="0.8125rem" />
+            <Codicon name={showIgnored ? 'eye' : 'eye-closed'} size="0.875rem" />
           </Button>
         </Tip>
         <Tip label={r.refreshTree}>
@@ -211,7 +209,7 @@ function FilesystemTab({
             size="icon-xs"
             variant="ghost"
           >
-            <Codicon name="refresh" size="0.8125rem" spinning={loading} />
+            <Codicon name="refresh" size="0.875rem" spinning={loading} />
           </Button>
         </Tip>
         <Tip label={r.collapseAll}>
@@ -223,7 +221,7 @@ function FilesystemTab({
             size="icon-xs"
             variant="ghost"
           >
-            <Codicon name="collapse-all" size="0.8125rem" />
+            <Codicon name="collapse-all" size="0.875rem" />
           </Button>
         </Tip>
       </RightSidebarSectionHeader>
@@ -299,13 +297,9 @@ function FileTreeBody({
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
         <EmptyState body={r.unreadableBody(error)} title={r.unreadableTitle} />
         {onRetry && (
-          <button
-            className="text-[0.68rem] font-medium text-muted-foreground transition hover:text-foreground"
-            onClick={onRetry}
-            type="button"
-          >
+          <Button onClick={onRetry} size="inline" type="button" variant="text">
             {r.tryAgain}
-          </button>
+          </Button>
         )}
       </div>
     )
@@ -324,13 +318,9 @@ function FileTreeBody({
       fallback={({ reset }) => (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
           <EmptyState body={r.treeErrorBody} title={r.treeErrorTitle} />
-          <button
-            className="text-[0.68rem] font-medium text-muted-foreground transition hover:text-foreground"
-            onClick={reset}
-            type="button"
-          >
+          <Button onClick={reset} size="inline" type="button" variant="text">
             {r.tryAgain}
-          </button>
+          </Button>
         </div>
       )}
       key={cwd}
@@ -367,7 +357,7 @@ function FileTreeLoadingState() {
 export function PaneEmptyState({ label }: { label: string }) {
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center px-4">
-      <SidebarPanelLabel className="pl-0 text-(--ui-text-quaternary)">{label}</SidebarPanelLabel>
+      <SidebarPanelLabel className="pl-0 text-(--linear-text-quaternary)">{label}</SidebarPanelLabel>
     </div>
   )
 }
@@ -377,9 +367,9 @@ export function EmptyState({ body, title }: { body: string; title?: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
       {title && (
-        <div className="text-[0.7rem] font-semibold uppercase tracking-[0.07em] text-muted-foreground/75">{title}</div>
+        <div className="text-[0.8125rem] font-medium text-(--linear-text-secondary)">{title}</div>
       )}
-      <div className="text-[0.68rem] leading-relaxed text-muted-foreground/65">{body}</div>
+      <div className="text-xs leading-relaxed text-(--linear-text-tertiary)">{body}</div>
     </div>
   )
 }

@@ -39,7 +39,7 @@ function pickResting(id: string): ReadonlySet<string> {
 export function LayoutPickerCard({ onContinue }: LayoutPickerCardProps) {
   const { t } = useI18n()
   const copy = t.assistant.themePicker
-  const look = useLookPreview('layout', false)
+  const look = useLookPreview('layout')
   const staged = look.staged?.value ?? null
   const presets = useContributions(LAYOUTS_AREA)
   const activeId = useStore($activePresetId)
@@ -67,12 +67,12 @@ export function LayoutPickerCard({ onContinue }: LayoutPickerCardProps) {
                   className={cn(
                     CARD_OPTION_CLASS,
                     'font-medium',
-                    active ? 'text-foreground' : 'text-(--ui-text-secondary)'
+                    active ? 'text-(--linear-text-primary)' : 'text-(--linear-text-secondary)'
                   )}
                 >
                   {copy[choice.name]}
                 </span>
-                <span className={cn(CARD_DETAIL_CLASS, 'text-(--ui-text-tertiary)')}>{copy[choice.detail]}</span>
+                <span className={cn(CARD_DETAIL_CLASS, 'text-(--linear-text-tertiary)')}>{copy[choice.detail]}</span>
               </span>
             </button>
           )

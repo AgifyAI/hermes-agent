@@ -61,7 +61,7 @@ export function UrlDialog({
               value={value}
             />
             {trimmed.length > 0 && !looksLikeUrl && (
-              <p className="text-xs text-muted-foreground/85">
+              <p className="text-xs text-(--linear-text-tertiary)">
                 {c.urlHintPre}
                 <span className="font-mono">https://…</span>
               </p>

@@ -53,9 +53,9 @@ export function PluginFolderAccess({ plugin, name }: PluginFolderAccessProps) {
   if (isError) {
     return (
       <div className="flex flex-col gap-2" data-testid={`plugin-folder-access-${pluginId}`}>
-        <div className="text-xs font-medium text-(--ui-text-secondary)">{copy.title}</div>
+        <div className="text-xs font-medium text-(--linear-text-secondary)">{copy.title}</div>
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+          <span className="flex-1 text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
             {copy.loadFailed(name)}
           </span>
           <Button onClick={() => void refetch()} size="xs" variant="text">
@@ -83,22 +83,22 @@ export function PluginFolderAccess({ plugin, name }: PluginFolderAccessProps) {
 
   return (
     <div className="flex flex-col gap-2" data-testid={`plugin-folder-access-${pluginId}`}>
-      <div className="text-xs font-medium text-(--ui-text-secondary)">{copy.title}</div>
-      <div className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+      <div className="text-xs font-medium text-(--linear-text-secondary)">{copy.title}</div>
+      <div className="text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
         {copy.hint(name)}
       </div>
       {grants.map(grant => (
         <div className="flex min-w-0 items-center gap-2" key={grant.id}>
           <Codicon name="folder" size="0.85rem" />
           <span className="flex min-w-0 flex-1 flex-col" title={grant.path}>
-            <span className="truncate text-xs text-(--ui-text-secondary)">{grant.name}</span>
-            <span className="truncate font-mono text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+            <span className="truncate text-xs text-(--linear-text-secondary)">{grant.name}</span>
+            <span className="truncate font-mono text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
               {grant.path}
             </span>
           </span>
           <Button
             aria-label={copy.revokeLabel(grant.path)}
-            className="text-destructive hover:text-destructive"
+            className="text-(--linear-red) hover:text-(--linear-red)"
             onClick={() => void revoke(grant.id, grant.path)}
             size="xs"
             variant="text"

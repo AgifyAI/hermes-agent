@@ -1170,12 +1170,8 @@ export interface ProfileSetupCommand {
 export interface ProfileDesktopOverlay {
   /** Overlay schema version (1). */
   version?: number
-  /** Skin name (built-in or bundled user theme). */
-  skin?: string
   /** Light/dark/system preference. */
   mode?: string
-  /** Full user-theme definitions the skin may reference (DesktopTheme JSON). */
-  themes?: Record<string, unknown>
   /** Rail color override for this profile. */
   profileColor?: null | string
   /** Layout tree (hermes.desktop.layoutTree.v2 shape). */

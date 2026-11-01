@@ -16,16 +16,16 @@ const EMOJIBASE_URL = './emojibase'
 
 // Slack tints its picker cells in a repeating palette (green, blue, yellow,
 // pink, brown, purple…) so long scrolls stay scannable. Same trick, in the
-// app's own accent idiom (bg-emerald-500/15 etc. are existing patterns).
+// Linear status palette (green, blue, yellow, pink, orange, accent).
 // Keyed off the emoji's codepoint — deterministic, and stable under
 // frimousse's virtualized rows (an index cycle would reshuffle on scroll).
 const CELL_TINTS = [
-  'hover:bg-emerald-500/15 data-[active]:bg-emerald-500/20',
-  'hover:bg-sky-500/15 data-[active]:bg-sky-500/20',
-  'hover:bg-amber-500/15 data-[active]:bg-amber-500/20',
-  'hover:bg-pink-500/15 data-[active]:bg-pink-500/20',
-  'hover:bg-orange-500/15 data-[active]:bg-orange-500/20',
-  'hover:bg-violet-500/15 data-[active]:bg-violet-500/20'
+  'hover:bg-(--linear-green)/15 data-[active]:bg-(--linear-green)/20',
+  'hover:bg-(--linear-blue)/15 data-[active]:bg-(--linear-blue)/20',
+  'hover:bg-(--linear-yellow)/15 data-[active]:bg-(--linear-yellow)/20',
+  'hover:bg-(--linear-pink)/15 data-[active]:bg-(--linear-pink)/20',
+  'hover:bg-(--linear-orange)/15 data-[active]:bg-(--linear-orange)/20',
+  'hover:bg-(--linear-accent)/15 data-[active]:bg-(--linear-accent)/20'
 ] as const
 
 const cellTint = (emoji: string) => CELL_TINTS[(emoji.codePointAt(0) ?? 0) % CELL_TINTS.length]
@@ -42,14 +42,14 @@ const FullEmojiPicker: FC<{ onSelect: (emoji: string) => void }> = ({ onSelect }
         ("lol" → 😂), which frimousse handles natively. */}
     <EmojiPicker.Search
       autoFocus
-      className="mx-1 border-b border-(--ui-stroke-tertiary) bg-transparent px-1 pb-1 text-sm outline-hidden focus:border-(--ui-stroke-secondary)"
+      className="mx-1 border-b-[0.5px] border-(--linear-border-panel) bg-transparent px-1 pb-1 text-[0.8125rem] outline-hidden focus:border-(--linear-border-secondary)"
       placeholder="Search…"
     />
     <EmojiPicker.Viewport className="relative flex-1 outline-hidden">
-      <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-xs text-(--ui-text-tertiary)">
+      <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-xs text-(--linear-text-tertiary)">
         Loading emoji…
       </EmojiPicker.Loading>
-      <EmojiPicker.Empty className="absolute inset-0 grid place-items-center text-xs text-(--ui-text-tertiary)">
+      <EmojiPicker.Empty className="absolute inset-0 grid place-items-center text-xs text-(--linear-text-tertiary)">
         No emoji found.
       </EmojiPicker.Empty>
       <EmojiPicker.List
@@ -57,7 +57,7 @@ const FullEmojiPicker: FC<{ onSelect: (emoji: string) => void }> = ({ onSelect }
         components={{
           CategoryHeader: ({ category, ...props }) => (
             <div
-              className="bg-(--ui-bg-elevated) px-1.5 pt-2 pb-1 text-[0.6875rem] text-(--ui-text-tertiary)"
+              className="bg-(--linear-bg-overlay) px-1.5 pt-2 pb-1 text-[0.6875rem] text-(--linear-text-tertiary)"
               {...props}
             >
               {category.label}
@@ -114,10 +114,8 @@ export const ReactionPicker: FC<{
       <PopoverAnchor asChild>{children}</PopoverAnchor>
       <PopoverContent
         align={align}
-        // Opt this one surface out of the shared popover glass: emoji hover
-        // tints at 15% alpha are unreadable over blurred transcript text.
         // Overriding the local surface var keeps the arrow matched for free.
-        className={cn('w-auto p-1 [--popover-surface:var(--ui-bg-elevated)]', !expanded && 'flex gap-0.5')}
+        className={cn('w-auto p-1 [--popover-surface:var(--linear-bg-overlay)]', !expanded && 'flex gap-0.5')}
         onCloseAutoFocus={event => event.preventDefault()}
         side="top"
       >
@@ -129,7 +127,7 @@ export const ReactionPicker: FC<{
               <Button
                 aria-label={emoji}
                 aria-pressed={selected === emoji}
-                className={cn('text-base', selected === emoji && 'bg-(--chrome-action-hover)')}
+                className={cn('text-base', selected === emoji && 'bg-(--linear-hover-control)')}
                 key={emoji}
                 onClick={() => {
                   triggerHaptic('selection')

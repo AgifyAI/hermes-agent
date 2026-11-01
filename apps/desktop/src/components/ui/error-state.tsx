@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 // everywhere an error is surfaced (boundaries, dialogs, banners) so failures
 // read identically — one icon, one color, no background chip.
 export function ErrorIcon({ className, size = '1.75rem' }: { className?: string; size?: string }) {
-  return <Codicon className={cn('text-destructive', className)} name="error" size={size} />
+  return <Codicon className={cn('text-(--linear-red)', className)} name="error" size={size} />
 }
 
 // Inline error banner for detail panes (born in Messaging's platform error,
@@ -18,7 +18,7 @@ export function ErrorBanner({ children, className }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        'flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-destructive',
+        'flex items-start gap-2 rounded-(--linear-radius-control) bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] px-3 py-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--linear-red)',
         className
       )}
     >
@@ -50,13 +50,13 @@ export function ErrorState({ children, className, description, icon, title }: Er
         {icon ?? <ErrorIcon />}
 
         {typeof title === 'string' ? (
-          <h2 className="text-center text-xl font-semibold tracking-tight">{title}</h2>
+          <h2 className="text-center text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary)">{title}</h2>
         ) : (
           title
         )}
 
         {typeof description === 'string' ? (
-          <p className="max-w-prose text-center text-sm leading-5 text-muted-foreground">{description}</p>
+          <p className="max-w-prose text-center text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">{description}</p>
         ) : (
           description
         )}

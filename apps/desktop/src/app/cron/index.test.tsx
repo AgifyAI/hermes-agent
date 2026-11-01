@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type * as HermesApi from '@/hermes'
-import type { CronJob, SessionInfo } from '@/hermes'
+import type { AutomationBlueprint, CronJob, SessionInfo } from '@/hermes'
 import { queryClient } from '@/lib/query-client'
 import { $cronFocusJobId, $cronJobs, setCronFocusJobId, setCronJobs } from '@/store/cron'
 import { notifyCronChanged, setChangeEventsAvailable } from '@/store/live-sync'
@@ -14,9 +14,11 @@ import { CronView } from './index'
 const getCronJobRuns = vi.fn()
 const getCronJobs = vi.fn()
 const triggerCronJob = vi.fn()
+const getAutomationBlueprints = vi.fn()
 
 vi.mock('@/hermes', async importOriginal => ({
   ...(await importOriginal<typeof HermesApi>()),
+  getAutomationBlueprints: (profile?: string) => getAutomationBlueprints(profile),
   getCronJobRuns: (jobId: string) => getCronJobRuns(jobId),
   getCronJobs: (profile?: string) => getCronJobs(profile),
   triggerCronJob: (jobId: string) => triggerCronJob(jobId)
@@ -49,7 +51,7 @@ async function renderCron() {
   await act(async () => {
     result = render(
       <QueryClientProvider client={queryClient}>
-        <CronView onClose={vi.fn()} />
+        <CronView />
       </QueryClientProvider>
     )
   })
@@ -76,6 +78,7 @@ beforeEach(() => {
   setChangeEventsAvailable(false)
   getCronJobs.mockResolvedValue([job])
   getCronJobRuns.mockResolvedValue([])
+  getAutomationBlueprints.mockResolvedValue({ blueprints: [] })
   triggerCronJob.mockResolvedValue(job)
 })
 
@@ -274,6 +277,95 @@ describe('CronView trigger duplicate-click guard (regression for f9d64b9 contrac
     await act(async () => {
       releaseTrigger(job)
     })
+  })
+})
+
+// A standalone page, not an overlay: the shell owns navigation, so the view
+// paints no close affordance; the create action lives in the page header; and
+// failed reads say so instead of rendering as "nothing here".
+describe('CronView as a routed page', () => {
+  it('paints no overlay close affordance and keeps the create action in the page header', async () => {
+    await renderLoadedCron()
+
+    expect(screen.queryByRole('button', { name: 'Close cron' })).toBeNull()
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'New cron' }).click()
+    })
+
+    expect(await screen.findByText('New cron job')).toBeTruthy()
+  })
+
+  it('reports a failed first load instead of claiming there are no jobs', async () => {
+    setCronJobs([])
+    getCronJobs.mockRejectedValue(new Error('backend down'))
+
+    await renderCron()
+
+    await screen.findByText('Failed to load cron jobs')
+    expect(screen.queryByText('No scheduled jobs yet')).toBeNull()
+
+    getCronJobs.mockResolvedValue([job])
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Retry' }).click()
+    })
+
+    expect(await screen.findAllByText('Status report')).not.toHaveLength(0)
+  })
+
+  it('does not say "No runs yet" when the run-history read failed', async () => {
+    getCronJobRuns.mockRejectedValue(new Error('read failed'))
+
+    await renderCron()
+
+    await screen.findByText('Failed to load run history')
+    expect(screen.queryByText('No runs yet')).toBeNull()
+  })
+
+  it('renders a run row as static text when no session opener is wired', async () => {
+    const startedAt = Date.now() / 1000
+    getCronJobRuns.mockResolvedValue([
+      {
+        id: 'cron_job-1_20261006_120000',
+        last_active: startedAt,
+        source: 'cron',
+        started_at: startedAt,
+        title: 'Status report run'
+      } as SessionInfo
+    ])
+
+    await renderCron()
+
+    await screen.findByText('Status report run')
+    expect(screen.queryByRole('button', { name: /Status report run/ })).toBeNull()
+  })
+
+  it('keeps a matching blueprint recipe visible instead of showing "No matches"', async () => {
+    getAutomationBlueprints.mockResolvedValue({
+      blueprints: [
+        {
+          appUrl: '',
+          category: 'general',
+          command: '',
+          description: 'Summarize the day',
+          fields: [],
+          key: 'digest',
+          tags: [],
+          title: 'Daily digest'
+        } satisfies AutomationBlueprint
+      ]
+    })
+
+    await renderCron()
+    await screen.findByText('Daily digest')
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search cron jobs...' }), { target: { value: 'digest' } })
+
+    // The job row is filtered out, but the recipe still matches the query, so
+    // the list must not claim nothing matched.
+    await screen.findByText('Daily digest')
+    expect(screen.queryByText('No matches')).toBeNull()
   })
 })
 

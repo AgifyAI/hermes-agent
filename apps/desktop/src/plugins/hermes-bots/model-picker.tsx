@@ -148,7 +148,7 @@ export function ModelPicker({ bot = null, value, onChange, placeholderModel }: M
   if (isLoading) {
     return (
       <div className="flex justify-center py-2">
-        <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+        <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
       </div>
     )
   }
@@ -215,7 +215,7 @@ export function ModelPicker({ bot = null, value, onChange, placeholderModel }: M
           )}
         </div>
         <Button
-          className="h-6 self-start text-xs text-(--ui-text-tertiary)"
+          className="h-6 self-start text-xs font-[450] text-(--linear-text-tertiary)"
           onClick={() => setManualEntry(false)}
           size="sm"
           variant="ghost"

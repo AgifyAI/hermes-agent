@@ -201,7 +201,7 @@ export function ConnectionSwitcher({ compact = false, onConnect }: { compact?: b
           >
             {displayedConnections.length === 0 ? (
               <div
-                className="flex h-full items-center justify-center px-4 text-center text-xs text-(--ui-text-tertiary)"
+                className="flex h-full items-center justify-center px-4 text-center text-xs text-(--linear-text-tertiary)"
                 role="status"
               >
                 {t.settings.connections.noSearchResults}
@@ -248,8 +248,8 @@ function ConnectionSwitcherTrigger({
       {...triggerProps}
       aria-label={activeConnection ? `${title}: ${activeConnection.label}` : title}
       className={cn(
-        'w-full min-w-0 justify-between overflow-hidden px-1 text-(--ui-text-secondary) data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground',
-        compact && 'h-full min-h-0 rounded-none px-1.5 text-[0.6875rem] font-normal',
+        'w-full min-w-0 justify-between overflow-hidden px-1 text-(--linear-text-secondary) data-[state=open]:bg-(--linear-active-sidebar) data-[state=open]:text-(--linear-text-primary)',
+        compact && 'h-full min-h-0 px-2 text-xs font-[450] text-(--linear-text-tertiary) hover:bg-(--linear-hover-sidebar-icon)',
         triggerProps.className
       )}
       size="xs"
@@ -271,7 +271,7 @@ function ConnectionSwitcherTrigger({
 
 function ManageGatewaysLabel({ label }: { label: string }) {
   return (
-    <span className="flex min-w-0 items-center gap-1.5 text-(--ui-text-secondary)">
+    <span className="flex min-w-0 items-center gap-1.5 text-(--linear-text-secondary)">
       <Codicon aria-hidden="true" name="settings-gear" size="0.875rem" />
       <span className="truncate">{label}</span>
     </span>

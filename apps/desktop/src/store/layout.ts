@@ -48,7 +48,6 @@ export const SIDEBAR_FILTERED_PAGE_SIZE = 300
 
 const SIDEBAR_PINNED_STORAGE_KEY = 'hermes.desktop.pinnedSessions'
 const SIDEBAR_AGENTS_GROUPED_STORAGE_KEY = 'hermes.desktop.agentsGroupedByWorkspace'
-const SIDEBAR_CRON_OPEN_STORAGE_KEY = 'hermes.desktop.sidebarCronOpen'
 const SIDEBAR_SESSION_ORDER_STORAGE_KEY = 'hermes.desktop.sessionOrder'
 const SIDEBAR_SESSION_ORDER_MANUAL_STORAGE_KEY = 'hermes.desktop.sessionOrder.manual'
 const SIDEBAR_GROUPING_STORAGE_KEY = 'hermes.desktop.sidebarGrouping'
@@ -237,10 +236,6 @@ export const $removedWorktreeIds = persistentAtom('hermes.desktop.removedWorktre
 // section. Not persisted, so an opened list never survives a restart.
 export const $sidebarPinsOpen = atom(false)
 export const $sidebarRecentsOpen = atom(true)
-// Cron-job sessions live in their own section below recents, collapsed by
-// default (it only renders at all when cron sessions exist) so the
-// scheduler's `[IMPORTANT: …]` first-message previews don't spam recents.
-export const $sidebarCronOpen = persistentAtom(SIDEBAR_CRON_OPEN_STORAGE_KEY, false, Codecs.bool)
 // The Project-grouping flag, per scope like the grouping atoms below it: one
 // global bool here meant picking Project inside a workspace also flipped the
 // all-profiles view into the project tree (and leaving it there wiped the
@@ -821,10 +816,6 @@ export function setSidebarPinsOpen(open: boolean) {
 
 export function setSidebarRecentsOpen(open: boolean) {
   $sidebarRecentsOpen.set(open)
-}
-
-export function setSidebarCronOpen(open: boolean) {
-  $sidebarCronOpen.set(open)
 }
 
 export function setSidebarAgentsGrouped(grouped: boolean) {

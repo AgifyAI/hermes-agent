@@ -35,7 +35,7 @@ vi.mock('@/store/gateway', async importOriginal => ({
 
 const { requestOneShot } = await import('./oneshot')
 const { setSessionYolo } = await import('./yolo-session')
-const { renameSessionPreferringRpc } = await import('@/app/chat/sidebar/session-actions-menu')
+const { renameSessionPreferringRpc } = await import('@/app/chat/sidebar/rename-session')
 const { ModelVisibilityDialog } = await import('@/components/model-visibility-dialog')
 const { reloadMcp } = await import('./mcp-reload')
 const { skipOnboarding } = await import('@/store/onboarding-run')

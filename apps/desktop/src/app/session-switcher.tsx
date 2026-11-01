@@ -57,10 +57,12 @@ export function SessionSwitcher() {
           return (
             <div
               className={cn(
-                'row-hover flex items-center rounded leading-tight',
+                'flex cursor-pointer items-center rounded-(--linear-radius-control) leading-tight transition-colors duration-100 hover:transition-none',
                 HUD_ITEM,
                 HUD_TEXT,
-                selected ? 'bg-accent text-accent-foreground' : 'text-(--ui-text-secondary)'
+                selected
+                  ? 'bg-(--linear-hover-overlay) text-(--linear-text-overlay-strong)'
+                  : 'text-(--linear-text-overlay) hover:bg-(--linear-hover-overlay)'
               )}
               key={session.id}
               onMouseDown={e => {
@@ -74,8 +76,8 @@ export function SessionSwitcher() {
               {i < 9 && (
                 <span
                   className={cn(
-                    'shrink-0 font-mono text-[0.625rem] tabular-nums',
-                    selected ? 'text-accent-foreground/70' : 'text-(--ui-text-quaternary)'
+                    'shrink-0 font-mono text-[0.6875rem] font-medium tabular-nums',
+                    selected ? 'text-(--linear-text-hint)' : 'text-(--linear-text-quaternary)'
                   )}
                 >
                   ⌃{i + 1}

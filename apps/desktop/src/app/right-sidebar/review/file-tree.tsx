@@ -59,16 +59,17 @@ import {
 
 const INDENT = 12
 
-// Per git status letter: a tinted diff codicon so the file's nature reads at a
+// Per git status letter (Linear's diff colours: added green, deleted red,
+// modified blue): a tinted diff codicon so the file's nature reads at a
 // glance (added / modified / deleted / renamed / untracked).
 const STATUS_GLYPH: Record<string, { icon: string; tone: string }> = {
-  A: { icon: 'diff-added', tone: 'text-(--ui-green)' },
-  C: { icon: 'diff-added', tone: 'text-(--ui-green)' },
-  D: { icon: 'diff-removed', tone: 'text-(--ui-red)' },
-  M: { icon: 'diff-modified', tone: 'text-amber-500/85' },
-  R: { icon: 'diff-renamed', tone: 'text-sky-500/85' },
-  U: { icon: 'warning', tone: 'text-(--ui-red)' },
-  '?': { icon: 'diff-added', tone: 'text-muted-foreground/60' }
+  A: { icon: 'diff-added', tone: 'text-(--linear-green)' },
+  C: { icon: 'diff-added', tone: 'text-(--linear-green)' },
+  D: { icon: 'diff-removed', tone: 'text-(--linear-red)' },
+  M: { icon: 'diff-modified', tone: 'text-(--linear-blue)' },
+  R: { icon: 'diff-renamed', tone: 'text-(--linear-orange)' },
+  U: { icon: 'warning', tone: 'text-(--linear-red)' },
+  '?': { icon: 'diff-added', tone: 'text-(--linear-text-quaternary)' }
 }
 
 // Review paths are repo-relative; the composer drop expects absolute paths, so
@@ -290,19 +291,19 @@ function ReviewDirRow({
   return (
     <>
       <div
-        className="group/review-row row-hover flex h-6 select-none items-center gap-1.5 rounded-md pr-1.5 text-xs text-(--ui-text-secondary) hover:text-foreground"
+        className="group/review-row row-hover flex h-6 select-none items-center gap-1.5 rounded-(--linear-radius-control) pr-1.5 text-xs text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
         onClick={toggle}
         style={rowStyle(depth)}
       >
         <Codicon
-          className="shrink-0 text-(--ui-text-tertiary)"
+          className="shrink-0 text-(--linear-text-tertiary)"
           name={open ? 'folder-opened' : 'folder'}
-          size="0.8rem"
+          size="0.875rem"
         />
         <span className="min-w-0 flex-1 truncate" title={node.name}>
           {node.name}
         </span>
-        {!open && <DiffCount added={node.added} className="text-[0.64rem] leading-4" removed={node.removed} />}
+        {!open && <DiffCount added={node.added} className="text-[0.6875rem] leading-4" removed={node.removed} />}
       </div>
       {!leaf && open && node.children && <ReviewNodeList animate={animate} depth={depth + 1} nodes={node.children} />}
     </>
@@ -389,8 +390,8 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
       <div
         aria-selected={selected}
         className={cn(
-          'group/review-row row-hover flex h-6 select-none items-center gap-1.5 rounded-md pr-1.5 text-xs text-(--ui-text-secondary) hover:text-foreground',
-          selected && 'bg-(--ui-row-active-background) text-foreground'
+          'group/review-row row-hover flex h-6 select-none items-center gap-1.5 rounded-(--linear-radius-control) pr-1.5 text-xs text-(--linear-text-secondary) hover:text-(--linear-text-primary)',
+          selected && 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
         )}
         draggable
         onClick={handleClick}
@@ -406,7 +407,7 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
         style={rowStyle(depth)}
         title={displayPath(dragPath)}
       >
-        <Codicon className={cn('shrink-0', glyph.tone)} name={glyph.icon} size="0.8rem" />
+        <Codicon className={cn('shrink-0', glyph.tone)} name={glyph.icon} size="0.875rem" />
         {/* Dir collapses first (huge shrink); the name only ellipsizes once the
             dir is gone — either way neither runs into the diff count. */}
         <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
@@ -414,7 +415,7 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
             {node.name}
           </span>
           {node.dir && (
-            <span className="min-w-0 shrink-[9999] truncate text-[0.68rem] text-(--ui-text-tertiary)" title={node.dir}>
+            <span className="min-w-0 shrink-[9999] truncate text-[0.6875rem] text-(--linear-text-tertiary)" title={node.dir}>
               {node.dir}
             </span>
           )}
@@ -424,7 +425,7 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
           <Tip label={file.staged ? c.unstage : c.stage}>
             <Button
               aria-label={file.staged ? c.unstage : c.stage}
-              className="size-4 rounded text-muted-foreground/70 hover:text-foreground"
+              className="size-4 text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
               onClick={event => {
                 event.stopPropagation()
                 void (file.staged ? unstageReviewFile(file.path) : stageReviewFile(file.path))
@@ -438,7 +439,7 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
           <Tip label={c.revert}>
             <Button
               aria-label={c.revert}
-              className="size-4 rounded text-muted-foreground/70 hover:text-(--ui-red)"
+              className="size-4 text-(--linear-text-tertiary) hover:text-(--linear-red)"
               onClick={event => {
                 event.stopPropagation()
                 requestRevert(file.path)
@@ -453,11 +454,11 @@ function ReviewFileRow({ node, depth }: { node: ReviewTreeNode; depth: number })
 
         <DiffCount
           added={node.added}
-          className="text-[0.64rem] leading-4 group-hover/review-row:hidden"
+          className="text-[0.6875rem] leading-4 group-hover/review-row:hidden"
           removed={node.removed}
         />
         {file.staged && (
-          <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--ui-green)/70" title={c.staged} />
+          <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-(--linear-green)" title={c.staged} />
         )}
       </div>
     </ReviewFileContextMenu>

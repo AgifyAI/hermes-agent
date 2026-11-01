@@ -12,12 +12,14 @@ import { displayPath } from '@/lib/display-path'
 import { AlertTriangle, Save } from '@/lib/icons'
 import { resolveProfileColor } from '@/lib/profile-color'
 import { normalize } from '@/lib/text'
+import { cn } from '@/lib/utils'
 import { notify, notifyError } from '@/store/notifications'
 import { $profileColors, profileLabel, refreshProfiles } from '@/store/profile'
 
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import {
   Panel,
+  PANEL_ERROR_NOTICE,
   PanelAddButton,
   PanelBody,
   PanelDetail,
@@ -28,7 +30,8 @@ import {
   type PanelMenuItem,
   PanelMeta,
   PanelPill,
-  PanelSectionLabel
+  PanelSectionLabel,
+  PanelTitle
 } from '../overlays/panel'
 
 import { CreateProfileDialog } from './create-profile-dialog'
@@ -108,11 +111,7 @@ export function ProfilesView({ onClose }: ProfilesViewProps) {
         <PageLoader label={p.loading} />
       ) : profiles.length === 0 ? (
         <PanelEmpty
-          action={
-            <Button onClick={() => setCreateOpen(true)} size="sm">
-              {p.newProfile}
-            </Button>
-          }
+          action={<Button onClick={() => setCreateOpen(true)}>{p.newProfile}</Button>}
           description={p.createDesc}
           icon="organization"
           title={p.noProfiles}
@@ -232,12 +231,12 @@ function ProfileDetail({ profile }: { profile: ProfileInfo }) {
       <header className="space-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[0.95rem] font-semibold tracking-tight text-foreground">{profileLabel(profile)}</h3>
+            <PanelTitle>{profileLabel(profile)}</PanelTitle>
             {profile.is_default && <PanelPill tone="good">{p.defaultBadge}</PanelPill>}
             {profile.has_env && <PanelPill tone="muted">.env</PanelPill>}
           </div>
           <p
-            className="mt-1 truncate font-mono text-[0.66rem] text-muted-foreground/55"
+            className="mt-1 truncate font-mono text-xs text-(--linear-text-tertiary)"
             title={displayPath(profile.path)}
           >
             {displayPath(profile.path)}
@@ -251,10 +250,12 @@ function ProfileDetail({ profile }: { profile: ProfileInfo }) {
               value: profile.model ? (
                 <span className="font-mono">
                   {profile.model}
-                  {profile.provider ? <span className="text-muted-foreground/55"> · {profile.provider}</span> : null}
+                  {profile.provider ? (
+                    <span className="text-(--linear-text-tertiary)"> · {profile.provider}</span>
+                  ) : null}
                 </span>
               ) : (
-                <span className="text-muted-foreground/55">{p.notSet}</span>
+                <span className="text-(--linear-text-tertiary)">{p.notSet}</span>
               )
             },
             { label: p.skillsLabel, value: profile.skill_count }
@@ -330,10 +331,10 @@ function SoulEditor({ profileName }: { profileName: string }) {
     <section className="space-y-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <PanelSectionLabel className="text-[0.7rem] tracking-[0.14em]">SOUL.md</PanelSectionLabel>
-          <p className="text-xs text-muted-foreground">{missing ? p.soulMissing : p.soulDesc}</p>
+          <PanelSectionLabel>SOUL.md</PanelSectionLabel>
+          <p className="text-xs font-[450] text-(--linear-text-tertiary)">{missing ? p.soulMissing : p.soulDesc}</p>
         </div>
-        {dirty && <span className="text-[0.65rem] text-muted-foreground">{p.unsavedChanges}</span>}
+        {dirty && <span className="text-xs text-(--linear-text-tertiary)">{p.unsavedChanges}</span>}
       </div>
 
       {loading ? (
@@ -352,14 +353,14 @@ function SoulEditor({ profileName }: { profileName: string }) {
       )}
 
       {error && (
-        <div className="flex items-start gap-2 rounded bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className={cn(PANEL_ERROR_NOTICE, 'flex items-start gap-2 px-3 py-2 text-xs')}>
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       <div className="flex justify-end">
-        <Button disabled={!dirty || saving || loading} onClick={() => void handleSave()} size="sm">
+        <Button disabled={!dirty || saving || loading} onClick={() => void handleSave()}>
           <Save />
           {saving ? p.saving : p.saveSoul}
         </Button>

@@ -237,7 +237,7 @@ export function EditProfileDialog({ bot, open, onClose }: EditProfileDialogProps
             />
           )}
           <Button
-            className="flex items-center gap-1 text-xs font-medium text-(--ui-text-tertiary) hover:text-(--ui-text-secondary)"
+            className="flex items-center gap-1 text-xs font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-secondary)"
             onClick={() => setAdvanced(v => !v)}
             size="inline"
             variant="text"
@@ -246,7 +246,7 @@ export function EditProfileDialog({ bot, open, onClose }: EditProfileDialogProps
             {b.bot.advancedHint}
           </Button>
           {advanced ? (
-            <div className="rounded-md border border-(--ui-stroke-secondary) p-3">
+            <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) p-3">
               <AdvancedProfileConfig bot={bot} setState={setAdv} state={adv} />
             </div>
           ) : null}

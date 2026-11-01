@@ -207,7 +207,7 @@ function useCapabilitiesDraft(ready: boolean, slug: string, draft: null | string
  *  until its draft profile exists, then the real surface pinned to that draft. */
 function CapabilitiesTab({ connection, draft, hint }: { connection?: string; draft: null | string; hint: null | string }) {
   const b = useBots()
-  const note = 'px-2 py-3 text-center text-xs text-(--ui-text-tertiary)'
+  const note = 'px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)'
 
   if (hint) {
     return <div className={note}>{hint}</div>
@@ -216,7 +216,7 @@ function CapabilitiesTab({ connection, draft, hint }: { connection?: string; dra
   if (!draft) {
     return (
       <div className="flex justify-center py-4">
-        <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+        <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
       </div>
     )
   }
@@ -788,7 +788,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
             <Input autoFocus onChange={event => setName(event.target.value)} placeholder="inbox-triage" value={name} />
           )}
           {taken ? (
-            <div className="text-xs text-(--ui-accent)">
+            <div className="text-xs text-(--linear-accent)">
               {remoteTarget ? b.editor.nameTakenOn(slug, targetLabel) : b.editor.nameTaken(slug)}
             </div>
           ) : null}
@@ -830,7 +830,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
               )
             : null}
           {remoteTarget ? (
-            <div className="text-[0.7rem] leading-5 text-(--ui-text-tertiary)">{b.editor.remoteHint(targetLabel)}</div>
+            <div className="text-xs font-[450] leading-5 text-(--linear-text-tertiary)">{b.editor.remoteHint(targetLabel)}</div>
           ) : null}
           {labeled(
             b.editor.title,
@@ -846,7 +846,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
             />
           )}
           <Button
-            className="flex items-center gap-1 text-xs font-medium text-(--ui-text-tertiary) hover:text-(--ui-text-secondary)"
+            className="flex items-center gap-1 text-xs font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-secondary)"
             onClick={() => {
               setAdvanced(v => {
                 if (!v) {
@@ -863,7 +863,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
             {b.bot.advanced}
           </Button>
           {advanced ? (
-            <div className="grid gap-3 rounded-md border border-(--ui-stroke-secondary) p-3">
+            <div className="grid gap-3 rounded-md border-[0.5px] border-(--linear-border-secondary) p-3">
               <SegmentedControl
                 onChange={id => {
                   setAdvTab(id)
@@ -945,14 +945,14 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                       value={soul}
                     />
                   )}
-                  <label className="flex items-center gap-2 text-xs text-(--ui-text-secondary)">
+                  <label className="flex items-center gap-2 text-xs font-[450] text-(--linear-text-secondary)">
                     <Checkbox checked={shareAuth} onCheckedChange={value => setShareAuth(Boolean(value))} />
                     {remoteTarget ? b.editor.shareKeysOn(targetLabel) : b.editor.shareKeys}
                   </label>
-                  <div className="pl-6 pt-0.5 text-[0.7rem] leading-5 text-(--ui-text-tertiary)">
+                  <div className="pl-6 pt-0.5 text-xs font-[450] leading-5 text-(--linear-text-tertiary)">
                     {b.editor.shareKeysHint}
                   </div>
-                  <label className="flex items-center gap-2 text-xs text-(--ui-text-secondary)">
+                  <label className="flex items-center gap-2 text-xs font-[450] text-(--linear-text-secondary)">
                     <Checkbox checked={noSkills} onCheckedChange={value => setNoSkills(Boolean(value))} />
                     {b.editor.createEmpty}
                   </label>
@@ -964,20 +964,19 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                   hint={!valid ? b.editor.nameFirstHint : taken ? b.editor.nameTakenHint : null}
                 />
               ) : capsFailed ? (
-                <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">{b.editor.newerGateway}</div>
+                <div className="px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">{b.editor.newerGateway}</div>
               ) : !caps ? (
                 <div className="flex justify-center py-4">
-                  <GlyphSpinner className="text-(--ui-text-tertiary)" spinner="breathe" />
+                  <GlyphSpinner className="text-(--linear-text-tertiary)" spinner="breathe" />
                 </div>
               ) : advTab === 'skills' ? (
                 noSkills ? (
-                  <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">
+                  <div className="px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">
                     {b.editor.emptySkillsHint}
                   </div>
                 ) : (
                   <div className="grid gap-1.5">
                     <Input
-                      className="h-7 text-xs"
                       onChange={event => setCapFilter(event.target.value)}
                       placeholder={b.tools.filterSkills}
                       value={capFilter}
@@ -998,7 +997,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                         onToggle={(name, enabled) => toggleCap('skills', name, enabled)}
                       />
                     </div>
-                    <div className="text-[0.65rem] leading-4 text-(--ui-text-quaternary)">
+                    <div className="text-[0.6875rem] font-[450] leading-4 text-(--linear-text-quaternary)">
                       {b.editor.catalogHint(caps.source)}
                     </div>
                     <HubSkillsSection
@@ -1035,12 +1034,12 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                       onToggle={(name, enabled) => toggleCap('toolsets', name, enabled)}
                     />
                   </div>
-                  <div className="text-[0.65rem] leading-4 text-(--ui-text-quaternary)">
+                  <div className="text-[0.6875rem] font-[450] leading-4 text-(--linear-text-quaternary)">
                     {b.editor.defaultToolsHint}
                   </div>
                 </div>
               ) : caps.mcp.length === 0 ? (
-                <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">{b.tools.noMcpServers}</div>
+                <div className="px-2 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">{b.tools.noMcpServers}</div>
               ) : (
                 <div className="grid gap-1.5">
                   <div
@@ -1057,7 +1056,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                           ((m.requires || []).length > 0 || (m.auth || '').toLowerCase() === 'oauth')
 
                         return (
-                          <label className="flex items-start gap-2 text-xs text-(--ui-text-secondary)" key={m.name}>
+                          <label className="flex items-start gap-2 text-xs font-[450] text-(--linear-text-secondary)" key={m.name}>
                             <Checkbox
                               checked={!!m.enabled}
                               disabled={needsSetup}
@@ -1066,7 +1065,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                             <span className="min-w-0">
                               <span>{m.name}</span>
                               {m.fromCatalog && !needsSetup ? (
-                                <span className="ml-1.5 text-[0.65rem] text-(--ui-text-quaternary)">
+                                <span className="ml-1.5 text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                                   {m.installed ? b.editor.catalogInstalled : b.editor.catalog}
                                 </span>
                               ) : null}
@@ -1102,7 +1101,7 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                                 />
                               ) : null}
                               {m.description ? (
-                                <div className="truncate text-[0.65rem] leading-4 text-(--ui-text-quaternary)">
+                                <div className="truncate text-[0.6875rem] font-[450] leading-4 text-(--linear-text-quaternary)">
                                   {m.description}
                                 </div>
                               ) : null}
@@ -1112,13 +1111,13 @@ export function CreateAgentDialog({ open, onClose, onConfigureModel, roster }: C
                       })}
                     </div>
                   </div>
-                  <div className="text-[0.65rem] leading-4 text-(--ui-text-quaternary)">{b.editor.mcpHint}</div>
+                  <div className="text-[0.6875rem] font-[450] leading-4 text-(--linear-text-quaternary)">{b.editor.mcpHint}</div>
                 </div>
               )}
             </div>
           ) : null}
           {error ? (
-            <div className="rounded-md border border-(--ui-stroke-secondary) px-3 py-2 text-xs text-(--ui-accent)">
+            <div className="rounded-md border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-xs text-(--linear-accent)">
               {error}
             </div>
           ) : null}
@@ -1190,7 +1189,7 @@ export function GroupDialog({ bot, onClose }: GroupDialogProps) {
 
               return (
                 <label
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-(--chrome-action-hover)"
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[0.8125rem] hover:bg-(--linear-hover-control)"
                   key={group}
                 >
                   <Checkbox checked={enabled} onCheckedChange={checked => setMembership(group, checked === true)} />
@@ -1441,7 +1440,7 @@ export function CreateGroupChatDialog({ open, roster, onClose, onCreated }: Crea
             {selected.map(bot => (
               <Badge
                 asChild
-                className="rounded-full bg-(--chrome-action-hover) pl-2 pr-1.5 text-[0.6875rem] text-(--ui-text-secondary) transition-colors hover:text-foreground"
+                className="rounded-full bg-(--linear-hover-control) pl-2 pr-1.5 text-[0.6875rem] font-[450] text-(--linear-text-secondary) transition-colors hover:text-(--linear-text-primary)"
                 key={botRosterKey(bot)}
                 variant="muted"
               >
@@ -1455,7 +1454,7 @@ export function CreateGroupChatDialog({ open, roster, onClose, onCreated }: Crea
                     }
                   >
                     {displayName(bot, botRosterMeta(bot, allMeta))}
-                    <Codicon className="text-[0.6rem]" name="close" />
+                    <Codicon className="text-[0.6875rem]" name="close" />
                   </RowButton>
                 </Tip>
               </Badge>
@@ -1475,7 +1474,7 @@ export function CreateGroupChatDialog({ open, roster, onClose, onCreated }: Crea
                 return (
                   <label
                     className={cn(
-                      'flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-(--chrome-action-hover)',
+                      'flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-(--linear-hover-control)',
                       disabled && 'cursor-not-allowed opacity-50'
                     )}
                     key={botRosterKey(bot)}
@@ -1488,8 +1487,8 @@ export function CreateGroupChatDialog({ open, roster, onClose, onCreated }: Crea
                       size={24}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs text-foreground">{displayName(bot, meta)}</div>
-                      <div className="truncate text-[0.625rem] text-(--ui-text-quaternary)">
+                      <div className="truncate text-xs text-(--linear-text-primary)">{displayName(bot, meta)}</div>
+                      <div className="truncate text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                         {[
                           currentGroups.length
                             ? `@${botHandle(bot.name, bot)} · in ${currentGroups.map(group => `“${group}”`).join(', ')}`
@@ -1512,7 +1511,7 @@ export function CreateGroupChatDialog({ open, roster, onClose, onCreated }: Crea
                 )
               })
             ) : (
-              <div className="px-1.5 py-3 text-center text-xs text-(--ui-text-tertiary)">
+              <div className="px-1.5 py-3 text-center text-xs font-[450] text-(--linear-text-tertiary)">
                 {query.trim() ? `No bots match “${query.trim()}”` : 'No bots yet — create one first.'}
               </div>
             )}

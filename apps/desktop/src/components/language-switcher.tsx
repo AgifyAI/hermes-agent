@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { useMemo, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -10,6 +9,7 @@ import {
   CommandItemCheck,
   CommandList
 } from '@/components/ui/command'
+import { controlVariants } from '@/components/ui/control'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -69,33 +69,34 @@ export function LanguageSwitcher({ className, collapsed = false, dropUp = false 
     }
   }
 
+  // Linear's select button (the same control chrome as SelectTrigger): 8px
+  // radius, select fill and hover, 13px label.
   const trigger = (
-    <Button
+    <button
       aria-expanded={open}
       aria-label={title}
       className={cn(
-        'min-w-32 justify-between gap-2 border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) px-2.5 text-left text-muted-foreground hover:text-foreground',
+        controlVariants(),
+        'flex w-auto min-w-32 cursor-pointer items-center justify-between gap-2 border-transparent bg-(--linear-bg-select) text-left hover:border-transparent hover:bg-(--linear-bg-select-hover)',
         collapsed && 'min-w-0 px-2',
         className
       )}
       disabled={isSavingLocale}
-      size="sm"
       type="button"
-      variant="outline"
     >
       <span className="inline-flex min-w-0 items-center gap-2">
-        <Globe className="size-3.5 shrink-0" />
+        <Globe className="size-3.5 shrink-0 text-(--linear-icon)" />
         {!collapsed && <span className="truncate">{current.endonym}</span>}
       </span>
-      {!collapsed && <ChevronDown className="size-3 shrink-0 opacity-70" />}
-    </Button>
+      {!collapsed && <ChevronDown className="size-3.5 shrink-0 text-(--linear-text-tertiary)" />}
+    </button>
   )
 
   if (useMobileSheet) {
     return (
       <Sheet onOpenChange={setOpen} open={open}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent className="max-h-[min(28rem,80vh)] rounded-t-xl" side="bottom">
+        <SheetContent className="max-h-[min(28rem,80vh)] rounded-t-(--linear-radius-overlay)" side="bottom">
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>{t.language.description}</SheetDescription>
@@ -177,7 +178,7 @@ function LanguageCommand({
               value={option.id}
             >
               <span className="min-w-0 flex-1 truncate">{option.endonym}</span>
-              <span className="font-mono text-[0.65rem] uppercase text-(--ui-text-tertiary)">{option.id}</span>
+              <span className="font-mono text-[0.6875rem] uppercase text-(--linear-text-tertiary)">{option.id}</span>
               <CommandItemCheck checked={selected} />
             </CommandItem>
           )

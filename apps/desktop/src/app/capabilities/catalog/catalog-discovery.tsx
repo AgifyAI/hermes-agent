@@ -34,7 +34,7 @@ const LOOSE_ROWS_PAGE = 3
 export function CatalogDiscovery({ entries, kind, card, onCategory, actions, narrowed, byCategory }: {
   entries: CatalogEntry[]
   kind: CatalogKind
-  card: (entry: CatalogEntry, index: number, variant: CatalogCardVariant, placement?: React.CSSProperties) => ReactNode
+  card: (entry: CatalogEntry, variant: CatalogCardVariant, placement?: React.CSSProperties) => ReactNode
   onCategory: (category: string) => void
   actions?: ReactNode
   /** A tier filter is on: the shelves show only those tiers, so no hero pick. */
@@ -77,8 +77,8 @@ export function CatalogDiscovery({ entries, kind, card, onCategory, actions, nar
   const loose = sections.filter(([, , items]) => items.length < minShelf).flatMap(([, , items]) => items)
 
   const bento = (items: CatalogEntry[], rows?: number, flip = false) => (
-    <div className="catalog-bento" data-catalog-hover-group>
-      {packBento(items, BENTO_COLUMNS, rows, flip).map(tile => card(tile.entry, tile.row, tile.variant, {
+    <div className="catalog-bento">
+      {packBento(items, BENTO_COLUMNS, rows, flip).map(tile => card(tile.entry, tile.variant, {
         '--bento-x': tile.column + 1,
         '--bento-y': tile.row + 1,
         '--bento-w': tile.w,
@@ -91,7 +91,7 @@ export function CatalogDiscovery({ entries, kind, card, onCategory, actions, nar
     <div className="catalog-discovery">
       {featured.length > 0 && <section data-catalog-section="featured">
         <header className="catalog-section-heading"><h2>{t.catalog.discoverKind(title)}</h2></header>
-        <CatalogFeaturedSlider slides={featured.map((entry, index) => card(entry, index, 'hero'))} />
+        <CatalogFeaturedSlider slides={featured.map(entry => card(entry, 'hero'))} />
       </section>}
       {tiered.map(({ tier, title: tierTitle, blurb, items }, index) => (
         <section data-catalog-section={tier} data-catalog-tier={tier} key={tier}>
@@ -108,7 +108,7 @@ export function CatalogDiscovery({ entries, kind, card, onCategory, actions, nar
         return <section data-catalog-section={category} key={category}>
           <header className="catalog-section-heading">
             <div>
-              <h2><Button className="text-[length:inherit] font-[inherit] text-(--ui-text-primary) hover:text-(--ui-text-primary)" onClick={() => onCategory(category)} size="inline" variant="text">{catalogLabel(label)}</Button></h2>
+              <h2><Button className="text-[length:inherit] font-[inherit] text-(--linear-text-primary) hover:text-(--linear-text-primary)" onClick={() => onCategory(category)} size="inline" variant="text">{catalogLabel(label)}</Button></h2>
               <p>{kind === 'plugins' ? PLUGIN_CATEGORIES[category]?.blurb : t.catalog.skillsFor(catalogLabel(label))}</p>
             </div>
             {items.length > packBento(items).length && <Button onClick={() => onCategory(category)} size="inline" variant="text">{t.catalog.seeAll}<Codicon name="arrow-right" /></Button>}

@@ -1,5 +1,5 @@
 export type WindowAcceleratorAction =
-  'close-tab' | 'reload' | 'zoom-in' | 'zoom-out' | 'zoom-reset' | 'swallow' | 'ignore'
+  'close-tab' | 'zoom-in' | 'zoom-out' | 'zoom-reset' | 'swallow' | 'ignore'
 
 /**
  * How long after the window gains focus a Close Tab / Reload keyDown is
@@ -18,7 +18,9 @@ export interface WindowAcceleratorInput {
 }
 
 /**
- * Classify a main-process before-input-event for Close Tab, Reload, and Zoom.
+ * Classify a main-process before-input-event for Close Tab and Zoom. (⌘R used
+ * to live here as a preview reload; it is now the renderer's session rename
+ * chord, and refreshing moved to ⇧⌘R / the menu's forceReload role.)
  *
  * `before-input-event` fires for keydown and keyup. A keyup that arrives after
  * Windows transfers focus (Ctrl+W started in another app) is not a chord this
@@ -47,12 +49,12 @@ export function windowAcceleratorAction(
     return 'ignore'
   }
 
-  if ((folded === 'w' || folded === 'r') && !input.shift) {
+  if (folded === 'w' && !input.shift) {
     if (input.isAutoRepeat || msSinceFocus < FOCUS_GRACE_MS) {
       return 'swallow'
     }
 
-    return folded === 'w' ? 'close-tab' : 'reload'
+    return 'close-tab'
   }
 
   if (key === '0') {

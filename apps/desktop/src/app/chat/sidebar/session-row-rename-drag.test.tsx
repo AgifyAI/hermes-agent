@@ -12,14 +12,17 @@ import type * as GatewayStore from '@/store/gateway'
 import type * as ProjectsStore from '@/store/projects'
 import type * as SessionStore from '@/store/session'
 import type * as SessionColorStore from '@/store/session-color'
+import { $sessionRenameTarget } from '@/store/session-rename'
 import type * as SessionStatesStore from '@/store/session-states'
 import type * as WindowsStore from '@/store/windows'
 
 import { ReorderableList, useSortableBindings } from './reorderable-list'
+import { SessionRenameDialog } from './session-rename-dialog'
 import { SidebarSessionRow } from './session-row'
 
 afterEach(() => {
   cleanup()
+  $sessionRenameTarget.set(null)
   vi.clearAllMocks()
 })
 
@@ -260,9 +263,12 @@ function Host({ session }: { session: SessionInfo }) {
   )
 
   return (
-    <ReorderableList ids={[session.id]} onReorder={noop} sensors={sensors}>
-      <SortableRow session={session} />
-    </ReorderableList>
+    <>
+      <ReorderableList ids={[session.id]} onReorder={noop} sensors={sensors}>
+        <SortableRow session={session} />
+      </ReorderableList>
+      <SessionRenameDialog />
+    </>
   )
 }
 
@@ -332,7 +338,7 @@ describe('SidebarSessionRow drag and the rename dialog (portal press)', () => {
 
     expect(startSessionDrag).not.toHaveBeenCalled()
     expect(row.style.opacity).not.toBe(LIFTED_OPACITY)
-    expect(container.querySelector('[data-glass-opaque]')).toBeNull()
+    expect(container.querySelector('.cursor-grabbing')).toBeNull()
 
     fireEvent.pointerUp(doc, { clientX: 80, clientY: 20, isPrimary: true, pointerId: 1 })
 
@@ -385,7 +391,7 @@ describe('SidebarSessionRow drag and the rename dialog (portal press)', () => {
     // dnd-kit reorder arms (the row goes opaque, the grabber reports pressed).
     expect(startSessionDrag).toHaveBeenCalledTimes(1)
     expect(row.style.opacity).toBe(LIFTED_OPACITY)
-    expect(row.getAttribute('data-glass-opaque')).not.toBeNull()
+    expect(row.classList.contains('cursor-grabbing')).toBe(true)
     expect(container.querySelector('[data-reorder-handle][aria-pressed="true"]')).not.toBeNull()
 
     fireEvent.pointerUp(doc, { clientX: 20, clientY: 160, isPrimary: true, pointerId: 3 })

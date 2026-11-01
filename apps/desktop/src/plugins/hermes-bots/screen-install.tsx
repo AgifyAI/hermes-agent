@@ -9,7 +9,7 @@
  * a fresh status the caller uses to flip the pane to "Start screen".
  */
 
-import { Button, Codicon, EmptyState, GlyphSpinner, host } from '@hermes/plugin-sdk'
+import { Button, Codicon, EmptyState, GlyphSpinner, host, LogView } from '@hermes/plugin-sdk'
 import type { RpcEvent } from '@hermes/plugin-sdk'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -136,14 +136,14 @@ export function ScreenInstallCard({ bot, status, onInstalled }: ScreenInstallCar
   return (
     <div className="grid min-h-48 place-items-center p-6 text-center">
       <div className="flex w-full max-w-lg flex-col gap-2">
-        <div className="text-sm font-medium">{t.screen.notInstalledTitle}</div>
-        <div className="text-xs text-muted-foreground">{t.screen.notInstalledBody}</div>
+        <div className="text-[0.9375rem] leading-[23px] font-medium">{t.screen.notInstalledTitle}</div>
+        <div className="text-xs font-[450] text-(--linear-text-tertiary)">{t.screen.notInstalledBody}</div>
         {status.install_command ? (
-          <code className="select-text break-all rounded bg-muted px-2 py-1 text-left text-xs">
+          <code className="select-text break-all rounded-(--linear-radius-control) bg-(--linear-bg-quaternary) px-2 py-1 text-left text-xs">
             {status.install_command}
           </code>
         ) : (
-          <div className="text-xs text-muted-foreground">{t.screen.noPackageManager}</div>
+          <div className="text-xs font-[450] text-(--linear-text-tertiary)">{t.screen.noPackageManager}</div>
         )}
         {status.install_command ? (
           <Button disabled={phase === 'running'} onClick={() => void install()} size="sm">
@@ -152,13 +152,13 @@ export function ScreenInstallCard({ bot, status, onInstalled }: ScreenInstallCar
           </Button>
         ) : null}
         {log.length > 0 ? (
-          <pre className="max-h-48 overflow-auto rounded bg-black/80 p-2 text-left font-mono text-[0.65rem] leading-tight text-white/85">
+          <LogView className="max-h-48 text-left">
             {log.join('\n')}
             <div ref={logEnd} />
-          </pre>
+          </LogView>
         ) : null}
-        {error ? <div className="text-xs text-red-500">{error}</div> : null}
-        <div className="text-xs text-muted-foreground">{t.screen.installHint}</div>
+        {error ? <div className="text-xs text-(--linear-red)">{error}</div> : null}
+        <div className="text-xs font-[450] text-(--linear-text-tertiary)">{t.screen.installHint}</div>
       </div>
     </div>
   )

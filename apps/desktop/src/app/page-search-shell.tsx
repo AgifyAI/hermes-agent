@@ -29,7 +29,6 @@ interface PageSearchShellProps extends React.ComponentProps<'section'> {
   searchValue?: string
   /** Hide the search field when there's nothing to search (empty dataset). */
   searchHidden?: boolean
-  tabsAlign?: 'center' | 'start'
   /** Right-aligned control in the header's trailing cell (e.g. a refresh button)
    *  so mouse users get a visible affordance for the refresh hotkey. */
   searchTrailingAction?: ReactNode
@@ -38,20 +37,18 @@ interface PageSearchShellProps extends React.ComponentProps<'section'> {
 function ShellTabs({
   tabs,
   activeTab,
-  onTabChange,
-  align
+  onTabChange
 }: {
   tabs: PageShellTab[]
   activeTab?: string
   onTabChange?: (id: string) => void
-  align?: 'center' | 'start'
 }) {
   return (
     <ResponsiveTabs
+      align="start"
       onChange={id => onTabChange?.(id)}
       tabs={tabs}
       value={activeTab ?? tabs[0]?.id ?? ''}
-      wideClassName={align === 'start' ? 'justify-start' : 'justify-center'}
     />
   )
 }
@@ -68,22 +65,21 @@ export function PageSearchShell({
   searchHints,
   searchValue,
   searchHidden = false,
-  tabsAlign = 'center',
   searchTrailingAction,
   ...props
 }: PageSearchShellProps) {
   const hasTabs = (tabs?.length ?? 0) > 0
+  const hasHeader = hasTabs || !searchHidden || Boolean(filters)
 
   return (
     <section
       {...props}
-      className={cn('flex h-full min-w-0 flex-col overflow-hidden bg-(--ui-chat-surface-background)', className)}
+      className={cn('flex h-full min-w-0 flex-col overflow-hidden bg-(--linear-bg-panel)', className)}
     >
       {/*
         Header lives in the page body, below the window chrome (the shell floats
         traffic lights over the top titlebar-height strip, which the `pt` clears
-        and leaves draggable). Search left, tabs centered on the page via the
-        1fr/auto/1fr grid; the trailing 1fr keeps the center honest.
+        and leaves draggable). Tabs and search lead on the left, actions trail.
       */}
       {/*
         IMPORTANT: do NOT put `-webkit-app-region: drag` on this header. It spans
@@ -94,33 +90,38 @@ export function PageSearchShell({
         draggable titlebar strip that is `calc()`'d around the icon clusters
         (see app-shell.tsx), so window dragging still works here.
       */}
-      <div className="shrink-0">
+      <div
+        className={cn(
+          'shrink-0 pt-(--titlebar-height)',
+          // One hairline under the whole header (Linear's header rule).
+          hasHeader && 'border-b-[0.5px] border-(--linear-border-primary)'
+        )}
+      >
         {(hasTabs || !searchHidden) && (
-          <div className={cn('grid items-center gap-3 px-3 pb-2 pt-[calc(var(--titlebar-height)+0.5rem)]', tabsAlign === 'start' ? 'grid-cols-[minmax(0,1fr)_auto_auto] px-6 pt-[calc(var(--titlebar-height)+1.5rem)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]')}>
-            <div className={cn('flex min-w-0 items-center justify-start', tabsAlign === 'start' ? 'col-start-2 row-start-1 justify-end' : '', searchHidden && tabsAlign === 'start' && 'hidden')}>
-              {!searchHidden && onSearchChange && (
-                <SearchField
-                  containerClassName="max-w-[45vw]"
-                  hints={searchHints}
-                  onChange={onSearchChange}
-                  placeholder={searchPlaceholder ?? ''}
-                  value={searchValue ?? ''}
-                />
-              )}
-            </div>
-            {hasTabs ? (
-              <div className={cn('flex min-w-0 items-center', tabsAlign === 'start' ? 'col-start-1 row-start-1 justify-start' : 'justify-center')} data-tour="page-tabs">
-                <ShellTabs activeTab={activeTab} align={tabsAlign} onTabChange={onTabChange} tabs={tabs!} />
+          // Linear's page header: 44px, 8px left / 12px right, hairline below;
+          // view tabs lead on the left, actions sit on the right.
+          <div className="flex h-11 items-center gap-3 pr-3 pl-2">
+            {hasTabs && (
+              <div className="flex min-w-0 items-center" data-tour="page-tabs">
+                <ShellTabs activeTab={activeTab} onTabChange={onTabChange} tabs={tabs!} />
               </div>
-            ) : (
-              <span />
             )}
-            <div className={cn('flex min-w-0 items-center justify-end', tabsAlign === 'start' && 'col-start-3 row-start-1')}>{searchTrailingAction}</div>
+            {!searchHidden && onSearchChange && (
+              <SearchField
+                containerClassName="w-64 max-w-[45vw]"
+                hints={searchHints}
+                onChange={onSearchChange}
+                placeholder={searchPlaceholder ?? ''}
+                value={searchValue ?? ''}
+                variant="box"
+              />
+            )}
+            <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5">{searchTrailingAction}</div>
           </div>
         )}
-        {filters ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 pb-2">{filters}</div> : null}
+        {filters ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-3 pb-2 pl-2">{filters}</div> : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden bg-(--ui-chat-surface-background)">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden bg-(--linear-bg-panel)">{children}</div>
     </section>
   )
 }

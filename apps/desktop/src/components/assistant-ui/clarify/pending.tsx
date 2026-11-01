@@ -287,7 +287,12 @@ export function ClarifyToolPending({
   if (questions.length === 0) {
     return (
       <ClarifyShell aria-label={copy.loadingQuestion} className="my-1.5 grid min-h-12 place-items-center" role="status">
-        <Loader aria-hidden="true" className="size-6 text-(--ui-text-tertiary)" role="presentation" type="rose-curve" />
+        <Loader
+          aria-hidden="true"
+          className="size-6 text-(--linear-text-tertiary)"
+          role="presentation"
+          type="rose-curve"
+        />
       </ClarifyShell>
     )
   }
@@ -310,7 +315,7 @@ export function ClarifyToolPending({
       )}
       <ClarifyShell className="grid gap-3">
         <div className="flex items-start gap-2">
-          <span className="flex-1 text-[0.6875rem] leading-4 text-(--ui-text-tertiary)">
+          <span className="flex-1 text-[0.6875rem] leading-4 text-(--linear-text-tertiary)">
             {questions.length === 1 ? copy.oneQuestion : copy.questionProgress(answeredCount, questions.length)}
           </span>
           <MessageQuestion aria-hidden className={CLARIFY_ICON_CLASS} />

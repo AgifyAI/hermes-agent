@@ -27,12 +27,7 @@ import {
   type SessionControlHeartbeat
 } from '@/store/session-control'
 
-import {
-  type ConfirmState,
-  formatCountdown,
-  formatHeartbeatInterval,
-  useCountdownClock
-} from './session-control-utils'
+import { type ConfirmState, formatCountdown, formatHeartbeatInterval, useCountdownClock } from './session-control-utils'
 
 interface HeartbeatSectionProps {
   heartbeat: SessionControlHeartbeat
@@ -40,7 +35,6 @@ interface HeartbeatSectionProps {
   pendingAction: SessionControlAction | null
   onFeedback: (error: string | null, success: string | null) => void
 }
-
 
 export const SessionControlHeartbeatSection = memo(function SessionControlHeartbeatSection({
   heartbeat,
@@ -87,7 +81,8 @@ export const SessionControlHeartbeatSection = memo(function SessionControlHeartb
       ? ` · ${isDue ? ctrl.dueWaitingForIdle : ctrl.heartbeatNext(formatCountdown(nextDueTimestamp, now))}`
       : ''
 
-  const iconClass = heartbeat.status === 'paused' ? 'text-red-500' : isDue ? 'text-amber-500' : 'text-emerald-500'
+  const iconClass =
+    heartbeat.status === 'paused' ? 'text-(--linear-red)' : isDue ? 'text-(--linear-yellow)' : 'text-(--linear-green)'
 
   const headerLabel = `${stateLabel} · ${intervalLabel}${nextRunLabel}`
 
@@ -143,7 +138,7 @@ export const SessionControlHeartbeatSection = memo(function SessionControlHeartb
                       <Button
                         aria-haspopup="menu"
                         aria-label={ctrl.heartbeatActions}
-                        className="size-6 rounded-md text-muted-foreground/70 hover:text-foreground/90"
+                        className="text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                         disabled={isBusy}
                         onClick={event => {
                           // Radix opens pointer interactions from pointerdown. Keyboard,
@@ -176,7 +171,7 @@ export const SessionControlHeartbeatSection = memo(function SessionControlHeartb
               label={headerLabel}
             >
               <div>
-                <StatusControlRow className="text-[0.73rem] leading-4 text-foreground/92 break-words" icon="bell">
+                <StatusControlRow className="text-xs leading-4 text-(--linear-text-secondary) break-words" icon="bell">
                   {heartbeat.prompt}
                 </StatusControlRow>
                 <StatusControlRow icon="history">{ctrl.heartbeatFiredCount(heartbeat.fire_count)}</StatusControlRow>

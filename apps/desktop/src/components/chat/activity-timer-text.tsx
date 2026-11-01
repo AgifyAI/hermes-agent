@@ -13,13 +13,7 @@ export function ActivityTimerText({ 'aria-hidden': ariaHidden, seconds, classNam
   return (
     <StableText
       aria-hidden={ariaHidden}
-      className={cn(
-        // Tinted with --dt-midground (very low alpha) so the timer reads
-        // as part of the same "live signal" cluster as the dither block /
-        // arc-border / working-session dot, instead of being neutral chrome.
-        'shrink-0 text-[0.56rem] leading-none tracking-[0.02em] text-midground/55',
-        className
-      )}
+      className={cn('shrink-0 text-[0.6875rem] leading-none text-(--linear-text-tertiary)', className)}
     >
       {formatElapsed(seconds)}
     </StableText>

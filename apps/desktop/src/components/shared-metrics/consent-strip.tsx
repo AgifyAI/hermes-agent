@@ -48,12 +48,12 @@ export function SharedMetricsConsentStrip() {
 
   return (
     <StatusRow
-      leading={<Codicon aria-hidden className="text-(--ui-text-tertiary)" name="graph" size="0.8rem" />}
+      leading={<Codicon aria-hidden className="text-(--linear-text-tertiary)" name="graph" size="0.8rem" />}
       trailing={
         <>
           {CHOICES.map(choice => (
             <Button
-              className="text-foreground/90 hover:text-foreground"
+              className="text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
               disabled={saving}
               key={choice}
               onClick={() => void choose(choice)}
@@ -65,7 +65,7 @@ export function SharedMetricsConsentStrip() {
             </Button>
           ))}
           <Button
-            className="text-muted-foreground/75 hover:text-foreground/90"
+            className="text-(--linear-text-quaternary) hover:text-(--linear-text-secondary)"
             onClick={() => $sharedMetricsDetailsOpen.set(true)}
             size="micro"
             type="button"
@@ -77,9 +77,9 @@ export function SharedMetricsConsentStrip() {
       }
       trailingVisible
     >
-      <span className="min-w-0 truncate text-[0.73rem] leading-4 text-foreground/92">
+      <span className="min-w-0 truncate text-xs leading-4 text-(--linear-text-secondary)">
         <span className="font-medium">{copy.consentTitle}</span>
-        <span className="text-muted-foreground/80"> {reask ? copy.stripReaskBody : copy.stripBody}</span>
+        <span className="text-(--linear-text-quaternary)"> {reask ? copy.stripReaskBody : copy.stripBody}</span>
       </span>
     </StatusRow>
   )

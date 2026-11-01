@@ -31,7 +31,7 @@ export function CanonicalGroupHeader({ busy, canStop, onBack, onDisband, onRenam
     <header className="flex items-center gap-2">
       {onBack && <Button onClick={onBack}>{labels.back}</Button>}
       <div className="min-w-0">
-        <h2 className="text-sm font-medium">{room?.name || labels.loadingGroup}</h2>
+        <h2 className="text-[0.9375rem] leading-[23px] font-medium">{room?.name || labels.loadingGroup}</h2>
         <CanonicalGroupRoster label={labels.members} labels={labels} members={room?.members} phases={phases} />
       </div>
       <Button disabled={busy || !canStop} onClick={onStop}>{labels.stop}</Button>
@@ -44,7 +44,7 @@ export function CanonicalGroupHeader({ busy, canStop, onBack, onDisband, onRenam
       <Button onClick={() => setRenaming(null)} type="button">{labels.cancel}</Button>
     </form>}
     {ending && <ConfirmDialog busyLabel={labels.disbanding} confirmLabel={labels.disband}
-      description={<span>{labels.disbandDescPrefix}<span className="font-medium text-foreground">{room?.name}</span>{labels.disbandDescSuffix(room?.members?.length ?? 0)}</span>}
+      description={<span>{labels.disbandDescPrefix}<span className="font-medium text-(--linear-text-primary)">{room?.name}</span>{labels.disbandDescSuffix(room?.members?.length ?? 0)}</span>}
       destructive doneLabel={labels.disbandDone} onClose={() => setEnding(false)} onConfirm={onDisband} open title={labels.disbandTitle} />}
   </>
 }

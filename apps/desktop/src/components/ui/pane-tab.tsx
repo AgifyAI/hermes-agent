@@ -12,16 +12,15 @@ import { cn } from '@/lib/utils'
 export const PANE_TAB_STRIP_LINE_LEFT = 'shadow-[inset_1px_0_0_var(--ui-stroke-tertiary)]'
 export const PANE_TAB_STRIP_LINE_RIGHT = 'shadow-[inset_-1px_0_0_var(--ui-stroke-tertiary)]'
 
-// Surface tokens become transparent under glass; the body owns the tint.
 // The close-button fade masks the label, so it needs no second surface fill.
 const TAB =
-  'group/tab relative flex shrink-0 items-center border-transparent bg-(--tab-bg) text-xs font-medium [-webkit-app-region:no-drag]'
+  'group/tab relative flex shrink-0 items-center border-transparent text-xs font-medium [-webkit-app-region:no-drag]'
 
-// Full height: with the strip's rule removed there is no last-pixel row to
-// leave uncovered, so tabs fill the bar and no sliver of gutter shows through.
-// No per-tab vertical rules — Linear's tab bar reads as one continuous strip;
-// the labels' own padding separates them.
-const TAB_HORIZONTAL = 'h-full min-w-0 max-w-48'
+// Linear's tab (measured): a 26px pill, radius 8, label 12px/500. The bar
+// keeps its height; the pill floats centred in it, and only the active one
+// takes the tab surface and the low shadow.
+const TAB_HORIZONTAL =
+  'my-auto h-[1.625rem] min-w-0 max-w-48 rounded-(--linear-radius-control) transition-colors duration-(--linear-speed-quick)'
 
 // A closeable tab's floor keeps short labels left of the close button.
 // A floor, not padding — a tab already wider than it pays nothing.
@@ -30,26 +29,20 @@ const TAB_CLOSEABLE = 'min-w-13'
 const TAB_VERTICAL =
   'w-full max-h-48 justify-center not-first:border-t not-first:border-t-(--ui-stroke-quaternary) [writing-mode:vertical-rl]'
 
-const TAB_ACTIVE = 'h-full text-foreground [--tab-bg:var(--pane-tab-active-bg,var(--ui-editor-surface-background))]'
+const TAB_ACTIVE = 'bg-(--linear-bg-tab) text-(--linear-text-primary)'
 
-// Horizontal only: the active tab is the sole seam on the strip — a quiet
-// neutral underline drawn as an inset shadow in its own last pixel row, so it
-// costs no layout and can't shift the tab. Neutral, not brand-blue: the tabs
-// name a pane, they don't advertise the accent.
-const TAB_ACTIVE_UNDERLINE = 'shadow-[inset_0_-2px_0_var(--pane-tab-active-accent,var(--ui-text-quaternary))]'
+const TAB_ACTIVE_RAISED = 'shadow-(--linear-shadow-low)'
 
-// Inactive = gutter, defaulting to the shared chrome surface so a strip that
-// sets no vars still matches the sidebar/titlebar instead of falling through to
-// the raw (unmixed) card seed. Hover DARKENS: surfaces this close in value need
-// a darkening wash to register at all.
+// Inactive = the bar itself; hover takes the control wash like Linear's
+// titlebar buttons.
 const TAB_IDLE =
-  'text-(--ui-text-tertiary) [--tab-bg:var(--pane-tab-strip-bg,var(--ui-sidebar-surface-background))] hover:shadow-[inset_0_0_0_100vmax_color-mix(in_srgb,#000_var(--ui-tab-hover-darken),transparent)] hover:text-(--ui-text-secondary)'
+  'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-secondary)'
 
 // A tab riding a multi-tab selection: an accent wash over whatever surface the
-// tab sits on. A background-image gradient (not a shadow) so it stacks cleanly
-// over `--tab-bg` without fighting the active underline / hover shadows.
+// tab sits on. A background-image gradient so it stacks over the tab's own
+// fill and hover wash.
 const TAB_SELECTED =
-  '[background-image:linear-gradient(color-mix(in_srgb,var(--ui-accent)_14%,transparent),color-mix(in_srgb,var(--ui-accent)_14%,transparent))] text-foreground'
+  '[background-image:linear-gradient(color-mix(in_srgb,var(--linear-accent)_14%,transparent),color-mix(in_srgb,var(--linear-accent)_14%,transparent))] text-(--linear-text-primary)'
 
 interface PaneTabProps extends React.ComponentProps<'div'> {
   active?: boolean
@@ -73,9 +66,8 @@ interface PaneTabProps extends React.ComponentProps<'div'> {
 /**
  * Editor tab shell — preview rail + zone headers + collapsed vertical rails.
  *
- * Defaults need no vars: the active tab takes the editor surface, inactive the
- * sidebar one. Override `--pane-tab-active-bg` to change what the active tab
- * merges into, `--pane-tab-strip-bg` for a gutter unlike the bar around it.
+ * The active tab is Linear's raised tab pill; inactive tabs are bare labels on
+ * the bar that take the control wash on hover.
  */
 export const PaneTab = React.forwardRef<HTMLDivElement, PaneTabProps>(function PaneTab(
   {
@@ -108,7 +100,7 @@ export const PaneTab = React.forwardRef<HTMLDivElement, PaneTabProps>(function P
         !vertical && onClose && TAB_CLOSEABLE,
         edge,
         active
-          ? cn(TAB_ACTIVE, !vertical && TAB_ACTIVE_UNDERLINE)
+          ? cn(TAB_ACTIVE, !vertical && TAB_ACTIVE_RAISED)
           : cn(TAB_IDLE, edge && `${edge}-(--ui-stroke-tertiary)`),
         selected && TAB_SELECTED,
         className
@@ -169,12 +161,12 @@ export const PaneTab = React.forwardRef<HTMLDivElement, PaneTabProps>(function P
             vertical ? 'bottom-1.5 left-1/2 -translate-x-1/2' : 'right-1.5 top-1/2 -translate-y-1/2'
           )}
         >
-          <span className="size-2 rounded-full bg-amber-500 shadow-[0_0_0_2px_var(--tab-bg),0_1px_2px_rgba(0,0,0,0.45)] dark:bg-amber-400" />
+          <span className="size-2 rounded-full bg-(--linear-orange)" />
         </span>
       )}
       {onClose && !vertical && (
         // Mask the content beneath the close button instead of painting over it.
-        // Geometry stays fixed; the same fade works on solid and glass surfaces.
+        // Geometry stays fixed; the fade works on any tab surface.
         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-stretch opacity-0 transition-opacity group-hover/tab:pointer-events-auto group-hover/tab:opacity-100">
           <button
             aria-label={translateNow('common.close')}
@@ -220,7 +212,7 @@ export const PaneTabLabel = React.forwardRef<HTMLElement, PaneTabLabelProps>(fun
 
   return (
     <Comp
-      className="flex h-full min-w-0 max-w-full items-center overflow-hidden px-2 text-left outline-none group-data-[vertical]/tab:h-auto group-data-[vertical]/tab:w-full group-data-[vertical]/tab:justify-center group-data-[vertical]/tab:py-2"
+      className="flex h-full min-w-0 max-w-full items-center overflow-hidden px-2.5 text-left outline-none group-data-[vertical]/tab:h-auto group-data-[vertical]/tab:w-full group-data-[vertical]/tab:justify-center group-data-[vertical]/tab:py-2"
       ref={ref}
       {...props}
     >
@@ -262,11 +254,10 @@ export const PaneTabStrip = React.forwardRef<HTMLDivElement, PaneTabStripProps>(
 ) {
   return (
     <div
-      // Strip and active tab both sit on the sidebar surface, so the bar reads
-      // as one piece of chrome with the titlebar above it. No bottom rule — the
-      // active tab's primary underline is the only seam.
+      // The bar is the window surface, like Linear's titlebar; the active tab is
+      // the raised pill on it. No rules or underlines.
       className={cn(
-        'group/pane-header relative flex min-w-0 shrink-0 select-none bg-(--ui-sidebar-surface-background) [--pane-tab-active-bg:var(--ui-sidebar-surface-background)]',
+        'group/pane-header relative flex min-w-0 shrink-0 select-none bg-(--ui-sidebar-surface-background)',
         titlebar ? 'h-full flex-1 [-webkit-app-region:drag]' : 'h-7 [-webkit-app-region:no-drag]',
         className
       )}
@@ -274,7 +265,7 @@ export const PaneTabStrip = React.forwardRef<HTMLDivElement, PaneTabStripProps>(
       {...props}
     >
       <div
-        className="flex min-w-0 flex-1 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         ref={listRef}
         role="tablist"
       >

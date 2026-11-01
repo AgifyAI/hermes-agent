@@ -16,13 +16,13 @@
 
 import { useEffect, useState } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Input } from '@/components/ui/input'
 import { PaneStripGlyph } from '@/components/ui/pane-tab'
 import { useI18n } from '@/i18n'
 import { isSubmitEnter } from '@/lib/ime'
-import { ANNOTATE_BLUE } from '@/lib/preview-annotate'
 import { cn } from '@/lib/utils'
 
 interface PreviewBrowserBarProps {
@@ -149,7 +149,7 @@ export function PreviewBrowserBar({
   }
 
   return (
-    <div className="flex min-h-(--titlebar-height) shrink-0 items-center gap-1 border-b border-border/60 bg-background px-1.5 py-1">
+    <div className="flex min-h-(--titlebar-height) shrink-0 items-center gap-1 border-b-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-panel) px-1.5 py-1">
       <PaneStripGlyph
         disabled={!canGoBack}
         icon={<Codicon name="arrow-left" size="0.8125rem" />}
@@ -177,7 +177,7 @@ export function PreviewBrowserBar({
             reads as chrome rather than as this page's state. */}
         {loading && (
           <Codicon
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-(--linear-text-tertiary)"
             name="loading"
             size="0.75rem"
             spinning
@@ -212,7 +212,7 @@ export function PreviewBrowserBar({
         />
         <CopyButton
           appearance="inline"
-          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-sm p-1"
+          className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1"
           iconClassName="size-3"
           label={t.contextMenu.link.copyUrl}
           showLabel={false}
@@ -229,22 +229,16 @@ export function PreviewBrowserBar({
       ) : null}
       {annotateMode ? (
         <span
-          className="hidden shrink-0 items-center rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide text-white uppercase sm:inline-flex"
+          className="hidden h-6 shrink-0 items-center rounded-full bg-(--linear-accent) px-2 text-xs font-medium text-(--linear-on-accent) sm:inline-flex"
           data-annotate-status="commenting"
-          style={{ background: ANNOTATE_BLUE }}
         >
           {copy.commenting}
         </span>
       ) : null}
       {commentCount > 0 && onFlushComments ? (
-        <button
-          className="shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold text-white"
-          onClick={onFlushComments}
-          style={{ background: ANNOTATE_BLUE }}
-          type="button"
-        >
+        <Button onClick={onFlushComments} size="xs" type="button">
           {copy.addComments(commentCount)}
-        </button>
+        </Button>
       ) : null}
       {onPopIn ? (
         <PaneStripGlyph

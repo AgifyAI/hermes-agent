@@ -106,19 +106,19 @@ export function ArtifactCard({ code, detection, streaming = false }: ArtifactCar
       onClick={open}
       type="button"
     >
-      <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted/55 text-muted-foreground">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-(--linear-bg-secondary) text-(--linear-icon)">
         <CodeCardIcon className="text-[1rem]" name={detectionIcon(detection)} />
       </span>
       <span className="min-w-0 flex-1">
         <span
           className={cn(
-            'block truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground',
-            streaming && 'shimmer text-foreground/55'
+            'block truncate text-[length:var(--conversation-text-font-size)] font-medium text-(--linear-text-primary)',
+            streaming && 'shimmer text-(--linear-text-quaternary)'
           )}
         >
           {title}
         </span>
-        <span className="block truncate text-[length:var(--conversation-tool-font-size)] text-muted-foreground">
+        <span className="block truncate text-[length:var(--conversation-tool-font-size)] text-(--linear-text-tertiary)">
           {streaming
             ? copy.generating(lineCount)
             : versionCount > 1
@@ -127,7 +127,7 @@ export function ArtifactCard({ code, detection, streaming = false }: ArtifactCar
         </span>
       </span>
       {!streaming && (
-        <span className="shrink-0 text-[length:var(--conversation-tool-font-size)] font-medium text-muted-foreground opacity-0 transition-opacity group-hover/artifact:opacity-100">
+        <span className="shrink-0 text-[length:var(--conversation-tool-font-size)] font-medium text-(--linear-text-tertiary) opacity-0 transition-opacity group-hover/artifact:opacity-100">
           {copy.open}
         </span>
       )}

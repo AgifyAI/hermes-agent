@@ -28,8 +28,7 @@ const LOAD_WRITERS = [
   () => import('@/store/profile'),
   () => import('@/store/reasoning-disclosure'),
   () => import('@/store/thread-timeline'),
-  () => import('@/store/tool-view'),
-  () => import('@/store/translucency')
+  () => import('@/store/tool-view')
 ]
 
 const dirs: string[] = []

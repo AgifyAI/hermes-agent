@@ -66,12 +66,12 @@ function KanbanCount() {
       <button
         className={cn(
           'inline-flex h-full items-center gap-1 rounded-none px-1.5 text-[0.6875rem] tabular-nums transition-colors',
-          'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+          'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)'
         )}
         onClick={() => host.navigate('/kanban')}
         type="button"
       >
-        <Codicon name="project" size="0.7rem" />
+        <Codicon name="project" size="0.75rem" />
         <span>{active}</span>
       </button>
     </Tip>

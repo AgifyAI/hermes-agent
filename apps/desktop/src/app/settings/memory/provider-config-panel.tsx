@@ -86,7 +86,7 @@ export function ProviderConfigPanel({ profile, provider }: { profile?: string; p
     if (loadError) {
       return (
         <div className="flex items-center justify-between gap-3 py-2">
-          <span className="text-[length:var(--conversation-caption-font-size)] text-muted-foreground">
+          <span className="text-xs text-(--linear-text-tertiary)">
             Memory provider settings failed to load: {loadError}
           </span>
           <Button onClick={() => void refresh()} size="sm" type="button" variant="secondary">
@@ -113,9 +113,7 @@ export function ProviderConfigPanel({ profile, provider }: { profile?: string; p
           type="button"
         >
           <DisclosureCaret open={expanded} />
-          <span className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-            {config.label} settings
-          </span>
+          <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{config.label} settings</span>
           {secretFields.map(field => (
             <Pill key={field.key}>{field.is_set ? `${field.label} set` : `${field.label} not set`}</Pill>
           ))}
@@ -129,9 +127,9 @@ export function ProviderConfigPanel({ profile, provider }: { profile?: string; p
       </div>
 
       {expanded && (
-        <div className="ml-1.5 border-l-2 border-(--ui-accent-secondary)/25 pb-4 pl-4 pr-4">
+        <div className="border-t-[0.5px] border-(--linear-border-secondary)">
           {inlineFields.map(field => (
-            <div className="border-b border-border/40 last:border-b-0" key={field.key}>
+            <div className="border-b-[0.5px] border-(--linear-border-secondary) last:border-b-0" key={field.key}>
               <ListRow
                 action={
                   <FieldControl

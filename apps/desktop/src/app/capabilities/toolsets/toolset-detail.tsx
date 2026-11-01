@@ -46,7 +46,7 @@ export function ToolsetDetail({
             <ToolChip key={name}>
               {name}
               {(toolCalls[name] ?? 0) > 0 && (
-                <span className="ml-1 text-(--ui-text-quaternary)">×{compactNumber(toolCalls[name])}</span>
+                <span className="ml-1 text-(--linear-text-quaternary)">×{compactNumber(toolCalls[name])}</span>
               )}
             </ToolChip>
           ))}
@@ -58,7 +58,7 @@ export function ToolsetDetail({
         // aux "vision" row) via an internal deep link instead of leaving the
         // detail pane empty.
         <div className="grid gap-1.5">
-          <p className="text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
+          <p className="text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
             {t.skills.visionModelHint}
           </p>
           <div>

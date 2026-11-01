@@ -30,7 +30,7 @@ import {
 export function ToolChip({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <span
-      className="rounded-md bg-(--ui-bg-quinary) px-1.5 py-0.5 font-mono text-[0.65rem] text-(--ui-text-tertiary)"
+      className="rounded-md border-[0.5px] border-(--linear-border-tertiary) px-1.5 py-0.5 font-mono text-[0.6875rem] text-(--linear-text-tertiary)"
       title={title}
     >
       {children}
@@ -135,7 +135,7 @@ export function MasterDetail({
                 <div
                   className={cn(
                     'absolute inset-y-0 left-1/2 w-px -translate-x-1/2 transition-colors',
-                    dragging ? 'bg-(--ui-stroke-secondary)' : 'group-hover/vsash:bg-(--ui-stroke-secondary)'
+                    dragging ? 'bg-(--linear-border-secondary)' : 'group-hover/vsash:bg-(--linear-border-secondary)'
                   )}
                 />
               </div>
@@ -153,7 +153,7 @@ export function MasterDetail({
 
 export function ListColumn({ children, header }: { children: ReactNode; header?: ReactNode }) {
   return (
-    <aside className="flex min-h-0 flex-col p-2">
+    <aside className="flex min-h-0 flex-col px-3 py-2">
       {header}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">{children}</div>
     </aside>
@@ -175,15 +175,15 @@ export function DetailColumn({
   return (
     <main className="flex min-h-0 flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-        <div className="mx-auto max-w-2xl space-y-5 px-5 py-4">{children}</div>
+        <div className="mx-auto max-w-2xl space-y-6 px-6 py-6">{children}</div>
       </div>
       {footer && (
-        <div className="mx-auto w-full max-w-2xl shrink-0 px-5 pb-3 pt-1.5 text-right text-[0.65rem] text-muted-foreground/50">
+        <div className="mx-auto w-full max-w-2xl shrink-0 px-6 pt-1.5 pb-3 text-right text-xs font-[450] text-(--linear-text-tertiary)">
           {footer}
         </div>
       )}
       {actionBar && (
-        <footer className="shrink-0 bg-(--ui-chat-surface-background) px-5 py-2.5">
+        <footer className="shrink-0 border-t-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-panel) px-6 py-2.5">
           <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-2">{actionBar}</div>
         </footer>
       )}
@@ -211,7 +211,7 @@ const DETAIL_PANE_COLLAPSED_PX = 4
 // finding 6), without changing how the button looks or lays out. The 2.5.5
 // enhanced 44px target is deliberately not met here.
 export const ICON_BUTTON =
-  "size-5 relative cursor-pointer rounded-[4px] text-muted-foreground/70 before:absolute before:-inset-0.5 before:content-[''] hover:bg-(--ui-control-active-background) hover:text-foreground"
+  "size-5 relative cursor-pointer rounded-full text-(--linear-text-tertiary) before:absolute before:-inset-0.5 before:content-[''] hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
 
 export function DetailPane({
   actions,
@@ -272,7 +272,7 @@ export function DetailPane({
   }
 
   return (
-    <section className="relative flex shrink-0 flex-col border-t border-(--ui-stroke-tertiary) bg-(--ui-chat-surface-background)">
+    <section className="relative flex shrink-0 flex-col border-t-[0.5px] border-(--linear-border-primary) bg-(--linear-bg-panel)">
       <div
         className="group/sash absolute inset-x-0 top-0 z-10 h-1 -translate-y-1/2 cursor-row-resize"
         onDoubleClick={() => setPaneHeightOverride(id, undefined)}
@@ -281,12 +281,12 @@ export function DetailPane({
         <div
           className={cn(
             'absolute inset-x-0 top-1/2 h-px -translate-y-1/2 transition-colors',
-            dragging ? 'bg-(--ui-stroke-secondary)' : 'group-hover/sash:bg-(--ui-stroke-secondary)'
+            dragging ? 'bg-(--linear-border-secondary)' : 'group-hover/sash:bg-(--linear-border-secondary)'
           )}
         />
       </div>
       <header className="flex h-9 shrink-0 items-center gap-2 px-3">
-        <span className="min-w-0 truncate text-xs font-medium text-foreground">{title}</span>
+        <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</span>
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {actions}
           <Tip label={collapsed ? t.common.expand : t.common.collapse}>
@@ -358,7 +358,7 @@ export function ListStripMenu({
           aria-label={label}
           className={cn(
             ICON_BUTTON,
-            'data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground'
+            'data-[state=open]:bg-(--linear-hover-control) data-[state=open]:text-(--linear-text-primary)'
           )}
           size="icon"
           variant="ghost"
@@ -409,8 +409,8 @@ export function ListStripButton({
   return (
     <button
       className={cn(
-        'cursor-pointer text-[0.68rem] font-medium transition-colors disabled:opacity-40',
-        active ? 'text-foreground' : 'text-muted-foreground/70 hover:text-foreground'
+        'cursor-pointer text-xs font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none disabled:opacity-60',
+        active ? 'text-(--linear-text-primary)' : 'text-(--linear-text-tertiary) hover:text-(--linear-text-primary)'
       )}
       disabled={disabled}
       onClick={onClick}
@@ -459,35 +459,34 @@ export function CapRow({
       className={cn(
         // content-visibility:auto lets the browser skip layout/paint for
         // offscreen rows — the Capabilities lists routinely hold 80+ entries.
-        // Row height is already fixed (h-8/h-11), so skipped rows keep their
-        // exact size and scrollbar geometry never jumps.
-        'group/row row-hover flex w-full shrink-0 items-center rounded-md [content-visibility:auto] hover:text-foreground',
-        subtitle ? 'h-11' : 'h-8',
-        active ? 'bg-(--ui-row-active-background) text-foreground' : 'text-(--ui-text-secondary)'
+        // Row height is fixed, so skipped rows keep their exact size and
+        // scrollbar geometry never jumps. Linear's list row: 44px, radius 8.
+        'group/row flex h-11 w-full shrink-0 items-center rounded-(--linear-radius-control) transition-colors duration-(--linear-speed-quick) [content-visibility:auto] hover:transition-none',
+        active ? 'bg-(--linear-active-sidebar)' : 'hover:bg-(--linear-hover-row)'
       )}
       id={rowId}
     >
       <RowButton
-        className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md pl-2 pr-1.5 text-left"
+        className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-(--linear-radius-control) pr-1.5 pl-2 text-left"
         onClick={onSelect}
       >
         <span className="min-w-0 flex-1">
           <span
             className={cn(
-              'block truncate text-[0.78rem]',
-              enabled ? 'font-medium text-foreground/85' : 'font-normal text-muted-foreground/60'
+              'block truncate text-[0.8125rem] font-medium',
+              enabled ? 'text-(--linear-text-primary)' : 'text-(--linear-text-tertiary)'
             )}
           >
             {title}
           </span>
           {subtitle != null && (
-            <span className="flex min-w-0 items-center gap-1 text-[0.62rem] text-muted-foreground/50">
+            <span className="flex min-w-0 items-center gap-1 text-xs font-[450] text-(--linear-text-tertiary)">
               {typeof subtitle === 'string' ? <span className="truncate">{subtitle}</span> : subtitle}
             </span>
           )}
         </span>
         {meta != null && (
-          <span className="shrink-0 rounded bg-(--ui-bg-quinary) px-1 py-px text-[0.6rem] tabular-nums leading-3.5 text-(--ui-text-tertiary)">
+          <span className="shrink-0 text-[0.6875rem] font-[450] tabular-nums text-(--linear-text-tertiary)">
             {meta}
           </span>
         )}

@@ -46,14 +46,14 @@ export function GroupHoldStatus(props: GroupHoldStatusProps) {
 
   return (
     <div
-      className="flex items-start gap-1.5 border-b border-(--ui-stroke-secondary) bg-(--ui-bg-tertiary) px-2.5 py-1.5 text-[0.7rem]"
+      className="flex items-start gap-1.5 border-b-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-quaternary) px-2.5 py-1.5 text-xs"
       data-slot="group-hold-status"
       role="status"
     >
-      <Codicon aria-hidden className="mt-0.5 shrink-0 text-(--ui-text-secondary)" name="debug-pause" />
+      <Codicon aria-hidden className="mt-0.5 shrink-0 text-(--linear-text-secondary)" name="debug-pause" />
       <div className="min-w-0">
-        <div className="font-medium text-(--ui-text-primary)">{label}</div>
-        <div className="text-(--ui-text-tertiary)">{b.group.holdReleaseHint}</div>
+        <div className="font-medium text-(--linear-text-primary)">{label}</div>
+        <div className="text-(--linear-text-tertiary)">{b.group.holdReleaseHint}</div>
       </div>
     </div>
   )

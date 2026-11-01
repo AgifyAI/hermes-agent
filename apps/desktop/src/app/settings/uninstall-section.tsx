@@ -3,10 +3,10 @@ import { type ReactElement, useContext, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import type { DesktopUninstallMode, DesktopUninstallResult, DesktopUninstallSummary } from '@/global'
 import { useI18n } from '@/i18n'
-import { AlertTriangle, Loader2, Trash2 } from '@/lib/icons'
+import { Loader2, Trash2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
-import { SectionHeading, SettingsBreadcrumbContext } from './primitives'
+import { SectionHeading, SettingsBreadcrumbContext, SettingsCard } from './primitives'
 
 interface ModeOption {
   mode: DesktopUninstallMode
@@ -96,12 +96,12 @@ export function UninstallSection(): ReactElement | null {
     }
 
     return (
-      <div className={cn('mx-auto w-full max-w-2xl', !hasBreadcrumb && 'mt-8')}>
-        <SectionHeading icon={AlertTriangle} page title={u.uninstallHermes} />
-        <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
-          <p className="text-xs text-muted-foreground">{u.managedBody}</p>
-          <p className="text-sm font-medium">{summary.native_removal_instructions}</p>
-          <p className="text-xs text-muted-foreground">{u.dataKept(summary.hermes_home)}</p>
+      <div className={cn(!hasBreadcrumb && 'mt-12')}>
+        <SectionHeading page title={u.uninstallHermes} />
+        <SettingsCard className="flex flex-col gap-2 py-4">
+          <p className="text-xs text-(--linear-text-tertiary)">{u.managedBody}</p>
+          <p className="text-[0.8125rem] font-medium">{summary.native_removal_instructions}</p>
+          <p className="text-xs text-(--linear-text-tertiary)">{u.dataKept(summary.hermes_home)}</p>
           {summary.platform === 'win32' && (
             <div className="mt-1">
               <Button onClick={(): void => void bridge.openAppsSettings()} size="sm" variant="outline">
@@ -109,7 +109,7 @@ export function UninstallSection(): ReactElement | null {
               </Button>
             </div>
           )}
-        </div>
+        </SettingsCard>
       </div>
     )
   }
@@ -145,20 +145,22 @@ export function UninstallSection(): ReactElement | null {
   const pendingOption: ModeOption | null = options.find((opt: ModeOption): boolean => opt.mode === pending) ?? null
 
   return (
-    <div className={cn('mx-auto w-full max-w-2xl', !hasBreadcrumb && 'mt-8')}>
-      <SectionHeading icon={AlertTriangle} page title={t.settings.uninstallSection.dangerZone} />
+    <div className={cn(!hasBreadcrumb && 'mt-12')}>
+      <SectionHeading page title={t.settings.uninstallSection.dangerZone} />
 
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+      <SettingsCard className="py-4">
         {pendingOption ? (
           <div>
-            <p className="text-sm font-medium text-destructive">{t.settings.uninstallSection.confirmUninstall}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{u.confirmBody(pendingOption.consequence)}</p>
+            <p className="text-[0.8125rem] font-medium text-(--linear-red)">
+              {t.settings.uninstallSection.confirmUninstall}
+            </p>
+            <p className="mt-1 text-xs text-(--linear-text-tertiary)">{u.confirmBody(pendingOption.consequence)}</p>
             {summary?.running_app_path && (
-              <p className="mt-1 font-mono text-[0.68rem] text-muted-foreground/60">
+              <p className="mt-1 font-mono text-[0.6875rem] text-(--linear-text-quaternary)">
                 {u.appLabel} {summary.running_app_path}
               </p>
             )}
-            {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+            {error && <p className="mt-2 text-xs text-(--linear-red)">{error}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <Button disabled={running} onClick={(): void => void handleConfirm()} size="sm" variant="destructive">
                 {running && <Loader2 className="size-3 animate-spin" />}
@@ -171,14 +173,14 @@ export function UninstallSection(): ReactElement | null {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">{t.settings.uninstallSection.uninstallHermes}</p>
-            <p className="text-xs text-muted-foreground">{u.chooseHowMuch}</p>
+            <p className="text-[0.8125rem] font-medium">{t.settings.uninstallSection.uninstallHermes}</p>
+            <p className="text-xs text-(--linear-text-tertiary)">{u.chooseHowMuch}</p>
             <div className="mt-1 flex flex-col gap-2">
               {visibleOptions.map((opt: ModeOption): ReactElement => (
                 <button
                   className={cn(
-                    'flex items-start gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2.5 text-left transition',
-                    'hover:border-destructive/40 hover:bg-destructive/5'
+                    'flex cursor-pointer items-start gap-3 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2.5 text-left transition-colors duration-(--linear-speed-quick)',
+                    'hover:border-(--linear-red) hover:bg-(--linear-hover-row)'
                   )}
                   key={opt.mode}
                   onClick={(): void => {
@@ -187,17 +189,17 @@ export function UninstallSection(): ReactElement | null {
                   }}
                   type="button"
                 >
-                  <Trash2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <Trash2 className="mt-0.5 size-4 shrink-0 text-(--linear-icon)" />
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium text-foreground">{opt.title}</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{opt.description}</span>
+                    <span className="block text-[0.8125rem] font-medium text-(--linear-text-primary)">{opt.title}</span>
+                    <span className="mt-[3px] block text-xs text-(--linear-text-tertiary)">{opt.description}</span>
                   </span>
                 </button>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </SettingsCard>
     </div>
   )
 }

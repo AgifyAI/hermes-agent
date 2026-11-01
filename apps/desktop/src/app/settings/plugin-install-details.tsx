@@ -17,7 +17,7 @@ import {
   type ProbeResult
 } from './plugin-install-run'
 
-const CAPTION = 'text-[length:var(--conversation-caption-font-size)]'
+const CAPTION = 'text-xs'
 
 export interface PinState {
   value: string
@@ -47,8 +47,8 @@ interface PluginInstallDetailsProps {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid gap-1">
-      <dt className={cn(CAPTION, 'text-(--ui-text-tertiary)')}>{label}</dt>
-      <dd className={cn(CAPTION, 'min-w-0 text-foreground')}>{children}</dd>
+      <dt className={cn(CAPTION, 'text-(--linear-text-tertiary)')}>{label}</dt>
+      <dd className={cn(CAPTION, 'min-w-0 text-(--linear-text-primary)')}>{children}</dd>
     </div>
   )
 }
@@ -94,7 +94,7 @@ function VersionRow({
         spellCheck={false}
         value={pin.value}
       />
-      <span className={cn('mt-1 block', pin.invalid ? 'text-destructive' : 'text-(--ui-text-tertiary)')}>
+      <span className={cn('mt-1 block', pin.invalid ? 'text-(--linear-red)' : 'text-(--linear-text-tertiary)')}>
         {pin.invalid ? copy.pinToCommitInvalid : copy.pinToCommitHint}
       </span>
     </Row>
@@ -139,11 +139,11 @@ function ContentsRow({
         {lines.map(line => (
           <li key={line.title}>
             <span className="block font-medium">{line.title}</span>
-            <span className="block text-(--ui-text-tertiary)">{line.hint}</span>
+            <span className="block text-(--linear-text-tertiary)">{line.hint}</span>
           </li>
         ))}
       </ul>
-      {probe.desktop && !probe.agent && <p className="mt-1 text-(--ui-text-tertiary)">{copy.desktopOnlyNote}</p>}
+      {probe.desktop && !probe.agent && <p className="mt-1 text-(--linear-text-tertiary)">{copy.desktopOnlyNote}</p>}
     </Row>
   )
 }
@@ -155,7 +155,7 @@ export function PluginInstallDetails(props: PluginInstallDetailsProps) {
   const agent = !probe?.ok || installComponents(request, probe).agent
 
   return (
-    <dl className="grid gap-3 rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) px-3 py-2.5">
+    <dl className="grid gap-3 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-panel) bg-(--linear-hover-control) px-3 py-2.5">
       <SourceRow copy={copy} repo={request.repo} />
       <VersionRow agent={agent} busy={busy} copy={copy} pin={props.pin} request={request} />
       <ContentsRow copy={copy} probe={probe} profile={profile} remote={props.remote} request={request} />
@@ -175,7 +175,7 @@ export function PluginInstallDetails(props: PluginInstallDetailsProps) {
       </Row>
       {!request.catalogName && (
         <div>
-          <label className={cn(CAPTION, 'flex items-center justify-between gap-3 text-foreground')}>
+          <label className={cn(CAPTION, 'flex items-center justify-between gap-3 text-(--linear-text-primary)')}>
             <span>{copy.forceReinstall}</span>
             <Switch checked={force} disabled={busy} onCheckedChange={onForceChange} />
           </label>

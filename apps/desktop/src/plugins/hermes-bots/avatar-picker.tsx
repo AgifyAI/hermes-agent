@@ -152,8 +152,8 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
                       <RowButton
                         aria-label={k || b.editor.autoHint}
                         className={cn(
-                          'flex size-11 items-center justify-center rounded-md transition-colors hover:bg-(--chrome-action-hover)',
-                          k === kind && !image && 'ring-1 ring-(--ui-accent)'
+                          'flex size-11 items-center justify-center rounded-md transition-colors hover:bg-(--linear-hover-control)',
+                          k === kind && !image && 'ring-1 ring-(--linear-accent)'
                         )}
                         onClick={() => {
                           onImage(null)
@@ -168,7 +168,7 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
                             size={32}
                           />
                         ) : (
-                          <span className="text-[0.6rem] text-(--ui-text-tertiary)">{b.editor.auto}</span>
+                          <span className="text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">{b.editor.auto}</span>
                         )}
                       </RowButton>
                     </Tip>
@@ -184,7 +184,7 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
                     type="button"
                     variant="ghost"
                   >
-                    <Codicon className="mr-1 text-[0.8rem]" name="refresh" />
+                    <Codicon className="mr-1 text-[0.875rem]" name="refresh" />
                     {b.avatar.randomize}
                   </Button>
                   <Button
@@ -193,15 +193,15 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
                     type="button"
                     variant="ghost"
                   >
-                    <Codicon className="mr-1 text-[0.8rem]" name={locked ? 'unlock' : 'lock'} />
+                    <Codicon className="mr-1 text-[0.875rem]" name={locked ? 'unlock' : 'lock'} />
                     {locked ? b.editor.unlock : b.editor.lockFace}
                   </Button>
                 </div>
-                <div className="text-center text-[0.65rem] text-(--ui-text-quaternary)">
+                <div className="text-center text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">
                   {locked ? b.editor.lockedHint : b.editor.unlockedHint}
                 </div>
                 <Button
-                  className="text-(--ui-text-tertiary)"
+                  className="text-(--linear-text-tertiary)"
                   onClick={() => onShape(defaultShapeFor(pickerName))}
                   size="sm"
                   type="button"
@@ -220,8 +220,8 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
                   <RowButton
                     aria-label={s === 'blobatar' ? b.avatar.blobFromName : s}
                     className={cn(
-                      'flex size-11 items-center justify-center rounded-md transition-colors hover:bg-(--chrome-action-hover)',
-                      s === shape && !image && 'ring-1 ring-(--ui-accent)'
+                      'flex size-11 items-center justify-center rounded-md transition-colors hover:bg-(--linear-hover-control)',
+                      s === shape && !image && 'ring-1 ring-(--linear-accent)'
                     )}
                     onClick={() => {
                       onImage(null)
@@ -246,7 +246,7 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
         imagen ? (
           <div className="grid w-full gap-2">
             <Textarea
-              className="min-h-16 text-xs"
+              className="min-h-16"
               onChange={event => setDescribe(event.target.value)}
               placeholder={b.avatar.describePlaceholder}
               value={describe}
@@ -259,25 +259,25 @@ export function AvatarPicker({ shape, color, image, onShape, onColor, onImage, g
               variant="secondary"
             >
               {genBusy ? (
-                <GlyphSpinner className="mr-1 text-[0.8rem]" spinner="breathe" />
+                <GlyphSpinner className="mr-1 text-[0.875rem]" spinner="breathe" />
               ) : (
-                <Codicon className="mr-1 text-[0.8rem]" name="sparkle" />
+                <Codicon className="mr-1 text-[0.875rem]" name="sparkle" />
               )}
               {genBusy ? b.avatar.generating : b.avatar.generate}
             </Button>
             {describe.trim() ? null : (
-              <div className="text-center text-[0.65rem] text-(--ui-text-quaternary)">{b.bot.descriptionHint}</div>
+              <div className="text-center text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{b.bot.descriptionHint}</div>
             )}
           </div>
         ) : (
-          <div className="px-2 py-3 text-center text-xs leading-5 text-(--ui-text-tertiary)">
+          <div className="px-2 py-3 text-center text-xs font-[450] leading-5 text-(--linear-text-tertiary)">
             {imagen === false ? b.editor.noImageModel : b.editor.checkingImage}
           </div>
         )
       ) : null}
       {tab === 'upload' ? (
         <Button className="w-full justify-center" onClick={upload} type="button" variant="secondary">
-          <Codicon className="mr-1 text-[0.8rem]" name="device-camera" />
+          <Codicon className="mr-1 text-[0.875rem]" name="device-camera" />
           {b.editor.chooseImage}
         </Button>
       ) : null}

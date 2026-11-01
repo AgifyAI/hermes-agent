@@ -29,8 +29,8 @@ export function PetProgress({ done, total }: { done?: number; total?: number }) 
     <Progress
       animated
       aria-label="Hatching progress"
-      className="bg-[color-mix(in_srgb,var(--ui-accent)_15%,transparent)]"
-      fillClassName="bg-(--ui-accent)"
+      className="bg-[color-mix(in_srgb,var(--linear-accent)_15%,transparent)]"
+      fillClassName="bg-(--linear-accent)"
       indeterminate={!determinate}
       size="sm"
       value={determinate ? done / total : 0}
@@ -49,7 +49,7 @@ export function PetEggHatch({ subtitle, onCancel, cancelLabel }: PetEggHatchProp
       </div>
 
       {subtitle && (
-        <p className="shimmer shimmer-color-primary whitespace-nowrap text-center text-[length:var(--conversation-caption-font-size)] leading-snug text-(--ui-text-tertiary)">
+        <p className="shimmer shimmer-color-primary whitespace-nowrap text-center text-xs leading-snug text-(--linear-text-tertiary)">
           {subtitle}
         </p>
       )}

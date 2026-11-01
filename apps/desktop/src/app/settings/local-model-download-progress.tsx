@@ -33,13 +33,13 @@ export function ProgressBar({ percent, paused = false }: ProgressBarProps) {
       aria-valuemax={100}
       aria-valuemin={0}
       {...(unknown ? {} : { 'aria-valuenow': percent })}
-      className="h-1.5 w-full overflow-hidden rounded-full bg-(--ui-bg-tertiary)"
+      className="h-1.5 w-full overflow-hidden rounded-full bg-(--linear-bg-quaternary)"
       role="progressbar"
     >
       <div
         className={cn(
           'h-full rounded-full',
-          paused ? 'bg-muted-foreground/60' : 'bg-primary transition-[width] duration-300'
+          paused ? 'bg-(--linear-text-tertiary)/60' : 'bg-(--linear-accent) transition-[width] duration-300'
         )}
         style={{ width: `${Math.max(0, Math.min(100, percent ?? 0))}%` }}
       />
@@ -171,7 +171,7 @@ export function LocalModelDownloadProgress({ job }: LocalModelDownloadProps) {
     <div className="grid gap-1">
       <ProgressBar paused={job.status === 'paused'} percent={job.percent} />
 
-      <p className="text-[0.68rem] text-muted-foreground">{downloadStatusText(job, copy)}</p>
+      <p className="text-[0.6875rem] text-(--linear-text-tertiary)">{downloadStatusText(job, copy)}</p>
     </div>
   )
 }

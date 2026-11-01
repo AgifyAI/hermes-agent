@@ -123,12 +123,12 @@ function UpdateChangeList({
       {shown.map((group, index) => (
         <div key={group.id}>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[0.625rem] font-semibold text-muted-foreground">{group.label}</p>
+            <p className="text-xs font-medium text-(--linear-text-tertiary)">{group.label}</p>
             {index === 0 && copyText && (
               <CopyButton
                 appearance="icon"
                 buttonSize="icon-xs"
-                className="-my-1 size-5 shrink-0 text-muted-foreground/70 hover:text-foreground"
+                className="-my-1 shrink-0"
                 iconClassName="size-3"
                 label={u.copyFullLog}
                 side="left"
@@ -136,10 +136,10 @@ function UpdateChangeList({
               />
             )}
           </div>
-          <ul className="mt-1.5 grid gap-1.5 text-xs text-foreground">
+          <ul className="mt-1.5 grid gap-1.5 text-[0.8125rem] text-(--linear-text-secondary)">
             {group.items.map(item => (
               <li className="flex items-start gap-2" key={item}>
-                <span aria-hidden className="mt-1.5 inline-block size-1 shrink-0 rounded-full bg-primary" />
+                <span aria-hidden className="mt-2 inline-block size-1 shrink-0 rounded-full bg-(--linear-accent)" />
                 <span className="line-clamp-2 leading-snug" title={item}>
                   {item}
                 </span>
@@ -150,7 +150,7 @@ function UpdateChangeList({
       ))}
       {notes?.url && (
         <a
-          className="inline-flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1 text-xs font-medium text-(--linear-accent) underline-offset-2 hover:underline"
           href={notes.url}
           onClick={event => {
             event.preventDefault()
@@ -335,7 +335,7 @@ function IdleView({
   // The channel is chosen in Settings (with its confirm step); here it is named, with a way there.
   const changeChannel = (
     <button
-      className="text-primary underline-offset-2 hover:underline"
+      className="cursor-pointer text-(--linear-accent) underline-offset-2 hover:underline"
       onClick={() => {
         setUpdateOverlayOpen(false)
         window.location.hash = `#${SETTINGS_ROUTE}?${settingsSearchTargetQuery({ view: 'about', setting: SETTING_IDS.about.updates })}`
@@ -357,17 +357,14 @@ function IdleView({
   // honest view names that path. Only this mechanism gets it.
   if (status.mechanism === 'app-installer' && status.error && !status.updateAvailable) {
     return (
-      <div className="grid gap-4 px-6 pb-6 pt-1 pr-8">
-        <VersionHero
-          renderHeading={heading => (
-            <DialogTitle className="text-lg font-semibold tracking-tight">{heading}</DialogTitle>
-          )}
-          version={version}
-        />
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-1">
+        <VersionHero renderHeading={heading => <DialogTitle>{heading}</DialogTitle>} version={version} />
         <div className="flex flex-col items-center gap-2 text-center">
-          <AlertCircle className="size-6 text-muted-foreground" />
-          <p className="text-sm font-medium">{u.checkUnknownTitleAppInstaller}</p>
-          <p className="max-w-prose text-sm leading-5 text-muted-foreground">{u.checkUnknownBodyAppInstaller}</p>
+          <AlertCircle className="size-6 text-(--linear-text-tertiary)" />
+          <p className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{u.checkUnknownTitleAppInstaller}</p>
+          <p className="max-w-prose text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+            {u.checkUnknownBodyAppInstaller}
+          </p>
         </div>
         <Button onClick={onRetryCheck} size="sm">
           {u.tryAgain}
@@ -383,13 +380,8 @@ function IdleView({
   // check/retry actions (its "Check now" covers the old Try-again button).
   if (!status.supported || status.error || !updateAvailable) {
     return (
-      <div className="grid gap-4 px-6 pb-6 pt-1 pr-8">
-        <VersionHero
-          renderHeading={heading => (
-            <DialogTitle className="text-lg font-semibold tracking-tight">{heading}</DialogTitle>
-          )}
-          version={version}
-        />
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-1">
+        <VersionHero renderHeading={heading => <DialogTitle>{heading}</DialogTitle>} version={version} />
         <UpdateStatusCard target={target} version={version} />
         <SyncStatusCard />
         {details}
@@ -435,12 +427,12 @@ function IdleView({
   const handleCopyFullLog = () => formatFullChangelogText(commits, behind, status.branch)
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <BrandMark className="size-16" />
 
-        <DialogTitle className="text-center text-xl">{title}</DialogTitle>
-        <DialogDescription className="text-center text-sm">{body}</DialogDescription>
+        <DialogTitle className="text-center">{title}</DialogTitle>
+        <DialogDescription className="text-center">{body}</DialogDescription>
       </div>
 
       <UpdateChangeList
@@ -451,15 +443,15 @@ function IdleView({
       />
 
       <div className="grid gap-2">
-        <Button className="font-semibold" onClick={onInstall} size="lg">
+        <Button onClick={onInstall} size="lg">
           {rollbackTag ? channelCopy.rollbackAction(rollbackTag) : u.updateNow}
         </Button>
-        <Button className="font-medium" onClick={onLater} type="button" variant="text">
+        <Button onClick={onLater} type="button" variant="text">
           {u.maybeLater}
         </Button>
       </div>
 
-      {remaining > 0 && <p className="text-center text-xs text-muted-foreground">{u.moreChanges(remaining)}</p>}
+      {remaining > 0 && <p className="text-center text-xs text-(--linear-text-tertiary)">{u.moreChanges(remaining)}</p>}
 
       <SyncStatusCard />
     </div>
@@ -497,17 +489,15 @@ function ManualView({
   // message + a Done button, not a copy-a-command box.
   if (!command) {
     return (
-      <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Terminal className="size-8 text-primary" />
+          <Terminal className="size-8 text-(--linear-accent)" />
 
-          <DialogTitle className="text-center text-xl">
-            {isBackend ? u.manualUnavailableTitle : u.manualTitle}
-          </DialogTitle>
-          <DialogDescription className="text-center text-sm">{message || u.manualPickedUp}</DialogDescription>
+          <DialogTitle className="text-center">{isBackend ? u.manualUnavailableTitle : u.manualTitle}</DialogTitle>
+          <DialogDescription className="text-center">{message || u.manualPickedUp}</DialogDescription>
         </div>
 
-        <Button className="font-semibold" onClick={onDone} size="lg" variant="secondary">
+        <Button onClick={onDone} size="lg" variant="secondary">
           {u.done}
         </Button>
       </div>
@@ -515,32 +505,34 @@ function ManualView({
   }
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Terminal className="size-8 text-primary" />
+        <Terminal className="size-8 text-(--linear-accent)" />
 
-        <DialogTitle className="text-center text-xl">{u.manualTitle}</DialogTitle>
-        <DialogDescription className="text-center text-sm">
+        <DialogTitle className="text-center">{u.manualTitle}</DialogTitle>
+        <DialogDescription className="text-center">
           {guidance ?? (isBackend ? u.manualBodyBackend : u.manualBody)}
         </DialogDescription>
       </div>
 
       <button
         className={cn(
-          'group flex w-full items-center justify-between gap-3 rounded-md border px-4 py-3 text-left transition-colors',
-          copied ? 'border-primary/50' : 'border-(--stroke-nous) hover:border-(--ui-stroke-secondary)'
+          'group flex w-full cursor-pointer items-center justify-between gap-3 rounded-(--linear-radius-control) border-[0.5px] px-4 py-3 text-left transition-colors duration-(--linear-speed-quick)',
+          copied
+            ? 'border-(--linear-accent)'
+            : 'border-(--linear-border-secondary) hover:border-(--linear-border-tertiary)'
         )}
         onClick={handleCopy}
         type="button"
       >
-        <code className="min-w-0 flex-1 truncate select-all font-mono text-sm text-foreground">
-          <span className="select-none text-muted-foreground">$ </span>
+        <code className="min-w-0 flex-1 truncate font-mono text-[0.8125rem] text-(--linear-text-primary) select-all">
+          <span className="text-(--linear-text-tertiary) select-none">$ </span>
           {command}
         </code>
         <span
           className={cn(
             'flex shrink-0 items-center gap-1 text-xs font-medium transition-colors',
-            copied ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+            copied ? 'text-(--linear-accent)' : 'text-(--linear-text-tertiary) group-hover:text-(--linear-text-primary)'
           )}
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -549,12 +541,12 @@ function ManualView({
       </button>
 
       {!guidance && (
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-(--linear-text-tertiary)">
           {isBackend ? u.manualPickedUpBackend : u.manualPickedUp}
         </p>
       )}
 
-      <Button className="font-semibold" onClick={onDone} size="lg" variant="secondary">
+      <Button onClick={onDone} size="lg" variant="secondary">
         {u.done}
       </Button>
     </div>
@@ -570,17 +562,15 @@ function GuiSkewView({ message, onDone }: { message?: string; onDone: () => void
   const u = t.updates
 
   return (
-    <div className="grid gap-5 px-6 pb-6 pt-7 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 px-6 pb-6 pt-7">
       <div className="flex flex-col items-center gap-3 text-center">
-        <AlertCircle className="size-8 text-amber-500" />
+        <AlertCircle className="size-8 text-(--linear-orange)" />
 
-        <DialogTitle className="text-center text-xl">{u.guiSkewTitle}</DialogTitle>
-        <DialogDescription className="max-w-prose text-center text-sm leading-5 text-muted-foreground">
-          {message || u.guiSkewBody}
-        </DialogDescription>
+        <DialogTitle className="text-center">{u.guiSkewTitle}</DialogTitle>
+        <DialogDescription className="max-w-prose text-center">{message || u.guiSkewBody}</DialogDescription>
       </div>
 
-      <Button className="font-semibold" onClick={onDone} size="lg" variant="secondary">
+      <Button onClick={onDone} size="lg" variant="secondary">
         {u.done}
       </Button>
     </div>
@@ -616,11 +606,13 @@ function ApplyingView({
       <div className="flex flex-col items-center gap-3 text-center">
         <Loader className="size-16" label={label} type="lemniscate-bloom" />
 
-        <DialogTitle className="text-center text-xl">{label}</DialogTitle>
-        <DialogDescription className="text-center text-sm">{body}</DialogDescription>
+        <DialogTitle className="text-center">{label}</DialogTitle>
+        <DialogDescription className="text-center">{body}</DialogDescription>
 
         {currentMessage ? (
-          <p className="max-w-lg break-words text-center text-xs leading-5 text-muted-foreground">{currentMessage}</p>
+          <p className="max-w-lg break-words text-center text-xs leading-5 text-(--linear-text-tertiary)">
+            {currentMessage}
+          </p>
         ) : null}
       </div>
 
@@ -632,7 +624,7 @@ function ApplyingView({
       />
 
       {recentLog.length > 1 ? (
-        <div className="max-h-24 overflow-hidden rounded-md border border-border/70 bg-muted/35 px-3 py-2 text-left font-mono text-[11px] leading-4 text-muted-foreground">
+        <div className="max-h-24 overflow-hidden rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) px-3 py-2 text-left font-mono text-[0.6875rem] leading-4 text-(--linear-text-tertiary)">
           {recentLog.map((entry, index) => (
             <div className="truncate" key={`${entry.at}-${index}`}>
               {entry.message}
@@ -641,7 +633,7 @@ function ApplyingView({
         </div>
       ) : null}
 
-      <p className="text-center text-xs text-muted-foreground">{u.applyingClose}</p>
+      <p className="text-center text-xs text-(--linear-text-tertiary)">{u.applyingClose}</p>
     </div>
   )
 }
@@ -653,14 +645,10 @@ function ErrorView({ message, onDismiss, onRetry }: { message: string; onDismiss
   return (
     <ErrorState
       className="px-6 pb-6 pt-7 pr-8"
-      description={
-        <DialogDescription className="max-w-prose text-center text-sm leading-5 text-muted-foreground">
-          {message || u.errorBody}
-        </DialogDescription>
-      }
-      title={<DialogTitle className="text-center text-xl font-semibold tracking-tight">{u.errorTitle}</DialogTitle>}
+      description={<DialogDescription className="max-w-prose text-center">{message || u.errorBody}</DialogDescription>}
+      title={<DialogTitle className="text-center">{u.errorTitle}</DialogTitle>}
     >
-      <Button className="font-semibold" onClick={onRetry} size="lg">
+      <Button onClick={onRetry} size="lg">
         {u.tryAgain}
       </Button>
       <Button onClick={onDismiss} variant="text">
@@ -682,12 +670,12 @@ function CenteredStatus({
   title: string
 }) {
   return (
-    <div className="grid gap-4 px-6 pb-6 pt-8 pr-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 px-6 pb-6 pt-8">
       <div className="flex flex-col items-center gap-3 text-center">
         {icon}
 
-        <DialogTitle className="text-center text-lg">{title}</DialogTitle>
-        {body && <DialogDescription className="text-center text-sm">{body}</DialogDescription>}
+        <DialogTitle className="text-center">{title}</DialogTitle>
+        {body && <DialogDescription className="text-center">{body}</DialogDescription>}
       </div>
 
       {action && <div className="flex justify-center">{action}</div>}

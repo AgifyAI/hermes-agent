@@ -18,10 +18,10 @@ import { AlertCircle, AlertTriangle, Check } from '@/lib/icons'
 import { deriveSyncStatusSummary, type SyncStatusSummary } from './sync-status'
 
 const LEVEL_STYLES: Record<SyncStatusSummary['level'], string> = {
-  ok: 'text-muted-foreground',
-  info: 'text-muted-foreground',
-  warn: 'text-amber-600 dark:text-amber-400',
-  error: 'text-destructive'
+  ok: 'text-(--linear-text-primary)',
+  info: 'text-(--linear-text-primary)',
+  warn: 'text-(--linear-orange)',
+  error: 'text-(--linear-red)'
 }
 
 export function SyncStatusCard() {
@@ -58,23 +58,23 @@ export function SyncStatusCard() {
 
   return (
     <div
-      className="grid gap-2 rounded-lg border border-border bg-muted/40 p-3 text-left"
+      className="grid gap-3 rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 text-left shadow-(--linear-shadow-card)"
       data-testid="sync-status-card"
     >
-      <p className={`flex items-center gap-2 text-sm font-medium ${tone}`}>
+      <p className={`flex items-center gap-2 text-[0.8125rem] font-medium ${tone}`}>
         {summary.level === 'error' || summary.level === 'warn' ? (
-          <AlertCircle aria-hidden className="size-4 shrink-0" />
+          <AlertCircle aria-hidden className="size-3.5 shrink-0" />
         ) : (
-          <Check aria-hidden className="size-4 shrink-0" />
+          <Check aria-hidden className="size-3.5 shrink-0" />
         )}
         {summary.headline}
       </p>
 
       {summary.needsFixing.length > 0 && (
-        <ul className="grid gap-1 text-xs text-foreground">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.needsFixing.map(item => (
             <li className="flex items-start gap-2" key={`needs-fixing-${item.plugin}`}>
-              <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-amber-600 dark:text-amber-400" />
+              <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-(--linear-yellow)" />
               <span className="leading-snug">
                 {item.plugin}: {item.reason}
               </span>
@@ -84,10 +84,10 @@ export function SyncStatusCard() {
       )}
 
       {summary.disabledPlugins.length > 0 && (
-        <ul className="grid gap-1 text-xs text-foreground">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.disabledPlugins.map(item => (
             <li className="flex items-start gap-2" key={`disabled-${item.plugin}`}>
-              <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-amber-600 dark:text-amber-400" />
+              <AlertTriangle aria-hidden className="mt-0.5 size-3 shrink-0 text-(--linear-yellow)" />
               <span className="leading-snug">
                 {item.plugin}: {item.reason}
               </span>
@@ -97,7 +97,7 @@ export function SyncStatusCard() {
       )}
 
       {summary.updatesAvailable.length > 0 && (
-        <ul className="grid gap-1 text-xs text-foreground">
+        <ul className="grid gap-[3px] text-xs text-(--linear-text-tertiary)">
           {summary.updatesAvailable.map(item => (
             <li className="leading-snug" key={`update-${item.name}`}>
               {item.name}

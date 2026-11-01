@@ -825,19 +825,19 @@ function Sash({
       role="separator"
     >
       {/* Persistent hairline: same token as PaneShell's divider sash
-          (--ui-stroke-secondary) so every seam — vertical or horizontal —
+          (--linear-border-secondary) so every seam — vertical or horizontal —
           reads identically. Sits at 0.1 so seams recede into the surface,
           and comes up to full on hover alongside the thicker grab band. */}
       <span
         className={cn(
-          'absolute bg-(--ui-stroke-secondary) opacity-10 transition-opacity duration-100 group-hover:opacity-100',
+          'absolute bg-(--linear-border-secondary) opacity-10 transition-opacity duration-100 group-hover:opacity-100',
           horizontal ? 'inset-y-0 left-[1px] w-px -translate-x-1/2' : 'inset-x-0 top-[1px] h-px -translate-y-1/2'
         )}
       />
       {!disabled && (
         <span
           className={cn(
-            'absolute bg-(--ui-sash-hover-border) opacity-0 transition-opacity duration-100 group-hover:opacity-100',
+            'absolute bg-(--linear-border-tertiary) opacity-0 transition-opacity duration-100 group-hover:opacity-100',
             horizontal
               ? 'inset-y-0 left-[1px] w-(--vscode-sash-hover-size,0.25rem) -translate-x-1/2'
               : 'inset-x-0 top-[1px] h-(--vscode-sash-hover-size,0.25rem) -translate-y-1/2'

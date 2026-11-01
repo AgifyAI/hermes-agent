@@ -88,12 +88,12 @@ export function FreeTierSetupNotice({ ctx }: { ctx: OnboardingContext }) {
 
   return (
     <div
-      className="grid gap-2 rounded-2xl border border-(--ui-stroke-tertiary) bg-(--ui-bg-tertiary)/40 px-4 py-3 text-sm"
+      className="grid gap-2 rounded-(--linear-radius-card) bg-(--linear-bg-secondary) px-3 py-2.5 text-[0.8125rem] text-(--linear-text-secondary)"
       data-testid="free-tier-setup-notice"
       role="status"
     >
       <p>{setupFailureCopy(failure, copy)}</p>
-      {failure.door === 'sign_in' ? <p className="text-muted-foreground">{copy.signInBelow}</p> : null}
+      {failure.door === 'sign_in' ? <p className="text-(--linear-text-tertiary)">{copy.signInBelow}</p> : null}
       {failure.retryable ? (
         <div>
           <Button disabled={retrying} onClick={() => void retry()} size="sm" type="button" variant="outline">

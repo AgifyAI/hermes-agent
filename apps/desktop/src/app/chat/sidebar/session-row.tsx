@@ -32,7 +32,6 @@ import { $projects } from '@/store/projects'
 import { $pullRequestsByBranch, sessionPrKey } from '@/store/pull-requests'
 import { sessionPinId } from '@/store/session'
 import { $sessionDotStateById, hasLiveTurn, showsRunningArc } from '@/store/session-dot-state'
-import { $sessionListDensity } from '@/store/session-list-density'
 import { $openStoredSessionIds } from '@/store/session-states'
 import { sessionCostUsd } from '@/store/sidebar-archive'
 import { $todoProgressBySession } from '@/store/todos'
@@ -51,7 +50,6 @@ import {
 } from './chrome'
 import { shellOwnsPress } from './reorderable-list'
 import { SessionActionsMenu, SessionContextMenu } from './session-actions-menu'
-import { sessionRowDetails } from './session-row-details'
 import { resolveSessionRowClick } from './session-row-gesture'
 import { SessionRowSlot } from './session-row-slots'
 import { useProfilePrewarm } from './use-profile-prewarm'
@@ -151,13 +149,7 @@ function SidebarSessionRowImpl({
   const r = t.sidebar.row
   const { cancelPrewarm, notePointerMove, startPrewarm } = useProfilePrewarm(session.profile)
   const title = sessionTitle(session)
-  const density = useStore($sessionListDensity)
   const fmt = t.sidebar
-
-  const details = sessionRowDetails(session, {
-    messageCount: fmt.messageCount,
-    toolCallCount: fmt.toolCallCount
-  })
 
   const timestamp = session.last_active || session.started_at
   const age = formatAge(timestamp, r)
@@ -173,7 +165,9 @@ function SidebarSessionRowImpl({
   const pinnedAge = rowMeta.includes('updated')
   // The default profile has no mark worth spending a row slot on — a chip on
   // every row that says "the normal one" is noise. Named profiles only.
-  const hasProfileTag = normalizeProfileKey(session.profile) !== 'default'
+  // In the all-profiles view every row is tagged, including `default` — the
+  // mark is the only way to tell whose conversation a row is at a glance.
+  const hasProfileTag = showProfile || normalizeProfileKey(session.profile) !== 'default'
   const pinnedProfile = hasProfileTag && rowMeta.includes('profile')
   // The branch's PR, if the row was asked to show one. A selector, not a plain
   // useStore: a repo's PRs land as a single map write, and only the rows on
@@ -225,7 +219,7 @@ function SidebarSessionRowImpl({
     trailing.push({
       key: 'figures',
       node: (
-        <span className="pointer-events-none whitespace-nowrap text-[0.625rem] leading-none text-(--ui-text-tertiary)">
+        <span className="pointer-events-none whitespace-nowrap text-[0.6875rem] font-[450] leading-none text-(--linear-text-tertiary)">
           {head}
           {/* The figures own their tail: the separator goes with it. */}
           <span className={cn('inline-block text-right', TAIL_HIDES)}>
@@ -234,7 +228,7 @@ function SidebarSessionRowImpl({
               <Tip label={absoluteAge} side="top">
                 <time
                   aria-label={`${age}, ${absoluteAge}`}
-                  className="pointer-events-auto focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring"
+                  className="pointer-events-auto focus-visible:text-(--linear-text-primary) focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)"
                   dateTime={timestampDate.toISOString()}
                   tabIndex={0}
                 >
@@ -289,7 +283,7 @@ function SidebarSessionRowImpl({
   // An archived session has no live status to paint, so the archive glyph takes
   // the lead slot the dot would occupy instead of adding a column of its own.
   const lead = session.archived ? (
-    <SidebarRowLeadGlyph className="text-(--ui-text-quaternary)">
+    <SidebarRowLeadGlyph className="text-(--linear-text-quaternary)">
       <Codicon name="archive" size="0.75rem" />
     </SidebarRowLeadGlyph>
   ) : null
@@ -342,7 +336,7 @@ function SidebarSessionRowImpl({
         <Button
           aria-label={r.sessionActions}
           className={cn(
-            'size-5 rounded-[4px] bg-transparent text-transparent transition-colors duration-100 hover:bg-(--ui-control-active-background) hover:text-foreground focus-visible:bg-(--ui-control-active-background) focus-visible:text-foreground focus-visible:ring-0 data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground group-hover:text-(--ui-text-tertiary) [&_svg]:size-3.5!',
+            'size-5 rounded-(--linear-radius-pill) bg-transparent text-transparent transition-colors duration-100 hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:transition-none focus-visible:bg-(--linear-hover-sidebar-icon) focus-visible:text-(--linear-text-primary) focus-visible:ring-0 data-[state=open]:bg-(--linear-hover-sidebar-icon) data-[state=open]:text-(--linear-text-primary) group-hover:text-(--linear-text-tertiary) [&_svg]:size-3.5!',
             trailing.length > 0 && 'absolute right-0',
             pr && KEBAB_YIELDS
           )}
@@ -376,21 +370,16 @@ function SidebarSessionRowImpl({
           card && SIDEBAR_ROW_CARD_MIN_H,
           // Density-aware minimum heights for the inline (non-card) row: the
           // metadata / preview lines below need the extra rows (#68119).
-          !card && density !== 'compact' && 'min-h-[2.75rem]',
-          !card && density === 'detailed' && 'min-h-[3.875rem]',
-          isSelected && 'bg-(--ui-row-active-background)',
+          isSelected && 'bg-(--linear-active-sidebar) text-(--linear-text-primary)',
           // Open in another pane: the SAME band, just weaker. Its own mixed
           // token rather than row opacity — dimming the whole row would take
           // the title and the status dot down with it.
           openUnfocused && 'bg-(--ui-row-open-background)',
-          liveTurn && 'text-foreground',
-          // Opaque surface while lifted so the dragged row erases what's under
-          // it (translucency let the rows below bleed through). data-glass-opaque
-          // keeps that true when window glass thins the field.
-          dragging && 'z-10 cursor-grabbing bg-(--ui-sidebar-surface-background)',
+          liveTurn && 'text-(--linear-text-primary)',
+          // Opaque surface while lifted so the dragged row erases what's under it.
+          dragging && 'z-10 cursor-grabbing bg-(--linear-bg-window)',
           className
         )}
-        data-glass-opaque={dragging ? '' : undefined}
         data-working={liveTurn ? 'true' : undefined}
         // The row runs BOTH drags off one press, and each declines outside its
         // own region — so no timing/arbitration rule is needed and neither can
@@ -451,6 +440,9 @@ function SidebarSessionRowImpl({
             // buttons earn this from the base layer's interactive-control
             // rule, a div doesn't.
             'z-0 w-full cursor-pointer',
+            // The status dot already lives in a 14px lead cell; a 2px gap keeps
+            // the title close to it instead of the 6px row gap.
+            !card && 'gap-0.5',
             card && 'pr-0',
             branchStem && 'pl-3.5',
             // The card is a grid with ONE spacing knob: --card-gap. Every row
@@ -536,7 +528,7 @@ function SidebarSessionRowImpl({
                 <Tip label={r.continuationOrigin}>
                   <Codicon
                     aria-hidden="true"
-                    className="size-3.5 shrink-0 text-(--ui-text-quaternary)"
+                    className="size-3.5 shrink-0 text-(--linear-text-quaternary)"
                     name="layers"
                     size="0.75rem"
                   />
@@ -562,7 +554,10 @@ function SidebarSessionRowImpl({
                     <RowButton className="block w-full text-left">
                       <OverflowTip label={title} placement="row">
                         <SidebarRowLabel
-                          className="hover-marquee block font-normal group-hover:text-foreground group-data-[working=true]:text-foreground/90"
+                          className={cn(
+                            'hover-marquee block group-hover:text-(--linear-text-primary) group-data-[working=true]:text-(--linear-text-primary)',
+                            isSelected && 'text-(--linear-text-primary)'
+                          )}
                           onPointerEnter={armMarquee}
                           onPointerLeave={disarmMarquee}
                         >
@@ -570,29 +565,6 @@ function SidebarSessionRowImpl({
                         </SidebarRowLabel>
                       </OverflowTip>
                     </RowButton>
-                    {/* Session-list density (#68119): comfortable adds one
-                        deterministic metadata line; detailed adds the initial
-                        request preview. Compact keeps today's one-line row. */}
-                    {density !== 'compact' && details.metadata && (
-                      <span
-                        className={cn(
-                          'mt-0.5 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
-                          SIDEBAR_TRUNCATED_LEADING
-                        )}
-                      >
-                        {details.metadata}
-                      </span>
-                    )}
-                    {density === 'detailed' && details.preview && (
-                      <span
-                        className={cn(
-                          'mt-1 block truncate text-[0.6875rem] text-(--ui-text-tertiary)',
-                          SIDEBAR_TRUNCATED_LEADING
-                        )}
-                      >
-                        {details.preview}
-                      </span>
-                    )}
                   </span>
                   <SessionRowSlot area={SESSION_ROW_AREAS.trailing} sessionId={sessionPinId(session)} />
                 </>
@@ -611,7 +583,7 @@ function SidebarSessionRowImpl({
                   <SessionRowSlot area={SESSION_ROW_AREAS.leading} sessionId={sessionPinId(session)} />
                   <span
                     className={cn(
-                      'min-w-0 flex-1 truncate text-[0.6875rem] text-(--ui-text-tertiary)',
+                      'min-w-0 flex-1 truncate text-[0.6875rem] font-[450] text-(--linear-text-tertiary)',
                       SIDEBAR_TRUNCATED_LEADING
                     )}
                   >
@@ -632,7 +604,7 @@ function SidebarSessionRowImpl({
                     <OverflowTip label={title} placement="row">
                       <SidebarRowLabel
                         className={cn(
-                          'hover-marquee text-[0.8125rem] font-medium text-(--ui-text-primary) group-data-[working=true]:text-foreground',
+                          'hover-marquee text-[0.8125rem] font-medium text-(--linear-text-primary)',
                           SIDEBAR_TRUNCATED_LEADING
                         )}
                         onPointerEnter={armMarquee}
@@ -645,7 +617,7 @@ function SidebarSessionRowImpl({
                   {session.preview && rowMeta.includes('preview') ? (
                     <span
                       className={cn(
-                        'min-w-0 truncate text-[0.6875rem] text-(--ui-text-tertiary)',
+                        'min-w-0 truncate text-xs font-[450] text-(--linear-text-tertiary)',
                         SIDEBAR_TRUNCATED_LEADING
                       )}
                     >
@@ -656,7 +628,7 @@ function SidebarSessionRowImpl({
                 {model || size || todoProgress ? (
                   <span
                     className={cn(
-                      'flex min-w-0 items-baseline gap-2 text-[0.6875rem] text-(--ui-text-tertiary)',
+                      'flex min-w-0 items-baseline gap-2 text-[0.6875rem] font-[450] text-(--linear-text-tertiary)',
                       SIDEBAR_TRUNCATED_LEADING
                     )}
                   >

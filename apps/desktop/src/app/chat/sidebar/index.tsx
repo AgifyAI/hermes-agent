@@ -3,42 +3,26 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useStore } from '@nanostores/react'
 import type * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { Codicon } from '@/components/ui/codicon'
-import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { GlyphSpinner } from '@/components/ui/glyph-spinner'
-import { KbdGroup } from '@/components/ui/kbd'
 import { SearchField } from '@/components/ui/search-field'
 import {
   Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem
+  SidebarContent
 } from '@/components/ui/sidebar'
-import { Tip, TipKeybindLabel } from '@/components/ui/tooltip'
-import { useContributions } from '@/contrib/react/use-contributions'
 import { type SessionInfo, type SessionSearchResult } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { comboTokens } from '@/lib/keybinds/combo'
+import { flattenSessionsWithBranches } from '@/lib/session-branch-tree'
 import { sessionMatchesSearch } from '@/lib/session-search'
 import { normalizeSessionSource } from '@/lib/session-source'
+import { isTodayTimestamp } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { $activeConnectionId } from '@/store/connections'
-import { $cronJobs } from '@/store/cron'
-import { recordAction } from '@/store/desktop-metrics'
-import { $interfaceMode, $showsAdvancedChrome, shownInMode } from '@/store/interface-mode'
-import { $bindings } from '@/store/keybinds'
 import {
   $dismissedAutoProjectIds,
   $panesFlipped,
   $pinnedSessionIds,
   $sidebarCardRows,
-  $sidebarCronOpen,
   $sidebarFiltersActive,
   $sidebarGrouping,
   $sidebarOrdering,
@@ -60,7 +44,6 @@ import {
   pinSession,
   SESSION_SEARCH_FOCUS_EVENT,
   setPinnedSessionOrder,
-  setSidebarCronOpen,
   setSidebarPinsOpen,
   setSidebarProjectOrderIds,
   setSidebarRecentsOpen,
@@ -73,7 +56,6 @@ import {
 } from '@/store/layout'
 import { notifyError } from '@/store/notifications'
 import {
-  $newChatProfile,
   $profiles,
   $profileScope,
   ALL_PROFILES,
@@ -85,7 +67,6 @@ import { $profileRailVisible } from '@/store/profile-rail-prefs'
 import { $projectScope, ALL_PROJECTS, exitProjectScope } from '@/store/project-scope'
 import {
   $activeProjectId,
-  $newProjectDropPlacement,
   $projectOwnerBySessionId,
   $projects,
   $projectTree,
@@ -107,7 +88,6 @@ import {
   refreshPullRequests,
   sessionPrKey
 } from '@/store/pull-requests'
-import { openRouteTile } from '@/store/route-tiles'
 import {
   $cronSessions,
   $gatewayState,
@@ -118,8 +98,6 @@ import {
   $sessions,
   $sessionsLoadError,
   $sessionsLoading,
-  $unreadFinishedSessionIds,
-  markAllSessionsRead,
   sessionPinId
 } from '@/store/session'
 import { $sessionDotStateById, sessionStatusBucket } from '@/store/session-dot-state'
@@ -127,30 +105,26 @@ import { $focusedSessionIsTile, $focusedStoredSessionId } from '@/store/session-
 import { $unconfirmedPinWrites } from '@/store/session-pin-sync'
 import { $removedSessionIds } from '@/store/session-removal'
 import { $workingSessionIds } from '@/store/session-states'
-import { ackAllSessionsRead } from '@/store/session-unread'
 import { markSessionUnread } from '@/store/session-unread-remote'
 import { $archivedSessions, loadArchivedSessions } from '@/store/sidebar-archive'
-import { applySidebarNavPrefs, SIDEBAR_NAV_PREFS_AREA } from '@/store/sidebar-nav'
 import { $sidebarSessionRankIds } from '@/store/sidebar-sort'
 
 import {
-  type AppView,
-  ARTIFACTS_ROUTE,
-  CAPABILITIES_ROUTE,
-  CRON_ROUTE,
-  MESSAGING_ROUTE,
-  SIDEBAR_NAV_AREA,
-  type SidebarNavContribution
+  type AppView
 } from '../../routes'
 import type { SidebarNavItem } from '../../types'
-import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
+import { type NewSessionSplitHandler } from '../new-session-drag'
 
-import { SidebarSectionAddButton } from './chrome'
-import { SidebarCronJobsSection } from './cron-jobs-section'
-import { SidebarFilterMenu } from './filter-menu'
 import { useGatewaySessionGroups } from './gateway-group-model'
 import { SidebarLoadMoreRow } from './load-more-row'
-import { orderByIds, reconcileOrderIds, resolveManualSessionOrderIds, sameIds } from './order'
+import { SidebarNavSection } from './nav-section'
+import {
+  mergeVisibleReorder,
+  orderByIds,
+  reconcileOrderIds,
+  resolveManualSessionOrderIds,
+  sameIds
+} from './order'
 import { filterSessionsByProfileScope } from './profile-scope'
 import { ProfileRail } from './profile-switcher'
 import { ProjectDialog } from './project-dialog'
@@ -162,7 +136,6 @@ import {
   overlayLivePreviews,
   PROJECT_PREVIEW_COUNT,
   ProjectBackRow,
-  ProjectMenu,
   projectTreeCwd,
   reconcileEnteredProjectSessions,
   sessionBucketId,
@@ -171,7 +144,6 @@ import {
   type SidebarProjectTree,
   type SidebarWorkspaceTree,
   sortProjectsForOverview,
-  StartWorkButton,
   useRepoWorktreeMap
 } from './projects'
 import { WorktreeDialog } from './projects/worktree-dialog'
@@ -179,12 +151,14 @@ import {
   SidebarBlankState,
   SidebarLoadErrorState,
   SidebarPinnedEmptyState,
+  SidebarSessionsEmptyState,
   SidebarSessionSkeletons,
   SidebarStorageCorruptNotice
 } from './section-states'
 import { buildSessionByAnyId, resolvePinnedSessions } from './session-index'
+import { SessionRenameDialog } from './session-rename-dialog'
+import { SessionsHeaderActions } from './sessions-header-actions'
 import { SidebarSessionsSection, VIRTUALIZE_THRESHOLD } from './sessions-section'
-import { CONTEXT_SPLIT_KIT, SplitSubmenu } from './split-submenu'
 import { useEnteredProjectSessions } from './use-entered-project-sessions'
 import { useServerSessionSearch } from './use-server-session-search'
 
@@ -192,50 +166,6 @@ import { useServerSessionSearch } from './use-server-session-search'
 // the grouped view. Long enough that the flat list — the thing actually on
 // screen — has the connection to itself first.
 const PROJECT_TREE_WARM_MS = 2_000
-
-// A row's `tier` is the one mode it belongs to (Simple keeps the setup rows,
-// Advanced adds the readouts); the list filters once, nothing is passed down.
-const SIDEBAR_NAV: SidebarNavItem[] = [
-  {
-    id: 'new-session',
-    label: '',
-    icon: props => <Codicon name="robot" {...props} />,
-    action: 'new-session',
-    keybindActionId: 'session.new'
-  },
-  {
-    id: 'capabilities',
-    label: '',
-    icon: props => <Codicon name="symbol-misc" {...props} />,
-    route: CAPABILITIES_ROUTE,
-    keybindActionId: 'nav.capabilities'
-  },
-  {
-    id: 'messaging',
-    label: '',
-    icon: props => <Codicon name="comment" {...props} />,
-    route: MESSAGING_ROUTE,
-    keybindActionId: 'nav.messaging'
-  },
-  // Artifacts and Scheduled jobs are outputs of running Hermes the developer
-  // way; Capabilities and Messaging are how anyone sets it up.
-  {
-    id: 'artifacts',
-    label: '',
-    icon: props => <Codicon name="files" {...props} />,
-    route: ARTIFACTS_ROUTE,
-    keybindActionId: 'nav.artifacts',
-    tier: 'advanced'
-  },
-  {
-    id: 'cron',
-    label: '',
-    icon: props => <Codicon name="watch" {...props} />,
-    route: CRON_ROUTE,
-    keybindActionId: 'nav.cron',
-    tier: 'advanced'
-  }
-]
 
 // Two modes via the `compact` height variant (styles.css):
 //   tall    → each section is shrink-0, capped, its own scroller; Sessions is flex-1.
@@ -252,18 +182,6 @@ const SCROLL_Y = 'overflow-y-auto overflow-x-hidden overscroll-contain scrollbar
 // filtering or collapsing a section doesn't reflow every row sideways. Only the
 // outer one: nested scrollers would each reserve their own and stack the inset.
 const SCROLL_GUTTER = '[scrollbar-gutter:stable]'
-
-// Section-header action icons stay hidden until the whole header row is hovered
-// (group/section lives on SidebarSectionHeader), mirroring the artifacts/file
-// browser header affordances. focus-visible keeps them keyboard-reachable.
-const HEADER_ACTION_BTN =
-  'text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/section:opacity-100 focus-visible:opacity-100'
-
-// The view toggle (overview group toggle / in-project back) is the one control
-// that stays visible at all times — it's the stable navigation affordance, not
-// a hover-revealed action.
-const HEADER_NAV_BTN =
-  'text-(--ui-text-tertiary) opacity-70 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground hover:opacity-100 focus-visible:opacity-100'
 
 // FTS results cover sessions that aren't in the loaded page; synthesize a
 // minimal SessionInfo so they render in the same row component (resume works
@@ -375,6 +293,9 @@ interface ChatSidebarProps extends React.ComponentProps<typeof Sidebar> {
    *  buttons), which land a fresh session exactly where it's dropped. The
    *  context-menu "Open in split" path passes just a `dir`. */
   onNewSessionSplit: NewSessionSplitHandler
+  // Kept for the shared action surface (command palette / statusbar / plugin
+  // contributions): the sidebar no longer reads these now that jobs are
+  // managed on the Scheduled jobs page.
   onManageCronJob: (jobId: string) => void
   onTriggerCronJob: (jobId: string) => Promise<void>
 }
@@ -390,55 +311,10 @@ export function ChatSidebar({
   onArchiveSession,
   onBranchSession,
   onNewSessionInWorkspace,
-  onNewSessionSplit,
-  onManageCronJob,
-  onTriggerCronJob
+  onNewSessionSplit
 }: ChatSidebarProps) {
   const { t } = useI18n()
   const s = t.sidebar
-  const { pathname } = useLocation()
-  // Contributed nav rows (plugins pairing a page with a sidebar entry) render
-  // below the built-ins with the same chrome; active = at their route.
-  const navContributions = useContributions(SIDEBAR_NAV_AREA)
-
-  const contributedNav = useMemo<SidebarNavItem[]>(
-    () =>
-      navContributions.flatMap(c => {
-        const data = c.data as Partial<SidebarNavContribution> | undefined
-
-        if (!data?.path?.startsWith('/') || !data.label) {
-          return []
-        }
-
-        const codicon = data.codicon || 'plug'
-
-        return [
-          {
-            id: c.id,
-            label: data.label,
-            icon: (props: { className?: string }) => <Codicon name={codicon} {...props} />,
-            route: data.path,
-            tier: data.tier
-          }
-        ]
-      }),
-    [navContributions]
-  )
-
-  const interfaceMode = useStore($interfaceMode)
-  const showsAdvancedChrome = useStore($showsAdvancedChrome)
-
-  // Nav preferences (`sidebarNav.prefs` contributions): a plugin may hide rows
-  // or re-order them. Merged here, at render, from the registry — so the
-  // preference never mutates the default list, and a plugin's disable/reload
-  // disposes its contribution and the rows come straight back.
-  const navPrefs = useContributions(SIDEBAR_NAV_PREFS_AREA)
-
-  const navItems = useMemo(
-    () => applySidebarNavPrefs([...SIDEBAR_NAV, ...contributedNav].filter(shownInMode(interfaceMode)), navPrefs),
-    [contributedNav, interfaceMode, navPrefs]
-  )
-
   const panesFlipped = useStore($panesFlipped)
   const grouping = useStore($sidebarGrouping)
   const ordering = useStore($sidebarOrdering)
@@ -463,7 +339,6 @@ export function ChatSidebar({
   const unconfirmedPinWrites = useStore($unconfirmedPinWrites)
   const pinsOpen = useStore($sidebarPinsOpen)
   const agentsOpen = useStore($sidebarRecentsOpen)
-  const cronOpen = useStore($sidebarCronOpen)
   // The sidebar highlight tracks the FOCUSED session — the interacted tile's
   // tab, else the main selection — so it stays 1:1 with whatever tab is active.
   const selectedSessionId = useStore($focusedStoredSessionId)
@@ -471,14 +346,12 @@ export function ChatSidebar({
   const currentView = focusedSessionIsTile ? 'chat' : routeView
   const sessions = useStore($sessions)
   const cronSessions = useStore($cronSessions)
-  const cronJobs = useStore($cronJobs)
   const messagingSessions = useStore($messagingSessions)
   const messagingPlatformTotals = useStore($messagingPlatformTotals)
   const messagingTruncated = useStore($messagingTruncated)
   const sessionsLoading = useStore($sessionsLoading)
   const sessionsLoadError = useStore($sessionsLoadError)
   const sessionProfilesTruncated = useStore($sessionProfilesTruncated)
-  const unreadCount = useStore($unreadFinishedSessionIds).length
   const profiles = useStore($profiles)
   const profileScope = useStore($profileScope)
   const activeConnectionId = useStore($activeConnectionId)
@@ -529,15 +402,15 @@ export function ChatSidebar({
   const projectScope = useStore($projectScope)
   const gatewayState = useStore($gatewayState)
   const dismissedAutoProjects = useStore($dismissedAutoProjectIds)
-  const newSessionCombo = useStore($bindings)['session.new']?.[0]
-  const newSessionKbd = newSessionCombo ? comboTokens(newSessionCombo) : []
   const [searchQuery, setSearchQuery] = useState('')
   // The sidebar's search bar is not a permanent fixture: it appears when the
   // user asks for it (⌘P / the search action) and folds away on Escape. That
   // keeps the top of the sidebar to navigation + sessions.
   const [searchOpen, setSearchOpen] = useState(false)
-  const [newSessionKbdFlash, setNewSessionKbdFlash] = useState(false)
   const [recentsLoadMorePending, setRecentsLoadMorePending] = useState(false)
+  // The "Previous sessions" parent section starts open so its day headings are
+  // visible; each day inside starts folded.
+  const [previousOpen, setPreviousOpen] = useState(true)
   // One footer button pages recents AND every messaging slice still truncated
   // on disk, so the merged list keeps growing as one list.
   const [flatLoadMorePending, setFlatLoadMorePending] = useState(false)
@@ -573,25 +446,6 @@ export function ChatSidebar({
   const closeSearch = useCallback(() => {
     setSearchQuery('')
     setSearchOpen(false)
-  }, [])
-
-  // Flash the ⌘N hint full-opacity (no transition) for the press, so hitting
-  // the shortcut visibly pings its affordance in the sidebar.
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout> | undefined
-
-    const onShortcut = () => {
-      setNewSessionKbdFlash(true)
-      clearTimeout(timeout)
-      timeout = setTimeout(() => setNewSessionKbdFlash(false), 140)
-    }
-
-    window.addEventListener('hermes:new-session-shortcut', onShortcut)
-
-    return () => {
-      window.removeEventListener('hermes:new-session-shortcut', onShortcut)
-      clearTimeout(timeout)
-    }
   }, [])
 
   const activeSidebarSessionId = currentView === 'chat' ? selectedSessionId : null
@@ -1345,6 +1199,37 @@ export function ChatSidebar({
   // parallel grouped view, not a filter on this one — nothing is hidden here.
   const displayAgentSessions = unpinnedAgentSessions
 
+  // In the flat chronological view, today is its own section ("Sessions") and
+  // every earlier day lives under a sibling "Previous sessions" parent. A day
+  // section is keyed by its nominal day (the 4 AM rollover), and a branch child
+  // always follows its parent's bucket so a cluster never splits across days.
+  const rankedGlobally = ordering === 'cost' || ordering === 'tokens'
+
+  const flatDateSplit =
+    !showArchived && !rankedGlobally && !worktreeGroupingActive && !inProject && grouping === 'date'
+
+  const { previousSessions, todaySessions } = useMemo(() => {
+    const today: SessionInfo[] = []
+    const previous: SessionInfo[] = []
+
+    if (!flatDateSplit) {
+      return { previousSessions: previous, todaySessions: displayAgentSessions }
+    }
+
+    let bucket = today
+
+    for (const entry of flattenSessionsWithBranches(displayAgentSessions)) {
+      if (!entry.branchStem) {
+        const stamp = entry.session.last_active || entry.session.started_at || 0
+        bucket = isTodayTimestamp(stamp) ? today : previous
+      }
+
+      bucket.push(entry.session)
+    }
+
+    return { previousSessions: previous, todaySessions: today }
+  }, [displayAgentSessions, flatDateSplit])
+
   // Pagination is scope-aware. In "All profiles" mode it tracks the global
   // unified set; scoped to one profile it tracks that profile's own truncation
   // flag — otherwise a huge default profile keeps "Load more" stuck on while
@@ -1425,6 +1310,12 @@ export function ChatSidebar({
 
   const hasMoreMessaging = messagingMorePlatforms.length > 0
 
+  // Profile marks are for the flat all-profiles list; a profile-grouped lane
+  // already names its owner in the header, so repeating it on every row is noise.
+  const showProfileTags = showAllProfiles && grouping !== 'profile'
+
+  const hasPreviousSessions = flatDateSplit && (previousSessions.length > 0 || hasMoreSessions || hasMoreMessaging)
+
   // Archived rows are excluded from the sessions query, so the view has to
   // fetch its own set.
   useEffect(() => {
@@ -1432,12 +1323,6 @@ export function ChatSidebar({
       void loadArchivedSessions()
     }
   }, [showArchived])
-
-  // Ranking by size is a question about the whole list ("what did I burn money
-  // on"), so it drops the calendar dividers and ranks globally — "Today" above
-  // the priciest session you have ever had would be a lie. Time- and
-  // state-based keys stay bucketed, where they read correctly per day.
-  const rankedGlobally = ordering === 'cost' || ordering === 'tokens'
 
   const displayAgentGroups = profileGroups
 
@@ -1461,6 +1346,7 @@ export function ChatSidebar({
   // wrapper classes built for a virtualized list around a non-virtual one.
   // Entered-project content is the third prop that suppresses virtualization.
   const recentsVirtualizes =
+    !flatDateSplit &&
     !displayAgentGroups?.length &&
     !projectOverview?.length &&
     !(inProject && enteredProjectContent) &&
@@ -1500,16 +1386,16 @@ export function ChatSidebar({
 
   // Filtered down to nothing still renders the section: the empty state is what
   // tells you the filter — not an empty account — is why the list is bare.
-  // Messaging threads and cron jobs live inside this area too: a profile whose
-  // only sessions are messaging threads (or that only has scheduled jobs) must
-  // not collapse the whole sidebar to the blank state (#63593).
+  // Messaging threads live inside this area too: a profile whose only sessions
+  // are messaging threads must not collapse the whole sidebar to the blank
+  // state (#63593). Scheduled jobs have their own page now, so they deliberately
+  // do not keep this area alive.
   const showSessionSections =
     showSessionSkeletons ||
     sessionsLoadError ||
     filtersActive ||
     mergedSessions.length > 0 ||
-    projectModel.length > 0 ||
-    (showsAdvancedChrome && cronJobs.length > 0)
+    projectModel.length > 0
 
   // The sidebar's session-area mode — exposed as data-attributes so custom
   // skins can target project mode (overview vs. entered), archived, or search
@@ -1528,8 +1414,15 @@ export function ChatSidebar({
   // Each reorderable list reports its OWN new id order; persisting is a direct,
   // typed write — no id-prefix sniffing to figure out which level moved.
   const reorderSessions = (ids: string[]) => {
+    // A drag in the split view only sees today's rows. Merge the new order into
+    // the full unpinned pool (in render order) so earlier days keep their saved
+    // intra-day rank instead of falling back to recency.
+    const pool = flattenSessionsWithBranches(unpinnedAgentSessions)
+      .filter(entry => !entry.branchStem)
+      .map(entry => entry.session.id)
+
     setSidebarSessionOrderManual(true)
-    setSidebarSessionOrderIds(ids)
+    setSidebarSessionOrderIds(mergeVisibleReorder(pool, ids))
   }
 
   // Persist the new project overview order (drag-to-reorder); orderByIds applies
@@ -1547,156 +1440,40 @@ export function ChatSidebar({
       })
     )
 
+  // The footer belongs to the part of the list that owns the tail: the
+  // Previous sessions section when today is split out, the single section
+  // otherwise.
+  const loadMoreFooter = !agentsGrouped && !showSessionSkeletons && (hasMoreSessions || hasMoreMessaging) ? (
+    <SidebarLoadMoreRow
+      loading={sessionsLoading || recentsLoadMorePending || flatLoadMorePending}
+      onClick={() => void onLoadMoreFlat()}
+      // The merged list is post-filtered, so a backend page size (50) is not a
+      // truthful "rows you'll see" count. Use the generic label over a fake N.
+      step={0}
+    />
+  ) : null
+
   return (
     <Sidebar
       className={cn(
         // Visibility is the layout tree's job (a hidden zone is display:none;
         // the narrow overlay renders the live instance) — the sidebar always
         // paints itself fully.
-        'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-foreground transition-none',
+        'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-(--linear-text-primary) transition-none',
         panesFlipped ? 'border-l border-r-0' : 'border-r border-l-0',
-        'border-(--sidebar-edge-border) bg-(--ui-sidebar-surface-background) opacity-100'
+        // Rows in the sidebar take Linear's sidebar hover, not the panel-row one.
+        'border-(--sidebar-edge-border) bg-(--linear-bg-window) opacity-100 [--ui-row-hover-background:var(--linear-hover-sidebar)]'
       )}
       collapsible="none"
       data-tip-region=""
       data-tour="sessions-sidebar"
     >
       <SidebarContent className="gap-0 overflow-hidden bg-transparent px-2.5">
-        <SidebarGroup className="shrink-0 p-0 pb-2 pt-[calc(var(--titlebar-height)+0.375rem)]">
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-px">
-              {navItems.map(item => {
-                const isInteractive = Boolean(item.action) || Boolean(item.route)
-
-                const active =
-                  (item.id === 'capabilities' && currentView === 'capabilities') ||
-                  (item.id === 'messaging' && currentView === 'messaging') ||
-                  (item.id === 'artifacts' && currentView === 'artifacts') ||
-                  (item.id === 'cron' && currentView === 'cron') ||
-                  // Contributed rows light up at their own route.
-                  (currentView === 'extension' && Boolean(item.route) && pathname === item.route)
-
-                const isNewSession = item.id === 'new-session'
-
-                const button = (
-                  <SidebarMenuButton
-                    aria-disabled={!isInteractive}
-                    className={cn(
-                      // no-drag: these rows sit directly under the titlebar's
-                      // [-webkit-app-region:drag] strips (app-shell.tsx), with only
-                      // 6px of clearance. Drag regions win hit-testing over DOM
-                      // (pointer-events can't override), and on Linux/WSLg the
-                      // resolved region has been observed to swallow clicks on the
-                      // top rows. Same carve-out as USER_BUBBLE_BASE_CLASS in
-                      // thread.tsx.
-                      'flex h-7 w-full justify-start gap-2 rounded-md border border-transparent px-2 text-left text-[0.8125rem] font-medium text-(--ui-text-secondary) transition-colors duration-100 ease-out [-webkit-app-region:no-drag] hover:bg-(--ui-control-hover-background) hover:text-foreground hover:transition-none',
-                      // Linear marks the current row with a neutral fill only —
-                      // no outline, no accent rail.
-                      active && 'bg-(--ui-control-active-background) text-foreground',
-                      !isInteractive &&
-                        'cursor-default hover:border-transparent hover:bg-transparent hover:text-inherit'
-                    )}
-                    // A tip anchored to the label points at the end of the
-                    // word; the row is what it's actually about.
-                    data-tip-region=""
-                    onClick={() => {
-                      // A plain new session lands in whatever profile the live
-                      // gateway is on (= the active switcher context). null →
-                      // no swap. The switcher header is the single place to
-                      // change which profile that is.
-                      if (isNewSession) {
-                        $newChatProfile.set(null)
-                      }
-
-                      if (item.keybindActionId) {
-                        recordAction(item.keybindActionId, 'click')
-                      }
-
-                      onNavigate(item)
-                    }}
-                    onPointerDown={event => {
-                      // The "New session" row is a drag source too: drag it onto
-                      // a chat zone's tab strip / edge / center to create the
-                      // session exactly there (stack / split). The pointer drag
-                      // session owns the gesture — a sub-threshold release falls
-                      // through to the onClick above (ordinary new session), and
-                      // an engaged drag suppresses that click so it never
-                      // double-creates. The create callback sets $newChatProfile
-                      // itself (the suppressed click can't), so a dragged new
-                      // session lands in the same profile a click would.
-                      if (!isNewSession) {
-                        return
-                      }
-
-                      startNewSessionDrag(placement => {
-                        $newChatProfile.set(null)
-                        onNewSessionSplit(placement.dir, { anchor: placement.anchor, before: placement.before })
-                      }, event)
-                    }}
-                    tooltip={
-                      item.keybindActionId
-                        ? {
-                            children: (
-                              <TipKeybindLabel actionId={item.keybindActionId} text={s.nav[item.id] ?? item.label} />
-                            )
-                          }
-                        : (s.nav[item.id] ?? item.label)
-                    }
-                    type="button"
-                  >
-                    <item.icon className="size-4 shrink-0 text-[color-mix(in_srgb,currentColor_72%,transparent)]" />
-                    {/* Shrink-to-fit, not flex-1: the label carries the row's
-                        `data-tour` handle, and anything anchored to it should
-                        land at the end of the WORD, not out at the sidebar's
-                        edge. Still truncates — `min-w-0` lets it shrink past
-                        its content when the rail is narrow — and the trailing
-                        chip's `ml-auto` was already doing the pushing that
-                        `flex-1` looked like it was for.
-                        Its own `sidebar-nav-` namespace: the overlay nav owns
-                        `nav-<id>`, and both are on screen with Settings open. */}
-                    <span className="min-w-0 truncate" data-tip-arrow-only="" data-tour={`sidebar-nav-${item.id}`}>
-                      {s.nav[item.id] ?? item.label}
-                    </span>
-                    {isNewSession && (
-                      <KbdGroup
-                        className={cn('ml-auto opacity-55', newSessionKbdFlash && 'opacity-100!')}
-                        keys={newSessionKbd}
-                        size="sm"
-                      />
-                    )}
-                  </SidebarMenuButton>
-                )
-
-                // New session + route-backed pages can open in a split —
-                // right-click for the directional "Open in split" submenu.
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    {isNewSession || item.route ? (
-                      <ContextMenu>
-                        <ContextMenuTrigger asChild>{button}</ContextMenuTrigger>
-                        <ContextMenuContent aria-label={s.nav[item.id] ?? item.label}>
-                          <SplitSubmenu
-                            kit={CONTEXT_SPLIT_KIT}
-                            label={s.row.openInSplit}
-                            onSplit={dir => {
-                              if (isNewSession) {
-                                onNewSessionSplit(dir)
-                              } else if (item.route) {
-                                openRouteTile(item.route, dir)
-                              }
-                            }}
-                          />
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    ) : (
-                      button
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SidebarNavSection
+          currentView={currentView}
+          onNavigate={onNavigate}
+          onNewSessionSplit={onNewSessionSplit}
+        />
 
         <SidebarStorageCorruptNotice />
 
@@ -1734,7 +1511,7 @@ export function ChatSidebar({
                   searchPending ? (
                     <SidebarSessionSkeletons />
                   ) : (
-                    <div className="wrap-anywhere grid min-h-24 place-items-center rounded-lg px-2 text-center text-xs text-(--ui-text-tertiary)">
+                    <div className="wrap-anywhere grid min-h-24 place-items-center px-2 text-center text-xs text-(--linear-text-tertiary)">
                       {s.noMatch(trimmedQuery)}
                     </div>
                   )
@@ -1752,7 +1529,7 @@ export function ChatSidebar({
                 preserveOrder
                 rootClassName="min-h-32 flex-1 overflow-hidden p-0"
                 sessions={searchResults}
-                showProfileTags={showAllProfiles}
+                showProfileTags={showProfileTags}
               />
             )}
 
@@ -1779,7 +1556,7 @@ export function ChatSidebar({
                 pinned
                 rootClassName="shrink-0 p-0 pb-1"
                 sessions={pinnedSessions}
-                showProfileTags={showAllProfiles}
+                showProfileTags={showProfileTags}
                 sortable={pinnedSessions.length > 1}
               />
             )}
@@ -1795,7 +1572,12 @@ export function ChatSidebar({
                 card={cardRows}
                 collapsible={!inProject}
                 contentClassName={cn(
-                  'flex min-h-0 flex-1 flex-col gap-px pb-1.75',
+                  'flex flex-col gap-px pb-1.75',
+                  // In the flat split, today's block is a FIT: it neither
+                  // shrinks nor owns a scroller, so an expanded Previous
+                  // sessions list below can never crop it. The shared outer
+                  // scroller carries the whole stack.
+                  !flatDateSplit && 'min-h-0 flex-1',
                   // The section is the ONE authority on whether the virtual
                   // list owns scrolling: it neutralizes this wrapper scroller
                   // itself (overflow-visible) when it virtualizes. Gating
@@ -1803,147 +1585,47 @@ export function ChatSidebar({
                   // two — a cached project tree flipped this side but not the
                   // section's, leaving the list with no scroller at all and
                   // the recents pane rendering blank under Updated grouping.
-                  SCROLL_Y,
+                  !flatDateSplit && SCROLL_Y,
                   // Flatten into the single scroll when compact — unless this is the
                   // virtualized long list, which must keep its own scroller.
                   !recentsVirtualizes && COMPACT_FLAT
                 )}
                 dndSensors={dndSensors}
                 emptyState={
-                  inProject && projectLoadFailed ? null : showSessionSkeletons || (inProject && projectLoading) ? (
-                    <SidebarSessionSkeletons />
-                  ) : !inProject && sessionsLoadError ? (
-                    <SidebarLoadErrorState onRetry={() => void onRetrySessions()} />
-                  ) : (
-                    <div className="grid min-h-16 place-items-center rounded-lg px-2 text-center text-xs text-(--ui-text-tertiary)">
-                      {inProject
-                        ? s.projectEmpty
-                        : filtersActive
-                          ? s.noFilterMatches
-                          : pinnedSessions.length > 0
-                            ? s.allPinned
-                            : s.noSessions}
-                    </div>
-                  )
+                  <SidebarSessionsEmptyState
+                    filtersActive={filtersActive}
+                    flatDateSplit={flatDateSplit}
+                    hasPinned={pinnedSessions.length > 0}
+                    inProject={inProject}
+                    loadError={sessionsLoadError}
+                    loading={showSessionSkeletons}
+                    onRetry={() => void onRetrySessions()}
+                    projectLoadFailed={projectLoadFailed}
+                    projectLoading={projectLoading}
+                  />
                 }
-                footer={
-                  // Hidden only when workspace-grouped — those groups page
-                  // themselves. Profile groups don't: this one footer pages the
-                  // merged list (recents + every truncated messaging platform).
-                  !agentsGrouped && !showSessionSkeletons && (hasMoreSessions || hasMoreMessaging) ? (
-                    <SidebarLoadMoreRow
-                      loading={sessionsLoading || recentsLoadMorePending || flatLoadMorePending}
-                      onClick={() => void onLoadMoreFlat()}
-                      // The merged list is post-filtered, so a backend page size
-                      // (50) is not a truthful "rows you'll see" count. Use the
-                      // generic label instead of a fake N.
-                      step={0}
-                    />
-                  ) : null
-                }
+                footer={flatDateSplit ? null : loadMoreFooter}
                 forceEmptyState={showSessionSkeletons}
                 // Archived is a plain list, and so is a magnitude-ranked one.
                 // Otherwise project lanes stay chronological whatever the flat
                 // list does — only the flat list can swap its day sections for
                 // WORKING / DONE.
-                grouping={showArchived || rankedGlobally ? 'none' : grouping === 'status' ? 'status' : 'date'}
+                grouping={flatDateSplit ? 'none' : showArchived || rankedGlobally ? 'none' : grouping === 'status' ? 'status' : 'date'}
                 groups={displayAgentGroups}
                 headerAction={
-                  // One cluster, not a fragment: the header is justify-between,
-                  // so two children (mark-all + the rest) park the check-all in
-                  // the middle as a blank 24px hole until hover.
-                  <div className="flex shrink-0 items-center gap-0.5">
-                    {unreadCount > 0 && (
-                      <Tip label={s.markAllRead}>
-                        <Button
-                          aria-label={s.markAllRead}
-                          className={HEADER_ACTION_BTN}
-                          onClick={event => {
-                            event.stopPropagation()
-                            markAllSessionsRead()
-                            // Ack the persisted layer too, or the next list
-                            // refresh repaints every dot just dismissed.
-                            ackAllSessionsRead()
-                          }}
-                          size="icon-xs"
-                          variant="ghost"
-                        >
-                          <Codicon name="check-all" size="0.75rem" />
-                        </Button>
-                      </Tip>
-                    )}
-                    {inProject && enteredProject ? (
-                      <div className="group/workspace flex shrink-0 items-center gap-0.5">
-                        {enteredProject.path && <StartWorkButton repoPath={enteredProject.path} />}
-                        {/* Home has no folder and no record to rename, theme, or delete. */}
-                        {!enteredProject.isNoProject && (
-                          <ProjectMenu
-                            isActive={enteredProject.id === activeProjectId}
-                            onExitScope={exitProjectScope}
-                            project={enteredProject}
-                            scoped
-                          />
-                        )}
-                        <div className="grid size-6 place-items-center">
-                          <Tip label={s.showProjects}>
-                            <Button
-                              aria-label={s.showProjects}
-                              className={HEADER_NAV_BTN}
-                              onClick={event => {
-                                event.stopPropagation()
-                                exitProjectScope()
-                              }}
-                              size="icon-xs"
-                              variant="ghost"
-                            >
-                              <Codicon name="list-unordered" size="0.75rem" />
-                            </Button>
-                          </Tip>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {/* The flat-list header "+" is a drag source too — the
-                            same gesture as the nav's "New session" row: drag
-                            it onto a chat zone's tab strip / edge / center to
-                            create the session exactly there. Project-overview
-                            mode drags its "+" (the "New project" button) with
-                            the project-drag variant: a drop opens the SAME
-                            project dialog, and the created project starts at
-                            the dropped spot. */}
-                        <SidebarSectionAddButton
-                          ariaLabel={agentsGrouped ? s.projects.newButton : s.nav['new-session']}
-                          onNewProjectDrag={
-                            agentsGrouped
-                              ? {
-                                  // Dragging the "New project" + arms WHERE the
-                                  // project should start; the dialog flow consumes
-                                  // it on create (see $newProjectDropPlacement).
-                                  onArm: placement => $newProjectDropPlacement.set(placement)
-                                }
-                              : undefined
-                          }
-                          onNewSessionSplit={agentsGrouped ? undefined : onNewSessionSplit}
-                          onPlainClick={() => {
-                            if (agentsGrouped) {
-                              openProjectCreate()
-                            } else {
-                              onNewSessionInWorkspace(null)
-                            }
-                          }}
-                        />
-                        <div className="grid size-6 place-items-center">
-                          <SidebarFilterMenu className={HEADER_NAV_BTN} />
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <SessionsHeaderActions
+                    activeProjectId={activeProjectId}
+                    agentsGrouped={agentsGrouped}
+                    enteredProject={enteredProject}
+                    onNewSessionInWorkspace={onNewSessionInWorkspace}
+                    onNewSessionSplit={onNewSessionSplit}
+                  />
                 }
                 label={sessionsLabel}
                 labelMeta={
                   worktreeGroupingActive ? (
                     reposScanning && !projectsSkeletonVisible ? (
-                      <GlyphSpinner ariaLabel={s.loading} className="text-[0.6875rem] text-(--ui-text-quaternary)" />
+                      <GlyphSpinner ariaLabel={s.loading} className="text-[0.6875rem] text-(--linear-text-quaternary)" />
                     ) : undefined
                   ) : undefined
                 }
@@ -1974,25 +1656,54 @@ export function ChatSidebar({
                 projectsLoading={worktreeGroupingActive ? projectTreeLoading : false}
                 removedSessionIds={inProject ? removedSessionIds : undefined}
                 rootClassName={cn(
-                  'min-h-32 flex-1 overflow-hidden p-0',
+                  flatDateSplit ? 'shrink-0 p-0' : 'min-h-32 flex-1 overflow-hidden p-0',
                   !recentsVirtualizes && 'compact:min-h-0 compact:flex-none compact:overflow-visible'
                 )}
-                sessions={displayAgentSessions}
-                sortable={!showAllProfiles && displayAgentSessions.length > 1}
+                sessions={flatDateSplit ? todaySessions : displayAgentSessions}
+                showProfileTags={showProfileTags}
+                sortable={
+                  !showAllProfiles && (flatDateSplit ? todaySessions.length : displayAgentSessions.length) > 1
+                }
+                virtualize={!flatDateSplit}
               />
             )}
 
-            {!trimmedQuery && !worktreeGroupingActive && showsAdvancedChrome && cronJobs.length > 0 && (
-              <SidebarCronJobsSection
-                jobs={cronJobs}
-                label={s.cronJobs}
-                onManageJob={onManageCronJob}
-                onOpenRun={onResumeSession}
-                onToggle={() => setSidebarCronOpen(!cronOpen)}
-                onTriggerJob={onTriggerCronJob}
-                open={cronOpen}
+            {hasPreviousSessions && (
+              <SidebarSessionsSection
+                activeSessionId={activeSidebarSessionId}
+                card={cardRows}
+                collapsible
+                contentClassName="flex flex-col gap-px pb-1.75"
+                daySectionsDefaultClosed
+                emptyState={null}
+                footer={previousOpen ? loadMoreFooter : null}
+                grouping="date"
+                label={s.previousSessions}
+                manualOrderIds={agentOrderManual ? agentOrderIds : sortOrderIds}
+                onArchiveSession={onArchiveSession}
+                onBranchSession={onBranchSession}
+                onDeleteSession={onDeleteSession}
+                onNewSessionInWorkspace={onNewSessionInWorkspace}
+                onNewSessionSplit={onNewSessionSplit}
+                onResumeSession={onResumeSession}
+                onToggle={() => setPreviousOpen(open => !open)}
+                onTogglePin={pinSession}
+                onToggleUnread={toggleUnread}
+                open={previousOpen}
+                pinned={false}
+                rootClassName="shrink-0 p-0 pb-1"
+                sessions={previousSessions}
+                showProfileTags={showProfileTags}
+                sortable={false}
+                virtualize={false}
               />
             )}
+
+            {/* A collapsed Previous sessions section must not hide the only way
+                to page older sessions: the load-more row stays outside its fold. */}
+            {hasPreviousSessions && !previousOpen && loadMoreFooter ? (
+              <div className="shrink-0 px-2 pb-1">{loadMoreFooter}</div>
+            ) : null}
           </div>
         )}
 
@@ -2007,6 +1718,7 @@ export function ChatSidebar({
         )}
       </SidebarContent>
       <ProjectDialog />
+      <SessionRenameDialog />
       {/* One mount for the whole app. The header of WorktreeDialog tells why. */}
       <WorktreeDialog />
     </Sidebar>

@@ -51,37 +51,37 @@ const cases: ReceiptCase[] = [
       pm_steps: [{ name: 'sync', ok: false, detail: 'network unavailable' }]
     },
     headline: /rebuild failed — network unavailable/,
-    tone: 'text-destructive'
+    tone: 'text-(--linear-red)'
   },
   {
     name: 'embedded refused',
     receipt: { ...details, pm_sync_outcome: 'refused' },
     headline: /rebuild failed/,
-    tone: 'text-destructive'
+    tone: 'text-(--linear-red)'
   },
   {
     name: 'legacy failed',
     receipt: { ...details, outcome: 'failed', venv_rebuild: { ok: false, reason: 'uv sync exited 1' } },
     headline: /rebuild failed — uv sync exited 1/,
-    tone: 'text-destructive'
+    tone: 'text-(--linear-red)'
   },
   {
     name: 'review beats bisect and updates',
     receipt: details,
     headline: /need update-url review/,
-    tone: 'text-amber-600'
+    tone: 'text-(--linear-orange)'
   },
   {
     name: 'bisect beats updates',
     receipt: { ...details, plugin_checks: details.plugin_checks?.slice(1) },
     headline: /disabled by dependency conflicts/,
-    tone: 'text-amber-600'
+    tone: 'text-(--linear-orange)'
   },
   {
     name: 'updates only',
     receipt: { plugin_checks: details.plugin_checks?.slice(1) },
     headline: /Plugin updates available/,
-    tone: 'text-muted-foreground'
+    tone: 'text-(--linear-text-primary)'
   }
 ]
 

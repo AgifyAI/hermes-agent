@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { HandoffResult } from '@/components/free-tier/sign-in-dialog'
 import { ModelPickerDialog } from '@/components/model-picker'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ErrorIcon } from '@/components/ui/error-state'
 import { Input } from '@/components/ui/input'
@@ -26,7 +27,7 @@ import {
   submitOnboardingCode
 } from '@/store/onboarding'
 
-import { DecodedLabel, GlyphText, HackeryButton, useScramble } from './glyph'
+import { BeginButton, DecodedLabel, GlyphText, useScramble } from './glyph'
 import { providerTitle } from './providers'
 
 export function FlowPanel({
@@ -67,12 +68,12 @@ export function FlowPanel({
 
     return (
       <div className="grid gap-3">
-        <div className="flex items-center gap-1.5 text-sm text-destructive">
+        <div className="flex items-center gap-1.5 text-[0.8125rem] text-(--linear-red)">
           <ErrorIcon className="shrink-0" size="0.875rem" />
           <span>{flow.message || t.onboarding.signInFailed}</span>
         </div>
         {flow.detail ? (
-          <details className="text-xs text-muted-foreground">
+          <details className="text-xs text-(--linear-text-tertiary)">
             <summary className="cursor-pointer select-none">{t.onboarding.errorDetails}</summary>
             <pre className="mt-1 whitespace-pre-wrap wrap-break-word font-mono text-[0.6875rem]">{flow.detail}</pre>
           </details>
@@ -95,7 +96,7 @@ export function FlowPanel({
   if (flow.status === 'awaiting_user') {
     return (
       <Step title={t.onboarding.signInWith(title)}>
-        <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+        <ol className="list-decimal space-y-1 pl-5 text-[0.8125rem] text-(--linear-text-tertiary)">
           <li>{t.onboarding.openedBrowser(title)}</li>
           <li>{t.onboarding.authorizeThere}</li>
           <li>{t.onboarding.copyAuthCode}</li>
@@ -120,7 +121,7 @@ export function FlowPanel({
   if (flow.status === 'external_pending') {
     return (
       <Step title={t.onboarding.signInWith(title)}>
-        <p className="text-sm text-muted-foreground">{t.onboarding.externalPending(title)}</p>
+        <p className="text-[0.8125rem] text-(--linear-text-tertiary)">{t.onboarding.externalPending(title)}</p>
         <CodeBlock copied={flow.copied} onCopy={() => void copyExternalCommand()} text={flow.provider.cli_command} />
         <FlowFooter
           left={
@@ -142,10 +143,10 @@ export function FlowPanel({
 
   return (
     <Step title={t.onboarding.signInWith(title)}>
-      <p className="text-sm text-muted-foreground">{t.onboarding.deviceCodeOpened(title)}</p>
+      <p className="text-[0.8125rem] text-(--linear-text-tertiary)">{t.onboarding.deviceCodeOpened(title)}</p>
       <DeviceCode code={flow.start.user_code} copied={flow.copied} onCopy={() => void copyDeviceCode()} />
       <FlowFooter left={<DocsLink href={flow.start.verification_url}>{t.onboarding.reopenVerification}</DocsLink>}>
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="flex items-center gap-2 text-xs text-(--linear-text-tertiary)">
           <Loader2 className="size-3 animate-spin" />
           {t.onboarding.waitingAuthorize}
         </span>
@@ -158,7 +159,7 @@ export function FlowPanel({
 function Step({ children, title }: { children: React.ReactNode; title: string }) {
   return (
     <div className="grid gap-4">
-      <h3 className="text-sm font-semibold">{title}</h3>
+      <h3 className="text-[0.9375rem] font-medium">{title}</h3>
       {children}
     </div>
   )
@@ -179,16 +180,16 @@ export function DeviceCode({ code, copied, onCopy }: { code: string; copied: boo
     >
       {[...code].map((ch, i) =>
         ch === '-' || ch === ' ' ? (
-          <span className="w-1.5 text-center text-lg text-muted-foreground" key={i}>
+          <span className="w-1.5 text-center text-[1.125rem] text-(--linear-text-tertiary)" key={i}>
             –
           </span>
         ) : (
           <span
             className={cn(
-              'flex size-10 items-center justify-center rounded-md border font-mono text-xl font-semibold uppercase transition-colors',
+              'flex size-10 items-center justify-center rounded-(--linear-radius-control) border-[0.5px] bg-(--linear-bg-input) font-mono text-[1.25rem] font-semibold uppercase transition-colors',
               copied
-                ? 'border-primary/50 text-primary'
-                : 'border-(--stroke-nous) text-foreground group-hover:border-(--ui-stroke-secondary)'
+                ? 'border-(--linear-accent) text-(--linear-accent)'
+                : 'border-(--linear-border-input) text-(--linear-text-primary) group-hover:border-(--linear-border-tertiary)'
             )}
             key={i}
           >
@@ -204,9 +205,9 @@ function CodeBlock({ copied, onCopy, text }: { copied: boolean; onCopy: () => vo
   const { t } = useI18n()
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-(--stroke-nous) px-3 py-2">
-      <code className="min-w-0 flex-1 truncate font-mono text-sm">
-        <span className="mr-2 select-none text-muted-foreground">$</span>
+    <div className="flex items-center justify-between gap-3 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2">
+      <code className="min-w-0 flex-1 truncate font-mono text-[0.8125rem]">
+        <span className="mr-2 select-none text-(--linear-text-tertiary)">$</span>
         {text}
       </code>
       <Button onClick={onCopy} size="sm" variant="outline">
@@ -283,25 +284,15 @@ function ConfirmingModelPanel({
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-muted-foreground">
-            {t.onboarding.defaultModel}
-          </span>
-          {freeTier === true && (
-            <span className="rounded-sm bg-emerald-500/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-              {t.onboarding.freeTier}
-            </span>
-          )}
-          {freeTier === false && (
-            <span className="rounded-sm bg-primary/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-primary">
-              {t.onboarding.pro}
-            </span>
-          )}
+          <span className="text-xs font-medium text-(--linear-text-tertiary)">{t.onboarding.defaultModel}</span>
+          {freeTier === true && <Badge variant="success">{t.onboarding.freeTier}</Badge>}
+          {freeTier === false && <Badge>{t.onboarding.pro}</Badge>}
         </div>
-        <p className="font-mono text-base">
+        <p className="font-mono text-[0.9375rem]">
           <GlyphText text={scrambledModel} />
         </p>
         {price && (price.input || price.output) && (
-          <p className="font-mono text-xs text-muted-foreground">
+          <p className="font-mono text-xs text-(--linear-text-tertiary)">
             {price.free ? t.onboarding.free : t.onboarding.price(price.input || '?', price.output || '?')}
           </p>
         )}
@@ -322,7 +313,7 @@ function ConfirmingModelPanel({
           leaving ? 'opacity-0 saturate-0' : 'opacity-100 saturate-100'
         )}
       >
-        <HackeryButton
+        <BeginButton
           disabled={flow.saving}
           label={<GlyphText text={scrambledBegin} />}
           loading={flow.saving}
@@ -376,8 +367,8 @@ function SignedInLines({ leaving, signedIn: { email, handoff } }: { leaving: boo
       )}
     >
       {email ? (
-        <p className="text-sm text-muted-foreground">
-          {t.freeTier.signedInAsLabel} <span className="font-medium text-foreground">{email}</span>
+        <p className="text-[0.8125rem] text-(--linear-text-tertiary)">
+          {t.freeTier.signedInAsLabel} <span className="font-medium text-(--linear-text-primary)">{email}</span>
         </p>
       ) : null}
       {handoff ? <HandoffResult handoff={handoff} /> : null}
@@ -398,7 +389,7 @@ export function DocsLink({ children, href }: { children: React.ReactNode; href: 
 
 export function Status({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 py-1 text-sm text-muted-foreground" role="status">
+    <div className="flex items-center gap-2.5 py-1 text-[0.8125rem] text-(--linear-text-tertiary)" role="status">
       <Loader className="size-7" type="lemniscate-bloom" />
       {children}
     </div>

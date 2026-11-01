@@ -66,12 +66,12 @@ export function statusOf(server: McpServerEntry, probe: Probe | undefined): Serv
 }
 
 export const STATUS_DOT = {
-  ok: 'bg-emerald-500',
-  error: 'bg-red-500',
-  'needs-auth': 'bg-amber-500',
-  probing: 'animate-pulse bg-foreground/40',
-  off: 'bg-foreground/20',
-  unknown: 'bg-foreground/20'
+  ok: 'bg-(--linear-green)',
+  error: 'bg-(--linear-red)',
+  'needs-auth': 'bg-(--linear-orange)',
+  probing: 'animate-pulse bg-(--linear-text-tertiary)',
+  off: 'bg-(--linear-text-quaternary)',
+  unknown: 'bg-(--linear-text-quaternary)'
 } satisfies Record<ServerStatus, string>
 
 export function canAuthenticate(server: McpServerEntry, status: ServerStatus): boolean {

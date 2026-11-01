@@ -92,12 +92,12 @@ it('arms the reorder from a pointer press on the header label', async () => {
     fireEvent.pointerMove(document, { clientX: 10, clientY: 30, pointerId: 1 })
     await Promise.resolve()
   })
-  expect(device.querySelector('[data-glass-opaque]')).not.toBeNull()
+  expect(device.querySelector('.cursor-grabbing')).not.toBeNull()
   await act(async () => {
     fireEvent.pointerUp(document, { clientX: 10, clientY: 30, pointerId: 1 })
     await Promise.resolve()
   })
-  expect(device.querySelector('[data-glass-opaque]')).toBeNull()
+  expect(device.querySelector('.cursor-grabbing')).toBeNull()
 })
 
 it('reorders gateway sections from the grabber by keyboard', async () => {

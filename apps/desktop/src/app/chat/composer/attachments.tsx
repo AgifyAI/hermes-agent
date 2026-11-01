@@ -150,16 +150,16 @@ function AttachmentPill({ attachment, onRemove }: { attachment: ComposerAttachme
             aria-busy={isUploading || undefined}
             aria-label={canPreview ? c.previewLabel(attachment.label) : attachment.label}
             className={cn(
-              'flex max-w-56 items-center gap-2 rounded-2xl border bg-background/50 px-2 py-1.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-colors disabled:cursor-default',
+              'flex max-w-56 items-center gap-2 rounded-xl border-[0.5px] bg-(--linear-bg-chip) px-2 py-1.5 text-left transition-colors duration-100 hover:transition-none disabled:cursor-default',
               hasUploadError
-                ? 'border-destructive/45 hover:border-destructive/60'
-                : 'border-border/60 hover:border-primary/35 hover:bg-accent/45'
+                ? 'border-(--linear-red)/45 hover:border-(--linear-red)/60'
+                : 'border-(--linear-border-tertiary) hover:bg-(--linear-bg-chip-hover)'
             )}
             disabled={!canPreview}
             onClick={() => void openAttachment()}
             type="button"
           >
-            <span className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-border/55 bg-muted/35 text-muted-foreground">
+            <span className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) text-(--linear-icon)">
               {(attachment.thumbnailUrl || attachment.previewUrl) && attachment.kind === 'image' ? (
                 <img
                   alt={attachment.label}
@@ -171,25 +171,25 @@ function AttachmentPill({ attachment, onRemove }: { attachment: ComposerAttachme
                 <Icon className="size-3.5" />
               )}
               {isUploading && (
-                <span className="absolute inset-0 grid place-items-center bg-background/60 backdrop-blur-[1px]">
-                  <Loader2 className="size-3.5 animate-spin text-foreground/75" />
+                <span className="absolute inset-0 grid place-items-center bg-(--linear-bg-chip)/70">
+                  <Loader2 className="size-3.5 animate-spin text-(--linear-text-secondary)" />
                 </span>
               )}
               {hasUploadError && (
-                <span className="absolute inset-0 grid place-items-center bg-destructive/15">
-                  <AlertCircle className="size-3.5 text-destructive" />
+                <span className="absolute inset-0 grid place-items-center bg-(--linear-red)/15">
+                  <AlertCircle className="size-3.5 text-(--linear-red)" />
                 </span>
               )}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[0.72rem] font-medium leading-4 text-foreground/90">
+              <span className="block truncate text-xs font-medium leading-4 text-(--linear-text-primary)">
                 {attachment.label}
               </span>
               {detail && (
                 <span
                   className={cn(
-                    'block truncate text-[0.62rem] leading-3.5',
-                    hasUploadError ? 'text-destructive/80' : 'text-muted-foreground/65'
+                    'block truncate text-[0.6875rem] leading-3.5',
+                    hasUploadError ? 'text-(--linear-red)' : 'text-(--linear-text-tertiary)'
                   )}
                 >
                   {detail}
@@ -200,7 +200,7 @@ function AttachmentPill({ attachment, onRemove }: { attachment: ComposerAttachme
           {onRemove && (
             <button
               aria-label={c.removeAttachment(attachment.label)}
-              className="absolute -right-1 -top-1 grid size-3.5 place-items-center rounded-full border border-border/70 bg-background text-muted-foreground opacity-0 shadow-xs transition hover:bg-accent hover:text-foreground group-hover/attachment:opacity-100 focus-visible:opacity-100"
+              className="absolute -right-1 -top-1 grid size-3.5 place-items-center rounded-full border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) text-(--linear-icon) opacity-0 transition hover:bg-(--linear-bg-chip-hover) hover:text-(--linear-text-primary) group-hover/attachment:opacity-100 focus-visible:opacity-100"
               onClick={() => onRemove(attachment.id)}
               type="button"
             >

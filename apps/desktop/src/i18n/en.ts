@@ -583,6 +583,8 @@ export const en: Translations = {
       'session.slot.8': 'Switch to recent session 8',
       'session.slot.9': 'Switch to recent session 9',
       'session.focusSearch': 'Search sessions',
+      'session.rename': 'Rename conversation',
+      'view.reload': 'Reload window',
       'session.togglePin': 'Pin / unpin current session',
       'session.archive': 'Archive current session',
       'conversation.scrollPageUp': 'Scroll conversation up one page',
@@ -943,7 +945,7 @@ export const en: Translations = {
       chatTextScaleDesc:
         'Scales conversation text and the message editor relative to UI Scale. Sidebars and controls stay the same size.',
       title: 'Appearance',
-      intro: 'Desktop-only. Mode is brightness; theme is palette and chat chrome.',
+      intro: 'Desktop-only. Hermes has one look, modelled on Linear, in light and dark.',
       colorMode: 'Color Mode',
       colorModeDesc: 'Pick a fixed mode or let Hermes follow your system setting.',
       toolViewTitle: 'Tool Call Display',
@@ -958,7 +960,7 @@ export const en: Translations = {
       uiScaleDesc: (percent: number) =>
         `Scales text and controls across the whole app. Cmd/Ctrl with +, - and 0 also works. Current: ${percent}%.`,
       sessionDensityTitle: 'Session List Density',
-      sessionDensityDesc: 'Choose how much context appears beneath session titles in the sidebar.',
+      sessionDensityDesc: 'Choose how much space separates the day groups in the sidebar.',
       sessionDensityCompact: 'Compact',
       sessionDensityComfortable: 'Comfortable',
       sessionDensityDetailed: 'Detailed',
@@ -984,30 +986,8 @@ export const en: Translations = {
       chatFontPreview: 'Preview',
       chatFontSample: 'The quick brown fox jumps over the lazy dog. 0123456789',
       chatFontReset: 'Use default font',
-      translucencyTitle: 'Window Translucency',
-      translucencyDesc: 'See your desktop through the whole window, text and all. Tuned separately for light and dark.',
-      translucencyGlassDesc:
-        'Matte glass: the desktop shows through as a smooth blur while text stays sharp. Tuned separately for light and dark.',
-      translucencyModeClear: 'Clear',
-      translucencyModeGlass: 'Glass',
-      translucencyTintTitle: 'Tint',
-      translucencyFadeTitle: 'Fade',
-      translucencyFrostTitle: 'Frost',
-      translucencyFrost: {
-        'under-window': 'Deep',
-        popover: 'Soft',
-        titlebar: 'Bright',
-        header: 'Glare'
-      },
-      translucencyScopeTitle: 'Area',
-      translucencyScope: {
-        window: 'Whole window',
-        sidebar: 'Sidebar only'
-      },
       backdropTitle: 'Chat Backdrop',
       backdropDesc: 'The faint statue image behind the conversation.',
-      userBubbleTitle: 'Message Bubble',
-      userBubbleDesc: 'How see-through your own messages are. Solid at 0; only the outline remains at 100.',
       textDirectionTitle: 'Text direction',
       textDirectionDesc:
         'How chat messages and the composer choose their direction. Auto follows the first letter of each paragraph; pick a direction when mixed text lines up the wrong way. Code always stays left-to-right.',
@@ -1047,20 +1027,7 @@ export const en: Translations = {
       productDesc: 'Human-friendly tool activity with concise summaries.',
       technical: 'Technical',
       technicalDesc: 'Include raw tool args/results and low-level details.',
-      themeTitle: 'Theme',
-      themeDesc: 'Desktop palettes only. The selected mode is applied on top.',
-      themeSearchPlaceholder: 'Search your themes or the VS Code Marketplace…',
-      themeProfileNote: profile => `Saved for the ${profile} profile — each profile keeps its own theme.`,
-      installTitle: 'Install from VS Code',
-      installDesc:
-        'Paste a Marketplace extension id (e.g. dracula-theme.theme-dracula) to convert its color theme into a desktop palette.',
-      installPlaceholder: 'publisher.extension',
-      installButton: 'Install',
-      installing: 'Installing…',
-      installError: 'Could not install that theme.',
-      installed: name => `Installed “${name}”.`,
-      removeTheme: 'Remove theme',
-      importedBadge: 'Imported',
+      themeProfileNote: profile => `Saved for the ${profile} profile — each profile keeps its own mode.`,
       pet: {
         title: 'Pet',
         intro:
@@ -2317,7 +2284,6 @@ export const en: Translations = {
     commandCenter: 'Command Center',
     appearance: 'Appearance',
     settings: 'Settings',
-    changeTheme: 'Change theme',
     changeColorMode: 'Change color mode…',
     pets: {
       title: 'Pets',
@@ -2363,18 +2329,6 @@ export const en: Translations = {
       referenceImageInvalid: 'Could not read that reference image. Try a PNG, JPG, WebP, or GIF.',
       adopt: 'Adopt',
       startOver: 'Start over'
-    },
-    installTheme: {
-      title: 'Install theme…',
-      pageTitle: 'Install theme',
-      placeholder: 'Search the VS Code Marketplace...',
-      loading: 'Searching the Marketplace...',
-      error: 'Could not reach the Marketplace.',
-      empty: 'No matching themes.',
-      install: 'Install',
-      installing: 'Installing...',
-      installed: 'Installed',
-      installs: count => `${count} installs`
     },
     settingsFields: 'Settings fields',
     mcpServers: 'MCP servers',
@@ -3015,6 +2969,7 @@ export const en: Translations = {
     created: 'Cron created',
     updated: 'Cron updated',
     failedLoad: 'Failed to load cron jobs',
+    failedRuns: 'Failed to load run history',
     failedUpdate: 'Failed to update cron job',
     failedTrigger: 'Failed to trigger cron job',
     failedDelete: 'Failed to delete cron job',
@@ -3255,6 +3210,8 @@ export const en: Translations = {
       ageHour: 'h',
       ageMin: 'm'
     },
+    previousSessions: 'Previous sessions',
+    noSessionsToday: 'No sessions today',
     dateDivider: {
       today: 'Today',
       yesterday: 'Yesterday'

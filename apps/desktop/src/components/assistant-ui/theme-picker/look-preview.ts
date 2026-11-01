@@ -4,29 +4,15 @@ import { $terminalTakeover, setTerminalTakeover } from '@/app/right-sidebar/stor
 import { type PreviewUndo, snapshotChatLayout } from '@/components/onboarding/first-run/assembly'
 import { $fileBrowserOpen, setFileBrowserOpen } from '@/store/layout'
 import { applyDesktopLayoutPreset, openLayoutPickPanes } from '@/store/pane-focus'
-import { $accentOverride, setAccentOverride } from '@/themes/accent-override'
-import { resolveAccentPick } from '@/themes/accents'
-import { ownAccent } from '@/themes/persist-accent'
 
-/** A staged pick; `value` null is the theme's own accent. */
+/** A staged layout pick. */
 export interface StagedLook {
   value: null | string
 }
 
 interface LiveLook {
-  apply: (value: null | string, dark: boolean) => void
+  apply: (value: null | string) => void
   snapshot: () => PreviewUndo
-}
-
-// The accent previews through the unsaved override so nothing is persisted before Continue; the theme's own
-// accent previews as the base theme's colour because an empty override would keep the current (maybe saved) one.
-const ACCENT: LiveLook = {
-  apply: (value, dark) => setAccentOverride(resolveAccentPick(value ?? 'theme', dark)?.hex ?? ownAccent()),
-  snapshot: () => {
-    const override = $accentOverride.get()
-
-    return { keep: send => send(), revert: () => setAccentOverride(override) }
-  }
 }
 
 // A layout previews as an arrangement in the current mode; Continue applies it for real (switching
@@ -71,12 +57,12 @@ interface Held {
 
 // A layout preview re-parents the chat, which remounts the card that staged it. The preview outlives the
 // card instance, so the remounted card shows the pick, and only a card that stays gone puts the old look back.
-const held = new Map<'accent' | 'layout', Held>()
+const held = new Map<'layout', Held>()
 
 /** Click previews a look live; a card that unmounts without Continue (cancel, timeout, Skip setup,
  *  words in the composer) puts back the value from before the preview. */
-export function useLookPreview(kind: 'accent' | 'layout', dark: boolean): LookPreview {
-  const live = kind === 'accent' ? ACCENT : LAYOUT
+export function useLookPreview(kind: 'layout'): LookPreview {
+  const live = LAYOUT
   const [staged, setStaged] = useState<null | StagedLook>(() => held.get(kind)?.staged ?? null)
 
   useEffect(() => {
@@ -123,7 +109,7 @@ export function useLookPreview(kind: 'accent' | 'layout', dark: boolean): LookPr
       if (entry.settled) {
         held.delete(kind)
       } else if (entry.undo) {
-        live.apply(staged.value, dark)
+        live.apply(staged.value)
       }
     },
     stage: value => {
@@ -132,7 +118,7 @@ export function useLookPreview(kind: 'accent' | 'layout', dark: boolean): LookPr
       held.set(kind, entry)
       entry.undo ??= live.snapshot()
       entry.staged = { value }
-      live.apply(value, dark)
+      live.apply(value)
       setStaged(entry.staged)
     },
     staged

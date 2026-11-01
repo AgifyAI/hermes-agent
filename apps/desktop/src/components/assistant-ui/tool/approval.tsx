@@ -138,9 +138,11 @@ function ApprovalActivity({ floating, visible }: { floating: boolean; visible: b
           transition={{ duration: reduced ? 0 : 0.22, ease: 'easeInOut' }}
         >
           <div
-            className={cn('mb-1 min-w-0', floating && 'rounded bg-(--ui-chat-surface-background)')}
+            className={cn(
+              'mb-1 min-w-0',
+              floating && 'rounded-(--linear-radius-kbd) bg-(--ui-chat-surface-background)'
+            )}
             data-approval-activity=""
-            data-glass-opaque={floating ? '' : undefined}
             data-tool-summary=""
           >
             <ScaffoldRow
@@ -211,8 +213,11 @@ export function ApprovalQueue({
           })
       }}
       surfaceClassName={cn(
-        'rounded-xl border bg-(--ui-chat-surface-background)',
-        floating ? 'border-(--stroke-nous) shadow-nous' : 'border-(--ui-stroke-secondary)'
+        'rounded-xl border-[0.5px]',
+        // These fill classes are what the HUD's ink rule (styles.css) matches.
+        floating
+          ? 'border-(--linear-border-overlay) bg-(--ui-chat-surface-background) shadow-(--linear-shadow-menu) [--ui-chat-surface-background:var(--linear-bg-overlay)]'
+          : 'border-(--linear-border-panel) bg-(--ui-widget-surface-background)'
       )}
       swipeDirections={['left']}
     >
@@ -334,17 +339,17 @@ const ApprovalCard: FC<ApprovalCardProps> = ({ request, total, position, stack }
       onPointerDownCapture={rememberFocusOrigin}
       ref={cardRef}
     >
-      <div className="flex items-center gap-2 px-2.5 pt-2 text-xs text-(--ui-text-secondary)">
+      <div className="flex items-center gap-2 px-2.5 pt-2 text-xs text-(--linear-text-tertiary)">
         <Codicon name="terminal" size="0.875rem" />
         <span>{showsDescription ? copy.commandDetails : copy.command}</span>
         {total > 1 && (
-          <span className="ml-auto text-[0.6875rem] tabular-nums text-(--ui-text-tertiary)">
+          <span className="ml-auto text-[0.6875rem] tabular-nums text-(--linear-text-tertiary)">
             {position} / {total}
           </span>
         )}
       </div>
       {details.length > 0 && (
-        <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words px-2.5 py-2 font-mono text-xs leading-relaxed text-(--ui-text-primary)">
+        <pre className="m-0 max-h-40 overflow-auto whitespace-pre-wrap break-words px-2.5 py-2 font-mono text-xs leading-relaxed text-(--linear-text-primary)">
           {details}
         </pre>
       )}
@@ -396,7 +401,7 @@ const ApprovalCard: FC<ApprovalCardProps> = ({ request, total, position, stack }
           </DialogHeader>
 
           {request.command.trim() && (
-            <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-md border border-(--ui-stroke-tertiary) bg-(--ui-chat-surface-background) px-2.5 py-1.5 font-mono text-xs leading-snug text-foreground">
+            <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-lg border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-secondary) px-2.5 py-1.5 font-mono text-xs leading-snug text-(--linear-text-primary)">
               {request.command.trim()}
             </pre>
           )}

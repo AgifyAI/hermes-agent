@@ -253,7 +253,7 @@ export function RosterSectionHeader({
     <RowButton
       aria-expanded={!collapsed}
       className={cn(
-        'flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[0.6875rem] font-semibold uppercase tracking-wider text-(--ui-text-quaternary) transition-colors hover:bg-(--chrome-action-hover) hover:text-(--ui-text-secondary)',
+        'flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-medium text-(--linear-text-tertiary) transition-colors hover:bg-(--linear-hover-control) hover:text-(--linear-text-secondary)',
         action ? 'flex-1' : 'mt-1'
       )}
       onClick={onToggle}
@@ -273,9 +273,9 @@ export function RosterSectionHeader({
         {status && !status.available ? <span className="sr-only">{status.label}</span> : null}
       </span>
       <span aria-hidden className="min-w-0 flex-1" />
-      <span className="shrink-0 font-normal tabular-nums text-(--ui-text-quaternary)">{count}</span>
+      <span className="shrink-0 font-normal tabular-nums text-(--linear-text-quaternary)">{count}</span>
       {status && !status.available ? (
-        <Codicon aria-hidden className="shrink-0 text-amber-600 dark:text-amber-300" name="debug-disconnect" />
+        <Codicon aria-hidden className="shrink-0 text-(--linear-orange)" name="debug-disconnect" />
       ) : null}
     </RowButton>
   )

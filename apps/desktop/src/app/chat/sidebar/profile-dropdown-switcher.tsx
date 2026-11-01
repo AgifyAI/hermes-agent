@@ -190,8 +190,8 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
           <Button
             aria-label={`${p.title}: ${triggerLabel}`}
             className={cn(
-              'w-full min-w-0 justify-between overflow-hidden px-1 text-(--ui-text-secondary) data-[state=open]:bg-(--ui-control-active-background) data-[state=open]:text-foreground',
-              compact && 'h-full min-h-0 rounded-none px-1.5 text-[0.6875rem] font-normal'
+              'w-full min-w-0 justify-between overflow-hidden px-1 text-(--linear-text-secondary) data-[state=open]:bg-(--linear-active-sidebar) data-[state=open]:text-(--linear-text-primary)',
+              compact && 'h-full min-h-0 px-2 text-xs font-[450] text-(--linear-text-tertiary) hover:bg-(--linear-hover-sidebar-icon)'
             )}
             size="xs"
             type="button"
@@ -235,7 +235,7 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
             {profiles.length > 1 && (
               <DropdownMenuRadioItem className="min-w-0" value={ALL_PROFILES}>
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <Codicon aria-hidden="true" className="text-(--ui-text-tertiary)" name="layers" size="0.875rem" />
+                  <Codicon aria-hidden="true" className="text-(--linear-text-tertiary)" name="layers" size="0.875rem" />
                   <span className="truncate">{p.allProfiles}</span>
                 </span>
               </DropdownMenuRadioItem>

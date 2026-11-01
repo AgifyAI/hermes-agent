@@ -24,13 +24,13 @@ export function Field({
   return (
     <div className="grid gap-1.5">
       <label
-        className="flex items-baseline gap-2 text-xs font-medium text-foreground"
+        className="flex items-baseline gap-2 text-xs font-medium text-(--linear-text-primary)"
         htmlFor={htmlFor}
         id={htmlFor ? `${htmlFor}-label` : undefined}
       >
         {label}
         {optional && optionalLabel && (
-          <span className="text-[0.65rem] font-normal text-muted-foreground">{optionalLabel}</span>
+          <span className="text-[0.6875rem] font-[450] text-(--linear-text-tertiary)">{optionalLabel}</span>
         )}
       </label>
       {children}
@@ -40,6 +40,6 @@ export function Field({
 
 export function FieldHint({ children, error }: { children: ReactNode; error?: boolean }) {
   return (
-    <p className={cn('text-[0.66rem] leading-4', error ? 'text-destructive' : 'text-muted-foreground')}>{children}</p>
+    <p className={cn('text-xs font-[450] leading-4', error ? 'text-(--linear-red)' : 'text-(--linear-text-tertiary)')}>{children}</p>
   )
 }

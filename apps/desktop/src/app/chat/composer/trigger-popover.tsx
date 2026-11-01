@@ -43,14 +43,16 @@ function rowKind(item: Unstable_TriggerItem, isSlash: boolean): string {
   return item.type
 }
 
+// Linear menu rows (docs/linear-design-reference.md § Menu), kept one notch
+// denser than a dropdown: radius 8, overlay highlight, strong text when lit.
 const ROW_CLASS = [
-  'relative flex w-full cursor-default select-none items-center gap-2 rounded-md px-2 py-1 text-left',
-  'outline-hidden transition-colors hover:bg-(--ui-bg-tertiary)',
-  'data-[highlighted]:bg-(--ui-bg-tertiary) data-[highlighted]:text-foreground'
+  'relative flex w-full cursor-default select-none items-center gap-2 rounded-(--linear-radius-control) px-2 py-1 text-left',
+  'outline-hidden transition-colors duration-100 hover:bg-(--linear-hover-overlay) hover:transition-none',
+  'data-[highlighted]:bg-(--linear-hover-overlay) data-[highlighted]:text-(--linear-text-overlay-strong)'
 ].join(' ')
 
-const GROUP_HEADER_CLASS =
-  'select-none px-2 pb-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-tertiary)'
+// Linear's menu section header: 12px/500 hint text, no caps.
+const GROUP_HEADER_CLASS = 'select-none px-2 pb-0.5 text-xs font-medium text-(--linear-text-hint)'
 
 interface ComposerTriggerPopoverProps {
   activeIndex: number
@@ -163,24 +165,24 @@ export function ComposerTriggerPopover({
       {scope && <div className={cn(GROUP_HEADER_CLASS, 'pt-0.5')}>{referenceStyle(scope).label}</div>}
       {items.length === 0 ? (
         loading ? (
-          <div className="flex items-center gap-2 px-2 py-1.5 text-(--ui-text-tertiary)">
-            <GlyphSpinner ariaLabel={copy.lookupLoading} className="text-foreground/70" spinner="braille" />
+          <div className="flex items-center gap-2 px-2 py-1.5 text-(--linear-text-tertiary)">
+            <GlyphSpinner ariaLabel={copy.lookupLoading} className="text-(--linear-text-secondary)" spinner="braille" />
             <span>{copy.lookupLoading}</span>
           </div>
         ) : (
           <CompletionDrawerEmpty title={copy.lookupNoMatches}>
             {kind === '@' ? (
               <>
-                {copy.lookupTry} <span className="font-mono text-foreground/80">@file:</span> {copy.lookupOr}{' '}
-                <span className="font-mono text-foreground/80">@folder:</span>.
+                {copy.lookupTry} <span className="font-mono text-(--linear-text-secondary)">@file:</span>{' '}
+                {copy.lookupOr} <span className="font-mono text-(--linear-text-secondary)">@folder:</span>.
               </>
             ) : isEmoji ? (
               <>
-                {copy.lookupTry} <span className="font-mono text-foreground/80">:joy:</span>.
+                {copy.lookupTry} <span className="font-mono text-(--linear-text-secondary)">:joy:</span>.
               </>
             ) : (
               <>
-                {copy.lookupTry} <span className="font-mono text-foreground/80">/help</span>.
+                {copy.lookupTry} <span className="font-mono text-(--linear-text-secondary)">/help</span>.
               </>
             )}
           </CompletionDrawerEmpty>
@@ -216,15 +218,17 @@ export function ComposerTriggerPopover({
                   {isEmoji ? (
                     // The emoji is its own icon — a glyph column beside it reads
                     // as decoration.
-                    <span className="min-w-0 shrink truncate leading-5 text-foreground">{display}</span>
+                    <span className="min-w-0 shrink truncate leading-5 text-(--linear-text-primary)">{display}</span>
                   ) : (
                     <>
                       <span className="grid size-4 shrink-0 place-items-center text-(--ref-color)" data-ref={refKind}>
                         <Codicon name={referenceStyle(refKind).codicon} size="0.875rem" />
                       </span>
-                      <span className="min-w-0 shrink truncate font-medium leading-5 text-foreground">{display}</span>
+                      <span className="min-w-0 shrink truncate font-medium leading-5 text-(--linear-text-primary)">
+                        {display}
+                      </span>
                       {description && (
-                        <span className="min-w-0 flex-1 truncate leading-5 text-(--ui-text-tertiary)">
+                        <span className="min-w-0 flex-1 truncate leading-5 text-(--linear-text-tertiary)">
                           {description}
                         </span>
                       )}

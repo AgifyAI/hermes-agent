@@ -43,21 +43,21 @@ function EventTime({ timestamp }: { timestamp?: number }) {
 
   if (!Number.isFinite(at.getTime())) {return null}
 
-  return <time className="text-[0.625rem] text-(--ui-text-quaternary)" dateTime={at.toISOString()}>{sdk.relativeTime(at.getTime())}</time>
+  return <time className="text-[0.6875rem] font-[450] text-(--linear-text-quaternary)" dateTime={at.toISOString()}>{sdk.relativeTime(at.getTime())}</time>
 }
 
 function EventBody({ event, notice }: { event: CanonicalGroupEvent; notice?: string }) {
   if (notice) {
     const detail = event.payload.error || event.payload.reason || event.payload.reason_code
 
-    return <p className="text-xs text-(--ui-text-secondary)" data-selectable-text="true">
+    return <p className="text-xs font-[450] text-(--linear-text-secondary)" data-selectable-text="true">
       <strong>{notice}</strong>{detail && <>: {detail}</>}
     </p>
   }
 
   const text = event.payload.text || event.payload.content || ''
 
-  return <div className="min-w-0 text-xs text-(--ui-text-secondary) [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:mb-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:mb-1 [&_ol]:list-decimal [&_ol]:pl-4 [&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere" data-selectable-text="true">
+  return <div className="min-w-0 text-xs font-[450] text-(--linear-text-secondary) [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:mb-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:mb-1 [&_ol]:list-decimal [&_ol]:pl-4 [&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere" data-selectable-text="true">
     {/* The shared renderer (layout and large-message safeguards). media={false}: room text
         may come from another machine, so its MEDIA: paths never resolve against this gateway;
         room files keep their own download path below. */}
@@ -150,7 +150,7 @@ function ImagePreview({ binding, eventId, attachment, disabled }: {
     return () => { cancel(); URL.revokeObjectURL(url); setSrc(''); setNear(false) }
   }, [connectionId, profile, roomId, eventId, attachmentId, disabled, near, previewable])
 
-  return previewable ? <div ref={box}>{src && <img alt={attachment.name} className="max-h-64 max-w-full rounded object-contain" src={src} />}</div> : null
+  return previewable ? <div ref={box}>{src && <img alt={attachment.name} className="max-h-64 max-w-full rounded-(--linear-radius-control) object-contain" src={src} />}</div> : null
 }
 
 export function CanonicalGroupHistory({ binding, events, members = [], disabled = false }: CanonicalGroupHistoryProps) {
@@ -179,7 +179,7 @@ export function CanonicalGroupHistory({ binding, events, members = [], disabled 
 
     return <div className="grid grid-cols-[minmax(0,1fr)] gap-1 px-2 py-1.5" key={event.seq}>
     <div className="flex items-center gap-2">
-      {author && <strong className="text-[0.7rem] font-semibold text-(--ui-accent)">{author}</strong>}
+      {author && <strong className="text-[0.8125rem] font-medium text-(--linear-accent)">{author}</strong>}
       <EventTime timestamp={event.created_at} />
     </div>
     <EventBody event={event} notice={notice} />

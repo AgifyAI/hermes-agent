@@ -83,7 +83,7 @@ export function SidebarWorkspaceGroup({
   // live branch), a branch/kanban mark otherwise.
   const leadingIcon = (
     <Codicon
-      className="shrink-0 text-(--ui-text-tertiary)"
+      className="shrink-0 text-(--linear-text-tertiary)"
       name={group.isKanban ? 'checklist' : group.isHome ? 'home' : 'git-branch'}
       size="0.75rem"
     />
@@ -192,7 +192,7 @@ export function SidebarWorkspaceGroup({
           label={
             <SidebarRowLink
               aria-label={t.profiles.switchToProfile(group.label)}
-              labelClassName="capitalize hover:text-foreground hover:underline"
+              labelClassName="capitalize hover:text-(--linear-text-primary) hover:underline"
               onClick={() => selectProfile(group.id)}
             >
               {group.label}
@@ -235,7 +235,7 @@ export function SidebarWorkspaceGroup({
       {open && (
         <>
           {visibleSessions.length === 0 ? (
-            <div className="min-h-7 pl-2 text-[0.75rem] leading-7 text-(--ui-text-quaternary)">{s.noSessions}</div>
+            <div className="min-h-7 pl-2 text-xs leading-7 font-[450] text-(--linear-text-quaternary)">{s.noSessions}</div>
           ) : (
             renderRows(visibleSessions)
           )}

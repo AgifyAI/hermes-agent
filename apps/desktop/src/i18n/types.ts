@@ -808,29 +808,8 @@ catalog: CatalogTranslations
       chatFontPreview: string
       chatFontSample: string
       chatFontReset: string
-      translucencyTitle: string
-      translucencyDesc: string
-      translucencyGlassDesc: string
-      translucencyModeClear: string
-      translucencyModeGlass: string
-      translucencyTintTitle: string
-      translucencyFadeTitle: string
-      translucencyFrostTitle: string
-      translucencyFrost: {
-        'under-window': string
-        popover: string
-        titlebar: string
-        header: string
-      }
-      translucencyScopeTitle: string
-      translucencyScope: {
-        window: string
-        sidebar: string
-      }
       backdropTitle: string
       backdropDesc: string
-      userBubbleTitle: string
-      userBubbleDesc: string
       textDirectionTitle: string
       textDirectionDesc: string
       textDirection: { auto: string; rtl: string; ltr: string }
@@ -863,19 +842,7 @@ catalog: CatalogTranslations
       productDesc: string
       technical: string
       technicalDesc: string
-      themeTitle: string
-      themeDesc: string
-      themeSearchPlaceholder: string
       themeProfileNote: (profile: string) => string
-      installTitle: string
-      installDesc: string
-      installPlaceholder: string
-      installButton: string
-      installing: string
-      installError: string
-      installed: (name: string) => string
-      removeTheme: string
-      importedBadge: string
       pet: {
         title: string
         intro: string
@@ -2102,7 +2069,6 @@ catalog: CatalogTranslations
     commandCenter: string
     appearance: string
     settings: string
-    changeTheme: string
     changeColorMode: string
     pets: {
       title: string
@@ -2147,18 +2113,6 @@ catalog: CatalogTranslations
       referenceImageInvalid: string
       adopt: string
       startOver: string
-    }
-    installTheme: {
-      title: string
-      pageTitle: string
-      placeholder: string
-      loading: string
-      error: string
-      empty: string
-      install: string
-      installing: string
-      installed: string
-      installs: (count: string) => string
     }
     settingsFields: string
     mcpServers: string
@@ -2635,6 +2589,7 @@ catalog: CatalogTranslations
     created: string
     updated: string
     failedLoad: string
+    failedRuns: string
     failedUpdate: string
     failedTrigger: string
     failedDelete: string
@@ -2808,6 +2763,8 @@ catalog: CatalogTranslations
     projectEmpty: string
     projectLoadFailed: string
     noSessions: string
+    noSessionsToday: string
+    previousSessions: string
     storageCorrupt: {
       title: string
       body: (profiles: string) => string

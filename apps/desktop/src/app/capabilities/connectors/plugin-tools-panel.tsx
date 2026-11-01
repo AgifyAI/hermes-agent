@@ -70,8 +70,8 @@ export function PluginToolsPanel({ card, onOpenPlugins, plugin, scope }: PluginT
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b border-(--ui-stroke-tertiary) px-3.5 py-1.5">
-        <span className="min-w-0 flex-1 text-[0.7rem] text-(--ui-text-tertiary)">
+      <div className="flex shrink-0 items-center gap-2 border-b-[0.5px] border-(--linear-border-panel) px-3.5 py-1.5">
+        <span className="min-w-0 flex-1 text-[0.6875rem] text-(--linear-text-tertiary)">
           {copy.dialog.providedByPlugin(plugin)}
         </span>
         <Button onClick={onOpenPlugins} size="inline" variant="textStrong">

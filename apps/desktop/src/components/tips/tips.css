@@ -14,7 +14,7 @@
    same. A hard line does not. */
 
 [data-tip-target] {
-  outline: 2px solid var(--dt-primary);
+  outline: 2px solid var(--linear-accent);
   outline-offset: 3px;
   animation: hermes-tip-outline-pulse 1.8s ease-in-out infinite;
 }
@@ -30,7 +30,7 @@
 
 @keyframes hermes-tip-outline-pulse {
   50% {
-    outline-color: color-mix(in srgb, var(--dt-primary) 45%, transparent);
+    outline-color: color-mix(in srgb, var(--linear-accent) 45%, transparent);
   }
 }
 

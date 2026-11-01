@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { $activeSessionId, $selectedStoredSessionId, $sessions } from '@/store/session'
 import { $sessionStates, $sessionTiles } from '@/store/session-states'
 
-import { renameSessionPreferringRpc } from './session-actions-menu'
+import { renameSessionPreferringRpc } from './rename-session'
 
 // The branched-session rename bug: a freshly branched session lives only in the
 // gateway's runtime _sessions map (no state.db row yet), so REST PATCH

@@ -4,10 +4,10 @@ import { ActionsMenu, renderActionItem } from '@/components/ui/actions-menu'
 import { Button } from '@/components/ui/button'
 import type { DelegationModelMap, DelegationModelRoute, ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
-import { Box, MoreHorizontal, Plus } from '@/lib/icons'
+import { MoreHorizontal, Plus } from '@/lib/icons'
 import { confirm } from '@/store/confirm'
 
-import { Pill, SectionHeading } from '../primitives'
+import { Pill, SectionHeading, SettingsCard } from '../primitives'
 
 import { ModelRouteDialog } from './model-route-dialog'
 import { removeRoute, setDefaultRoute, upsertRoute } from './routes'
@@ -54,27 +54,26 @@ export function ModelRoutesEditor({ scope, routes, providerNames }: ModelRoutesE
             {r.addRoute}
           </Button>
         }
-        icon={Box}
         title={r.modelRoutesTitle}
       />
       {routes.options.length === 0 ? (
-        <p className="py-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-          {r.modelRoutesEmpty}
-        </p>
+        <p className="px-4 text-xs text-(--linear-text-tertiary)">{r.modelRoutesEmpty}</p>
       ) : (
-        <ul className="grid">
-          {routes.options.map(route => (
-            <RouteRow
-              isDefault={routes.default === route.name}
-              key={route.name}
-              onDelete={() => void askDelete(route)}
-              onEdit={() => setEditing(route)}
-              onMakeDefault={() => void save(setDefaultRoute(routes, route.name))}
-              providerName={providerNames.get(route.provider ?? '') ?? route.provider}
-              route={route}
-            />
-          ))}
-        </ul>
+        <SettingsCard>
+          <ul className="grid">
+            {routes.options.map(route => (
+              <RouteRow
+                isDefault={routes.default === route.name}
+                key={route.name}
+                onDelete={() => void askDelete(route)}
+                onEdit={() => setEditing(route)}
+                onMakeDefault={() => void save(setDefaultRoute(routes, route.name))}
+                providerName={providerNames.get(route.provider ?? '') ?? route.provider}
+                route={route}
+              />
+            ))}
+          </ul>
+        </SettingsCard>
       )}
       {editing !== undefined && (
         <ModelRouteDialog
@@ -110,18 +109,16 @@ function RouteRow({ route, isDefault, providerName, onEdit, onMakeDefault, onDel
   ].filter(Boolean)
 
   return (
-    <li className="group flex items-start gap-3 border-t border-(--ui-stroke-tertiary) py-3 first:border-t-0">
-      <button className="grid min-w-0 flex-1 gap-1 text-left" onClick={onEdit} type="button">
+    <li className="group flex items-start gap-3 border-t-[0.5px] border-(--linear-border-secondary) py-4 first:border-t-0">
+      <button className="grid min-w-0 flex-1 gap-[3px] text-left" onClick={onEdit} type="button">
         <span className="flex min-w-0 items-center gap-2">
-          <span className="truncate font-mono text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+          <span className="truncate font-mono text-[0.8125rem] font-medium text-(--linear-text-primary)">
             {route.name}
           </span>
           {isDefault && <Pill tone="primary">{r.defaultBadge}</Pill>}
         </span>
-        <span className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-secondary)">
-          {route.description}
-        </span>
-        <span className="truncate font-mono text-[0.68rem] text-(--ui-text-tertiary)">{facts.join(' · ')}</span>
+        <span className="text-xs text-(--linear-text-tertiary)">{route.description}</span>
+        <span className="truncate font-mono text-[0.6875rem] text-(--linear-text-tertiary)">{facts.join(' · ')}</span>
       </button>
       <ActionsMenu
         ariaLabel={r.routeActions(route.name)}

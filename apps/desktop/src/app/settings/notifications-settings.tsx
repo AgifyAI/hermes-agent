@@ -20,11 +20,11 @@ import {
 import { notify } from '@/store/notifications'
 
 import { CONTROL_TEXT } from './constants'
-import { ListRow, SectionHeading, SettingsContent, ToggleRow } from './primitives'
+import { ListRow, SectionHeading, SettingsCard, SettingsContent, ToggleRow } from './primitives'
 import { notificationKindSettingId, SETTING_IDS, settingElementId } from './settings-manifest'
 import { useSettingDeepLink } from './use-setting-deep-link'
 
-const CAPTION = 'text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)'
+const CAPTION = 'text-xs text-(--linear-text-tertiary)'
 
 function Caption({ children, className }: { children: ReactNode; className?: string }) {
   return <p className={cn(CAPTION, className)}>{children}</p>
@@ -55,33 +55,35 @@ export function NotificationsSettings({ subpage }: NotificationsSettingsProps = 
     <SettingsContent>
       {showAlerts && (
         <>
-          {subpage === undefined && <SectionHeading icon={Bell} title={copy.title} />}
-          <Caption className="mb-2 leading-(--conversation-caption-line-height)">{copy.intro}</Caption>
+          {subpage === undefined && <SectionHeading title={copy.title} />}
+          <Caption className="mb-4 px-4">{copy.intro}</Caption>
 
-          <ToggleRow
-            checked={prefs.enabled}
-            description={copy.enableAllDesc}
-            id={settingElementId(SETTING_IDS.notifications.enableAll)}
-            label={copy.enableAll}
-            onChange={setNativeNotifyEnabled}
-          />
-
-          {NATIVE_NOTIFICATION_KINDS.map(kind => (
+          <SettingsCard>
             <ToggleRow
-              checked={prefs.enabled && prefs.kinds[kind]}
-              description={copy.kinds[kind].description}
-              disabled={!prefs.enabled}
-              id={settingElementId(notificationKindSettingId(kind))}
-              key={kind}
-              label={copy.kinds[kind].label}
-              onChange={on => setNativeNotifyKind(kind, on)}
+              checked={prefs.enabled}
+              description={copy.enableAllDesc}
+              id={settingElementId(SETTING_IDS.notifications.enableAll)}
+              label={copy.enableAll}
+              onChange={setNativeNotifyEnabled}
             />
-          ))}
+
+            {NATIVE_NOTIFICATION_KINDS.map(kind => (
+              <ToggleRow
+                checked={prefs.enabled && prefs.kinds[kind]}
+                description={copy.kinds[kind].description}
+                disabled={!prefs.enabled}
+                id={settingElementId(notificationKindSettingId(kind))}
+                key={kind}
+                label={copy.kinds[kind].label}
+                onChange={on => setNativeNotifyKind(kind, on)}
+              />
+            ))}
+          </SettingsCard>
         </>
       )}
 
       {showSounds && (
-        <>
+        <SettingsCard>
           <ToggleRow
             checked={muted}
             description={copy.muteSoundsDesc}
@@ -134,11 +136,11 @@ export function NotificationsSettings({ subpage }: NotificationsSettingsProps = 
             id={settingElementId(SETTING_IDS.notifications.completionSound)}
             title={copy.completionSoundTitle}
           />
-        </>
+        </SettingsCard>
       )}
 
       {showAlerts && (
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex flex-col gap-2 px-4">
           <Button className="self-start" onClick={() => void runTest()} size="sm" type="button" variant="outline">
             <Bell />
             {copy.test}

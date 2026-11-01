@@ -3,100 +3,73 @@ import type { CSSProperties } from 'react'
 
 import { isComposerChord } from '@/lib/keybinds/chords'
 import { isMacPlatform } from '@/lib/platform'
-import type { DesktopTerminalPalette } from '@/themes/types'
 
-// VS Code's default integrated-terminal palette (terminalColorRegistry.ts) — a
-// fixed table per theme type, not luminance-derived. Light/dark diverge on
-// purpose so each stays legible (e.g. mustard yellow on white).
-const DARK_THEME: ITheme = {
-  background: '#1e1e1e',
-  foreground: '#cccccc',
-  cursor: '#cccccc',
-  cursorAccent: '#1e1e1e',
-  selectionBackground: '#264f7866',
-  black: '#000000',
-  red: '#cd3131',
-  green: '#0dbc79',
-  yellow: '#e5e510',
-  blue: '#2472c8',
-  magenta: '#bc3fbc',
-  cyan: '#11a8cd',
-  white: '#e5e5e5',
-  brightBlack: '#666666',
-  brightRed: '#f14c4c',
-  brightGreen: '#23d18b',
-  brightYellow: '#f5f543',
-  brightBlue: '#3b8eea',
-  brightMagenta: '#d670d6',
-  brightCyan: '#29b8db',
-  brightWhite: '#e5e5e5'
+type TerminalThemeSlot = keyof ITheme
+
+// The terminal paints from the Linear layer. Status tokens carry the ANSI hues,
+// the same in both modes; xterm's minimumContrastRatio clamps each against the
+// surface at render time, so bright variants share their base token.
+const ANSI_HUE_TOKENS: Partial<Record<TerminalThemeSlot, string>> = {
+  red: '--linear-red',
+  green: '--linear-green',
+  yellow: '--linear-yellow',
+  blue: '--linear-blue',
+  magenta: '--linear-pink',
+  cyan: '--linear-cyan',
+  brightRed: '--linear-red',
+  brightGreen: '--linear-green',
+  brightYellow: '--linear-yellow',
+  brightBlue: '--linear-blue',
+  brightMagenta: '--linear-pink',
+  brightCyan: '--linear-cyan'
 }
 
-const LIGHT_THEME: ITheme = {
-  background: '#ffffff',
-  foreground: '#333333',
-  cursor: '#333333',
-  cursorAccent: '#ffffff',
-  selectionBackground: '#add6ff80',
-  black: '#000000',
-  red: '#cd3131',
-  green: '#00bc00',
-  yellow: '#949800',
-  blue: '#0451a5',
-  magenta: '#bc05bc',
-  cyan: '#0598bc',
-  white: '#555555',
-  brightBlack: '#666666',
-  brightRed: '#cd3131',
-  brightGreen: '#14ce14',
-  brightYellow: '#b5ba00',
-  brightBlue: '#0451a5',
-  brightMagenta: '#bc05bc',
-  brightCyan: '#0598bc',
-  brightWhite: '#a5a5a5'
+// Neutrals follow the mode and diverge on purpose: on the pale panel "white"
+// must stay readable, so light mode inverts the black/white ramp. An opaque
+// selection colour is what xterm blends to 30% over the surface.
+const SURFACE_TOKENS: Partial<Record<TerminalThemeSlot, string>> = {
+  background: '--linear-bg-panel',
+  cursorAccent: '--linear-bg-panel',
+  cursor: '--linear-text-primary',
+  foreground: '--linear-text-secondary',
+  selectionBackground: '--linear-text-tertiary'
 }
 
-// Palette by painted mode, optionally overlaid with an imported theme's ANSI
-// palette (Solarized terminal for the Solarized skin, etc.). `palette` only
-// fills the slots it defines, so a partial import keeps the mode defaults for
-// the rest. `background` is a fallback only — withSurface swaps in the live skin
-// surface at runtime (keeping transparency); minimumContrastRatio keeps colors
-// crisp against it.
-export function terminalTheme(mode: 'light' | 'dark', palette?: DesktopTerminalPalette): ITheme {
-  const base = mode === 'dark' ? DARK_THEME : LIGHT_THEME
-
-  if (!palette) {
-    return base
+const NEUTRAL_TOKENS: Record<'light' | 'dark', Partial<Record<TerminalThemeSlot, string>>> = {
+  dark: {
+    black: '--linear-bg-tertiary',
+    brightBlack: '--linear-text-quaternary',
+    white: '--linear-text-secondary',
+    brightWhite: '--linear-text-primary'
+  },
+  light: {
+    black: '--linear-text-primary',
+    brightBlack: '--linear-text-tertiary',
+    white: '--linear-text-tertiary',
+    brightWhite: '--linear-text-quaternary'
   }
-
-  const overlay = { ...base } as Record<string, string>
-
-  for (const [slot, value] of Object.entries(palette)) {
-    if (value) {
-      overlay[slot] = value
-    }
-  }
-
-  return overlay as ITheme
 }
 
-// Resolve --ui-terminal-surface-background (a color-mix on the skin seed) to a
-// concrete color for the WebGL renderer + contrast clamp. Custom props don't
+// Concrete colours for the WebGL renderer + contrast clamp. Custom props don't
 // resolve via getComputedStyle, so probe a real background-color. Read AFTER
-// applyTheme repaints (mount / rAF post-change) or it lags a frame behind.
-export function resolveSurfaceColor(fallback: string): string {
-  if (typeof document === 'undefined' || !document.body) {
-    return fallback
-  }
-
+// the theme provider repaints (mount / rAF post-change) or neutrals lag a frame.
+export function terminalTheme(mode: 'light' | 'dark'): ITheme {
+  const tokens = { ...ANSI_HUE_TOKENS, ...SURFACE_TOKENS, ...NEUTRAL_TOKENS[mode === 'dark' ? 'dark' : 'light'] }
   const probe = document.createElement('span')
-  probe.style.cssText =
-    'position:absolute;visibility:hidden;pointer-events:none;background-color:var(--ui-terminal-surface-background)'
+  probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none'
   document.body.appendChild(probe)
-  const resolved = getComputedStyle(probe).backgroundColor
+
+  const theme = Object.fromEntries(
+    Object.entries(tokens).map(([slot, token]) => {
+      probe.style.backgroundColor = `var(${token})`
+
+      return [slot, getComputedStyle(probe).backgroundColor]
+    })
+  ) as ITheme
+
   probe.remove()
 
-  return resolved && resolved !== 'rgba(0, 0, 0, 0)' ? resolved : fallback
+  return theme
 }
 
 export { isMacPlatform }

@@ -7,12 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { DelegationRouting, ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
 import type { DelegationRoutingTranslations } from '@/i18n/types_delegation_routing'
-import { AlertTriangle, Check, GitFork, Plug, SlidersHorizontal } from '@/lib/icons'
+import { AlertTriangle, Check, Plug } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { $settingsRequestProfile } from '@/store/settings-scope'
 
 import { useOwnerCatalog } from '../delegation-model-provider-field'
-import { Pill, SectionHeading, SettingsSection } from '../primitives'
+import { Pill, SectionHeading, SettingsCard, SettingsSection, WARN_NOTICE_CLASS } from '../primitives'
 
 import { ModelRoutesEditor } from './model-routes'
 import { enableAdvancedDelegation, installAdvancedDelegation, useAdvancedDelegationPlugin } from './plugin-actions'
@@ -59,13 +59,13 @@ export function DelegationRoutingSection({ scope }: { scope: ProfileScope }) {
 
   return (
     <>
-      <SettingsSection icon={GitFork} title={r.title}>
-        <p className="mb-3 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">{r.intro}</p>
+      <SettingsSection card={false} title={r.title}>
+        <p className="mb-4 px-4 text-xs text-(--linear-text-tertiary)">{r.intro}</p>
         {routing ? (
           <RoutingBody routing={routing} scope={scope} />
         ) : query.isError ? (
-          <div className="flex items-center gap-2" role="status">
-            <p className="text-xs text-muted-foreground">{r.loadFailed}</p>
+          <div className="flex items-center gap-2 px-4" role="status">
+            <p className="text-xs text-(--linear-text-tertiary)">{r.loadFailed}</p>
             <Button disabled={query.isFetching} onClick={() => void query.refetch()} size="xs" variant="secondary">
               {t.common.retry}
             </Button>
@@ -73,12 +73,12 @@ export function DelegationRoutingSection({ scope }: { scope: ProfileScope }) {
         ) : (
           <div className="grid gap-1.5">
             {MODES.map(mode => (
-              <Skeleton className="h-14 rounded-lg" key={mode} />
+              <Skeleton className="h-14 rounded-(--linear-radius-card)" key={mode} />
             ))}
           </div>
         )}
       </SettingsSection>
-      <SectionHeading icon={SlidersHorizontal} title={r.settingsTitle} />
+      <SectionHeading title={r.settingsTitle} />
     </>
   )
 }
@@ -94,18 +94,20 @@ function RoutingBody({ routing, scope }: { routing: DelegationRouting; scope: Pr
 
   return (
     <>
-      <div aria-label={r.title} className="grid gap-1.5" role="radiogroup">
-        {modeChoices(routing).map(option => (
-          <ModeOption
-            available={modeAvailable(routing, option)}
-            blocked={blocked && option === mode}
-            key={option}
-            mode={option}
-            onChoose={() => void chooseDelegationMode(scope, option, r.modeFailed)}
-            routing={routing}
-            selected={option === mode}
-          />
-        ))}
+      <div aria-label={r.title} role="radiogroup">
+        <SettingsCard>
+          {modeChoices(routing).map(option => (
+            <ModeOption
+              available={modeAvailable(routing, option)}
+              blocked={blocked && option === mode}
+              key={option}
+              mode={option}
+              onChoose={() => void chooseDelegationMode(scope, option, r.modeFailed)}
+              routing={routing}
+              selected={option === mode}
+            />
+          ))}
+        </SettingsCard>
       </div>
       {pluginNeeded ? <AdvancedDelegationStatus blocked={blocked && isPluginMode(mode)} scope={scope} /> : null}
       {blocked && !isPluginMode(mode) && <BlockedBanner message={thirdPartyBlockedMessage(routing, r)} scope={scope} />}
@@ -158,20 +160,16 @@ function ModeOption({ routing, mode, selected, blocked, available, onChoose }: M
   return (
     <div
       className={cn(
-        'rounded-lg border transition-colors hover:transition-none',
-        selected
-          ? blocked
-            ? 'border-amber-500/50 bg-amber-500/5'
-            : 'border-(--ui-stroke-secondary) bg-(--ui-bg-tertiary)'
-          : 'border-(--ui-stroke-tertiary)',
-        !selected && available && 'hover:bg-(--chrome-action-hover)'
+        '-mx-4 px-4 transition-colors hover:transition-none',
+        blocked && 'bg-[color-mix(in_srgb,var(--linear-orange)_12%,transparent)]',
+        !selected && available && 'hover:bg-(--linear-hover-row)'
       )}
       data-blocked={blocked || undefined}
       data-mode={mode}
     >
       <button
         aria-checked={selected}
-        className="flex w-full items-start gap-3 px-3 py-2.5 text-left disabled:cursor-default"
+        className="flex w-full items-start gap-3 py-4 text-left disabled:cursor-default"
         disabled={!available || selected}
         onClick={onChoose}
         role="radio"
@@ -180,21 +178,21 @@ function ModeOption({ routing, mode, selected, blocked, available, onChoose }: M
         <span
           aria-hidden
           className={cn(
-            'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border',
+            'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border-[0.5px]',
             selected
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-(--ui-stroke-primary) bg-background',
+              ? 'border-(--linear-accent) bg-(--linear-accent) text-(--linear-on-accent)'
+              : 'border-(--linear-border-tertiary) bg-(--linear-bg-input)',
             !available && !selected && 'opacity-60'
           )}
         >
           {selected && <Check className="size-2.5" />}
         </span>
-        <span className="grid min-w-0 gap-0.5">
+        <span className="grid min-w-0 gap-[3px]">
           <span className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
-                'text-[length:var(--conversation-text-font-size)] font-medium',
-                available || selected ? 'text-foreground' : 'text-(--ui-text-secondary)'
+                'text-[0.8125rem] font-medium',
+                available || selected ? 'text-(--linear-text-primary)' : 'text-(--linear-text-secondary)'
               )}
             >
               {copy.label}
@@ -207,9 +205,7 @@ function ModeOption({ routing, mode, selected, blocked, available, onChoose }: M
               </Pill>
             )}
           </span>
-          <span className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-            {copy.description}
-          </span>
+          <span className="text-xs text-(--linear-text-tertiary)">{copy.description}</span>
         </span>
       </button>
     </div>
@@ -223,16 +219,14 @@ function BlockedBanner({ message, action, scope }: { message: string; action?: R
 
   return (
     <div
-      className="mt-2 flex flex-wrap items-start gap-x-3 gap-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5"
+      className={cn('mt-4 flex flex-wrap items-start gap-x-3 gap-y-2 px-3 py-2.5', WARN_NOTICE_CLASS)}
       data-slot="delegation-blocked"
       role="alert"
     >
-      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300" />
+      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-(--linear-orange)" />
       <div className="grid min-w-0 flex-1 basis-64 gap-0.5">
-        <span className="text-[length:var(--conversation-text-font-size)] font-medium text-foreground">{message}</span>
-        <span className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-secondary)">
-          {r.blockedDetail}
-        </span>
+        <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{message}</span>
+        <span className="text-xs text-(--linear-text-secondary)">{r.blockedDetail}</span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {action}
@@ -287,9 +281,9 @@ function AdvancedDelegationStatus({ blocked, scope }: { blocked: boolean; scope:
   const message = { disabled: r.pluginDisabled, missing: r.pluginMissing, not_loaded: r.pluginNotLoaded }[state]
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1" data-slot="delegation-plugin-hint">
-      <Plug className="size-3.5 shrink-0 text-(--ui-text-tertiary)" />
-      <span className="text-xs text-(--ui-text-secondary)">{message}</span>
+    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4" data-slot="delegation-plugin-hint">
+      <Plug className="size-3.5 shrink-0 text-(--linear-text-tertiary)" />
+      <span className="text-xs text-(--linear-text-secondary)">{message}</span>
       {action}
     </div>
   )

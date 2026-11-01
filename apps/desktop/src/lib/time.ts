@@ -28,20 +28,10 @@ export const fmtFullDateTime = new Intl.DateTimeFormat(undefined, { dateStyle: '
 // Date only, "5 Jun 2026" (starmap tooltip).
 export const fmtDate = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
-// Weekday + day + month — the sessions sidebar's day-section heading ("Thursday
-// 18 June"). A second formatter adds the year once a day is not in the current
-// one; Intl resolves both from the runtime locale.
-export const fmtDayHeading = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'long',
-  weekday: 'long'
-})
-export const fmtDayHeadingYear = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'long',
-  weekday: 'long',
-  year: 'numeric'
-})
+// Abbreviated month for the sessions sidebar's day headings. Composed day-first
+// ("20 Oct" / "20 oct.") by sessionDayLabel so the heading reads the same in
+// every locale's own month name without the locale's month-first ordering.
+const fmtShortMonth = new Intl.DateTimeFormat(undefined, { month: 'short' })
 
 // ── Relative time ──────────────────────────────────────────────────────────
 const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto', style: 'short' })
@@ -95,17 +85,25 @@ export function daySectionKey(dayStart: number): string {
 }
 
 // Fixed day-section labels, resolved from i18n. Every other day is formatted
-// by Intl (see fmtDayHeading).
+// by Intl (see sessionDayLabel).
 export interface SessionDayLabels {
   today: string
   yesterday: string
 }
 
+// Is a session timestamp (`last_active || started_at`, Unix seconds) part of the
+// current nominal day? The sidebar splits today's chats from the Previous
+// sessions section with this same boundary.
+export function isTodayTimestamp(seconds: number, nowMs = Date.now()): boolean {
+  return nominalDayStart(seconds * SECOND) === nominalDayStart(nowMs)
+}
+
 // Localized heading for one day section. `dayStart` is a `nominalDayStart()`
 // value. Today and yesterday get their translated label; an older day reads as
-// its weekday + date, with the year once it isn't the current one. Today is
-// normally the unlabelled top of the list — the label is only needed when the
-// list isn't sorted newest-first (project lanes) and today appears mid-list.
+// its day-of-month + abbreviated month ("20 Oct", "20 oct."), with the year
+// once it isn't the current one. Today is normally the unlabelled top of the
+// list — the label is only needed when the list isn't sorted newest-first
+// (project lanes) and today appears mid-list.
 export function sessionDayLabel(dayStart: number, labels: SessionDayLabels, nowMs = Date.now()): string {
   const todayStart = nominalDayStart(nowMs)
   const dayDiff = Math.round((todayStart - dayStart) / DAY)
@@ -118,9 +116,11 @@ export function sessionDayLabel(dayStart: number, labels: SessionDayLabels, nowM
     return labels.yesterday
   }
 
-  const sameYear = new Date(dayStart).getFullYear() === new Date(todayStart).getFullYear()
+  const d = new Date(dayStart)
+  const month = fmtShortMonth.format(dayStart)
+  const sameYear = d.getFullYear() === new Date(todayStart).getFullYear()
 
-  return (sameYear ? fmtDayHeading : fmtDayHeadingYear).format(dayStart)
+  return sameYear ? `${d.getDate()} ${month}` : `${d.getDate()} ${month} ${d.getFullYear()}`
 }
 
 export type ElapsedUnit = 'day' | 'hour' | 'minute' | 'second'

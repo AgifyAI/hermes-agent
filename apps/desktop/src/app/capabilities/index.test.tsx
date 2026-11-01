@@ -365,6 +365,20 @@ describe('CapabilitiesView toolset management', { timeout: 60_000 }, () => {
     await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/settings?tab=config:model&aux=vision'))
   })
 
+  it('keeps a tour anchor and a live count on each tab pill, and a click selects the tab', async () => {
+    await renderSkills()
+
+    const tab = (id: string) => document.querySelector<HTMLElement>(`[data-tour="tab-${id}"]`)!
+
+    expect(document.querySelector('[data-tour="page-tabs"]')).not.toBeNull()
+    expect(tab('toolsets').getAttribute('aria-selected')).toBe('true')
+    await waitFor(() => expect(tab('toolsets').textContent).toMatch(/\d$/))
+
+    fireEvent.click(tab('plugins'))
+
+    expect(navigateSpy).toHaveBeenCalledWith(expect.objectContaining({ search: '?tab=plugins' }), { replace: true })
+  })
+
   it('fixedConnection pins every read to the target connection', async () => {
     // Bot Mode's remote-target door: a bot on another registered gateway gets
     // the live surface pointed at ITS backend — the reads must carry the

@@ -197,6 +197,18 @@ function useApiKeyCatalog(scope: OnboardingContext['scope']): ApiKeyOption[] {
 // → surface-out (520ms, held back by [transition-delay:660ms]). Finalize after.
 const ONBOARDING_EXIT_MS = 1180
 
+function onboardingSurfaceClass(bare: boolean, leaving: boolean) {
+  return cn(
+    'fixed inset-0 z-(--z-onboarding) flex justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pb-6 transition-opacity duration-[520ms] ease-out',
+    // The bare confirm screen floats centered; every carded state is Linear's modal, 80px from the top.
+    bare ? 'items-center pt-6' : 'items-start pt-20',
+    // On the bare confirm screen, hold the surface (text-out + hold) so the
+    // per-element exit plays before it dissolves.
+    bare && leaving ? '[transition-delay:660ms]' : '',
+    leaving ? 'pointer-events-none opacity-0' : 'opacity-100'
+  )
+}
+
 export function DesktopOnboardingOverlay({
   enabled,
   onCompleted,
@@ -415,38 +427,27 @@ export function DesktopOnboardingOverlay({
 
   return (
     <div
-      className={cn(
-        'fixed inset-0 z-(--z-onboarding) flex items-center justify-center bg-(--ui-chat-surface-background) p-6 transition-opacity duration-[520ms] ease-out',
-        // On the bare confirm screen, hold the surface (text-out + hold) so the
-        // per-element exit plays before it dissolves.
-        bare && leaving ? '[transition-delay:660ms]' : '',
-        leaving ? 'pointer-events-none opacity-0' : 'opacity-100'
-      )}
-      // Masks the whole app until onboarding finishes — must stay filled under
-      // window glass or the shell shows through. Contract:
-      // `[data-glass-opaque]` in styles.css.
-      data-glass-opaque=""
+      className={onboardingSurfaceClass(bare, leaving)}
+      data-onboarding-overlay=""
     >
       <div
         className={cn(
-          'relative w-full max-w-[45rem] transition-all duration-500 ease-out',
+          'relative w-full max-w-[46.875rem] transition-all duration-500 ease-out',
           bare
             ? ''
-            : 'overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous',
+            : 'overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)',
           // Bare confirm screen orchestrates its own per-element exit; the
-          // carded states use the simple lift/blur dissolve.
-          leaving && !bare
-            ? '-translate-y-1 scale-[0.985] opacity-0 blur-[2px]'
-            : 'translate-y-0 scale-100 opacity-100 blur-0'
+          // carded states use the simple lift dissolve.
+          leaving && !bare ? '-translate-y-1 scale-[0.985] opacity-0' : 'translate-y-0 scale-100 opacity-100'
         )}
       >
         {showPicker || !ready ? <Header /> : null}
         {onboarding.manual ? (
           <Button
             aria-label={t.common.close}
-            className="absolute right-3 top-3 z-10 text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
+            className="absolute right-3 top-3 z-10"
             onClick={() => closeManualOnboarding()}
-            size="icon-sm"
+            size="icon"
             variant="ghost"
           >
             <Codicon name="close" size="1rem" />
@@ -500,15 +501,11 @@ function FreeTierReadyPanel({
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-muted-foreground">
-            {t.onboarding.defaultModel}
-          </span>
-          <Badge size="xs" variant="success">
-            {t.onboarding.freeTier}
-          </Badge>
+          <span className="text-xs font-medium text-(--linear-text-tertiary)">{t.onboarding.defaultModel}</span>
+          <Badge variant="success">{t.onboarding.freeTier}</Badge>
         </div>
-        <p className="font-mono text-base">{FREE_TIER_MODEL}</p>
-        <p className="font-mono text-xs text-muted-foreground">{copy.readyCaption}</p>
+        <p className="font-mono text-[0.9375rem]">{FREE_TIER_MODEL}</p>
+        <p className="font-mono text-xs text-(--linear-text-tertiary)">{copy.readyCaption}</p>
       </div>
 
       <div
@@ -541,7 +538,7 @@ function FreeTierReadyPanel({
 // upstream), so it never shows the generic "no provider configured" noise.
 function ReasonNotice({ reason }: { reason: string }) {
   return (
-    <div className="rounded-2xl border border-(--ui-stroke-tertiary) bg-(--ui-bg-tertiary)/40 px-4 py-3 text-sm text-muted-foreground">
+    <div className="rounded-(--linear-radius-card) bg-(--linear-bg-secondary) px-3 py-2.5 text-[0.8125rem] text-(--linear-text-tertiary)">
       {reason}
     </div>
   )
@@ -555,7 +552,7 @@ function Preparing({ boot }: { boot: DesktopBootState }) {
 
   return (
     <div className="grid gap-3" role="status">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-[0.8125rem] text-(--linear-text-tertiary)">
         {installing ? t.onboarding.preparingInstall : t.onboarding.starting}
       </p>
       <Progress
@@ -564,11 +561,11 @@ function Preparing({ boot }: { boot: DesktopBootState }) {
         size="lg"
         value={progress / 100}
       />
-      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 text-xs text-(--linear-text-tertiary)">
         <span className="truncate">{boot.message}</span>
         <span>{progress}%</span>
       </div>
-      {hasError ? <p className="text-xs text-destructive">{boot.error}</p> : null}
+      {hasError ? <p className="text-xs text-(--linear-red)">{boot.error}</p> : null}
     </div>
   )
 }
@@ -577,9 +574,11 @@ function Header() {
   const { t } = useI18n()
 
   return (
-    <div className="bg-(--ui-chat-bubble-background) px-5 pt-5 pb-1">
-      <h2 className="text-[0.9375rem] font-semibold tracking-tight">{t.onboarding.headerTitle}</h2>
-      <p className="mt-1 max-w-xl text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">{t.onboarding.headerDesc}</p>
+    <div className="px-5 pt-5 pb-1 pr-14">
+      <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{t.onboarding.headerTitle}</h2>
+      <p className="mt-0.5 max-w-xl text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)">
+        {t.onboarding.headerDesc}
+      </p>
     </div>
   )
 }
@@ -875,19 +874,23 @@ export function ApiKeyForm({
         {options.map(o => (
           <button
             className={cn(
-              'rounded-2xl border bg-background/60 p-3 text-left transition hover:bg-accent/50',
-              option.envKey === o.envKey ? 'border-primary ring-2 ring-primary/20' : 'border-transparent'
+              'rounded-(--linear-radius-card) border-[0.5px] p-3 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none',
+              option.envKey === o.envKey
+                ? 'border-(--linear-accent) bg-[color-mix(in_srgb,var(--linear-accent)_6%,transparent)]'
+                : 'border-(--linear-border-secondary)'
             )}
             key={o.envKey}
             onClick={() => pick(o)}
             type="button"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium">{o.name}</span>
-              {isSet?.(o.envKey) ? <Check className="size-3.5 text-muted-foreground" /> : null}
+              <span className="text-[0.8125rem] font-medium">{o.name}</span>
+              {isSet?.(o.envKey) ? <Check className="size-3.5 text-(--linear-text-tertiary)" /> : null}
             </div>
             {(t.onboarding.apiKeyOptions[o.id]?.short ?? o.short) ? (
-              <p className="mt-1 text-xs text-muted-foreground">{t.onboarding.apiKeyOptions[o.id]?.short ?? o.short}</p>
+              <p className="mt-1 text-xs text-(--linear-text-tertiary)">
+                {t.onboarding.apiKeyOptions[o.id]?.short ?? o.short}
+              </p>
             ) : null}
           </button>
         ))}
@@ -895,7 +898,7 @@ export function ApiKeyForm({
 
       <div className="grid scroll-mt-4 gap-2" ref={entryRef}>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm leading-6 text-muted-foreground">{optionDescription}</p>
+          <p className="text-[0.8125rem] leading-6 text-(--linear-text-tertiary)">{optionDescription}</p>
           {option.docsUrl ? <DocsLink href={option.docsUrl}>{t.onboarding.getKey}</DocsLink> : null}
         </div>
         <Input
@@ -933,7 +936,7 @@ export function ApiKeyForm({
             value={modelName}
           />
         ) : null}
-        {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        {error ? <p className="text-xs text-(--linear-red)">{error}</p> : null}
       </div>
 
       <div className="flex items-center justify-between gap-3">

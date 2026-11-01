@@ -304,7 +304,7 @@ export const arSettings = {
       chatTextScaleDesc:
         'يضبط حجم نص المحادثة ومحرر الرسائل نسبةً إلى مقياس الواجهة. يبقى حجم الأشرطة الجانبية وعناصر التحكم كما هو.',
       title: 'المظهر',
-      intro: 'خصص مظهر Hermes Desktop.',
+      intro: 'لسطح المكتب فقط. لـ Hermes مظهر واحد مستوحى من Linear، بالوضعين الفاتح والداكن.',
       colorMode: 'نمط الألوان',
       colorModeDesc: 'اختر الوضع الفاتح أو الداكن أو اتبع النظام.',
       toolViewTitle: 'عرض الأدوات',
@@ -315,29 +315,8 @@ export const arSettings = {
       hideThreadTimelineDesc: 'إخفاء أشرطة التنقل على الحافة اليمنى لكل محادثة.',
       reasoningCollapsedTitle: 'طي التفكير افتراضيًا',
       reasoningCollapsedDesc: 'أبقِ التفكير المتدفق متاحًا دون توسيعه حتى تفتحه.',
-      translucencyTitle: 'شفافية النافذة',
-      translucencyDesc: 'إظهار سطح المكتب من خلال النافذة بالكامل، بما في ذلك النص.',
-      translucencyGlassDesc: 'زجاج غير لامع: يظهر سطح المكتب كضبابية ناعمة بينما يبقى النص واضحًا.',
-      translucencyModeClear: 'شفاف',
-      translucencyModeGlass: 'زجاج',
-      translucencyTintTitle: 'التلوين',
-      translucencyFadeTitle: 'التلاشي',
-      translucencyFrostTitle: 'نوع الضبابية',
-      translucencyFrost: {
-        'under-window': 'عميق',
-        popover: 'ناعم',
-        titlebar: 'ساطع',
-        header: 'متوهج'
-      },
-      translucencyScopeTitle: 'النطاق',
-      translucencyScope: {
-        window: 'النافذة كاملة',
-        sidebar: 'الشريط الجانبي فقط'
-      },
       backdropTitle: 'خلفية النافذة',
       backdropDesc: 'اختيار مقدار مزج خلفية سطح المكتب مع سطح Hermes.',
-      userBubbleTitle: 'فقاعة الرسالة',
-      userBubbleDesc: 'مدى شفافية رسائلك. معتمة عند 0؛ يبقى الإطار فقط عند 100.',
       textDirectionTitle: 'اتجاه النص',
       textDirectionDesc:
         'كيف تحدد رسائل المحادثة وحقل الكتابة اتجاهها. «تلقائي» يتبع أول حرف في كل فقرة؛ اختر اتجاهًا عندما يظهر النص المختلط بترتيب خاطئ. تبقى الشيفرة دائمًا من اليسار إلى اليمين.',
@@ -374,18 +353,7 @@ export const arSettings = {
       productDesc: 'عرض أنظف يركز على النتيجة.',
       technical: 'تقني',
       technicalDesc: 'يعرض تفاصيل أكثر عن الأدوات والتنفيذ.',
-      themeTitle: 'الثيم',
-      themeDesc: 'اختر ثيم سطح المكتب.',
-      themeProfileNote: profile => `سيطبق هذا الثيم على الملف الشخصي ${profile}.`,
-      installTitle: 'تثبيت ثيم',
-      installDesc: 'ألصق رابط ثيم أو اسمه لتثبيته.',
-      installPlaceholder: 'رابط أو اسم الثيم',
-      installButton: 'تثبيت',
-      installing: 'جار التثبيت...',
-      installError: 'فشل تثبيت الثيم',
-      installed: name => `تم تثبيت ${name}`,
-      removeTheme: 'إزالة الثيم',
-      importedBadge: 'مستورد',
+      themeProfileNote: profile => `سيُحفظ هذا الوضع للملف الشخصي ${profile}؛ لكل ملف شخصي وضعه الخاص.`,
       pet: {
         title: 'حيوان أليف',
         intro:

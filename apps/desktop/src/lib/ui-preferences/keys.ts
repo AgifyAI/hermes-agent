@@ -19,17 +19,12 @@
 
 const SHARED_KEYS: ReadonlySet<string> = new Set([
   // Appearance.
-  'hermes-desktop-theme-v2',
   'hermes-desktop-mode-v1',
-  'hermes-desktop-profile-themes-v1',
   'hermes-desktop-profile-modes-v1',
-  'hermes-desktop-user-themes-v1',
   'hermes.desktop.backdrop.v1',
   'hermes.desktop.chat-text-scale.v1',
   'hermes.desktop.interfaceMode.v1',
   'hermes.desktop.textDirection',
-  'hermes.desktop.translucency.v2',
-  'hermes.desktop.user-bubble-transparency.v1',
   // Sessions sidebar and profile rail.
   'hermes.desktop.agentsGroupedByWorkspace',
   'hermes.desktop.profileColors',

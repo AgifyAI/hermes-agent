@@ -49,7 +49,7 @@ export const AvatarChip = forwardRef<HTMLSpanElement, AvatarChipProps>(function 
         // Not `overflow-hidden`: an overlay dot sits proud of the corner. A
         // caller painting a raster mark clips at its own layer.
         'relative inline-grid size-6 shrink-0 place-items-center rounded-md text-[length:var(--conversation-caption-font-size)] font-medium',
-        !brand && 'bg-(--ui-bg-tertiary) text-(--ui-text-tertiary)',
+        !brand && 'bg-(--linear-bg-tertiary) text-(--linear-text-tertiary)',
         className
       )}
       ref={ref}

@@ -22,7 +22,7 @@ export function SidebarLoadMoreRow({ step, onClick, loading = false }: SidebarLo
     <Tip label={label}>
       <button
         aria-label={label}
-        className="mr-2 ml-auto grid size-5 place-items-center rounded-sm bg-transparent text-(--ui-text-tertiary) transition-colors hover:bg-(--ui-control-hover-background) hover:text-foreground disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-(--ui-text-tertiary)"
+        className="mr-2 ml-auto grid size-5 place-items-center rounded-(--linear-radius-pill) bg-transparent text-(--linear-icon) transition-colors hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) hover:transition-none disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-(--linear-icon)"
         disabled={loading}
         onClick={onClick}
         type="button"

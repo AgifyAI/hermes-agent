@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 
 import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ import { AlertCircle, ChevronDown, ChevronRight, Globe, iconSize, Loader2, Monit
 import { capitalize } from '@/lib/text'
 import { cn } from '@/lib/utils'
 
-import { localCardPresentation } from './desktop-install-local-card'
+import { localCardPresentation, type LocalCardState } from './desktop-install-local-card'
 import { FirstRunRemoteSetup } from './remote-setup/first-run'
 
 /**
@@ -122,7 +122,7 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       case 'succeeded':
 
       case 'skipped':
-        return <Codicon className="text-muted-foreground" name="check" size="0.8125rem" />
+        return <Codicon className="text-(--linear-text-tertiary)" name="check" size="0.8125rem" />
 
       case 'failed':
         return <ErrorIcon size="1rem" />
@@ -130,7 +130,7 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       case 'pending':
 
       default:
-        return <div className="size-1.5 rounded-full border border-(--ui-stroke-secondary)" />
+        return <div className="size-1.5 rounded-full border border-(--linear-border-secondary)" />
     }
   }, [state])
 
@@ -143,14 +143,21 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className={cn('truncate text-sm', state === 'running' ? 'font-medium' : 'text-muted-foreground')}>
+          <span
+            className={cn(
+              'truncate text-[0.8125rem]',
+              state === 'running' ? 'font-medium' : 'text-(--linear-text-tertiary)'
+            )}
+          >
             {formatStageName(descriptor.name)}
           </span>
           {state !== 'running' && <span className="flex size-4 shrink-0 items-center justify-center">{icon}</span>}
         </div>
-        {reason && state !== 'pending' && <p className="mt-0.5 truncate text-xs text-muted-foreground">{reason}</p>}
+        {reason && state !== 'pending' && (
+          <p className="mt-0.5 truncate text-xs text-(--linear-text-tertiary)">{reason}</p>
+        )}
       </div>
-      <span className="flex-shrink-0 text-xs tabular-nums text-muted-foreground">
+      <span className="flex-shrink-0 text-xs tabular-nums text-(--linear-text-tertiary)">
         {state === 'running' ? (elapsed ? `${copy.stageStates[state]} · ${elapsed}` : copy.stageStates[state]) : null}
         {state === 'succeeded' || state === 'skipped' ? formatDuration(result?.durationMs) : null}
         {state === 'failed' ? copy.stageStates[state] : null}
@@ -293,6 +300,365 @@ function applyEvent(state: DesktopBootstrapState, ev: DesktopBootstrapEvent): De
   return state
 }
 
+// Install surfaces sit on the boot chain's panel fill and wear Linear's modal,
+// the same shell as the boot-failure and update-hold overlays.
+const SETUP_BACKDROP_CLASS = 'fixed inset-0 z-(--z-setup) flex items-start justify-center overflow-y-auto bg-(--linear-bg-panel) px-6 pt-20 pb-6'
+
+const SETUP_MODAL_CLASS =
+  'w-full max-w-[46.875rem] rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)'
+
+const MODAL_TITLE_CLASS = 'text-[1.125rem] leading-[1.8rem] font-semibold'
+const MODAL_DESCRIPTION_CLASS = 'mt-0.5 text-[0.9375rem] leading-[1.40625rem] text-(--linear-text-tertiary)'
+
+const CHOICE_CARD_CLASS =
+  'rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-card) p-4 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none disabled:cursor-not-allowed disabled:opacity-60'
+
+interface ChoiceCardProps {
+  description: string
+  disabled?: boolean
+  icon: ReactNode
+  onClick: () => void
+  title: string
+}
+
+function ChoiceCard({ description, disabled, icon, onClick, title }: ChoiceCardProps) {
+  return (
+    <button className={CHOICE_CARD_CLASS} disabled={disabled} onClick={onClick} type="button">
+      <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
+        {icon}
+        <span>{title}</span>
+      </div>
+      <p className="mt-1 text-xs leading-4 text-(--linear-text-tertiary)">{description}</p>
+    </button>
+  )
+}
+
+interface SetupChoiceViewProps {
+  activeRoot: string
+  localStartError: string | null
+  localStarting: boolean
+  localState: LocalCardState
+  onConnectExisting: () => void
+  onStartLocal: () => void
+}
+
+function SetupChoiceView({
+  activeRoot,
+  localStartError,
+  localStarting,
+  localState,
+  onConnectExisting,
+  onStartLocal
+}: SetupChoiceViewProps) {
+  const { t } = useI18n()
+  const copy = t.install
+  const localPres = localCardPresentation(localState)
+  const LocalIcon = localStarting ? Loader2 : Monitor
+
+  return (
+    <div className={SETUP_BACKDROP_CLASS}>
+      <div className={cn(SETUP_MODAL_CLASS, 'p-5')}>
+        <div className="flex items-start gap-3">
+          <BrandMark className="size-11 shrink-0" />
+          <div className="min-w-0">
+            <h2 className={MODAL_TITLE_CLASS}>{copy.setupChoiceTitle}</h2>
+            <p className={MODAL_DESCRIPTION_CLASS}>
+              {localState === 'none' ? copy.setupChoiceDesc : copy.setupChoiceDescLocal}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <ChoiceCard
+            description={copy.connectExistingDesc}
+            icon={<Globe className="size-4 text-(--linear-icon)" />}
+            onClick={onConnectExisting}
+            title={copy.connectExistingTitle}
+          />
+          <ChoiceCard
+            description={copy[localPres.desc]}
+            disabled={localStarting}
+            icon={<LocalIcon className={cn('size-4 text-(--linear-icon)', localStarting && 'animate-spin')} />}
+            onClick={onStartLocal}
+            title={copy[localPres.title]}
+          />
+        </div>
+
+        {localStartError ? (
+          <div className="mt-4 flex items-start gap-2 rounded-(--linear-radius-control) bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] px-3 py-2 text-[0.8125rem] text-(--linear-red)">
+            <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+            <span>{localStartError}</span>
+          </div>
+        ) : null}
+
+        {localPres.showInstallTo ? (
+          <div className="mt-5 text-xs text-(--linear-text-tertiary)">
+            {copy.installTo} <code className="font-mono text-(--linear-text-secondary)">{activeRoot}</code>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+interface UnsupportedPlatformViewProps {
+  onConnectExisting: () => void
+  platform: NonNullable<DesktopBootstrapState['unsupportedPlatform']>
+}
+
+// macOS/Linux packaged builds land here when there's no Hermes Agent installed
+// yet and we can't drive install.sh (no stage protocol equivalent yet). Shows a
+// copy-paste install command and the docs URL; the user runs it from Terminal
+// and relaunches the app.
+function UnsupportedPlatformView({ onConnectExisting, platform: ups }: UnsupportedPlatformViewProps) {
+  const { t } = useI18n()
+  const copy = t.install
+  const platformLabel = ups.platform === 'darwin' ? 'macOS' : ups.platform === 'linux' ? 'Linux' : ups.platform
+
+  return (
+    <div className={SETUP_BACKDROP_CLASS}>
+      <div className={cn(SETUP_MODAL_CLASS, 'p-5')}>
+        <h2 className={MODAL_TITLE_CLASS}>{copy.oneTimeTitle}</h2>
+        <p className={MODAL_DESCRIPTION_CLASS}>{copy.unsupportedDesc(platformLabel)}</p>
+
+        <div className="mt-4">
+          <div className="mb-1.5 text-xs font-medium text-(--linear-text-tertiary)">{copy.installCommand}</div>
+          <pre className="overflow-x-auto rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2.5 font-mono text-xs">
+            <code>{ups.installCommand}</code>
+          </pre>
+          <div className="mt-2 flex items-center gap-2">
+            <Button
+              onClick={() => {
+                void writeClipboardText(ups.installCommand).catch(() => {})
+              }}
+              size="sm"
+              variant="secondary"
+            >
+              {copy.copyCommand}
+            </Button>
+            <Button
+              onClick={() => {
+                window.hermesDesktop?.openExternal?.(ups.docsUrl)
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              {copy.viewDocs}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <span className="min-w-0 text-xs text-(--linear-text-tertiary)">
+            {copy.installTo} <code className="font-mono text-(--linear-text-secondary)">{ups.activeRoot}</code>
+          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button onClick={onConnectExisting} size="sm" variant="secondary">
+              <Globe />
+              {copy.connectExistingShort}
+            </Button>
+            <Button onClick={() => window.location.reload()} size="sm" variant="default">
+              {copy.retryAfterRun}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface InstallProgressProps {
+  failed: boolean
+  now: number
+  state: DesktopBootstrapState
+}
+
+function InstallProgress({ failed, now, state }: InstallProgressProps) {
+  const { t } = useI18n()
+  const copy = t.install
+  const stages = state.manifest?.stages || []
+  const currentStage = stages.find(s => state.stages[s.name]?.state === 'running')?.name
+
+  const completedCount = stages.filter(
+    s => state.stages[s.name]?.state === 'succeeded' || state.stages[s.name]?.state === 'skipped'
+  ).length
+
+  const totalCount = stages.length
+  // Count the running stage as half-done so the bar advances *during* a long
+  // stage instead of sitting frozen at the last completed step while its logs
+  // stream (e.g. "0 of 2" pinned at 0% for the whole first stage).
+  const progressUnits = completedCount + (!failed && currentStage ? 0.5 : 0)
+  const progressPct = totalCount > 0 ? Math.round((progressUnits / totalCount) * 100) : 0
+  const currentStartedAt = currentStage ? state.stages[currentStage]?.startedAt : null
+  const currentElapsed = typeof currentStartedAt === 'number' ? formatElapsed(now - currentStartedAt) : ''
+
+  if (totalCount === 0) {
+    return state.active ? (
+      <div className="mb-4 flex items-center gap-2.5 text-[0.8125rem] text-(--linear-text-tertiary)">
+        <Loader className="size-5" type="fourier-flow" />
+        <span>{copy.fetchingManifest}</span>
+      </div>
+    ) : null
+  }
+
+  return (
+    <div className="mb-4">
+      <div className="mb-1 flex items-center justify-between text-xs text-(--linear-text-tertiary)">
+        <span>
+          {copy.progress(completedCount, totalCount)}
+          {currentStage && copy.currentStage(formatStageName(currentStage))}
+          {currentElapsed && ` (${currentElapsed})`}
+        </span>
+        <span className="tabular-nums">{progressPct}%</span>
+      </div>
+      <Progress
+        aria-label={copy.progress(completedCount, totalCount)}
+        className="bg-(--linear-bg-tertiary)"
+        destructive={failed}
+        value={progressPct / 100}
+      />
+    </div>
+  )
+}
+
+function InstallFailure({ error }: { error: string }) {
+  const { t } = useI18n()
+  // Main writes a plain lead sentence and keeps the raw installer error after
+  // "Details:" (electron/bootstrap-failure-copy.ts); show them as two lines.
+  const [failureLead, failureDetail] = splitFailureDetails(error)
+
+  return (
+    <div className="mb-4 flex items-start gap-2 text-[0.8125rem]">
+      <ErrorIcon className="mt-0.5 shrink-0" size="1rem" />
+      <div className="min-w-0">
+        <div className="font-medium text-(--linear-red)">{t.install.error}</div>
+        <p className="mt-0.5 whitespace-pre-wrap break-words text-(--linear-text-secondary)">{failureLead}</p>
+        {failureDetail ? (
+          <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-(--linear-text-tertiary)">
+            {failureDetail}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+interface InstallOutputProps {
+  endRef: RefObject<HTMLDivElement | null>
+  failed: boolean
+  log: DesktopBootstrapState['log']
+  onToggle: () => void
+  open: boolean
+}
+
+function InstallOutput({ endRef, failed, log, onToggle, open }: InstallOutputProps) {
+  const { t } = useI18n()
+  const copy = t.install
+
+  return (
+    <div className="pt-3">
+      <Button
+        className="-ml-2 text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+        onClick={onToggle}
+        size="xs"
+        type="button"
+        variant="ghost"
+      >
+        {open ? <ChevronDown className={iconSize.sm} /> : <ChevronRight className={iconSize.sm} />}
+        <span>{open ? copy.hideOutput : copy.showOutput}</span>
+        <span className="ml-1 tabular-nums">({copy.lines(log.length)})</span>
+      </Button>
+
+      {open && (
+        <LogView className={cn('mt-2', failed ? 'max-h-96' : 'max-h-64')}>
+          {log.length === 0 ? (
+            <div>{copy.noOutput}</div>
+          ) : (
+            <>
+              {log.map((entry, i) => (
+                <div className={cn(entry.stream === 'stderr' && 'text-(--linear-text-quaternary)')} key={i}>
+                  {entry.stage ? <span className="text-(--linear-text-quaternary)">[{entry.stage}] </span> : null}
+                  <span>{entry.line}</span>
+                </div>
+              ))}
+              <div ref={endRef} />
+            </>
+          )}
+        </LogView>
+      )}
+    </div>
+  )
+}
+
+// A running install's own way out; a failed one uses InstallFailedFooter.
+function InstallActiveFooter({ cancelling, onCancel }: { cancelling: boolean; onCancel: () => void }) {
+  const { t } = useI18n()
+  const copy = t.install
+
+  return (
+    <div className="flex shrink-0 items-center justify-end px-5 py-4">
+      <Button disabled={cancelling} onClick={onCancel} size="sm" variant="ghost">
+        {cancelling ? <Loader className="size-4" type="fourier-flow" /> : null}
+        {cancelling ? copy.cancelling : copy.cancelInstall}
+      </Button>
+    </div>
+  )
+}
+
+interface InstallFailedFooterProps {
+  copied: boolean
+  onClose: () => void
+  onCopyOutput: () => void
+}
+
+function InstallFailedFooter({ copied, onClose, onCopyOutput }: InstallFailedFooterProps) {
+  const { t } = useI18n()
+  const copy = t.install
+
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-2 px-5 py-4">
+      <span className="text-xs text-(--linear-text-tertiary)">
+        {copy.transcriptSaved}{' '}
+        <code className="font-mono text-(--linear-text-secondary)">%LOCALAPPDATA%\hermes\logs\</code>
+      </span>
+      <div className="flex gap-2">
+        <Button onClick={onClose} size="sm" variant="ghost">
+          {t.common.close}
+        </Button>
+        <Button
+          onClick={() => void window.hermesDesktop?.revealLogs?.().catch(() => undefined)}
+          size="sm"
+          variant="ghost"
+        >
+          {copy.openLogs}
+        </Button>
+        <Button onClick={onCopyOutput} size="sm" variant="secondary">
+          {copied ? copy.copiedOutput : copy.copyOutput}
+        </Button>
+        <Button
+          onClick={async () => {
+            // Tell main.ts to clear its latched failure BEFORE we
+            // reload. Otherwise the renderer reload calls getConnection
+            // and main short-circuits to the latched error without
+            // re-running install.ps1.
+            try {
+              await window.hermesDesktop?.resetBootstrap?.()
+            } catch {
+              // best-effort -- continue with reload regardless
+            }
+
+            window.location.reload()
+          }}
+          size="sm"
+          variant="default"
+        >
+          {copy.reloadRetry}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayProps) {
   const { t } = useI18n()
   const copy = t.install
@@ -403,35 +769,12 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
 
   const activeRoot = state.setupChoice?.activeRoot ?? null
   const forActiveRoot = localStart.root === activeRoot
-  const localStarting = forActiveRoot && localStart.starting
-  const localStartError = forActiveRoot ? localStart.error : null
 
   // Mount logic: show whenever a bootstrap is in flight, completed-with-error,
   // or actively running with a manifest. Hide entirely after a successful
   // completion so the rest of the UI can take over.
-  const shouldShow = useMemo(() => {
-    if (!enabled) {
-      return false
-    }
-
-    if (state.active) {
-      return true
-    }
-
-    if (state.error) {
-      return true
-    }
-
-    if (state.unsupportedPlatform) {
-      return true
-    }
-
-    if (state.setupChoice) {
-      return true
-    }
-
-    return false
-  }, [enabled, state.active, state.error, state.setupChoice, state.unsupportedPlatform])
+  const shouldShow =
+    enabled && (state.active || Boolean(state.error) || Boolean(state.unsupportedPlatform) || Boolean(state.setupChoice))
 
   if (!shouldShow) {
     return null
@@ -442,221 +785,58 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
   }
 
   if (state.setupChoice) {
-    const localState = state.setupChoice.local
-    const localPres = localCardPresentation(localState)
-
     return (
-      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 p-4 backdrop-blur-md">
-        <div className="w-full max-w-2xl rounded-xl border border-(--stroke-nous) bg-card p-8 shadow-nous">
-          <div className="flex items-start gap-4">
-            <BrandMark className="size-11 shrink-0" />
-            <div className="min-w-0">
-              <h2 className="text-xl font-semibold tracking-tight">{copy.setupChoiceTitle}</h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                {localState === 'none' ? copy.setupChoiceDesc : copy.setupChoiceDescLocal}
-              </p>
-            </div>
-          </div>
+      <SetupChoiceView
+        activeRoot={state.setupChoice.activeRoot}
+        localStartError={forActiveRoot ? localStart.error : null}
+        localStarting={forActiveRoot && localStart.starting}
+        localState={state.setupChoice.local}
+        onConnectExisting={() => setRemoteOpen(true)}
+        onStartLocal={async () => {
+          setLocalStart({ root: activeRoot, starting: true, error: null })
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <button
-              className="rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-4 text-left transition hover:bg-(--chrome-action-hover)"
-              onClick={() => setRemoteOpen(true)}
-              type="button"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Globe className="size-4 text-muted-foreground" />
-                <span>{copy.connectExistingTitle}</span>
-              </div>
-              <p className="mt-2 text-sm leading-5 text-muted-foreground">{copy.connectExistingDesc}</p>
-            </button>
+          try {
+            const desktop = window.hermesDesktop
 
-            <button
-              className="rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-4 text-left transition hover:bg-(--chrome-action-hover) disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={localStarting}
-              onClick={async () => {
-                setLocalStart({ root: activeRoot, starting: true, error: null })
+            if (!desktop || typeof desktop.continueBootstrapLocal !== 'function') {
+              throw new Error(copy.localStartUnavailable)
+            }
 
-                try {
-                  const desktop = window.hermesDesktop
-
-                  if (!desktop || typeof desktop.continueBootstrapLocal !== 'function') {
-                    throw new Error(copy.localStartUnavailable)
-                  }
-
-                  await desktop.continueBootstrapLocal()
-                } catch (err) {
-                  setLocalStart({ root: activeRoot, starting: false, error: errorMessage(err) })
-                }
-              }}
-              type="button"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium">
-                {localStarting ? (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Monitor className="size-4 text-muted-foreground" />
-                )}
-                <span>{copy[localPres.title]}</span>
-              </div>
-              <p className="mt-2 text-sm leading-5 text-muted-foreground">{copy[localPres.desc]}</p>
-            </button>
-          </div>
-
-          {localStartError ? (
-            <div className="mt-4 flex items-start gap-2 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 size-4 shrink-0" />
-              <span>{localStartError}</span>
-            </div>
-          ) : null}
-
-          {localPres.showInstallTo ? (
-            <div className="mt-6 text-xs text-muted-foreground">
-              {copy.installTo}{' '}
-              <code className="font-mono text-(--ui-text-secondary)">{state.setupChoice.activeRoot}</code>
-            </div>
-          ) : null}
-        </div>
-      </div>
+            await desktop.continueBootstrapLocal()
+          } catch (err) {
+            setLocalStart({ root: activeRoot, starting: false, error: errorMessage(err) })
+          }
+        }}
+      />
     )
   }
 
-  // Unsupported-platform branch: macOS/Linux packaged builds hit this when
-  // there's no Hermes Agent installed yet and we can't drive install.sh
-  // (no stage protocol equivalent yet). Show a copy-paste install command
-  // and the docs URL; user runs it from Terminal and relaunches the app.
   if (state.unsupportedPlatform) {
-    const ups = state.unsupportedPlatform
-    const platformLabel = ups.platform === 'darwin' ? 'macOS' : ups.platform === 'linux' ? 'Linux' : ups.platform
-
-    return (
-      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 backdrop-blur-md">
-        <div className="w-full max-w-xl rounded-xl border border-(--stroke-nous) bg-card p-8 shadow-nous">
-          <h2 className="text-xl font-semibold tracking-tight">{copy.oneTimeTitle}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{copy.unsupportedDesc(platformLabel)}</p>
-
-          <div className="mt-4">
-            <div className="mb-1.5 text-xs font-medium text-muted-foreground">{copy.installCommand}</div>
-            <pre className="overflow-x-auto rounded-md border border-(--stroke-nous) px-3 py-2.5 font-mono text-[12px]">
-              <code>{ups.installCommand}</code>
-            </pre>
-            <div className="mt-2 flex items-center gap-2">
-              <Button
-                onClick={() => {
-                  void writeClipboardText(ups.installCommand).catch(() => {})
-                }}
-                size="sm"
-                variant="secondary"
-              >
-                {copy.copyCommand}
-              </Button>
-              <Button
-                onClick={() => {
-                  window.hermesDesktop?.openExternal?.(ups.docsUrl)
-                }}
-                size="sm"
-                variant="ghost"
-              >
-                {copy.viewDocs}
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {copy.installTo} <code className="font-mono text-(--ui-text-secondary)">{ups.activeRoot}</code>
-            </span>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setRemoteOpen(true)} size="sm" variant="secondary">
-                <Globe className="size-4" />
-                {copy.connectExistingShort}
-              </Button>
-              <Button onClick={() => window.location.reload()} size="sm" variant="default">
-                {copy.retryAfterRun}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <UnsupportedPlatformView onConnectExisting={() => setRemoteOpen(true)} platform={state.unsupportedPlatform} />
   }
 
   const stages = state.manifest?.stages || []
-  const currentStage = stages.find(s => state.stages[s.name]?.state === 'running')?.name
-
-  const completedCount = stages.filter(
-    s => state.stages[s.name]?.state === 'succeeded' || state.stages[s.name]?.state === 'skipped'
-  ).length
-
-  const totalCount = stages.length
   const failed = Boolean(state.error)
-  // Main writes a plain lead sentence and keeps the raw installer error after
-  // "Details:" (electron/bootstrap-failure-copy.ts); show them as two lines.
-  const [failureLead, failureDetail] = splitFailureDetails(state.error)
-  // Count the running stage as half-done so the bar advances *during* a long
-  // stage instead of sitting frozen at the last completed step while its logs
-  // stream (e.g. "0 of 2" pinned at 0% for the whole first stage).
-  const progressUnits = completedCount + (!failed && currentStage ? 0.5 : 0)
-  const progressPct = totalCount > 0 ? Math.round((progressUnits / totalCount) * 100) : 0
-  const currentStartedAt = currentStage ? state.stages[currentStage]?.startedAt : null
-  const currentElapsed = typeof currentStartedAt === 'number' ? formatElapsed(now - currentStartedAt) : ''
 
   return (
-    <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 backdrop-blur-md p-4">
-      <div className="flex w-full max-w-2xl max-h-[90vh] flex-col rounded-xl border border-(--stroke-nous) bg-card shadow-nous">
+    <div className={SETUP_BACKDROP_CLASS}>
+      <div className={cn(SETUP_MODAL_CLASS, 'flex max-h-[calc(100vh-6.5rem)] flex-col overflow-hidden')}>
         {/* Header -- always visible, never scrolls */}
-        <div className="flex flex-shrink-0 items-start gap-4 p-8 pb-4">
+        <div className="flex shrink-0 items-start gap-3 px-5 pt-5 pb-4">
           {!failed && <BrandMark className="size-11 shrink-0" />}
           <div className="min-w-0">
-            <h2 className="text-xl font-semibold tracking-tight">
+            <h2 className={MODAL_TITLE_CLASS}>
               {failed ? copy.failedTitle : state.active ? copy.settingUpTitle : copy.finishingTitle}
             </h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">{failed ? copy.failedDesc : copy.activeDesc}</p>
+            <p className={MODAL_DESCRIPTION_CLASS}>{failed ? copy.failedDesc : copy.activeDesc}</p>
           </div>
         </div>
 
         {/* Scrollable middle: progress, stages, error block, log */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-8 pb-2">
-          {totalCount > 0 && (
-            <div className="mb-4">
-              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {copy.progress(completedCount, totalCount)}
-                  {currentStage && copy.currentStage(formatStageName(currentStage))}
-                  {currentElapsed && ` (${currentElapsed})`}
-                </span>
-                <span className="tabular-nums">{progressPct}%</span>
-              </div>
-              <Progress
-                aria-label={copy.progress(completedCount, totalCount)}
-                className="bg-(--ui-bg-tertiary)"
-                destructive={failed}
-                value={progressPct / 100}
-              />
-            </div>
-          )}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-2">
+          <InstallProgress failed={failed} now={now} state={state} />
 
-          {totalCount === 0 && state.active && (
-            <div className="mb-4 flex items-center gap-2.5 text-sm text-muted-foreground">
-              <Loader className="size-5" type="fourier-flow" />
-              <span>{copy.fetchingManifest}</span>
-            </div>
-          )}
-
-          {failed && state.error && (
-            <div className="mb-4 flex items-start gap-2 text-sm">
-              <ErrorIcon className="mt-0.5 shrink-0" size="1rem" />
-              <div className="min-w-0">
-                <div className="font-medium text-destructive">{copy.error}</div>
-                <p className="mt-0.5 whitespace-pre-wrap break-words text-foreground/90">{failureLead}</p>
-                {failureDetail ? (
-                  <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-muted-foreground">
-                    {failureDetail}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          )}
+          {state.error ? <InstallFailure error={state.error} /> : null}
 
           {stages.length > 0 && (
             <ol className="mb-4 space-y-0.5">
@@ -666,126 +846,52 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
             </ol>
           )}
 
-          <div className="pt-3">
-            <Button
-              className="-ml-2 text-muted-foreground hover:text-foreground"
-              onClick={() => setLogOpen(v => !v)}
-              size="xs"
-              type="button"
-              variant="ghost"
-            >
-              {logOpen ? <ChevronDown className={iconSize.sm} /> : <ChevronRight className={iconSize.sm} />}
-              <span>{logOpen ? copy.hideOutput : copy.showOutput}</span>
-              <span className="ml-1 tabular-nums">({copy.lines(state.log.length)})</span>
-            </Button>
-
-            {logOpen && (
-              <LogView className={cn('mt-2', failed ? 'max-h-96' : 'max-h-64')}>
-                {state.log.length === 0 ? (
-                  <div>{copy.noOutput}</div>
-                ) : (
-                  <>
-                    {state.log.map((entry, i) => (
-                      <div className={cn(entry.stream === 'stderr' && 'text-muted-foreground/70')} key={i}>
-                        {entry.stage ? <span className="text-muted-foreground/60">[{entry.stage}] </span> : null}
-                        <span>{entry.line}</span>
-                      </div>
-                    ))}
-                    <div ref={logEndRef} />
-                  </>
-                )}
-              </LogView>
-            )}
-          </div>
+          <InstallOutput
+            endRef={logEndRef}
+            failed={failed}
+            log={state.log}
+            onToggle={() => setLogOpen(v => !v)}
+            open={logOpen}
+          />
         </div>
 
         {/* Active footer: let the user actually cancel a running install. */}
         {state.active && !failed && (
-          <div className="flex-shrink-0 bg-card p-4">
-            <div className="flex items-center justify-end">
-              <Button
-                disabled={cancelling}
-                onClick={async () => {
-                  setCancelling(true)
+          <InstallActiveFooter
+            cancelling={cancelling}
+            onCancel={async () => {
+              setCancelling(true)
 
-                  try {
-                    await window.hermesDesktop?.cancelBootstrap?.()
-                  } catch {
-                    // ignore -- the failed/cancelled event will surface the result
-                  }
-                }}
-                size="sm"
-                variant="ghost"
-              >
-                {cancelling ? <Loader className="size-4" type="fourier-flow" /> : null}
-                {cancelling ? copy.cancelling : copy.cancelInstall}
-              </Button>
-            </div>
-          </div>
+              try {
+                await window.hermesDesktop?.cancelBootstrap?.()
+              } catch {
+                // ignore -- the failed/cancelled event will surface the result
+              }
+            }}
+          />
         )}
 
         {/* Footer -- always visible, never scrolls; only renders on failure */}
         {failed && (
-          <div className="flex-shrink-0 bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">
-                {copy.transcriptSaved}{' '}
-                <code className="font-mono text-(--ui-text-secondary)">%LOCALAPPDATA%\hermes\logs\</code>
-              </span>
-              <div className="flex gap-2">
-                <Button onClick={() => setState(EMPTY_STATE)} size="sm" variant="ghost">
-                  {t.common.close}
-                </Button>
-                <Button
-                  onClick={() => void window.hermesDesktop?.revealLogs?.().catch(() => undefined)}
-                  size="sm"
-                  variant="ghost"
-                >
-                  {copy.openLogs}
-                </Button>
-                <Button
-                  onClick={async () => {
-                    const text = state.log
-                      .map(entry => (entry.stage ? `[${entry.stage}] ${entry.line}` : entry.line))
-                      .join('\n')
+          <InstallFailedFooter
+            copied={copied}
+            onClose={() => setState(EMPTY_STATE)}
+            onCopyOutput={async () => {
+              const text = state.log
+                .map(entry => (entry.stage ? `[${entry.stage}] ${entry.line}` : entry.line))
+                .join('\n')
 
-                    const fullText = state.error ? `Error: ${state.error}\n\n${text}` : text
+              const fullText = state.error ? `Error: ${state.error}\n\n${text}` : text
 
-                    try {
-                      await writeClipboardText(fullText)
-                      setCopied(true)
-                      window.setTimeout(() => setCopied(false), 1500)
-                    } catch {
-                      // ignore -- some environments forbid clipboard writes
-                    }
-                  }}
-                  size="sm"
-                  variant="secondary"
-                >
-                  {copied ? copy.copiedOutput : copy.copyOutput}
-                </Button>
-                <Button
-                  onClick={async () => {
-                    // Tell main.ts to clear its latched failure BEFORE we
-                    // reload. Otherwise the renderer reload calls getConnection
-                    // and main short-circuits to the latched error without
-                    // re-running install.ps1.
-                    try {
-                      await window.hermesDesktop?.resetBootstrap?.()
-                    } catch {
-                      // best-effort -- continue with reload regardless
-                    }
-
-                    window.location.reload()
-                  }}
-                  size="sm"
-                  variant="default"
-                >
-                  {copy.reloadRetry}
-                </Button>
-              </div>
-            </div>
-          </div>
+              try {
+                await writeClipboardText(fullText)
+                setCopied(true)
+                window.setTimeout(() => setCopied(false), 1500)
+              } catch {
+                // ignore -- some environments forbid clipboard writes
+              }
+            }}
+          />
         )}
       </div>
     </div>

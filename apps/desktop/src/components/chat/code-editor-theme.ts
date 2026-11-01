@@ -90,7 +90,7 @@ export function githubEditorTheme(dark: boolean): Extension {
       {
         '&': { backgroundColor: 'transparent', color: p.fg },
         '&.cm-focused .cm-selectionBackground, .cm-content ::selection, .cm-selectionBackground': {
-          backgroundColor: dark ? 'rgba(56,139,253,0.25)' : 'rgba(84,174,255,0.28)'
+          backgroundColor: 'var(--linear-selection)'
         },
         // Match the read view's gutter: dim, right-aligned line numbers.
         '.cm-content': { caretColor: p.fg },

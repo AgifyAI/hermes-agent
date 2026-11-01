@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -47,12 +48,13 @@ export function QuestionBlock({
           {question.question}
         </span>
         {choices.length > 0 ? (
-          <span
-            className="mt-px shrink-0 rounded-sm bg-(--chrome-action-hover) px-1 py-px text-[0.625rem] text-(--ui-text-tertiary)"
+          <Badge
+            className="mt-0.5"
             data-clarify-select-mode={question.multiSelect ? 'multi' : 'single'}
+            variant="muted"
           >
             {question.multiSelect ? copy.multiSelectHint : copy.singleSelectHint}
-          </span>
+          </Badge>
         ) : null}
       </div>
 
@@ -71,7 +73,7 @@ export function QuestionBlock({
             />
           ))}
           <label
-            className={cn(OPTION_ROW_CLASS, 'items-center', otherActive && 'bg-(--chrome-action-hover)')}
+            className={cn(OPTION_ROW_CLASS, 'items-center', otherActive && 'bg-(--linear-hover-control)')}
             data-highlighted={otherActive || undefined}
           >
             <KeyBadge

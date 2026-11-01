@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 import { PAGE_MAX_W } from '../layout-constants'
 
-import { OVERLAY_TOP_CLEARANCE } from './overlay-view'
+import { OVERLAY_PANEL_SURFACE } from './overlay-view'
 
 // The wide rail and the narrow dropdown swap at exactly the width where
 // OverlaySplitLayout drops to a single column, so the rail never stacks.
@@ -57,7 +57,7 @@ export function OverlaySplitLayout({ children, className }: OverlaySplitLayoutPr
         // Narrow: one column, and pin rows to [nav-bar auto | main 1fr] — without
         // an explicit template the grid's default align-content:stretch splits the
         // height evenly across the two rows, shoving the content to mid-screen.
-        'grid h-full min-h-0 flex-1 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden bg-transparent max-[47.5rem]:grid-cols-1 max-[47.5rem]:grid-rows-[auto_minmax(0,1fr)]',
+        'grid h-full min-h-0 flex-1 grid-cols-[15.25rem_minmax(0,1fr)] overflow-hidden bg-transparent max-[47.5rem]:grid-cols-1 max-[47.5rem]:grid-rows-[auto_minmax(0,1fr)]',
         className
       )}
     >
@@ -70,12 +70,8 @@ export function OverlaySidebar({ children, className }: OverlaySidebarProps) {
   return (
     <aside
       className={cn(
-        // The left links sit beside (not under) the floating close button, so
-        // they ride up via the shorter shared OVERLAY_TOP_CLEARANCE (same line
-        // as a Panel header) instead of main's taller X-clearance. The bg still
-        // fills from the card's top edge, so there's no gap above the sidebar.
-        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--ui-sidebar-surface-background) px-2.5 pb-3',
-        OVERLAY_TOP_CLEARANCE,
+        // Linear's settings nav sits on the window colour beside the content.
+        'flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-(--linear-bg-window) px-3 pt-2.5 pb-3',
         className
       )}
       // Every overlay's left nav (settings, cron, profiles, agents) answers to
@@ -90,22 +86,21 @@ export function OverlaySidebar({ children, className }: OverlaySidebarProps) {
 
 export function OverlayMain({ children, className }: OverlayMainProps) {
   return (
-    <main
-      className={cn(
-        // Main sits UNDER the floating close button (top-right), so it keeps the
-        // taller top pad to clear the X — unlike the sidebar / Panel header,
-        // which sit to its left and ride up via OVERLAY_TOP_CLEARANCE. All four
-        // paddings are 1/3 tighter than the raw values (×2/3): the wide/narrow
-        // top clearance, the bottom gutter, and the horizontal clamp gutter
-        // (inlined from PAGE_INSET_X so only overlay panes tighten, not the
-        // shared page gutter). Narrow top drops toward the OverlayNav bar.
-        'mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-transparent pb-2 pt-[calc((var(--titlebar-height)/2+1rem)*2/3)] max-[47.5rem]:pt-[calc(0.5rem*2/3)] px-[clamp(0.8333rem,2.6667vw,2.6667rem)]',
-        PAGE_MAX_W,
-        className
-      )}
-    >
-      {children}
-    </main>
+    <div className={cn('mr-2 mb-2 flex min-h-0 min-w-0 flex-col max-[47.5rem]:ml-2', OVERLAY_PANEL_SURFACE)}>
+      <main
+        className={cn(
+          // All four paddings are 1/3 tighter than the raw values (×2/3): the
+          // top pad, the bottom gutter, and the horizontal clamp gutter (inlined
+          // from PAGE_INSET_X so only overlay panes tighten, not the shared page
+          // gutter). Narrow top drops toward the OverlayNav bar.
+          'mx-auto flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-transparent pb-2 pt-[calc((var(--titlebar-height)/2+1rem)*2/3)] max-[47.5rem]:pt-[calc(0.5rem*2/3)] px-[clamp(0.8333rem,2.6667vw,2.6667rem)]',
+          PAGE_MAX_W,
+          className
+        )}
+      >
+        {children}
+      </main>
+    </div>
   )
 }
 
@@ -126,18 +121,16 @@ export const OverlayNavItem = memo(function OverlayNavItem({
       aria-current={current ? 'page' : undefined}
       aria-pressed={pressed}
       className={cn(
-        'row-hover flex h-7 w-full shrink-0 items-center justify-start gap-2 rounded-md border px-2 text-left text-[length:var(--conversation-text-font-size)] font-normal transition-colors',
-        nested
-          ? active
-            ? current
-              ? 'border-transparent bg-(--chrome-action-hover) font-medium text-foreground'
-              : // Ancestor of the current page (a plugin whose sub-page is open):
-                // named, not filled, so exactly one nested row reads as selected.
-                'border-transparent bg-transparent font-medium text-foreground hover:bg-(--chrome-action-hover)'
-            : 'border-transparent bg-transparent text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+        // Linear's settings nav row: 28px, radius 8, 10px left / 9px right,
+        // 13px/500 in the sidebar ink; hover and active use the sidebar fills.
+        'flex h-7 w-full shrink-0 cursor-pointer items-center justify-start gap-2 rounded-(--linear-radius-control) pr-[0.5625rem] pl-2.5 text-left text-[0.8125rem] font-medium transition-colors duration-(--linear-speed-quick) hover:transition-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        current
+          ? 'bg-(--linear-active-sidebar) text-(--linear-text-primary)'
           : active
-            ? 'border-(--ui-stroke-tertiary) bg-(--ui-bg-tertiary) text-foreground'
-            : 'border-transparent bg-transparent text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+            ? // Ancestor of the current page (a group or plugin whose sub-page is
+              // open): named, not filled, so exactly one row reads as selected.
+              'text-(--linear-text-primary) hover:bg-(--linear-hover-sidebar)'
+            : 'text-(--linear-text-sidebar) hover:bg-(--linear-hover-sidebar) hover:text-(--linear-text-primary)'
       )}
       // Names the row by its own id, so a tour can address one link
       // (`[data-tour="nav-models"]`) instead of guessing at nth-child.
@@ -148,11 +141,7 @@ export const OverlayNavItem = memo(function OverlayNavItem({
       {leading}
       {Icon && (
         <Icon
-          className={cn(
-            'shrink-0',
-            nested ? 'size-3.5' : 'size-4',
-            active ? 'text-foreground/80' : 'text-muted-foreground/80'
-          )}
+          className={cn('shrink-0 text-(--linear-icon)', nested ? 'size-3.5' : 'size-4', !active && 'opacity-80')}
         />
       )}
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -186,7 +175,16 @@ export interface OverlayNavGroup extends OverlayNavLink {
 // dropdown in PageSearchShell), so every OverlaySplitLayout pane degrades the
 // same way instead of stacking its whole sidebar. Drop it in as the first
 // child of an OverlaySplitLayout, before OverlayMain.
-export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: OverlayNavGroup[] }) {
+export function OverlayNav({
+  footer,
+  groups,
+  header
+}: {
+  footer?: ReactNode
+  groups: OverlayNavGroup[]
+  /** Above the links (Linear's "Back to app" and search). Rail only. */
+  header?: ReactNode
+}) {
   const { t } = useI18n()
   const navId = useId()
   const [disclosures, setDisclosures] = useState<Record<string, boolean>>({})
@@ -216,6 +214,7 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
   return (
     <>
       <OverlaySidebar className={RAIL_HIDDEN}>
+        {header}
         {groups.map(group => {
           const hasChildren = Boolean(group.children?.length)
           const expanded = disclosures[group.id] ?? group.active
@@ -223,7 +222,7 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
 
           return (
             <Fragment key={group.id}>
-              {group.gapBefore && <div aria-hidden className="h-2" />}
+              {group.gapBefore && <div aria-hidden className="h-3" />}
               <div className="relative">
                 <OverlayNavItem
                   active={group.active}
@@ -307,14 +306,10 @@ export function OverlayNav({ footer, groups }: { footer?: ReactNode; groups: Ove
         {footer && <div className="mt-auto flex items-center gap-1 pt-2">{footer}</div>}
       </OverlaySidebar>
 
-      {/* Narrow: ride the OverlayView titlebar strip so the dropdown shares the
-          close button's row instead of taking its own. The bar is
-          pointer-events-none (children opt back in) so the floating X underneath
-          stays clickable; pr clears it, no-drag beats the strip's drag region,
-          and the height matches the strip so the trigger lines up with the X. */}
+      {/* Narrow: the rail collapses to a dropdown row under the titlebar strip. */}
       <div
         className={cn(
-          'pointer-events-none relative z-20 h-[calc(var(--titlebar-height)+0.1875rem)] items-center justify-between gap-2 pl-3 pr-[calc(var(--titlebar-tools-right,0.75rem)+2.25rem)]',
+          'pointer-events-none relative z-20 h-(--titlebar-height) items-center justify-between gap-2 px-3',
           BAR_HIDDEN
         )}
       >

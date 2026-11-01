@@ -89,9 +89,7 @@ export function QuickEntrySettings() {
           status && (
             <div
               className={
-                state.error
-                  ? 'mt-1 text-[length:var(--conversation-caption-font-size)] text-amber-500/90'
-                  : 'mt-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)'
+                state.error ? 'mt-1 text-xs text-(--linear-orange)' : 'mt-1 text-xs text-(--linear-text-tertiary)'
               }
             >
               {status}

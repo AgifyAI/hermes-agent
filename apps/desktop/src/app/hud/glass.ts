@@ -56,9 +56,8 @@ const DRAWER_SELECTOR = '[data-slot="composer-completion-drawer"]'
  *   mounts inside the composer subtree from three different call sites, so a
  *   prop would need every one of them to remember.
  *
- * Whether the frost is wanted AT ALL is the user's translucency setting, and
- * that answer lives in main (`hudFrostFor`) next to the state it reads. This
- * hook reports what the band is doing; it does not decide the material.
+ * This hook reports what the band is doing; main (hud-ipc.ts) picks the
+ * material and applies it on macOS only.
  */
 export function useHudGlass(rootRef: RefObject<HTMLElement | null>, backing: boolean): void {
   useEffect(() => {

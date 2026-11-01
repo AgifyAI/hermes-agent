@@ -10,6 +10,7 @@ import { RowButton } from '@/components/ui/row-button'
 import { Tip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { $sidebarRowMeta } from '@/store/layout'
+import type { SessionListDensity } from '@/store/session-list-density'
 import type { TileDock } from '@/store/session-states'
 
 import {
@@ -26,7 +27,7 @@ import {
 
 /** The muted slot beside a section label (loading glyph, status hint). */
 export function SidebarSectionMeta({ children }: { children: React.ReactNode }) {
-  return <span className="shrink-0 text-[0.6875rem] font-medium text-(--ui-text-quaternary)">{children}</span>
+  return <span className="shrink-0 text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{children}</span>
 }
 
 // Row geometry lives in `row-geometry.ts` — see that file for why each class
@@ -38,7 +39,7 @@ export { SIDEBAR_LEAD_ICON_SIZE, SIDEBAR_ROW_CARD_MIN_H, SIDEBAR_TRUNCATED_LEADI
 // SidebarSectionHeader), mirroring the artifacts/file browser header
 // affordances. focus-visible keeps them keyboard-reachable.
 const HEADER_ACTION_BTN =
-  'text-(--ui-text-tertiary) opacity-0 transition-opacity hover:bg-(--ui-control-hover-background) hover:text-foreground group-hover/section:opacity-100 focus-visible:opacity-100'
+  'text-(--linear-icon) opacity-0 transition-opacity hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) group-hover/section:opacity-100 focus-visible:opacity-100'
 
 // The sessions section header's "+" — the flat list's top-level new-session
 // control. Also a drag source, the same gesture as the nav's "New session"
@@ -120,23 +121,32 @@ export function SidebarRowNest({ className, ...props }: React.ComponentProps<'di
  * `toggle` is set the whole caption collapses the sessions beneath it, same
  * gesture as a repo header (the hover caret is the tell).
  */
+const DAY_HEADING_SPACING: Record<SessionListDensity, string> = {
+  compact: 'pt-3',
+  comfortable: 'pt-4',
+  detailed: 'pt-6'
+}
+
 export function SidebarDateDivider({
   action,
-  centered = false,
   className,
   label,
+  spacing = 'compact',
   toggle,
   ...props
 }: React.ComponentProps<'div'> & {
   action?: React.ReactNode
-  // Day sections centre their caption over the rows they head. Status runs
-  // ("Working" / "Done") stay left-aligned with the list's other captions.
-  centered?: boolean
   label: string
+  // Top separation for a day heading. Status runs keep the default; day
+  // sections use the user's density preference, so the extra air sits between
+  // days instead of between the sessions inside one day.
+  spacing?: SessionListDensity
   toggle?: { ariaLabel: string; onToggle: () => void; open: boolean }
 }) {
   const caption = (
-    <span className="shrink-0 text-xs font-medium tracking-normal text-(--ui-text-tertiary)">{label}</span>
+    <span className="shrink-0 text-xs font-medium tracking-normal text-(--linear-text-tertiary) group-hover/workspace:text-(--linear-text-primary)">
+      {label}
+    </span>
   )
 
   return (
@@ -145,8 +155,8 @@ export function SidebarDateDivider({
     // groups the rows — no timeline rule; Linear's list headers are quiet text.
     <div
       className={cn(
-        'group/workspace flex select-none items-center gap-2 px-2 pb-0.5 pt-2',
-        centered && 'relative',
+        'group/workspace flex select-none items-center gap-2 px-2 pb-0.5',
+        DAY_HEADING_SPACING[spacing],
         className
       )}
       {...props}
@@ -155,29 +165,20 @@ export function SidebarDateDivider({
         <button
           aria-expanded={toggle.open}
           aria-label={toggle.ariaLabel}
-          className={cn(
-            'flex min-w-0 flex-1 items-center gap-1.5 bg-transparent',
-            centered ? 'justify-center' : 'text-left'
-          )}
+          className="flex min-w-0 flex-1 items-center gap-1.5 bg-transparent text-left"
           onClick={toggle.onToggle}
           type="button"
         >
           {caption}
           <DisclosureCaret
-            className="text-(--ui-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
+            className="text-(--linear-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
             open={toggle.open}
           />
         </button>
       ) : (
-        <div className={cn('flex min-w-0 flex-1', centered && 'justify-center')}>{caption}</div>
+        <>{caption}</>
       )}
-      {/* The hover "+" must not pull a centred caption off-centre: outside the
-          flex flow when centred, it floats at the row's end. */}
-      {centered && action ? (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2">{action}</div>
-      ) : (
-        action
-      )}
+      {action}
     </div>
   )
 }
@@ -199,7 +200,7 @@ export function SidebarRowShell({
       className={cn(
         SIDEBAR_ROW_MIN_H,
         SIDEBAR_ROW_PAD_TRAIL,
-        'grid grid-cols-[minmax(0,1fr)_auto] items-stretch rounded-md',
+        'grid grid-cols-[minmax(0,1fr)_auto] items-stretch rounded-(--linear-radius-control)',
         className
       )}
       {...props}
@@ -295,7 +296,7 @@ export function SidebarGroupRow({
         // group, never both at once.
         facts.length ? (
           <div className="relative flex items-center">
-            <span className="min-w-9 whitespace-nowrap text-right text-[0.625rem] leading-none text-(--ui-text-tertiary) transition-opacity group-hover/workspace:opacity-0">
+            <span className="min-w-9 whitespace-nowrap text-right text-[0.6875rem] font-[450] leading-none text-(--linear-text-tertiary) transition-opacity group-hover/workspace:opacity-0">
               {facts.join(' · ')}
             </span>
             {actions ? <div className="absolute right-0 flex items-center">{actions}</div> : null}
@@ -320,7 +321,7 @@ export function SidebarGroupRow({
               type="button"
             >
               <DisclosureCaret
-                className="shrink-0 text-(--ui-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
+                className="shrink-0 text-(--linear-text-tertiary) opacity-0 transition group-hover/workspace:opacity-100"
                 open={toggle.open}
               />
             </button>
@@ -366,8 +367,8 @@ export function SidebarRowGrab({
       </span>
       <Codicon
         className={cn(
-          'absolute text-(--ui-text-quaternary) opacity-0 transition-opacity group-hover/handle:opacity-80 group-focus-within/handle:opacity-80 hover:text-(--ui-text-secondary)',
-          dragging && 'text-(--ui-text-secondary) opacity-100'
+          'absolute text-(--linear-text-quaternary) opacity-0 transition-opacity group-hover/handle:opacity-80 group-focus-within/handle:opacity-80 hover:text-(--linear-text-secondary)',
+          dragging && 'text-(--linear-text-secondary) opacity-100'
         )}
         name="grabber"
         size="0.75rem"
@@ -388,7 +389,7 @@ export function SidebarRowLeadGlyph({
 }) {
   return (
     <span
-      className={cn('grid size-full place-items-center text-(--ui-text-tertiary) [&_.codicon]:leading-none', className)}
+      className={cn('grid size-full place-items-center text-(--linear-text-sidebar) [&_.codicon]:leading-none', className)}
       style={style}
     >
       {children}

@@ -49,8 +49,8 @@ describe('QuickEntryApp', () => {
     expect(options).toHaveLength(3)
 
     for (const option of options) {
-      expect(option.style.color).toBe('var(--ui-text-primary, var(--foreground))')
-      expect(option.style.backgroundColor).toBe('var(--ui-bg-elevated, var(--background))')
+      expect(option.style.color).toBe('var(--linear-text-overlay)')
+      expect(option.style.backgroundColor).toBe('var(--linear-bg-overlay)')
     }
   })
 })

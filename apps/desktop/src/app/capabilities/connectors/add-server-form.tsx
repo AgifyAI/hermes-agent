@@ -41,7 +41,7 @@ export function AddServerForm({ draft, nameTaken, onChange }: AddServerFormProps
 
       <Field label={copy.name}>
         <Input onChange={event => set({ name: event.currentTarget.value })} size="sm" value={draft.name} />
-        {nameTaken ? <p className="text-[0.65rem] text-(--ui-red)">{copy.nameTaken}</p> : null}
+        {nameTaken ? <p className="text-[0.6875rem] text-(--linear-red)">{copy.nameTaken}</p> : null}
       </Field>
 
       <Fieldset label={copy.type}>
@@ -178,18 +178,18 @@ function PasteBox({
     <Fieldset label={copy.pasteLabel}>
       <Textarea
         aria-label={copy.pasteLabel}
-        className="max-h-32 min-h-16 font-mono text-[0.68rem]"
+        className="max-h-32 min-h-16 font-mono text-[0.6875rem]"
         onChange={event => read(event.currentTarget.value)}
         placeholder={copy.pastePlaceholder}
         value={text}
       />
-      {failed ? <p className="text-[0.65rem] text-(--ui-text-tertiary)">{copy.pasteNoMatch}</p> : null}
+      {failed ? <p className="text-[0.6875rem] text-(--linear-text-tertiary)">{copy.pasteNoMatch}</p> : null}
     </Fieldset>
   )
 }
 
 function FieldLabel({ children }: { children: string }) {
-  return <span className="text-xs font-medium text-(--ui-text-primary)">{children}</span>
+  return <span className="text-xs font-medium text-(--linear-text-primary)">{children}</span>
 }
 
 function Field({ children, label }: { children: ReactNode; label: string }) {
@@ -214,7 +214,7 @@ function TrashButton({ label, onClick }: { label: string; onClick: () => void })
   return (
     <Button
       aria-label={label}
-      className="shrink-0 text-(--ui-text-tertiary)"
+      className="shrink-0 text-(--linear-text-tertiary)"
       onClick={onClick}
       size="icon-xs"
       variant="ghost"

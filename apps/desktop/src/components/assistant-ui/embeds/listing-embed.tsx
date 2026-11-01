@@ -26,8 +26,8 @@ const META_CLASS = 'text-[length:var(--conversation-tool-font-size)]'
  * renderer makes it browsable.
  *
  * It sits on the same shell as every other inline widget
- * (`WIDGET_SHELL_CLASS`: one radius above the composer, mode-derived fill, no
- * border) and uses the conversation's own type scale, so a listing reads as
+ * (`WIDGET_SHELL_CLASS`: a Linear card — 10px radius, card fill, one
+ * hairline) and uses the conversation's own type scale, so a listing reads as
  * app surface rather than a pasted webpage.
  *
  * Facts ride a quiet meta line; catches get ONE muted line, not a wall of
@@ -81,21 +81,27 @@ function ListingCard({ listing }: { listing: Listing }) {
 
       <span className="block px-3.5 py-3">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <span className={cn(TEXT_CLASS, 'font-medium text-foreground')}>{listing.address}</span>
+          <span className={cn(TEXT_CLASS, 'font-medium text-(--linear-text-primary)')}>{listing.address}</span>
           {listing.price && (
-            <span className={cn(TEXT_CLASS, 'font-medium tabular-nums text-foreground')}>{listing.price}</span>
+            <span className={cn(TEXT_CLASS, 'font-medium tabular-nums text-(--linear-text-primary)')}>
+              {listing.price}
+            </span>
           )}
         </span>
 
-        {meta && <span className={cn(META_CLASS, 'mt-0.5 block tabular-nums text-muted-foreground')}>{meta}</span>}
+        {meta && (
+          <span className={cn(META_CLASS, 'mt-0.5 block tabular-nums text-(--linear-text-tertiary)')}>{meta}</span>
+        )}
 
         {listing.note && (
-          <span className={cn(TEXT_CLASS, 'mt-1.5 block leading-relaxed text-foreground/80')}>{listing.note}</span>
+          <span className={cn(TEXT_CLASS, 'mt-1.5 block leading-relaxed text-(--linear-text-secondary)')}>
+            {listing.note}
+          </span>
         )}
 
         {listing.catches.length > 0 && (
-          <span className={cn(META_CLASS, 'mt-2 flex gap-1.5 text-muted-foreground')}>
-            <Codicon className="mt-px shrink-0 text-amber-500" name="warning" size="0.75rem" />
+          <span className={cn(META_CLASS, 'mt-2 flex gap-1.5 text-(--linear-text-tertiary)')}>
+            <Codicon className="mt-px shrink-0 text-(--linear-yellow)" name="warning" size="0.75rem" />
             <span className="min-w-0">{listing.catches.join(' · ')}</span>
           </span>
         )}
@@ -234,7 +240,7 @@ function GalleryTile({
   return (
     <Tip label={label}>
       <button
-        className={cn('relative block size-full cursor-zoom-in overflow-hidden bg-muted/55', className)}
+        className={cn('relative block size-full cursor-zoom-in overflow-hidden bg-(--linear-bg-secondary)', className)}
         onClick={onOpen}
         type="button"
       >
@@ -250,7 +256,7 @@ function GalleryTile({
           <span
             className={cn(
               TEXT_CLASS,
-              'absolute inset-0 grid place-items-center bg-background/55 font-medium tabular-nums text-foreground backdrop-blur-[2px]'
+              'absolute inset-0 grid place-items-center bg-(--linear-bg-card)/70 font-medium tabular-nums text-(--linear-text-primary)'
             )}
           >
             +{more}

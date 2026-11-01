@@ -12,6 +12,13 @@ export interface DesktopProfileRoute {
 
 export const DESKTOP_PROFILE_NAME_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/
 
+/** A window's profile key, as `hermes --profile <name>` names it; anything invalid is `default`. */
+export function desktopProfileKey(profile: null | string | undefined): string {
+  const name = typeof profile === 'string' ? profile.trim() : ''
+
+  return name && name !== 'default' && DESKTOP_PROFILE_NAME_RE.test(name) ? name : 'default'
+}
+
 export function requireDesktopProfileRoute(value: unknown): DesktopProfileRoute {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('A connection and profile route is required.')

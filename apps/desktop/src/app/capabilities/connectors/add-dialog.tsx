@@ -83,8 +83,8 @@ export function AddServerDialog({ controller, onOpenChange, open, profile }: Add
         }
         fitContent
       >
-        <header className="flex shrink-0 items-center border-b border-(--ui-stroke-tertiary) px-5 py-3">
-          <DialogTitle className="text-base font-semibold">{copy.title}</DialogTitle>
+        <header className="flex shrink-0 items-center border-b-[0.5px] border-(--linear-border-panel) px-5 py-3">
+          <DialogTitle>{copy.title}</DialogTitle>
         </header>
         <DialogDescription className="sr-only">{copy.hint}</DialogDescription>
 
@@ -98,7 +98,7 @@ export function AddServerDialog({ controller, onOpenChange, open, profile }: Add
           </div>
         )}
 
-        <footer className="flex shrink-0 items-center gap-2 border-t border-(--ui-stroke-tertiary) px-5 py-3">
+        <footer className="flex shrink-0 items-center gap-2 border-t-[0.5px] border-(--linear-border-panel) px-5 py-3">
           {raw ? (
             <Button onClick={leaveRaw} size="sm" variant="outline">
               {t.common.back}

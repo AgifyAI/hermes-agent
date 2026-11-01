@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useRef, useState } from 'react'
 
 import { useResizeObserver } from '@/hooks/use-resize-observer'
+import { cn } from '@/lib/utils'
 
 interface PaneBodyProps {
   /** Wraps the body's own element (the zone's right-click menu) WITHOUT an
@@ -8,13 +9,18 @@ interface PaneBodyProps {
    *  triggers attach to it directly. */
   wrap?: (body: ReactNode) => ReactNode
   hidden: boolean
+  /** Linear's content panel: the body becomes the inset card (radius 12,
+   *  hairline, low shadow, 8px off the right and bottom) on the window surface.
+   *  Off for navigation columns, which sit flush on the window like Linear's
+   *  sidebar. */
+  panel?: boolean
   children: ReactNode
 }
 
 /** Collapse the zone, not its guests. Retaining the last visible viewport lets
  * background browser input use the same page coordinates while the restore
  * rail occupies only a sliver of the layout. Never detach/reparent a webview. */
-export function PaneBody({ wrap, hidden, children }: PaneBodyProps) {
+export function PaneBody({ wrap, hidden, panel = false, children }: PaneBodyProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<{ width: number; height: number }>()
 
@@ -39,7 +45,11 @@ export function PaneBody({ wrap, hidden, children }: PaneBodyProps) {
 
   const body = (
     <div
-      className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+      className={cn(
+        'relative min-h-0 min-w-0 flex-1 overflow-hidden',
+        panel &&
+          'mr-2 mb-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) shadow-(--linear-shadow-low)'
+      )}
       ref={ref}
       style={hidden ? { position: 'absolute', visibility: 'hidden', pointerEvents: 'none', ...size } : undefined}
     >

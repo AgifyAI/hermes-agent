@@ -13,13 +13,13 @@
 .kanban-arc {
   pointer-events: none;
   position: absolute;
-  inset: -1px; /* sit on the card's own border line */
+  inset: 0; /* the card's edge is its shadow hairline; sit on it */
   border-radius: inherit;
   padding: 1.5px; /* arc thickness */
   background: conic-gradient(
     from var(--kanban-arc-angle),
     transparent 0deg,
-    var(--kanban-tone, var(--ui-stroke-primary)) 55deg,
+    var(--kanban-tone, var(--linear-border-tertiary)) 55deg,
     transparent 110deg
   );
   -webkit-mask:
@@ -35,7 +35,7 @@
 
 /* Running but no heartbeat: amber crawl — still claimed, health unknown. */
 .kanban-arc--stale {
-  --kanban-tone: #fbbf24;
+  --kanban-tone: var(--linear-yellow);
   animation-duration: 6s;
 }
 

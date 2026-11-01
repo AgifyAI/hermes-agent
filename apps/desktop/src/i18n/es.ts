@@ -590,6 +590,8 @@ export const esOverrides = {
       'session.slot.8': 'Cambiar a la sesión reciente 8',
       'session.slot.9': 'Cambiar a la sesión reciente 9',
       'session.focusSearch': 'Buscar sesiones',
+      'session.rename': 'Renombrar conversación',
+      'view.reload': 'Recargar ventana',
       'session.togglePin': 'Fijar / desfijar sesión actual',
       'session.archive': 'Archivar la sesión actual',
       'workspace.newWorktree': 'Nuevo worktree',
@@ -970,7 +972,7 @@ export const esOverrides = {
       chatTextScaleDesc:
         'Ajusta el texto de la conversación y del editor respecto a la escala de la interfaz. Las barras laterales y los controles mantienen su tamaño.',
       title: 'Apariencia',
-      intro: 'Solo escritorio. El modo es el brillo; el tema es la paleta y el marco del chat.',
+      intro: 'Solo escritorio. Hermes tiene un único aspecto, inspirado en Linear, en claro y oscuro.',
       colorMode: 'Modo de color',
       colorModeDesc: 'Elige un modo fijo o deja que Hermes siga la configuración del sistema.',
       toolViewTitle: 'Visualización de llamadas a herramientas',
@@ -986,7 +988,7 @@ export const esOverrides = {
       uiScaleDesc: percent =>
         `Escala el texto y los controles de toda la app. También funciona Cmd/Ctrl con +, - y 0. Actual: ${percent}%.`,
       sessionDensityTitle: 'Densidad de la lista de sesiones',
-      sessionDensityDesc: 'Elige cuánto contexto aparece bajo los títulos de las sesiones en la barra lateral.',
+      sessionDensityDesc: 'Elige cuánto espacio separa los grupos de días en la barra lateral.',
       sessionDensityCompact: 'Compacta',
       sessionDensityComfortable: 'Cómoda',
       sessionDensityDetailed: 'Detallada',
@@ -1013,30 +1015,8 @@ export const esOverrides = {
       chatFontPreview: 'Vista previa',
       chatFontSample: 'El veloz murciélago hindú comía feliz cardillo y kiwi. 0123456789',
       chatFontReset: 'Usar la fuente predeterminada',
-      translucencyTitle: 'Translucidez de la ventana',
-      translucencyDesc: 'Verás tu escritorio a través de toda la ventana. Solo macOS y Windows.',
-      translucencyGlassDesc:
-        'Vidrio mate: el escritorio se ve a través con un desenfoque suave mientras el texto se mantiene nítido. Ajustado por separado para claro y oscuro.',
-      translucencyModeClear: 'Transparente',
-      translucencyModeGlass: 'Vidrio',
-      translucencyTintTitle: 'Tinte',
-      translucencyFadeTitle: 'Atenuación',
-      translucencyFrostTitle: 'Escarcha',
-      translucencyFrost: {
-        'under-window': 'Profunda',
-        popover: 'Suave',
-        titlebar: 'Brillante',
-        header: 'Resplandor'
-      },
-      translucencyScopeTitle: 'Área',
-      translucencyScope: {
-        window: 'Toda la ventana',
-        sidebar: 'Solo la barra lateral'
-      },
       backdropTitle: 'Fondo del chat',
       backdropDesc: 'La tenue imagen de la estatua detrás de la conversación.',
-      userBubbleTitle: 'Burbuja de mensaje',
-      userBubbleDesc: 'Cuánta transparencia tienen tus propios mensajes. Opaca en 0; en 100 solo queda el contorno.',
       textDirectionTitle: 'Dirección del texto',
       textDirectionDesc:
         'Cómo eligen su dirección los mensajes del chat y el campo de escritura. Auto sigue la primera letra de cada párrafo; elige una dirección cuando un texto mixto se alinee mal. El código siempre va de izquierda a derecha.',
@@ -1079,20 +1059,7 @@ export const esOverrides = {
       productDesc: 'Actividad de herramientas legible con resúmenes concisos.',
       technical: 'Técnico',
       technicalDesc: 'Incluye argumentos/resultados sin procesar y detalles de bajo nivel.',
-      themeTitle: 'Tema',
-      themeDesc: 'Paletas solo para escritorio. Se aplican sobre el modo seleccionado.',
-      themeSearchPlaceholder: 'Busca en tus temas o en el VS Code Marketplace…',
-      themeProfileNote: profile => `Guardado para el perfil ${profile}; cada perfil conserva su propio tema.`,
-      installTitle: 'Instalar desde VS Code',
-      installDesc:
-        'Pega un ID de extensión de Marketplace (por ejemplo, dracula-theme.theme-dracula) para convertir su tema de color en una paleta de escritorio.',
-      installPlaceholder: 'publisher.extension',
-      installButton: 'Instalar',
-      installing: 'Instalando…',
-      installError: 'No se pudo instalar ese tema.',
-      installed: name => `Instalado “${name}”.`,
-      removeTheme: 'Quitar tema',
-      importedBadge: 'Importado',
+      themeProfileNote: profile => `Guardado para el perfil ${profile}; cada perfil conserva su propio modo.`,
       pet: {
         title: 'Mascota',
         intro:
@@ -2666,7 +2633,6 @@ export const esOverrides = {
     commandCenter: 'Centro de comandos',
     appearance: 'Apariencia',
     settings: 'Configuración',
-    changeTheme: 'Cambiar tema...',
     changeColorMode: 'Cambiar modo de color...',
     pets: {
       title: 'Mascotas',
@@ -2712,18 +2678,6 @@ export const esOverrides = {
       referenceImageInvalid: 'No se pudo leer esa imagen de referencia. Prueba con un PNG, JPG, WebP o GIF.',
       adopt: 'Adoptar',
       startOver: 'Empezar de nuevo'
-    },
-    installTheme: {
-      title: 'Instalar tema…',
-      pageTitle: 'Instalar tema',
-      placeholder: 'Buscar en VS Code Marketplace…',
-      loading: 'Buscando en Marketplace…',
-      error: 'No se pudo acceder al Marketplace.',
-      empty: 'No hay temas coincidentes.',
-      install: 'Instalar',
-      installing: 'Instalando…',
-      installed: 'Instalado',
-      installs: count => `${count} instalaciones`
     },
     settingsFields: 'Campos de configuración',
     mcpServers: 'Servidores MCP',
@@ -3437,6 +3391,7 @@ export const esOverrides = {
     created: 'Cron creado',
     updated: 'Cron actualizado',
     failedLoad: 'No se pudieron cargar las tareas cron',
+    failedRuns: 'No se pudo cargar el historial de ejecuciones',
     failedUpdate: 'No se pudo actualizar la tarea cron',
     failedTrigger: 'No se pudo ejecutar la tarea cron',
     failedDelete: 'No se pudo eliminar la tarea cron',
@@ -3680,6 +3635,8 @@ export const esOverrides = {
       ageHour: 'h',
       ageMin: 'm'
     },
+    previousSessions: 'Sesiones anteriores',
+    noSessionsToday: 'Aún no hay sesiones hoy',
     dateDivider: {
       today: 'Hoy',
       yesterday: 'Ayer'

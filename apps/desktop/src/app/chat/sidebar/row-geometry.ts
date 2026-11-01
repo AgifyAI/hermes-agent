@@ -22,8 +22,9 @@ import { cn } from '@/lib/utils'
 // which is exactly where a working row paints its arc (`.arc-row` has zero
 // standoff) — the ring ran through the text.
 
-export const SIDEBAR_ROW_MIN_H = 'min-h-[1.625rem]' as const
-export const SIDEBAR_ROW_PAD_X = 'pl-2 pr-2' as const
+// Linear's sidebar row: 28px tall, `0 9px 0 8px` inside, 6px icon gap.
+export const SIDEBAR_ROW_MIN_H = 'min-h-7' as const
+export const SIDEBAR_ROW_PAD_X = 'pl-2 pr-[0.5625rem]' as const
 export const SIDEBAR_ROW_PAD_TRAIL = 'pr-2' as const
 export const SIDEBAR_ROW_GAP = 'gap-1.5' as const
 
@@ -43,8 +44,9 @@ export const SIDEBAR_ROW_INSET = cn(
 // so the extra leading just centers.
 export const SIDEBAR_TRUNCATED_LEADING = 'leading-[1.35]' as const
 
+// Linear's nav label: 13px/500 in the sidebar's own quiet grey.
 export const SIDEBAR_ROW_LABEL = cn(
-  'min-w-0 truncate text-[0.8125rem] text-(--ui-text-secondary)',
+  'min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-sidebar)',
   SIDEBAR_TRUNCATED_LEADING
 )
 

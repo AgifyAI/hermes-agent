@@ -248,14 +248,14 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
   }
 
   return (
-    <div className="rounded-xl border border-(--ui-stroke-secondary) bg-(--ui-surface-secondary,transparent) p-3">
+    <div className="rounded-(--linear-radius-card) bg-(--linear-bg-card) p-4 shadow-(--linear-shadow-card)">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[length:var(--conversation-text-font-size)] font-medium">{q.quickSetup}</span>
+            <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{q.quickSetup}</span>
             <Badge variant="success">{q.recommended}</Badge>
           </div>
-          <p className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
+          <p className="mt-[3px] text-xs font-[450] text-(--linear-text-tertiary)">
             {q.quickHelp}
           </p>
         </div>
@@ -275,12 +275,12 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
       {phase === 'idle' && connectedBot && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Badge variant="success">{t.messaging.states.connected}</Badge>
-          <span className="font-mono text-xs text-muted-foreground">@{connectedBot}</span>
+          <span className="font-mono text-xs text-(--linear-text-tertiary)">@{connectedBot}</span>
         </div>
       )}
 
       {platform.configured && phase === 'idle' && !connectedBot && (
-        <p className="mt-2 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-muted-foreground">
+        <p className="mt-2 text-xs font-[450] text-(--linear-text-tertiary)">
           {q.replaceWarning}
         </p>
       )}
@@ -288,12 +288,12 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
       {error && <ErrorBanner className="mt-3">{error}</ErrorBanner>}
 
       {setup && qrDataUrl && (
-        <div className="mt-3 grid gap-4 border-t border-(--ui-stroke-secondary) pt-3 lg:grid-cols-[minmax(0,1fr)_240px]">
+        <div className="mt-4 grid gap-4 border-t-[0.5px] border-(--linear-border-secondary) pt-4 lg:grid-cols-[minmax(0,1fr)_240px]">
           <div className="grid content-start gap-3">
             {phase === 'waiting' && (
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="warn">{q.waiting}</Badge>
-                <span className="text-xs text-muted-foreground">{q.scanHint}</span>
+                <span className="text-xs text-(--linear-text-tertiary)">{q.scanHint}</span>
               </div>
             )}
 
@@ -301,12 +301,12 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
               <>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="success">{q.ready}</Badge>
-                  {botUsername && <span className="font-mono text-xs text-muted-foreground">@{botUsername}</span>}
+                  {botUsername && <span className="font-mono text-xs text-(--linear-text-tertiary)">@{botUsername}</span>}
                 </div>
 
                 <div className="grid gap-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    <span className="text-xs font-medium text-(--linear-text-secondary)">
                       {q.allowedUsers}
                     </span>
                     {detectedOwnerId && allowedIds.includes(detectedOwnerId) && (
@@ -318,8 +318,9 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
                       <button
                         aria-label={`${t.common.remove} ${id}`}
                         className={cn(
-                          'inline-flex items-center gap-1 rounded-md border border-(--ui-stroke-secondary) px-2 py-1 font-mono text-xs',
-                          'hover:border-destructive/50 hover:text-destructive'
+                          // Linear chip: 24px pill, hairline, chip fill; hover warns it removes.
+                          'inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) pr-1.5 pl-2 font-mono text-xs text-(--linear-text-chip) transition-colors duration-(--linear-speed-quick)',
+                          'hover:text-(--linear-red) hover:transition-none'
                         )}
                         key={id}
                         onClick={() => setAllowedIds(ids => ids.filter(existing => existing !== id))}
@@ -330,7 +331,7 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
                       </button>
                     ))}
                     {allowedIds.length === 0 && (
-                      <span className="text-xs text-muted-foreground">{q.addAtLeastOne}</span>
+                      <span className="text-xs text-(--linear-text-tertiary)">{q.addAtLeastOne}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -367,7 +368,8 @@ export function TelegramQrSetup({ onApplied, platform, scopeProfile }: TelegramQ
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <img alt="Telegram setup QR code" className="size-56 rounded-md bg-white p-2" src={qrDataUrl} />
+            {/* bg-white is deliberate: a QR code needs a light quiet zone in both themes. */}
+            <img alt="Telegram setup QR code" className="size-56 rounded-(--linear-radius-control) bg-white p-2 shadow-(--linear-shadow-card)" src={qrDataUrl} />
             <Badge variant={expiresIn ? 'outline' : 'destructive'}>
               {expiresIn ? q.expiresIn(expiresIn) : q.expired}
             </Badge>

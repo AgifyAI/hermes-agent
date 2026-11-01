@@ -32,20 +32,9 @@ test('ignores a macOS Cmd+W keyUp', () => {
   assert.equal(windowAcceleratorAction(chord({ type: 'keyUp', key: 'w', meta: true }), true), 'ignore')
 })
 
-test('claims Reload on a Windows Ctrl+R keyDown', () => {
-  assert.equal(windowAcceleratorAction(chord({ key: 'r', control: true }), false), 'reload')
-})
-
-test('ignores a Windows Ctrl+R keyUp', () => {
-  assert.equal(windowAcceleratorAction(chord({ type: 'keyUp', key: 'r', control: true }), false), 'ignore')
-})
-
-test('claims Reload on a macOS Cmd+R keyDown', () => {
-  assert.equal(windowAcceleratorAction(chord({ key: 'r', meta: true }), true), 'reload')
-})
-
-test('ignores a macOS Cmd+R keyUp', () => {
-  assert.equal(windowAcceleratorAction(chord({ type: 'keyUp', key: 'r', meta: true }), true), 'ignore')
+test('leaves ⌘R/Ctrl+R to the renderer (session rename)', () => {
+  assert.equal(windowAcceleratorAction(chord({ key: 'r', control: true }), false), 'ignore')
+  assert.equal(windowAcceleratorAction(chord({ key: 'r', meta: true }), true), 'ignore')
 })
 
 test('claims zoom reset on Ctrl+0 keyDown', () => {
@@ -111,25 +100,21 @@ test('does not claim an Alt-modified chord', () => {
   assert.equal(windowAcceleratorAction(chord({ key: '0', control: true, alt: true }), false), 'ignore')
 })
 
-test('folds letter case for Close Tab and Reload only', () => {
+test('folds letter case for Close Tab', () => {
   assert.equal(windowAcceleratorAction(chord({ key: 'W', control: true }), false), 'close-tab')
-  assert.equal(windowAcceleratorAction(chord({ key: 'R', meta: true }), true), 'reload')
 })
 
-test('swallows an auto-repeating Ctrl+W or Ctrl+R instead of acting on it (#105498)', () => {
+test('swallows an auto-repeating Ctrl+W instead of acting on it (#105498)', () => {
   assert.equal(windowAcceleratorAction(chord({ key: 'w', control: true, isAutoRepeat: true }), false), 'swallow')
   assert.equal(windowAcceleratorAction(chord({ key: 'w', meta: true, isAutoRepeat: true }), true), 'swallow')
-  assert.equal(windowAcceleratorAction(chord({ key: 'r', control: true, isAutoRepeat: true }), false), 'swallow')
 })
 
-test('swallows Ctrl+W and Ctrl+R that land inside the post-focus grace window (#105498)', () => {
+test('swallows Ctrl+W that lands inside the post-focus grace window (#105498)', () => {
   assert.equal(windowAcceleratorAction(chord({ key: 'w', control: true }), false, 0), 'swallow')
-  assert.equal(windowAcceleratorAction(chord({ key: 'r', control: true }), false, FOCUS_GRACE_MS - 1), 'swallow')
 })
 
-test('acts on Ctrl+W and Ctrl+R once the post-focus grace window has passed', () => {
+test('acts on Ctrl+W once the post-focus grace window has passed', () => {
   assert.equal(windowAcceleratorAction(chord({ key: 'w', control: true }), false, FOCUS_GRACE_MS), 'close-tab')
-  assert.equal(windowAcceleratorAction(chord({ key: 'r', meta: true }), true, FOCUS_GRACE_MS + 50), 'reload')
 })
 
 test('keeps zoom on auto-repeat and inside the focus grace window (holding Ctrl+= zooms)', () => {

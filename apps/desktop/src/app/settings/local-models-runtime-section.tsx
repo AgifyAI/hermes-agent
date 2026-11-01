@@ -47,7 +47,6 @@ export function LocalModelsRuntimeSection({ status, jobs, lastError }: LocalMode
           </Pill>
         ) : undefined
       }
-      icon={Zap}
       meta={status.tag}
       title={copy.runtimeTitle}
     >
@@ -150,14 +149,14 @@ export function LocalModelsRuntimeSection({ status, jobs, lastError }: LocalMode
           description={copy.upToDateDetail(status.tag, status.runtime_backend ?? 'cpu')}
           title={
             <span className="inline-flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="size-4 text-(--linear-green)" />
               {copy.upToDateTitle}
             </span>
           }
         />
       )}
 
-      {lastError?.kind === 'runtime-install' && <p className="text-[0.75rem] text-destructive">{lastError.error}</p>}
+      {lastError?.kind === 'runtime-install' && <p className="py-3 text-xs text-(--linear-red)">{lastError.error}</p>}
     </SettingsSection>
   )
 }

@@ -20,6 +20,7 @@ import {
 } from '@/lib/keybinds/actions'
 import { formatCombo } from '@/lib/keybinds/combo'
 import { arraysEqual } from '@/lib/storage'
+import { cn } from '@/lib/utils'
 import {
   $bindings,
   $capture,
@@ -33,7 +34,7 @@ import {
 } from '@/store/keybinds'
 
 import { HudModifierSettings } from './hud-modifier-settings'
-import { SettingsBreadcrumbContext, SettingsContent } from './primitives'
+import { SettingsBreadcrumbContext, SettingsCard, SettingsContent } from './primitives'
 import { ScreenshotSettings } from './screenshot-settings'
 import { useSettingDeepLink } from './use-setting-deep-link'
 
@@ -47,7 +48,9 @@ export function KeybindSettings({ subpage }: KeybindSettingsProps = {}) {
   if (subpage === 'hud-gesture') {
     return (
       <SettingsContent>
-        <HudModifierSettings />
+        <SettingsCard>
+          <HudModifierSettings />
+        </SettingsCard>
       </SettingsContent>
     )
   }
@@ -55,7 +58,9 @@ export function KeybindSettings({ subpage }: KeybindSettingsProps = {}) {
   if (subpage === 'screen-capture') {
     return (
       <SettingsContent>
-        <ScreenshotSettings />
+        <SettingsCard>
+          <ScreenshotSettings />
+        </SettingsCard>
       </SettingsContent>
     )
   }
@@ -129,29 +134,29 @@ function ShortcutSettings({ includeScreenshot }: { includeScreenshot: boolean })
 
   return (
     <SettingsContent>
-      <div className="flex items-center justify-between gap-3 pb-3">
+      <div className="mb-8 flex items-center justify-between gap-3 px-4">
         <div className="min-w-0">
-          {!hasBreadcrumb && <h2 className="text-sm font-semibold text-foreground">{k.title}</h2>}
-          <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
+          {!hasBreadcrumb && (
+            <h2 className="text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)">{k.title}</h2>
+          )}
+          <p className="mt-0.5 text-xs text-(--linear-text-tertiary)">
             {k.subtitle(openCombo ? formatCombo(openCombo) : '')}
           </p>
         </div>
-        <button
-          className="flex shrink-0 items-center gap-1 rounded-md text-[0.72rem] text-muted-foreground hover:text-foreground"
-          onClick={resetAllBindings}
-          type="button"
-        >
+        <Button className="shrink-0" onClick={resetAllBindings} size="sm" type="button" variant="text">
           <Codicon name="discard" size="0.8125rem" />
           {k.resetAll}
-        </button>
+        </Button>
       </div>
 
       {includeScreenshot &&
         (!isSearching || t.settings.screenshot.enabledTitle.toLowerCase().includes(query.toLowerCase())) && (
-          <ScreenshotSettings />
+          <SettingsCard className="mb-8">
+            <ScreenshotSettings />
+          </SettingsCard>
         )}
 
-      <div className="pb-3">
+      <div className="mb-8 px-4">
         <SearchField
           aria-label={k.search}
           containerClassName="w-full"
@@ -162,22 +167,20 @@ function ShortcutSettings({ includeScreenshot }: { includeScreenshot: boolean })
       </div>
 
       {isSearching ? (
-        <div className="px-2 py-1.5">
-          {filteredActions?.length === 0 && filteredReadonly?.length === 0 ? (
-            <p className="px-2.5 py-4 text-center text-[0.82rem] text-muted-foreground">—</p>
-          ) : (
-            <>
-              {filteredActions?.map(action => (
-                <KeybindRow action={action} key={action.id} />
-              ))}
-              {filteredReadonly?.map(shortcut => (
-                <ReadonlyRow key={shortcut.id} shortcut={shortcut} />
-              ))}
-            </>
-          )}
-        </div>
+        filteredActions?.length === 0 && filteredReadonly?.length === 0 ? (
+          <p className="py-4 text-center text-[0.8125rem] text-(--linear-text-tertiary)">—</p>
+        ) : (
+          <SettingsCard>
+            {filteredActions?.map(action => (
+              <KeybindRow action={action} key={action.id} />
+            ))}
+            {filteredReadonly?.map(shortcut => (
+              <ReadonlyRow key={shortcut.id} shortcut={shortcut} />
+            ))}
+          </SettingsCard>
+        )
       ) : (
-        <div className="px-2 py-1.5">
+        <div>
           {KEYBIND_CATEGORIES.map(category => {
             const actions = actionList.filter(
               action => action.category === category && action.id !== KEYBIND_PANEL_ACTION
@@ -192,14 +195,16 @@ function ShortcutSettings({ includeScreenshot }: { includeScreenshot: boolean })
             const sectionOpen = !collapsed.has(category)
 
             return (
-              <section key={category}>
+              <section className="not-first:mt-12" key={category}>
                 <CategoryHeader
                   label={k.categories[category] ?? category}
                   onToggle={() => toggleCategory(category)}
                   open={sectionOpen}
                 />
-                {sectionOpen && actions.map(action => <KeybindRow action={action} key={action.id} />)}
-                {sectionOpen && readonly.map(shortcut => <ReadonlyRow key={shortcut.id} shortcut={shortcut} />)}
+                <SettingsCard>
+                  {sectionOpen && actions.map(action => <KeybindRow action={action} key={action.id} />)}
+                  {sectionOpen && readonly.map(shortcut => <ReadonlyRow key={shortcut.id} shortcut={shortcut} />)}
+                </SettingsCard>
               </section>
             )
           })}
@@ -212,21 +217,22 @@ function ShortcutSettings({ includeScreenshot }: { includeScreenshot: boolean })
 function CategoryHeader({ label, onToggle, open }: { label: string; onToggle: () => void; open: boolean }) {
   return (
     <button
-      className="group/kbd-cat flex w-fit min-w-0 items-center gap-1 px-2.5 pb-1 pt-3 text-left leading-none"
+      className="group/kbd-cat mb-4 flex w-fit min-w-0 cursor-pointer items-center gap-1 px-4 text-left text-[0.9375rem] leading-[1.4375rem] font-medium text-(--linear-text-primary)"
       onClick={onToggle}
       type="button"
     >
-      <span className="min-w-0 truncate text-[0.64rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
-        {label}
-      </span>
+      <span className="min-w-0 truncate">{label}</span>
       <DisclosureCaret
-        className="text-(--ui-text-tertiary) opacity-0 transition group-hover/kbd-cat:opacity-100"
+        className="text-(--linear-text-tertiary) opacity-0 transition group-hover/kbd-cat:opacity-100"
         open={open}
         size="0.6875rem"
       />
     </button>
   )
 }
+
+// A shortcut row inside its category card: Linear's 44px list row.
+const KEYBIND_ROW_CLASS = 'flex min-h-11 items-center gap-2.5'
 
 function KeybindRow({ action }: { action: KeybindActionMeta }) {
   const { t } = useI18n()
@@ -247,11 +253,14 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
     .find(Boolean)
 
   return (
-    <div className="group flex items-center gap-2.5 rounded-lg px-2.5 py-1 transition-colors hover:bg-(--chrome-action-hover)">
-      <span className="min-w-0 flex-1 truncate text-[0.82rem] text-foreground/90">{label}</span>
+    <div className={cn('group', KEYBIND_ROW_CLASS)}>
+      <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
 
       {conflict && (
-        <span className="flex size-4 items-center justify-center text-amber-500/90" title={k.conflictWith(conflict)}>
+        <span
+          className="flex size-4 items-center justify-center text-(--linear-orange)"
+          title={k.conflictWith(conflict)}
+        >
           <Codicon name="warning" size="0.8125rem" />
         </span>
       )}
@@ -260,7 +269,7 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
       <Tip label={k.rebind}>
         <button
           aria-label={k.rebind}
-          className="flex shrink-0 items-center gap-1 rounded-lg outline-none"
+          className="flex shrink-0 items-center gap-1 rounded-(--linear-radius-control) outline-none"
           onClick={() => (capturing ? endCapture() : beginCapture(action.id))}
           type="button"
         >
@@ -281,7 +290,7 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
           <Tip label={k.clear}>
             <Button
               aria-label={k.clear}
-              className="shrink-0 text-(--ui-text-tertiary) opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              className="shrink-0 text-(--linear-text-tertiary) opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               onClick={() => clearBinding(action.id)}
               size="icon-xs"
               variant="ghost"
@@ -296,7 +305,7 @@ function KeybindRow({ action }: { action: KeybindActionMeta }) {
         <Tip label={k.reset}>
           <Button
             aria-label={k.reset}
-            className="shrink-0 text-(--ui-text-tertiary) opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="shrink-0 text-(--linear-text-tertiary) opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             onClick={() => resetBinding(action.id)}
             size="icon-xs"
             variant="ghost"
@@ -317,8 +326,10 @@ function ReadonlyRow({ shortcut }: { shortcut: KeybindReadonly }) {
   const label = k.actions[shortcut.id] ?? shortcut.id
 
   return (
-    <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-1">
-      <span className="min-w-0 flex-1 truncate text-[0.82rem] text-foreground/75">{label}</span>
+    <div className={KEYBIND_ROW_CLASS}>
+      <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-(--linear-text-secondary)">
+        {label}
+      </span>
       <div className="flex shrink-0 items-center gap-1">
         {shortcut.keys.map(key => (
           <KbdCombo combo={key} key={key} />

@@ -70,8 +70,10 @@ function SlowSetupStart({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="grid max-w-xs justify-items-center gap-3 text-center" role="status">
-      <div className="text-sm font-medium text-foreground">{t.onboarding.setupSlowTitle}</div>
-      <div className="text-xs text-muted-foreground">{t.onboarding.setupSlowBody}</div>
+      <div className="grid gap-[3px]">
+        <div className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{t.onboarding.setupSlowTitle}</div>
+        <div className="text-xs text-(--linear-text-tertiary)">{t.onboarding.setupSlowBody}</div>
+      </div>
       <Button onClick={onExit} size="sm" type="button" variant="secondary">
         {t.onboarding.continueWithoutSetup}
       </Button>
@@ -86,13 +88,9 @@ function ConnectingOverlayView({ decoding, onExit, phase }: ConnectingOverlayVie
   return (
     <div
       className={cn(
-        'fixed inset-0 z-(--z-connecting) grid place-items-center bg-(--ui-chat-surface-background) transition-opacity duration-500 ease-out',
+        'fixed inset-0 z-(--z-connecting) grid place-items-center bg-(--linear-bg-panel) transition-opacity duration-500 ease-out',
         overlayHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
       )}
-      // Masks the whole app while booting — must stay filled under window
-      // glass or the shell shows through. Contract: `[data-glass-opaque]`
-      // in styles.css.
-      data-glass-opaque=""
     >
       {onExit ? (
         <SlowSetupStart onExit={onExit} />
@@ -100,7 +98,7 @@ function ConnectingOverlayView({ decoding, onExit, phase }: ConnectingOverlayVie
         <DecodeText
           active={decoding}
           className={cn(
-            'pl-[0.4em] text-(--theme-primary) transition duration-300 ease-out',
+            'pl-[0.4em] text-(--linear-accent) transition duration-300 ease-out',
             leaving ? 'translate-y-2 opacity-0 saturate-0' : 'translate-y-0 opacity-100 saturate-100'
           )}
           cursor

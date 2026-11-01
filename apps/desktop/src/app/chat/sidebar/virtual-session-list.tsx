@@ -15,7 +15,7 @@ import { $sessionListDensity } from '@/store/session-list-density'
 
 import { SidebarDateDivider } from './chrome'
 import { SidebarSessionRow } from './session-row'
-import { SESSION_CARD_ROW_ESTIMATE_PX, sessionRowEstimate } from './session-row-details'
+import { SESSION_CARD_ROW_ESTIMATE_PX, SESSION_ROW_ESTIMATE_PX } from './session-row-details'
 
 interface SessionRowCommonProps {
   branchStem?: string
@@ -96,7 +96,7 @@ export const VirtualSessionList: FC<VirtualSessionListProps> = ({
         return DIVIDER_ESTIMATE_PX
       }
 
-      return card ? SESSION_CARD_ROW_ESTIMATE_PX : sessionRowEstimate(density)
+      return card ? SESSION_CARD_ROW_ESTIMATE_PX : SESSION_ROW_ESTIMATE_PX
     },
     getItemKey: index => {
       const row = listRows[index]
@@ -141,8 +141,8 @@ export const VirtualSessionList: FC<VirtualSessionListProps> = ({
         <div data-index={virtualItem.index} key={row.key} ref={virtualizer.measureElement} style={itemStyle}>
           <SidebarDateDivider
             action={dividerAction}
-            centered={'day' in row}
             label={label}
+            spacing={'day' in row ? density : 'compact'}
             toggle={
               dividerToggle
                 ? {

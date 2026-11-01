@@ -76,13 +76,11 @@ export function TipBubble({ action, anchor, keybind, onClose, side, text, title 
       >
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            {title && <p className="text-[length:var(--conversation-caption-font-size)] font-semibold">{title}</p>}
+            {title && <p className="text-[0.8125rem] leading-5 font-medium">{title}</p>}
             {/* Held off full strength so the title still leads. Everything here
                 is currentColor-relative, so it follows whatever the accent's
                 foreground is rather than pinning a grey that only works on glass. */}
-            <p className="mt-0.5 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-current/85">
-              {text}
-            </p>
+            <p className="mt-0.5 text-xs leading-4 text-current/85">{text}</p>
             {combo && <KbdCombo className="mt-2" combo={combo} size="sm" variant="inverted" />}
             {action && (
               // The CTA: still not a focus trap — the button is tabbable when
@@ -90,7 +88,7 @@ export function TipBubble({ action, anchor, keybind, onClose, side, text, title 
               // fill against the accent surface, same currentColor discipline
               // as the rest of the bubble.
               <button
-                className="mt-2.5 inline-flex cursor-pointer items-center rounded-md bg-current/15 px-2.5 py-1 text-[length:var(--conversation-caption-font-size)] font-semibold transition-colors hover:bg-current/25"
+                className="mt-2.5 inline-flex h-6 cursor-pointer items-center rounded-full bg-current/15 px-2.5 text-xs font-medium transition-colors duration-(--linear-speed-quick) hover:bg-current/25 hover:transition-none"
                 onClick={action.onSelect}
                 type="button"
               >
@@ -100,7 +98,7 @@ export function TipBubble({ action, anchor, keybind, onClose, side, text, title 
           </div>
           <button
             aria-label={t.tips.close}
-            className="-mr-0.5 -mt-0.5 shrink-0 cursor-pointer rounded-[3px] p-0.5 text-current/70 transition-colors hover:bg-current/15 hover:text-current"
+            className="-mr-0.5 -mt-0.5 shrink-0 cursor-pointer rounded-full p-0.5 text-current/70 transition-colors duration-(--linear-speed-quick) hover:bg-current/15 hover:text-current hover:transition-none"
             onClick={onClose}
             type="button"
           >

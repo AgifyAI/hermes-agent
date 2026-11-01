@@ -25,7 +25,7 @@ export function ScrollGate() {
 
   return (
     <div className={cn('group/gate absolute inset-0', active ? 'pointer-events-none' : 'pointer-events-auto')}>
-      <span className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-black/55 px-1.5 py-0.5 text-[0.625rem] font-medium text-white opacity-0 transition-opacity group-hover/embed:opacity-100">
+      <span className="pointer-events-none absolute bottom-2 left-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) px-1.5 py-0.5 text-[0.6875rem] font-[450] text-(--linear-text-overlay) opacity-0 transition-opacity group-hover/embed:opacity-100">
         Hold ⌘ to zoom
       </span>
     </div>

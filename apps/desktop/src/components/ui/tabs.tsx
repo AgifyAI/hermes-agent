@@ -11,7 +11,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       className={cn(
-        'inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground',
+        'inline-flex h-7 items-center justify-center gap-1 text-(--linear-text-tertiary)',
         className
       )}
       data-slot="tabs-list"
@@ -24,7 +24,8 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:bg-background focus-visible:text-foreground focus-visible:ring-[0.1875rem] focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+        // Linear's segmented tabs (same as SegmentedControl): 28px pills, 12px/500.
+        'inline-flex h-7 items-center justify-center gap-1.5 rounded-full bg-(--linear-segment-rest) px-2.5 text-xs font-medium whitespace-nowrap text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) outline-none hover:text-(--linear-text-primary) focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:pointer-events-none disabled:opacity-60 data-[state=active]:bg-(--linear-segment-selected) data-[state=active]:text-(--linear-text-primary) [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0',
         className
       )}
       data-slot="tabs-trigger"

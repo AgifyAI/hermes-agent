@@ -19,11 +19,11 @@ export type KeyRowProps = Omit<EnvRowProps, 'info' | 'varKey'>
 export const CREDENTIAL_CONTROL_CLASS = cn('h-8', CONTROL_TEXT)
 
 // Resting credential field: chrome stripped so it reads as plain subtext.
-// Stacked (<@2xl) it collapses to zero box (flush under its label); at @2xl it
+// Stacked (<@lg) it collapses to zero box (flush under its label); at @lg it
 // keeps the full control metrics (h-8 + px-2.5/py-1.5) so it centres on the
 // label and nothing shifts when focus/expand adds the border. `!` beats the
 // unlayered chrome CSS and the shared control sizing.
-const CRED_BARE = 'border-0! bg-transparent! shadow-none! h-auto! p-0! @2xl:h-8! @2xl:px-2.5! @2xl:py-1.5!'
+const CRED_BARE = 'border-0! bg-transparent! shadow-none! h-auto! p-0! @lg:h-8! @lg:px-2.5! @lg:py-1.5!'
 
 export const isKeyVar = (key: string, info: EnvVarInfo) => info.is_password || /(?:_API_KEY|_TOKEN|_KEY)$/.test(key)
 
@@ -88,7 +88,7 @@ export function KeyField({
   if (info.is_set && !editing) {
     return (
       <Input
-        className={cn(CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE, 'cursor-pointer text-muted-foreground')}
+        className={cn(CREDENTIAL_CONTROL_CLASS, bare && CRED_BARE, 'cursor-pointer text-(--linear-text-tertiary)')}
         onFocus={startEdit}
         readOnly
         value={masked}
@@ -120,7 +120,7 @@ export function KeyField({
           {info.is_set && (
             <Button
               aria-label={t.settings.credentials.remove}
-              className="text-muted-foreground hover:text-destructive"
+              className="text-(--linear-text-tertiary) hover:text-(--linear-red)"
               disabled={busy}
               onClick={() => void onClear(varKey, editKey)}
               size="icon-xs"
@@ -131,7 +131,7 @@ export function KeyField({
             </Button>
           )}
           {dirty && (
-            <Button className="h-8" disabled={busy} onClick={() => void onSave(varKey, editKey)} size="sm">
+            <Button disabled={busy} onClick={() => void onSave(varKey, editKey)} size="lg">
               {busy ? <Loader2 className="animate-spin" /> : <Save />}
               {busy ? t.settings.credentials.saving : t.common.save}
             </Button>
@@ -147,7 +147,7 @@ function CredentialDocsLink({ href }: { href: string }) {
 
   return (
     <a
-      className="inline-flex w-fit items-center gap-1 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary) underline-offset-4 transition-colors hover:text-foreground hover:underline"
+      className="inline-flex w-fit items-center gap-1 text-xs text-(--linear-text-tertiary) underline-offset-4 transition-colors hover:text-(--linear-text-primary) hover:underline"
       href={href}
       onClick={e => e.stopPropagation()}
       rel="noreferrer"
@@ -177,10 +177,9 @@ export function CredentialKeyCard({
   return (
     <div
       className={cn(
-        '@container group/card rounded-[6px] p-3 transition-colors',
-        expandable && 'cursor-pointer',
-        expandable && !expanded && 'row-hover',
-        expanded && 'bg-(--ui-bg-quaternary) ring-1 ring-(--ui-stroke-secondary)'
+        // A row of its settings card: Linear's 16px rhythm, no surface of its own.
+        '@container group/card rounded-(--linear-radius-control) py-4 outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        expandable && 'cursor-pointer'
       )}
       onClick={expandable ? onToggle : undefined}
       onKeyDown={
@@ -203,23 +202,24 @@ export function CredentialKeyCard({
       role={expandable ? 'button' : undefined}
       tabIndex={expandable ? 0 : undefined}
     >
-      {/* One CSS grid: 1 col stacked, 2 cols at @2xl. p-3 card padding = gap-3
+      {/* One CSS grid: 1 col stacked, 2 cols at @lg. py-4 row padding, gap-3
           row/col gaps, everything top-left aligned (items-start), no indents.
           The label row is h-8 to line up with the input row beside it. */}
-      <div className={cn('grid grid-cols-1 items-start gap-x-3 gap-y-1.5 @2xl:gap-y-3', LIST_ROW_COLUMNS)}>
+      <div className={cn('grid grid-cols-1 items-start gap-x-3 gap-y-1.5 @lg:gap-y-3', LIST_ROW_COLUMNS)}>
         <div className="flex h-8 min-w-0 items-center gap-2">
           <span
-            className={cn('size-2 shrink-0 rounded-full', info.is_set ? 'bg-primary' : 'bg-(--ui-stroke-secondary)')}
+            className={cn(
+              'size-2 shrink-0 rounded-full',
+              info.is_set ? 'bg-(--linear-accent)' : 'bg-(--linear-border-tertiary)'
+            )}
           />
 
-          <span className="min-w-0 truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
-            {label}
-          </span>
+          <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">{label}</span>
 
           {expandable && (
             <ChevronDown
               className={cn(
-                'size-3.5 shrink-0 text-muted-foreground transition',
+                'size-3.5 shrink-0 text-(--linear-icon) transition',
                 expanded ? 'rotate-180 opacity-100' : 'opacity-0 group-hover/card:opacity-100'
               )}
             />
@@ -239,12 +239,8 @@ export function CredentialKeyCard({
         </div>
 
         {expandable && expanded && (
-          <div className="grid gap-3 @2xl:col-span-2" onClick={e => e.stopPropagation()}>
-            {description && (
-              <p className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-                {description}
-              </p>
-            )}
+          <div className="grid gap-3 @lg:col-span-2" onClick={e => e.stopPropagation()}>
+            {description && <p className="text-xs text-(--linear-text-tertiary)">{description}</p>}
 
             {docsUrl && <CredentialDocsLink href={docsUrl} />}
           </div>
@@ -264,10 +260,9 @@ export function ProviderKeyRows({ expanded, group, onExpand, onToggle, rowProps 
   return (
     <div
       className={cn(
-        '@container group/card rounded-[6px] p-3 transition-colors',
-        expandable && 'cursor-pointer',
-        expandable && !expanded && 'row-hover',
-        expanded && 'bg-(--ui-bg-quaternary) ring-1 ring-(--ui-stroke-secondary)'
+        // A row of its settings card: Linear's 16px rhythm, no surface of its own.
+        '@container group/card rounded-(--linear-radius-control) py-4 outline-none focus-visible:ring-1 focus-visible:ring-(--linear-focus)',
+        expandable && 'cursor-pointer'
       )}
       onClick={expandable ? onToggle : undefined}
       onKeyDown={
@@ -290,25 +285,25 @@ export function ProviderKeyRows({ expanded, group, onExpand, onToggle, rowProps 
       role={expandable ? 'button' : undefined}
       tabIndex={expandable ? 0 : undefined}
     >
-      {/* Same grid as CredentialKeyCard: 1 col stacked, 2 cols at @2xl, p-3 =
+      {/* Same grid as CredentialKeyCard: 1 col stacked, 2 cols at @lg, py-4,
           gap-3, items-start, label row h-8 to line up with the input row. */}
-      <div className={cn('grid grid-cols-1 items-start gap-x-3 gap-y-1.5 @2xl:gap-y-3', LIST_ROW_COLUMNS)}>
+      <div className={cn('grid grid-cols-1 items-start gap-x-3 gap-y-1.5 @lg:gap-y-3', LIST_ROW_COLUMNS)}>
         <div className="flex h-8 min-w-0 items-center gap-2">
           <span
             className={cn(
               'size-2 shrink-0 rounded-full',
-              group.hasAnySet ? 'bg-primary' : 'bg-(--ui-stroke-secondary)'
+              group.hasAnySet ? 'bg-(--linear-accent)' : 'bg-(--linear-border-tertiary)'
             )}
           />
 
-          <span className="min-w-0 truncate text-[length:var(--conversation-text-font-size)] font-medium text-foreground">
+          <span className="min-w-0 truncate text-[0.8125rem] font-medium text-(--linear-text-primary)">
             {group.name}
           </span>
 
           {expandable && (
             <ChevronDown
               className={cn(
-                'size-3.5 shrink-0 text-muted-foreground transition',
+                'size-3.5 shrink-0 text-(--linear-icon) transition',
                 expanded ? 'rotate-180 opacity-100' : 'opacity-0 group-hover/card:opacity-100'
               )}
             />
@@ -335,12 +330,8 @@ export function ProviderKeyRows({ expanded, group, onExpand, onToggle, rowProps 
         </div>
 
         {expandable && expanded && (
-          <div className="grid gap-3 @2xl:col-span-2" onClick={e => e.stopPropagation()}>
-            {description && (
-              <p className="text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-                {description}
-              </p>
-            )}
+          <div className="grid gap-3 @lg:col-span-2" onClick={e => e.stopPropagation()}>
+            {description && <p className="text-xs text-(--linear-text-tertiary)">{description}</p>}
 
             {group.advanced.map(([key, info]) => {
               const fieldLabel = isKeyVar(key, info)

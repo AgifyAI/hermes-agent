@@ -71,7 +71,6 @@ it('keeps caller-provided and generated slash IDs when a busy target queues the 
       submitPromptText,
       appendSessionTextMessage: vi.fn(),
       branchCurrentSession: async () => true,
-      handleSkinCommand: () => '',
       handoffSession: async () => ({ ok: true }),
       openMemoryGraph: vi.fn(),
       refreshSessions: async () => undefined,

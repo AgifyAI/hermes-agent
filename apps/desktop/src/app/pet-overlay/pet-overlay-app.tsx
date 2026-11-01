@@ -403,15 +403,16 @@ export function PetOverlayApp() {
           placeholder="Message…"
           ref={inputRef}
           style={{
-            background: 'var(--ui-bg-elevated)',
-            border: '1px solid var(--ui-stroke-secondary)',
-            borderRadius: 2,
-            boxShadow: '0 6px 18px rgba(0,0,0,0.28)',
-            color: 'var(--foreground)',
-            fontSize: 12,
+            // Linear text input (radius 8, input hairline) floating as a menu.
+            background: 'var(--linear-bg-input)',
+            border: '0.5px solid var(--linear-border-input)',
+            borderRadius: 'var(--linear-radius-control)',
+            boxShadow: 'var(--linear-shadow-menu)',
+            color: 'var(--linear-text-primary)',
+            fontSize: 13,
             marginBottom: 8,
             outline: 'none',
-            padding: '4px 8px',
+            padding: '4px 10px',
             width: 184
           }}
           value={draft}
@@ -456,11 +457,12 @@ export function PetOverlayApp() {
               onPointerUp={e => e.stopPropagation()}
               style={{
                 alignItems: 'center',
-                background: 'var(--ui-bg-elevated)',
-                border: '1px solid var(--ui-stroke-secondary)',
-                borderRadius: 999,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.22)',
-                color: 'var(--foreground)',
+                // Linear floating control: overlay fill, hairline, menu shadow.
+                background: 'var(--linear-bg-overlay)',
+                border: '0.5px solid var(--linear-border-overlay)',
+                borderRadius: 'var(--linear-radius-pill)',
+                boxShadow: 'var(--linear-shadow-menu)',
+                color: 'var(--linear-icon)',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 height: 24,
@@ -473,7 +475,7 @@ export function PetOverlayApp() {
               }}
               type="button"
             >
-              <Mail style={{ height: 13, width: 13 }} />
+              <Mail style={{ height: 14, width: 14 }} />
             </button>
           )}
         </div>

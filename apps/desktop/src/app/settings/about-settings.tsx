@@ -4,11 +4,10 @@ import { type ReactElement, useEffect } from 'react'
 import { UpdateStatusCard, VersionHero } from '@/components/update-status'
 import { VersionDetails } from '@/components/version-details'
 import { useI18n } from '@/i18n'
-import { RefreshCw } from '@/lib/icons'
 import { $connection } from '@/store/session'
 import { $desktopVersion, checkBackendUpdates, refreshDesktopVersion } from '@/store/updates'
 
-import { SectionHeading, SettingsContent } from './primitives'
+import { SectionHeading, SettingsCard, SettingsContent } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
 import { UninstallSection } from './uninstall-section'
 import { UpdateChannelRow } from './update-channel-row'
@@ -54,11 +53,13 @@ function AppUpdatesSettings({ includeUninstall }: AppUpdatesSettingsProps): Reac
   return (
     <SettingsContent>
       <VersionHero version={version} />
-      <div className="mx-auto mt-4 w-full max-w-2xl">
-        <SectionHeading icon={RefreshCw} title={t.settings.about.updates} />
-        <div className="grid gap-3" id={settingElementId(SETTING_IDS.about.updates)}>
+      <div className="mt-12">
+        <SectionHeading title={t.settings.about.updates} />
+        <div className="grid gap-4" id={settingElementId(SETTING_IDS.about.updates)}>
           <UpdateStatusCard target="client" version={version} />
-          <UpdateChannelRow />
+          <SettingsCard>
+            <UpdateChannelRow />
+          </SettingsCard>
           {/* Client and remote backend updates are independent. Only the client has release notes. */}
           {remote && <UpdateStatusCard showReleaseNotes={false} target="backend" version={version} />}
         </div>

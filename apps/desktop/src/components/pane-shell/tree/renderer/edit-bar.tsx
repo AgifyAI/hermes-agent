@@ -71,7 +71,7 @@ export function TreeEditBar() {
 
   return (
     <div
-      className="absolute z-50 flex w-[26rem] max-w-[calc(100%-2rem)] flex-col rounded-xl border border-(--ui-stroke-secondary) bg-popover text-popover-foreground shadow-2xl [-webkit-app-region:no-drag]"
+      className="absolute z-50 flex w-[26rem] max-w-[calc(100%-2rem)] flex-col rounded-xl border border-(--linear-border-secondary) bg-(--linear-bg-overlay) text-(--linear-text-overlay) shadow-2xl [-webkit-app-region:no-drag]"
       ref={cardRef}
       style={pos ? { left: pos.x, top: pos.y } : { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
     >
@@ -81,11 +81,11 @@ export function TreeEditBar() {
         onPointerDown={startMove}
       >
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{t.zones.editTitle}</h2>
-          <p className="text-xs text-muted-foreground/80">
+          <h2 className="text-sm font-semibold text-(--linear-text-primary)">{t.zones.editTitle}</h2>
+          <p className="text-xs text-(--linear-text-tertiary)/80">
             {t.zones.editHint}{' '}
             {toggleCombo && (
-              <kbd className="rounded border border-(--ui-stroke-secondary) bg-foreground/5 px-1 font-mono text-[10px]">
+              <kbd className="rounded border border-(--linear-border-secondary) bg-(--linear-text-primary)/5 px-1 font-mono text-[10px]">
                 {formatCombo(toggleCombo)}
               </kbd>
             )}

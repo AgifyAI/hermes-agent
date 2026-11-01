@@ -7,22 +7,22 @@ import { cn } from '@/lib/utils'
 // Small status/metadata tag. App radius (not a full pill); tones map to the
 // shared accent/muted/destructive surfaces so badges read consistently.
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center gap-1 rounded-[3px] font-medium leading-none whitespace-nowrap [&_svg]:pointer-events-none',
+  'inline-flex w-fit shrink-0 items-center gap-1 rounded-full font-medium leading-none whitespace-nowrap [&_svg]:pointer-events-none',
   {
     variants: {
       variant: {
-        default: 'bg-primary/10 text-primary',
-        muted: 'bg-muted text-muted-foreground',
-        success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-        warn: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-        destructive: 'bg-destructive/10 text-destructive',
-        outline: 'border border-(--ui-stroke-secondary) text-muted-foreground',
+        default: 'bg-[color-mix(in_srgb,var(--linear-accent)_12%,transparent)] text-(--linear-accent)',
+        muted: 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)',
+        success: 'bg-[color-mix(in_srgb,var(--linear-green)_14%,transparent)] text-(--linear-green)',
+        warn: 'bg-[color-mix(in_srgb,var(--linear-orange)_14%,transparent)] text-(--linear-orange)',
+        destructive: 'bg-[color-mix(in_srgb,var(--linear-red)_12%,transparent)] text-(--linear-red)',
+        outline: 'border-[0.5px] border-(--linear-border-tertiary) text-(--linear-text-tertiary)',
         // Solid fill — icon-corner counts (titlebar unread, etc.).
-        solid: 'bg-primary text-primary-foreground'
+        solid: 'bg-(--linear-accent) text-(--linear-on-accent)'
       },
       size: {
-        default: 'px-1.5 py-0.5 text-[0.65rem] [&_svg]:size-3',
-        xs: 'px-1 py-px text-[0.6rem] [&_svg]:size-2.5',
+        default: 'px-1.5 py-0.5 text-[0.6875rem] font-[450] [&_svg]:size-3',
+        xs: 'px-1 py-px text-[0.6875rem] [&_svg]:size-2.5',
         overlay: 'h-2 min-w-2 justify-center rounded-[2px] px-px text-[7px] font-semibold tabular-nums'
       }
     },

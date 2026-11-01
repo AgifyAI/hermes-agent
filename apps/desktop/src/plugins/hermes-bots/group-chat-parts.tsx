@@ -97,11 +97,11 @@ export function GroupImageControls({ image, onImage, seedName, seedMembers }: Gr
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--chrome-action-hover)">
+      <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--linear-hover-control)">
         {image ? (
           <img alt="" className="size-full object-cover" src={image} />
         ) : (
-          <Codicon className="text-(--ui-text-tertiary)" name="organization" />
+          <Codicon className="text-(--linear-text-tertiary)" name="organization" />
         )}
       </div>
       <Button onClick={upload} size="sm" type="button" variant="secondary">
@@ -261,12 +261,12 @@ export function GroupMentionInput({ handleFor, members, onChange, onSubmitDraft,
   return (
     <div className="relative min-w-0 flex-1">
       {open ? (
-        <div className="absolute bottom-full left-0 z-50 mb-1 max-h-48 w-64 overflow-y-auto rounded-md border border-(--ui-stroke-secondary) bg-(--ui-bg-elevated) py-1 shadow-lg">
+        <div className="absolute bottom-full left-0 z-50 mb-1 max-h-48 w-64 overflow-y-auto rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-overlay) py-1 shadow-(--linear-shadow-menu)">
           {options.map((option, index) => (
             <RowButton
               className={cn(
-                'flex w-full items-baseline gap-2 px-2 py-1 text-left text-xs',
-                index === active ? 'bg-(--ui-control-hover-background) text-foreground' : 'text-(--ui-text-secondary)'
+                'flex w-full items-baseline gap-2 px-2 py-1 text-left text-[0.8125rem] font-[450]',
+                index === active ? 'bg-(--linear-hover-overlay) text-(--linear-text-overlay-strong)' : 'text-(--linear-text-secondary)'
               )} // preventDefault on mousedown so the input keeps focus.
               key={option.handle}
               onMouseDown={event => {
@@ -276,7 +276,7 @@ export function GroupMentionInput({ handleFor, members, onChange, onSubmitDraft,
               onMouseEnter={() => setSelected(index)}
             >
               <span className="font-medium">{`@${option.handle}`}</span>
-              <span className="truncate text-[0.65rem] text-(--ui-text-quaternary)">{option.meta}</span>
+              <span className="truncate text-[0.6875rem] font-[450] text-(--linear-text-quaternary)">{option.meta}</span>
             </RowButton>
           ))}
         </div>
@@ -471,15 +471,15 @@ export function GroupClarifyCard({ entry, members }: GroupClarifyCardProps) {
   }
 
   return (
-    <div className="grid gap-1.5 rounded-md border border-(--ui-accent)/50 bg-(--ui-accent)/5 px-2.5 py-2">
-      <div className="flex items-center gap-1.5 text-xs font-medium">
-        <Codicon className="shrink-0 text-(--ui-accent)" name={isApproval ? 'shield' : 'question'} />
+    <div className="grid gap-1.5 rounded-md border-[0.5px] border-(--linear-accent)/50 bg-(--linear-accent)/5 px-2.5 py-2">
+      <div className="flex items-center gap-1.5 text-[0.8125rem] font-medium">
+        <Codicon className="shrink-0 text-(--linear-accent)" name={isApproval ? 'shield' : 'question'} />
         {isApproval
           ? b.group.wantsToRunCommand(botHandle(entry.member, member))
           : b.group.asks(botHandle(entry.member, member))}
       </div>
       {isApproval && entry.command ? (
-        <code className="block overflow-x-auto rounded bg-(--ui-bg-secondary,rgba(0,0,0,0.25)) px-2 py-1 font-mono text-[0.7rem] whitespace-pre-wrap break-all">
+        <code className="block overflow-x-auto rounded-(--linear-radius-control) bg-(--linear-bg-secondary) px-2 py-1 font-mono text-xs whitespace-pre-wrap break-all">
           {entry.command}
         </code>
       ) : null}
@@ -493,10 +493,7 @@ export function GroupClarifyCard({ entry, members }: GroupClarifyCardProps) {
 
                 return (
                   <Button
-                    className={cn(
-                      'h-6 px-2 text-[0.7rem]',
-                      isApproval && choice === 'deny' && !chosen && 'text-destructive'
-                    )}
+                    className={cn(isApproval && choice === 'deny' && !chosen && 'text-(--linear-red)')}
                     disabled={sending || !member}
                     key={`choice:${q.qid}:${choice}`}
                     onClick={() => {
@@ -534,7 +531,7 @@ export function GroupClarifyCard({ entry, members }: GroupClarifyCardProps) {
                         }
                       })
                     }}
-                    size="sm"
+                    size="xs"
                     variant={chosen ? 'default' : 'secondary'}
                   >
                     {choice}
@@ -547,7 +544,6 @@ export function GroupClarifyCard({ entry, members }: GroupClarifyCardProps) {
           {isApproval ? null : (
             <Input
               aria-label={b.group.answerTo(entry.member)}
-              className="h-7 text-xs"
               key={`input:${q.qid}`}
               onChange={event => {
                 const value = event.target.value

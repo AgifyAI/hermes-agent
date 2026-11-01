@@ -6,7 +6,7 @@
  * two: it publishes a small summary on every membership change, and
  * `electron/quit-guard.ts` turns that into the confirmation dialog.
  *
- * Imported for its side effect from `main.tsx`, alongside `store/translucency`.
+ * Imported for its side effect from `main.tsx`.
  */
 
 import { computed } from 'nanostores'

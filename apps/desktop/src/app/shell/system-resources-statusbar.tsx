@@ -31,15 +31,15 @@ function MeterRow({ label, percent, value }: { label: string; percent: number | 
         {/* Label yields, value never does: if anything ever narrows the row
             again, a truncated label beats a clipped number — "15.2 GB" losing
             its tail reads as a wrong number, not a cut one. */}
-        <span className="truncate text-muted-foreground">{label}</span>
+        <span className="truncate text-(--linear-text-tertiary)">{label}</span>
 
-        <span className="shrink-0 whitespace-nowrap tabular-nums text-foreground">{value}</span>
+        <span className="shrink-0 whitespace-nowrap tabular-nums">{value}</span>
       </div>
 
       {percent !== null && (
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
           <div
-            className="h-full rounded-full bg-primary transition-[width] duration-500"
+            className="h-full rounded-full bg-(--linear-accent) transition-[width] duration-500"
             style={{ width: `${Math.max(1, Math.min(100, percent))}%` }}
           />
         </div>
@@ -151,17 +151,17 @@ export function useSystemResourcesStatusbarItem(): StatusbarItem {
     menuAlign: 'end',
     menuClassName: 'w-64 p-0',
     menuContent: (
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 p-3 text-[0.75rem]" data-slot="system-resources-panel">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 p-3 text-[0.8125rem] font-[450] text-(--linear-text-overlay)" data-slot="system-resources-panel">
         {/* min-w-0 everywhere a flex/grid child must shrink: grid items
             default min-width:auto, so a long GPU name's nowrap min-content
             props the track open past the w-64 box and overflow-x:hidden
             shears off every right-aligned value. With the track clamped,
             `truncate` can finally act. */}
         <div className="flex min-w-0 items-baseline justify-between gap-2">
-          <p className="shrink-0 font-medium text-foreground">{copy.title}</p>
+          <p className="shrink-0 font-medium text-(--linear-text-overlay-strong)">{copy.title}</p>
 
           {hardware?.gpu_name && (
-            <span className="min-w-0 truncate text-[0.6875rem] text-muted-foreground">{hardware.gpu_name}</span>
+            <span className="min-w-0 truncate text-xs text-(--linear-text-tertiary)">{hardware.gpu_name}</span>
           )}
         </div>
 
@@ -187,7 +187,7 @@ export function useSystemResourcesStatusbarItem(): StatusbarItem {
           value={`${gbLong(ramUsed)} / ${gbLong(hardware?.ram_total_bytes)}`}
         />
 
-        {hardware?.uma && <p className="text-[0.6875rem] text-muted-foreground">{copy.unifiedNote}</p>}
+        {hardware?.uma && <p className="text-xs text-(--linear-text-tertiary)">{copy.unifiedNote}</p>}
       </div>
     ),
     toggleLabel: enabled ? copy.toggle : undefined,

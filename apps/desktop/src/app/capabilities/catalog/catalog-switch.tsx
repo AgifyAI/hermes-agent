@@ -9,7 +9,7 @@ export function CatalogSwitch(props: ComponentProps<typeof Switch>) {
   const id = useId()
   const { t } = useI18n()
 
-  return <label className="catalog-switch relative inline-flex shrink-0 items-center gap-2 text-xs text-(--ui-text-secondary)" htmlFor={id}>
+  return <label className="catalog-switch relative inline-flex shrink-0 items-center gap-2 text-xs text-(--linear-text-secondary)" htmlFor={id}>
     <span className="grid justify-items-end [&>*]:col-start-1 [&>*]:row-start-1">
       <span className={props.checked ? undefined : 'invisible'}>{t.settings.plugins.disable}</span>
       <span className={props.checked ? 'invisible' : undefined}>{t.settings.plugins.enable}</span>

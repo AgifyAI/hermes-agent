@@ -807,7 +807,7 @@ export function ContribController() {
 
   return (
     <SidebarProvider
-      className="h-full min-h-0 flex-col bg-background"
+      className="h-full min-h-0 flex-col bg-(--linear-bg-panel)"
       onOpenChange={setSidebarOpen}
       open={sidebarOpen}
       style={{ '--sidebar-width': '100%' } as CSSProperties}
@@ -818,12 +818,8 @@ export function ContribController() {
             run in every window kind, so each shell mounts it. */}
         <PluginPreviewConsentDialog />
         <div
-          className="flex h-full min-h-0 w-screen flex-col bg-(--ui-bg-chrome) text-(--ui-text-primary)"
-          // Window-glass hook: this div and the sidebar-wrapper above it are
-          // the app shell's two full-window opaque painters; the
-          // [data-hermes-glass] rules in styles.css clear them so the tint
-          // painted by <body> is the only thing between the page and the
-          // vibrancy material.
+          className="flex h-full min-h-0 w-screen flex-col bg-(--linear-bg-panel) text-(--linear-text-primary)"
+          // The app shell's full-window painter, alongside the sidebar wrapper.
           data-contrib-shell=""
           style={{ '--titlebar-height': '0px' } as CSSProperties}
         >

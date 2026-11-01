@@ -225,7 +225,7 @@ function ScopedSkillsTab({
       {installedError instanceof Error ? installedError.message : null}
     </CatalogAlert>
   ) : installedPending ? (
-    <Loader className="mx-auto my-2 size-6 text-(--ui-text-tertiary)" label={t.skills.loading} type="rose-curve" />
+    <Loader className="mx-auto my-2 size-6 text-(--linear-text-tertiary)" label={t.skills.loading} type="rose-curve" />
   ) : null
 
   return (
@@ -269,7 +269,7 @@ function ScopedSkillsTab({
         renderInstalledDetail={skill => (
           <>
             {usageOf(skill) > 0 && (
-              <p className="text-xs text-(--ui-text-tertiary)">{t.skills.usageCount(usageOf(skill))}</p>
+              <p className="text-xs text-(--linear-text-tertiary)">{t.skills.usageCount(usageOf(skill))}</p>
             )}
             <SkillDetail
               onArchive={() => {
@@ -281,7 +281,7 @@ function ScopedSkillsTab({
               profile={profile}
               skill={skill}
             />
-            <p className="text-xs text-(--ui-text-tertiary)">{t.skills.changesApplyNewSessions}</p>
+            <p className="text-xs text-(--linear-text-tertiary)">{t.skills.changesApplyNewSessions}</p>
             {skillEditor?.name === skill.name && (
               <DetailPane
                 actions={
@@ -292,7 +292,7 @@ function ScopedSkillsTab({
                 id="skill-editor"
                 onClose={closeSkillEditor}
                 title={
-                  <span className="text-[0.68rem] font-normal text-muted-foreground/60">
+                  <span className="text-[0.6875rem] font-normal text-(--linear-text-quaternary)">
                     {skillEditor.name}/SKILL.md
                   </span>
                 }

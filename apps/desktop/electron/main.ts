@@ -222,6 +222,7 @@ import { formatDesktopLogLine, formatLogStamp } from './desktop-log-line'
 import {
   createDesktopProfilePreferences,
   DESKTOP_PROFILE_NAME_RE,
+  desktopProfileKey,
   type DesktopProfileRoute,
   resolveDesktopConnectionRequest,
   resolveDesktopWindowLaunch
@@ -349,7 +350,6 @@ import { relaunchIfNoSandboxCameTooLate } from './linux-sandbox-relaunch'
 import { createLocalBackendLifecycle, waitForTeardown } from './local-backend-lifecycle'
 import { resolveIpcFileReadPath, resolveMediaStreamFile, resolvePreviewTargetPath } from './local-read-path'
 import { resolveDesktopClientVersion } from './local-runtime-version'
-import { localSkinProfileKey, registerLocalSkinIpc } from './local-skin'
 import { ACTIVE_LOG_POLL_MS, planLogRotation, reclaimActiveLogIfOversized } from './log-rotation'
 import { registerMachineProfile } from './machine-profile'
 import { createMainProcessLagWatchdog } from './main-process-lag-watchdog'
@@ -574,21 +574,6 @@ import { createStreamThrottle } from './stream-throttle'
 import { installSystemCaTrust } from './system-ca'
 import { registerTerminalIpc } from './terminal-ipc'
 import { nativeOverlayWidth as computeNativeOverlayWidth, titleBarOverlayOptions } from './titlebar-overlay-width'
-import {
-  applyWindowsBackdrop,
-  defaultTranslucencyState,
-  glassActive,
-  glassSupportedOn,
-  nativeOpacityFor,
-  normalizeState as normalizeTranslucency,
-  opacityNeedsSetting,
-  translucencySupportedOn,
-  vibrancyFor as vibrancyForTranslucency,
-  windowBackgroundMaterialOptions,
-  windowBackingOptions,
-  windowOpacityFor,
-  windowOpacityOptions
-} from './translucency'
 import { registerMachineUiPreferences } from './ui-preferences-ipc'
 import {
   UPDATE_HANDOFF_DWELL_MS,
@@ -653,7 +638,6 @@ import { preflightStateDb } from './updater/state-db-preflight'
 import { createStoreStrategy } from './updater/store-client'
 import { filenameFromUrl } from './url-filename'
 import { isExternalVenvHolder, isHermesOwnedVenvDaemon } from './venv-holder-select'
-import { fetchMarketplaceThemes, searchMarketplaceThemes } from './vscode-marketplace'
 import { createWakeIndicatorWindowController } from './wake-indicator-window'
 import { guardedWatch } from './watch-storm-breaker'
 import { windowAcceleratorAction } from './window-accelerator'
@@ -776,11 +760,6 @@ const IS_WSL = isWslEnvironment()
 // Truthful macOS kernel major (Tahoe = 25). Product version lies (16 vs 26) per
 // build SDK, so gate Tahoe workarounds on Darwin instead.
 const DARWIN_MAJOR = IS_MAC ? Number.parseInt(os.release(), 10) || 0 : 0
-// Glass: macOS vibrancy, or Windows 11 22H2+ system backdrop. Computed once
-// so the renderer, the persisted default, and every chat window agree.
-const GLASS_SUPPORTED = glassSupportedOn(process.platform, os.release())
-// Settings drops the row on Linux, so nativeOpacityFor keeps the fade off there.
-const TRANSLUCENCY_SUPPORTED = translucencySupportedOn(process.platform)
 const APP_ROOT = app.getAppPath()
 
 // Device-local preference: block F12 from opening DevTools.
@@ -1422,12 +1401,10 @@ const APP_ICON_PATHS = appIconCandidates({
 
 let rendererTitleBarTheme = null
 
-// Force the NATIVE window appearance (vibrancy material, titlebar, the
-// pre-first-paint window background) to follow the APP theme instead of the
-// OS appearance. With `vibrancy` set, macOS paints an NSVisualEffectView that
-// tracks the window's effective appearance and ignores `backgroundColor` —
-// so a dark-themed app on a light-mode Mac flashes a white material on every
-// new window until the renderer covers it. The renderer reports its mode via
+// Force the NATIVE window appearance (titlebar, the HUD's frost material, the
+// pre-first-paint window background) to follow the APP mode instead of the
+// OS appearance, so a dark app on a light-mode Mac never flashes native light
+// chrome before the renderer covers it. The renderer reports its mode via
 // 'hermes:native-theme' ('dark' | 'light' | 'system'); we pin
 // nativeTheme.themeSource to it and persist the value so cold launches paint
 // correctly before the renderer has even loaded.
@@ -1459,156 +1436,9 @@ function writePersistedThemeSource(mode) {
 
 nativeTheme.themeSource = readPersistedThemeSource()
 
-// Window translucency (see-through window). One lever, 0–100; 0 = off (the
-// default). Two modes share the lever (see electron/translucency.ts and
-// store/translucency): 'clear' maps it to the native window opacity so the
-// desktop shows through the whole window; 'glass' keeps the window opaque
-// and lets the renderer thin its surfaces over a platform material instead
-// — a matte blur with full-contrast text. macOS uses vibrancy; Windows 11
-// uses DWM acrylic/mica/tabbed. Persisted so a cold launch applies it at
-// window creation, before the renderer reports its value.
-// macOS + Windows only, gated at the value itself (see nativeOpacityFor).
-const TRANSLUCENCY_CONFIG_PATH = path.join(app.getPath('userData'), 'translucency.json')
-
-function readPersistedTranslucency() {
-  try {
-    return normalizeTranslucency(JSON.parse(fs.readFileSync(TRANSLUCENCY_CONFIG_PATH, 'utf8')), GLASS_SUPPORTED)
-  } catch {
-    // Nothing persisted yet — a first launch. Glass ships on, so the FIRST
-    // window has to be created with the glass backing already: a window born
-    // opaque cannot reliably be swapped to glass afterwards (see
-    // windowBackingOptions). nativeTheme is the only appearance signal main
-    // has this early; the renderer's first resolved send corrects it.
-    return defaultTranslucencyState(nativeTheme.shouldUseDarkColors ? 'dark' : 'light', GLASS_SUPPORTED, IS_WINDOWS)
-  }
-}
-
-function writePersistedTranslucency(state) {
-  try {
-    fs.mkdirSync(path.dirname(TRANSLUCENCY_CONFIG_PATH), { recursive: true })
-    fs.writeFileSync(TRANSLUCENCY_CONFIG_PATH, JSON.stringify(state, null, 2), 'utf8')
-  } catch (error) {
-    rememberLog(`[translucency] write failed: ${error.message}`)
-  }
-}
-
-let translucencyState = readPersistedTranslucency()
-
-// Chat windows whose webContents backing follows translucency (primary,
-// instance peers, session windows). The HUD / pet overlay / quick entry /
-// wake indicator are `transparent: true` windows that own their backgrounds —
-// painting a themed backing onto them would turn them into opaque rectangles.
-const translucencyBackedWindows = new WeakSet()
-
-// Set a live window's native opacity, but only when the state asks it to fade
-// — or when the window is already faded and is on its way back to opaque. The
-// window's own opacity is the record of whether that door was ever opened; see
-// opacityNeedsSetting for why it matters that it stays shut.
-function applyWindowOpacity(win) {
-  const opacity = nativeOpacityFor(translucencyState, TRANSLUCENCY_SUPPORTED)
-
-  if (typeof win.setOpacity === 'function' && opacityNeedsSetting(opacity, win.getOpacity?.() ?? 1)) {
-    win.setOpacity(opacity)
-  }
-}
-
-// Re-apply translucency to a live window (runtime toggle, no recreation).
-// Opacity goes through applyWindowOpacity, which knows when the call is worth
-// making at all. The backing swap is the glass half: Chromium composites the
-// page against the window backing BEFORE the OS composites the window, so
-// glass needs the backing dropped for the platform material to reach it, and
-// every other state needs the opaque themed backing (anti-flash, and it is
-// what makes clear mode fade to the desktop instead of to black).
-//
-// `changed` says which native properties actually need touching. Dragging the
-// intensity slider emits ~100 updates, and in glass mode NONE of them change
-// anything native — the tint is painted by the renderer and windowOpacityFor
-// answers off `fade`, not `intensity`, there. Re-issuing setVibrancy on every
-// tick restarts its 150ms animation before macOS can settle the material,
-// which reads as jank and flattens the frost levels into each other. Windows
-// setBackgroundMaterial is instantaneous but still skipped on tint-only ticks.
-// The glass Fade lever is the one glass drag that does reach main, and it
-// costs exactly what a Clear drag costs: one setOpacity.
-//
-// CAUTION (measured, macOS 26 / Electron 40): a runtime
-// setBackgroundColor('#00000000') is silently LOST on a window whose
-// compositor hasn't been up for a few seconds — including calls from
-// 'ready-to-show' and 'did-finish-load'. Cold launches therefore must not
-// rely on this path: windows are BORN with the right backing
-// (windowBackingOptions at each creation site). This path only has to cover
-// live toggles from Settings, where the window is long settled.
-function applyWindowTranslucency(win, changed = { backing: true, material: true, opacity: true }) {
-  if (!win || win.isDestroyed()) {
-    return
-  }
-
-  try {
-    // Backing swap + material are scoped to registered chat windows (see
-    // translucencyBackedWindows above).
-    if (translucencyBackedWindows.has(win)) {
-      if (IS_WINDOWS && GLASS_SUPPORTED) {
-        applyWindowsBackdrop(win, translucencyState, changed, getWindowBackgroundColor())
-      } else {
-        if (changed.backing && typeof win.setBackgroundColor === 'function') {
-          win.setBackgroundColor(glassActive(translucencyState) ? '#00000000' : getWindowBackgroundColor())
-        }
-
-        // Animate deliberate macOS frost changes, not unrelated tint updates.
-        if (changed.material && IS_MAC && typeof win.setVibrancy === 'function') {
-          win.setVibrancy(vibrancyForTranslucency(translucencyState), { animationDuration: 150 })
-        }
-      }
-    }
-
-    if (changed.opacity) {
-      applyWindowOpacity(win)
-    }
-  } catch (error) {
-    rememberLog(`[translucency] apply failed: ${error.message}`)
-  }
-}
-
-// Constructor options every chat window shares for its translucency surface:
-// the platform material, the webContents backing, and a native opacity only if
-// the state actually fades — all under the CURRENT state. Glass omits
-// backgroundColor so the material shows from the first frame (Electron hands a
-// translucent window a transparent default backing, and runtime swaps are lost
-// early in a window's life — see applyWindowTranslucency); otherwise the opaque
-// themed anti-flash backing.
-//
-// Call sites also register the window in translucencyBackedWindows so a live
-// toggle can re-apply. The HUD, pet overlay, quick entry and wake indicator
-// are `transparent: true` windows that own their backgrounds and are
-// deliberately not chat windows.
-function chatWindowSurfaceOptions() {
-  return {
-    vibrancy: IS_MAC ? vibrancyForTranslucency(translucencyState) : undefined,
-    // Pin the material to its ACTIVE appearance: several NSVisualEffectView
-    // materials collapse to a shared inactive look when the window blurs
-    // (measured on macOS 26: sidebar, popover and under-window composited
-    // pixel-identically once unfocused), which would quietly erase the
-    // user's frost choice whenever they click elsewhere. Only observable
-    // under glass — everywhere else the page buries the material.
-    visualEffectState: IS_MAC ? ('active' as const) : undefined,
-    // NOT `transparent: true` on Windows. The backdrop material already makes
-    // the window translucent on its own: `IsTranslucent` answers yes off
-    // `background_material_` alone, which is what gives the page its transparent
-    // default backing, and `SetBackgroundMaterial` flips widget translucency
-    // live, so a Clear→Glass toggle needs no recreate either way. Its one gate
-    // is a frameless window, and `titleBarStyle: 'hidden'` already makes
-    // `has_frame()` false here.
-    //
-    // What `transparent` adds on top is permanent and unwanted: it pins the
-    // widget to kTranslucent for the window's whole life, so even glass-OFF
-    // windows pay a DirectComposition redraw per frame (electron#39895), and it
-    // opts into the documented transparent-window limits — including that a
-    // RESIZABLE transparent window is unsupported and breaks (electron#48421).
-    // Every chat window is resizable.
-    ...windowBackgroundMaterialOptions(translucencyState, IS_WINDOWS, GLASS_SUPPORTED),
-    ...windowOpacityOptions(translucencyState, TRANSLUCENCY_SUPPORTED),
-    ...windowBackingOptions(translucencyState, getWindowBackgroundColor())
-  }
-}
+// A chat window's retired translucency settings. Hermes has one opaque look now;
+// the file is dropped once so it stops shadowing a later upgrade.
+fs.rmSync(path.join(app.getPath('userData'), 'translucency.json'), { force: true })
 
 function isHexColor(value) {
   return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
@@ -1622,7 +1452,8 @@ function getWindowBackgroundColor() {
     return rendererTitleBarTheme.background
   }
 
-  return nativeTheme.shouldUseDarkColors ? '#111111' : '#f7f7f7'
+  // Linear's window colour (themes/context.tsx WINDOW_CHROME).
+  return nativeTheme.shouldUseDarkColors ? '#09090a' : '#efeff0'
 }
 
 // Transparent WCO — renderer chrome shows through. rgba(0,0,0,0) can fall back
@@ -6401,13 +6232,9 @@ function buildApplicationMenu() {
     label: 'View',
     submenu: [
       // Not `role: 'reload'`: that hard-reloads the RENDERER (every pane, the
-      // whole shell) and a focused in-app browser needs ⌘R to mean "reload
-      // this page", the way it does in every other browser. ⇧⌘R
-      // (`forceReload`) below stays the unconditional escape hatch.
-      //
-      // No accelerator: ⌘R is claimed in `installPreviewShortcut`, which works
-      // on every platform (this menu exists only on macOS). Declaring it here
-      // too would fire the item and the input hook for one keypress.
+      // whole shell). ⇧⌘R (`forceReload`) below is the whole-window refresh;
+      // ⌘R belongs to the renderer now (`session.rename`), so the preview
+      // reload is a click item only.
       { click: () => sendPreviewNavCommand('reload'), label: 'Reload' },
       { role: 'forceReload' },
       {
@@ -6560,15 +6387,6 @@ function installPreviewShortcut(window) {
       return
     }
 
-    // ⌘R rides here rather than on the View menu item for the same reason:
-    // the application menu only exists on macOS (it is set to null elsewhere,
-    // see #77845), so a menu accelerator would leave Windows and Linux with no
-    // way to reload a page at all. ⇧⌘R is left alone — that is `forceReload`,
-    // the unconditional whole-window escape hatch.
-    if (action === 'reload') {
-      event.preventDefault()
-      sendPreviewNavCommand('reload')
-    }
   })
 }
 
@@ -12304,23 +12122,17 @@ function spawnSecondaryWindow({
     titleBarStyle: 'hidden',
     titleBarOverlay: getTitleBarOverlayOptions(),
     trafficLightPosition: IS_MAC ? WINDOW_BUTTON_POSITION : undefined,
-    ...chatWindowSurfaceOptions(),
+    backgroundColor: getWindowBackgroundColor(),
     icon,
-    // Don't show until the renderer's first themed paint is ready. macOS
-    // `vibrancy` ignores `backgroundColor` and paints a translucent OS
-    // material (which follows the OS appearance, not the app theme), so a
-    // dark-themed app on a light-mode Mac flashes white until the renderer
-    // covers it. ready-to-show fires after the boot-time paint in
-    // themes/context.tsx, so the window appears already themed.
+    // Don't show until the renderer's first themed paint is ready:
+    // ready-to-show fires after the boot-time paint in themes/context.tsx, so
+    // the window appears already in the app's mode.
     show: false,
     webPreferences: chatWindowWebPreferences(PRELOAD_PATH)
   })
 
-  // Chat-surface registration: applyWindowTranslucency swaps this window's
-  // backing between opaque-themed and alpha-0 when glass toggles.
   registerChatWindow(win)
   minimizeToTray.registerWindow(win)
-  translucencyBackedWindows.add(win)
 
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
@@ -12333,11 +12145,11 @@ function spawnSecondaryWindow({
   streamThrottle.register(win)
   wireCommonWindowHandlers(win, zoomWiringForWindowKind('chat'))
   attachRendererConsoleCapture(win, 'session-window', rememberLog)
-  // The preload asks for its skin before it can publish its own active route.
-  // Register the profile carried in the window URL before loading the renderer.
+  // Register the profile carried in the window URL before loading the renderer,
+  // so IPC sent before the renderer announces its own route resolves to it.
   recordWindowConnectionRoute(win.webContents, {
     connectionId: null,
-    profile: localSkinProfileKey(profile ?? primaryProfileKey()),
+    profile: desktopProfileKey(profile ?? primaryProfileKey()),
     registryScoped: false
   })
 
@@ -12409,13 +12221,12 @@ function spawnBrowserWindow(tabId) {
     titleBarStyle: 'hidden',
     titleBarOverlay: getTitleBarOverlayOptions(),
     trafficLightPosition: IS_MAC ? WINDOW_BUTTON_POSITION : undefined,
-    ...chatWindowSurfaceOptions(),
+    backgroundColor: getWindowBackgroundColor(),
     icon,
     show: false,
     webPreferences: chatWindowWebPreferences(PRELOAD_PATH)
   })
 
-  translucencyBackedWindows.add(win)
 
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
@@ -12521,7 +12332,7 @@ function createInstanceWindow(
     titleBarStyle: 'hidden',
     titleBarOverlay: getTitleBarOverlayOptions(),
     trafficLightPosition: IS_MAC ? WINDOW_BUTTON_POSITION : undefined,
-    ...chatWindowSurfaceOptions(),
+    backgroundColor: getWindowBackgroundColor(),
     icon,
     show: false,
     webPreferences: chatWindowWebPreferences(PRELOAD_PATH)
@@ -12532,8 +12343,6 @@ function createInstanceWindow(
   minimizeToTray.registerWindow(win)
   recordWindowConnectionRoute(win.webContents, { ...route, registryScoped: route.connectionId !== null })
 
-  // Chat-surface registration: see applyWindowTranslucency.
-  translucencyBackedWindows.add(win)
 
   if (IS_MAC) {
     win.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
@@ -13270,7 +13079,7 @@ function spawnHudWindow(sessionId, profile) {
   // renderer cannot announce its route until after preload has already run.
   recordWindowConnectionRoute(win.webContents, {
     connectionId: null,
-    profile: localSkinProfileKey(profile ?? primaryProfileKey()),
+    profile: desktopProfileKey(profile ?? primaryProfileKey()),
     registryScoped: false
   })
   loadWindowUrl(win, hudUrl(sessionId, profile), 'HUD')
@@ -13612,11 +13421,9 @@ function createWindow() {
     titleBarStyle: 'hidden',
     titleBarOverlay: getTitleBarOverlayOptions(),
     trafficLightPosition: IS_MAC ? WINDOW_BUTTON_POSITION : undefined,
-    ...chatWindowSurfaceOptions(),
+    backgroundColor: getWindowBackgroundColor(),
     icon,
-    // Hidden until the first themed paint so macOS `vibrancy` (which ignores
-    // `backgroundColor` and follows the OS appearance) can't flash a light
-    // material before the renderer paints the app theme. See createSessionWindow.
+    // Hidden until the first themed paint. See createSessionWindow.
     show: false,
     // Shared with the secondary session windows (chatWindowWebPreferences);
     // stream-aware throttling is applied per-window via streamThrottle so a
@@ -13638,8 +13445,6 @@ function createWindow() {
     })
   }
 
-  // Chat-surface registration: see applyWindowTranslucency.
-  translucencyBackedWindows.add(mainWindow)
 
   if (IS_MAC) {
     mainWindow.setWindowButtonPosition?.(WINDOW_BUTTON_POSITION)
@@ -14375,9 +14180,8 @@ registerPetOverlayIpc({
 })
 
 // --- HUD mode (chrome-free floating chat) — see hud-ipc.ts. ---------------
-const hudIpc = registerHudIpc({
+registerHudIpc({
   isMac: IS_MAC,
-  getTranslucencyState: () => translucencyState,
   getHudWindow: () => hudWindow,
   openHudWindow,
   closeHudWindow,
@@ -16642,39 +16446,6 @@ ipcMain.on('hermes:native-theme', (_event, mode) => {
   }
 })
 
-// See-through window translucency. Persist + re-apply to every open window at
-// runtime (no recreation, so caching/sessions are untouched).
-//
-// The intensity slider is a HOT path: ~100 updates per drag. Two things make
-// that cheap. Native work is diffed, so an intensity-only change under glass
-// touches nothing (it's painted by the renderer). And the disk write is
-// coalesced onto a trailing timer, because writePersistedTranslucency is a
-// synchronous writeFileSync and doing one per tick blocks the main process
-// mid-drag. Only a cold launch reads that file, so it just has to be correct
-// once the hand comes off the slider.
-let translucencyWriteTimer = null
-
-function scheduleTranslucencyWrite() {
-  if (translucencyWriteTimer) {
-    clearTimeout(translucencyWriteTimer)
-  }
-
-  translucencyWriteTimer = setTimeout(() => {
-    translucencyWriteTimer = null
-    writePersistedTranslucency(translucencyState)
-  }, 250)
-}
-
-// Flush a pending write before the process can exit, so a quit landing inside
-// the debounce window doesn't lose the setting.
-app.on('before-quit', () => {
-  if (translucencyWriteTimer) {
-    clearTimeout(translucencyWriteTimer)
-    translucencyWriteTimer = null
-    writePersistedTranslucency(translucencyState)
-  }
-})
-
 // Close the pooled keep-alive sockets on quit so lingering connections can't
 // hold the event loop open or leak FDs past app teardown.
 app.on('will-quit', () => {
@@ -16690,15 +16461,8 @@ app.on('quit', () => {
   quitFinalization.cancel()
 })
 
-// Answered synchronously so preload can publish the verdict before the
-// renderer's first script — see the note there on why it cannot decide this
-// itself. Registered at module scope, which runs long before any window.
-ipcMain.on('hermes:translucency:support', event => {
-  event.returnValue = { glass: GLASS_SUPPORTED, translucency: TRANSLUCENCY_SUPPORTED }
-})
-
-// Feature-flag facts the renderer needs before first paint (same sendSync
-// pattern as translucency). Resolved in feature-flags.ts from the launch
+// Feature-flag facts the renderer needs before first paint (read with sendSync
+// before first paint). Resolved in feature-flags.ts from the launch
 // argv and the artifact's channel: `--local` (from `hermes desktop --local`
 // or directly on Hermes.exe, a shortcut edit) gates the local-models GUI on
 // stable builds, and canary builds get the same surfaces by default. Launch
@@ -16713,46 +16477,6 @@ ipcMain.on('hermes:feature-flags', (event: IpcMainEvent): void => {
     // Dev-only: `--fresh-install` makes onboarding treat this launch as a fresh
     // install. Packaged builds never honour it.
     assumeFreshInstall: !app.isPackaged && process.argv.includes('--fresh-install')
-  }
-})
-
-ipcMain.on('hermes:translucency', (_event, payload) => {
-  const next = normalizeTranslucency(payload, GLASS_SUPPORTED)
-  const previous = translucencyState
-
-  if (
-    next.intensity === previous.intensity &&
-    next.fade === previous.fade &&
-    next.mode === previous.mode &&
-    next.material === previous.material &&
-    next.scope === previous.scope
-  ) {
-    return
-  }
-
-  translucencyState = next
-
-  // Which native properties actually moved. `scope` is renderer-only (which
-  // surfaces thin), so it never appears here.
-  const changed = {
-    // The backing follows whether glass is ON, not the intensity behind it.
-    backing: glassActive(previous) !== glassActive(next),
-    material: vibrancyForTranslucency(previous) !== vibrancyForTranslucency(next),
-    opacity: windowOpacityFor(previous) !== windowOpacityFor(next)
-  }
-
-  scheduleTranslucencyWrite()
-
-  // The HUD's frost reads the same setting but answers on its own terms (see
-  // hudFrostFor) — and it is a transparent window, so it is deliberately not
-  // in the chat fan-out below. It self-diffs, so an unrelated change costs
-  // nothing native.
-  hudIpc.applyHudFrost()
-
-  if (changed.backing || changed.material || changed.opacity) {
-    for (const win of BrowserWindow.getAllWindows()) {
-      applyWindowTranslucency(win, changed)
-    }
   }
 })
 
@@ -17075,9 +16799,8 @@ ipcMain.on('hermes:logs:renderer-error', (_event, report) => {
   flushDesktopLogBufferSync()
 })
 
-// Pre-paint payloads the preload reads synchronously: the local skin, and this
-// machine's shared UI preferences (#145213) — see local-skin.ts, ui-preferences.ts.
-registerLocalSkinIpc(ipcMain, HERMES_HOME, id => windowConnectionRoutes.get(id)?.profile, primaryProfileKey)
+// Pre-paint payload the preload reads synchronously: this machine's shared UI
+// preferences (#145213) — see ui-preferences.ts.
 registerMachineUiPreferences(HERMES_HOME)
 
 // Renderer error toasts (notifyError): the toast shows the summarized copy,
@@ -17558,13 +17281,6 @@ registerDesktopUninstallIpc({
   removableAppPath: () => resolveRemovableAppPath(process.execPath, process.platform, process.env),
   openAppsSettings: () => shell.openExternal('ms-settings:appsfeatures')
 })
-
-// Download a VS Code Marketplace extension and return the raw color-theme JSON
-// it contributes. No theme code is executed — we only read JSON from the .vsix.
-ipcMain.handle('hermes:vscode-theme:fetch', async (_event, id) => fetchMarketplaceThemes(String(id || '')))
-
-// Search the Marketplace for color-theme extensions (empty query = top installs).
-ipcMain.handle('hermes:vscode-theme:search', async (_event, query) => searchMarketplaceThemes(String(query || ''), 20))
 
 // ---------------------------------------------------------------------------
 // hermes:// deep links (e.g. hermes://blueprint/morning-brief?time=08:00,

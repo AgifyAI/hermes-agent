@@ -81,7 +81,7 @@ export function SubagentControls({ sessionId, subagentId, text, setText }: Subag
         </Button>
       </div>
       {feedback && (
-        <p className="text-xs text-(--ui-text-secondary)" role={failed ? 'alert' : 'status'}>
+        <p className="text-xs text-(--linear-text-secondary)" role={failed ? 'alert' : 'status'}>
           {feedback}
         </p>
       )}

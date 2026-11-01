@@ -3,10 +3,9 @@ import { describe, expect, it } from 'vitest'
 import {
   DAY,
   daySectionKey,
-  fmtDayHeading,
-  fmtDayHeadingYear,
   formatAgo,
   HOUR,
+  isTodayTimestamp,
   MINUTE,
   nominalDayStart,
   SECOND,
@@ -75,17 +74,36 @@ describe('sessionDayLabel', () => {
     expect(sessionDayLabel(dayStartAt(2026, 5, 17, 15), dayLabels, smallHours)).toBe('Yesterday')
   })
 
-  it('formats older days via Intl, adding the year only when it differs', () => {
-    // Locale-agnostic contract: same-year days use fmtDayHeading, prior-year
-    // days fmtDayHeadingYear. Assert against the shared formatters instead of
-    // frozen en-US strings so the test passes under any host locale.
+  it('formats older days as day + abbreviated month, adding the year only when it differs', () => {
+    // Locale-agnostic contract: the month abbreviation comes from Intl, but the
+    // order is always day-first ("20 Oct" / "20 oct."), never the locale's
+    // month-first ordering. Assert against the shared formatter, not frozen
+    // en-US strings, so the test passes under any host locale.
+    const shortMonth = new Intl.DateTimeFormat(undefined, { month: 'short' })
     const sameYear = dayStartAt(2026, 5, 16)
 
-    expect(sessionDayLabel(sameYear, dayLabels, THU_NOON)).toBe(fmtDayHeading.format(sameYear))
+    expect(sessionDayLabel(sameYear, dayLabels, THU_NOON)).toBe(`16 ${shortMonth.format(sameYear)}`)
 
     const priorYear = dayStartAt(2025, 11, 3)
 
-    expect(sessionDayLabel(priorYear, dayLabels, THU_NOON)).toBe(fmtDayHeadingYear.format(priorYear))
+    expect(sessionDayLabel(priorYear, dayLabels, THU_NOON)).toBe(`3 ${shortMonth.format(priorYear)} 2025`)
+  })
+})
+
+describe('isTodayTimestamp', () => {
+  it('uses the same nominal-day (4 AM) boundary as the day sections', () => {
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 18, 5).getTime() / 1000), THU_NOON)).toBe(true)
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 18, 3).getTime() / 1000), THU_NOON)).toBe(false)
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 17, 23).getTime() / 1000), THU_NOON)).toBe(false)
+  })
+
+  it('counts the small hours as the previous evening', () => {
+    const smallHours = new Date(2026, 5, 19, 0, 58).getTime()
+
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 18, 23).getTime() / 1000), smallHours)).toBe(true)
+    // 3 AM is already the previous nominal day: it belongs to Jun 17's section.
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 18, 3).getTime() / 1000), smallHours)).toBe(false)
+    expect(isTodayTimestamp(Math.floor(new Date(2026, 5, 17, 20).getTime() / 1000), smallHours)).toBe(false)
   })
 })
 

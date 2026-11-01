@@ -322,7 +322,7 @@ function ConversationPill({
         <Button
           aria-label={muted ? c.unmuteMic : c.muteMic}
           aria-pressed={muted}
-          className={cn(GHOST_ICON_BTN, 'p-0', muted && 'bg-muted text-muted-foreground')}
+          className={cn(GHOST_ICON_BTN, 'p-0', muted && 'bg-(--linear-hover-control) text-(--linear-text-tertiary)')}
           disabled={disabled}
           onClick={() => {
             triggerHaptic('selection')
@@ -338,7 +338,7 @@ function ConversationPill({
       {listening && (
         <Button
           aria-label={c.stopListening}
-          className="h-(--composer-control-size) shrink-0 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="h-(--composer-control-size)"
           disabled={disabled}
           onClick={() => {
             triggerHaptic('submit')
@@ -353,7 +353,7 @@ function ConversationPill({
       )}
       <Button
         aria-label={c.endConversation}
-        className="h-(--composer-control-size) gap-1.5 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+        className="h-(--composer-control-size)"
         disabled={disabled}
         onClick={() => {
           triggerHaptic('close')
