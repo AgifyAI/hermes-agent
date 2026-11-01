@@ -889,7 +889,7 @@ export const UserEditComposer: FC<UserEditComposerProps> = ({ cwd, gateway, sess
           <div
             className={cn(
               USER_BUBBLE_BASE_CLASS,
-              'ui-prompt-input__container relative border-(--ui-stroke-secondary) data-[expanded=true]:min-h-20',
+              'ui-prompt-input__container relative border-(--linear-border-secondary) data-[expanded=true]:min-h-20',
               COMPOSER_DROP_FADE_CLASS,
               dragActive && COMPOSER_DROP_ACTIVE_CLASS
             )}

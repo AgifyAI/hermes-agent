@@ -19,6 +19,7 @@ import { type GetTargetScrollTop, useStickToBottom } from 'use-stick-to-bottom'
 
 import { useComposerSurfaceId } from '@/app/chat/composer/scope'
 import { usePaneLifecycle, usePaneVisible } from '@/components/pane-shell/pane-visibility'
+import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
 import { messagePaintWeight } from '@/lib/render-weight'
 import { cn } from '@/lib/utils'
@@ -502,6 +503,12 @@ const TurnRow = memo(function TurnRow({ components, group, resetKey, virtualized
     </div>
   )
 })
+
+const ShowEarlierButton: FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (
+  <Button className="mx-auto mb-(--conversation-turn-gap)" onClick={onClick} size="xs" type="button" variant="secondary">
+    {label}
+  </Button>
+)
 
 const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
   clampToComposer,
@@ -1619,7 +1626,7 @@ const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
         // it and keeps the window draggable, matching the main window's header.
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 z-10 h-(--titlebar-height) bg-background [-webkit-app-region:drag]"
+          className="absolute inset-x-0 top-0 z-10 h-(--titlebar-height) bg-(--linear-bg-panel) [-webkit-app-region:drag]"
         />
       )}
       <div
@@ -1637,13 +1644,7 @@ const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
           ref={contentRef as React.RefCallback<HTMLDivElement>}
         >
           {!renderEmpty && (hiddenCount > 0 || olderAvailable) && (
-            <button
-              className="mx-auto mb-(--conversation-turn-gap) rounded-full border border-border/65 bg-(--composer-fill) px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
-              onClick={showEarlier}
-              type="button"
-            >
-              {t.assistant.thread.showEarlier}
-            </button>
+            <ShowEarlierButton label={t.assistant.thread.showEarlier} onClick={showEarlier} />
           )}
           {renderEmpty ? (
             <div className="grid flex-1 grid-rows-[minmax(0,1fr)_auto] gap-(--conversation-turn-gap)">

@@ -17,7 +17,7 @@ export function ChoiceLabel({ choice }: { choice: string }) {
 
   return (
     <>
-      {bare} <span className="text-(--ui-text-tertiary)">{RECOMMENDED_LABEL}</span>
+      {bare} <span className="text-(--linear-text-tertiary)">{RECOMMENDED_LABEL}</span>
     </>
   )
 }
@@ -80,9 +80,9 @@ export function ChoiceButton({
       aria-pressed={selected}
       className={cn(
         OPTION_ROW_CLASS,
-        'text-(--ui-text-secondary) hover:bg-(--chrome-action-hover) hover:text-(--ui-text-primary)',
-        active && 'bg-(--chrome-action-hover) text-(--ui-text-primary)',
-        selected && 'text-(--ui-text-primary)'
+        'text-(--linear-text-secondary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)',
+        active && 'bg-(--linear-hover-control) text-(--linear-text-primary)',
+        selected && 'text-(--linear-text-primary)'
       )}
       data-choice
       data-highlighted={active || undefined}

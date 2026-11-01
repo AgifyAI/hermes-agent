@@ -192,15 +192,15 @@ export function ModelPickerDialog({
         bodyClassName="gap-0 overflow-hidden p-0"
         className={cn('max-h-[85vh] max-w-2xl', contentClassName)}
       >
-        <DialogHeader className="border-b border-border px-4 py-3">
+        <DialogHeader className="border-b-[0.5px] border-(--linear-border-panel) px-4 py-3">
           <DialogTitle>{copy.title}</DialogTitle>
-          <DialogDescription className="font-mono text-xs leading-relaxed">
+          <DialogDescription className="text-xs leading-relaxed">
             {copy.current} {optionsModel || currentModel || copy.unknown}
             {optionsProvider || currentProvider ? ` · ${optionsProvider || currentProvider}` : ''}
           </DialogDescription>
         </DialogHeader>
 
-        <Command className="rounded-none bg-card" shouldFilter={false}>
+        <Command className="rounded-none bg-(--linear-bg-card)" shouldFilter={false}>
           <CommandInput
             autoFocus
             onValueChange={setSearch}
@@ -227,7 +227,7 @@ export function ModelPickerDialog({
           </CommandList>
         </Command>
 
-        <DialogFooter className="flex-row items-center justify-end gap-2 bg-card p-3">
+        <DialogFooter className="flex-row items-center justify-end gap-2 bg-(--linear-bg-card) p-3">
           <Button className="mr-auto" onClick={enterSlug} variant="ghost">
             {copy.addCustomModelAction}
           </Button>
@@ -289,7 +289,9 @@ function ModelResults({
   }
 
   if (providers.length === 0) {
-    return <div className="px-4 py-6 text-sm text-muted-foreground">{copy.noAuthenticatedProviders}</div>
+    return (
+      <div className="px-4 py-6 text-[0.8125rem] text-(--linear-text-tertiary)">{copy.noAuthenticatedProviders}</div>
+    )
   }
 
   const q = normalize(search)
@@ -372,9 +374,9 @@ function ModelResults({
           return (
             <CommandItem
               className={cn(
-                'flex items-center gap-2 pl-6 font-mono',
+                'flex items-center gap-2 pl-6',
                 isCurrent &&
-                  'bg-primary text-primary-foreground data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground',
+                  'bg-(--linear-segment-selected) text-(--linear-text-primary) data-[selected=true]:text-(--linear-text-primary)',
                 locked && 'cursor-not-allowed opacity-45'
               )}
               disabled={locked}
@@ -386,21 +388,23 @@ function ModelResults({
               }}
               value={`${provider.slug}:${model}`}
             >
-              <span className={cn('min-w-0 flex-1 truncate', dimmed && !isCurrent && 'text-muted-foreground')}>
+              <span className={cn('min-w-0 flex-1 truncate', dimmed && !isCurrent && 'text-(--linear-text-tertiary)')}>
                 <HighlightMatches foldSeparators query={search} text={model} />
               </span>
               {loadProgress && (
                 <span className="flex shrink-0 items-center gap-1.5" title={copy.loadingIntoMemory}>
-                  <span className="h-1 w-16 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+                  <span className="h-1 w-16 overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
                     <span
-                      className="block h-full rounded-full bg-primary transition-[width] duration-500"
+                      className="block h-full rounded-full bg-(--linear-accent) transition-[width] duration-500"
                       style={{ width: `${Math.max(2, loadProgress.percent)}%` }}
                     />
                   </span>
-                  <span className="text-[0.62rem] tabular-nums text-muted-foreground">{loadProgress.percent}%</span>
+                  <span className="text-[0.6875rem] tabular-nums text-(--linear-text-tertiary)">
+                    {loadProgress.percent}%
+                  </span>
                 </span>
               )}
-              {locked && <span className="shrink-0 text-[0.62rem] uppercase tracking-wide opacity-80">{copy.pro}</span>}
+              {locked && <span className="shrink-0 text-[0.6875rem] opacity-80">{copy.pro}</span>}
               {resetLabel && (
                 <Badge
                   className="font-sans tabular-nums"
@@ -445,7 +449,7 @@ function ModelResults({
               models.map(renderModel)
             )}
             {hasTopTier(provider, models) && (
-              <div className="px-6 pb-2 pt-1 text-[0.62rem] leading-relaxed text-muted-foreground">
+              <div className="px-6 pb-2 pt-1 text-[0.6875rem] leading-relaxed text-(--linear-text-tertiary)">
                 {copy.largeFootnote}
               </div>
             )}
@@ -453,7 +457,7 @@ function ModelResults({
               <DownloadingModelRow jobId={job.jobId} key={job.jobId} owner={owner} target={job.target} />
             ))}
             {unavailable.size > 0 && (
-              <div className="px-6 pb-2 pt-1 text-[0.62rem] leading-relaxed text-muted-foreground">
+              <div className="px-6 pb-2 pt-1 text-[0.6875rem] leading-relaxed text-(--linear-text-tertiary)">
                 {copy.proNeedsSubscription}
               </div>
             )}
@@ -471,13 +475,13 @@ function ModelResults({
         <CommandGroup heading={copy.customModel} key="custom-model">
           {customProviders.map(provider => (
             <CommandItem
-              className="flex items-center gap-2 pl-6 font-mono"
+              className="flex items-center gap-2 pl-6"
               key={`custom:${provider.slug}`}
               onSelect={() => onSelectCustomModel(provider, customSlug)}
               value={`custom:${provider.slug}:${customSlug}`}
             >
               <span className="min-w-0 flex-1 truncate">{customSlug}</span>
-              <span className="shrink-0 text-[0.66rem] text-muted-foreground">{provider.name}</span>
+              <span className="shrink-0 text-[0.6875rem] text-(--linear-text-tertiary)">{provider.name}</span>
             </CommandItem>
           ))}
         </CommandGroup>
@@ -522,22 +526,22 @@ function DownloadingModelRow({
   )
 
   return (
-    <CommandItem className="flex items-center gap-2 pl-6 font-mono opacity-60" disabled value={`downloading:${jobId}`}>
+    <CommandItem className="flex items-center gap-2 pl-6 opacity-60" disabled value={`downloading:${jobId}`}>
       <span className="min-w-0 flex-1 truncate">{target}</span>
       <span
         className="flex shrink-0 items-center gap-1.5"
         title={paused ? copyLocal.downloadPausedLabel : copy.downloading}
       >
-        <span className="h-1 w-16 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+        <span className="h-1 w-16 overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
           <span
             className={cn(
               'block h-full rounded-full',
-              paused ? 'bg-muted-foreground/60' : 'bg-primary transition-[width] duration-500'
+              paused ? 'bg-(--linear-text-quaternary)' : 'bg-(--linear-accent) transition-[width] duration-500'
             )}
             style={{ width: `${Math.max(2, percent ?? 0)}%` }}
           />
         </span>
-        <span className="text-[0.62rem] tabular-nums text-muted-foreground">
+        <span className="text-[0.6875rem] tabular-nums text-(--linear-text-tertiary)">
           {paused ? copyLocal.downloadPausedLabel : typeof percent === 'number' ? `${percent}%` : copy.downloading}
         </span>
       </span>
@@ -584,7 +588,7 @@ function AsciiBar({
         aria-hidden
         className={cn(
           'whitespace-pre text-[0.62rem] leading-none tracking-[-0.08em]',
-          isCurrent ? 'text-primary-foreground/85' : color
+          isCurrent ? 'text-(--linear-text-secondary)' : color
         )}
       >
         [{'|'.repeat(filled)}
@@ -593,8 +597,8 @@ function AsciiBar({
       {percentLabel ? (
         <span
           className={cn(
-            'text-[0.62rem] tabular-nums',
-            isCurrent ? 'text-primary-foreground/70' : 'text-muted-foreground'
+            'text-[0.6875rem] tabular-nums',
+            isCurrent ? 'text-(--linear-text-tertiary)' : 'text-(--linear-text-tertiary)'
           )}
         >
           {percentLabel}
@@ -621,11 +625,7 @@ function UsageBar({ gauge, isCurrent }: { gauge: PlanUsageGauge; isCurrent?: boo
 
 /** Window plans: "Recommended" / "Other models" title inside a provider group (not selectable). */
 function ModelSectionLabel({ children }: { children: string }) {
-  return (
-    <div className="px-6 pb-1 pt-2 text-[0.62rem] font-medium uppercase tracking-wide text-muted-foreground">
-      {children}
-    </div>
-  )
+  return <div className="px-6 pb-1 pt-2 text-xs font-medium text-(--linear-text-tertiary)">{children}</div>
 }
 
 /** Window plans: Large (its own monthly limit) or Free (never runs out); other models carry no tag. */
@@ -645,9 +645,9 @@ export function UsageLevelTag({
   return (
     <span
       className={cn(
-        'shrink-0 rounded-sm px-1 py-0.5 font-sans text-[0.62rem] font-medium',
+        'shrink-0 rounded-sm px-1 py-0.5 font-sans text-[0.6875rem] font-medium',
         isCurrent
-          ? 'bg-primary-foreground/20 text-primary-foreground'
+          ? 'bg-(--linear-bg-chip) text-(--linear-text-chip)'
           : level === 'free'
             ? 'bg-(--linear-green)/15 text-(--linear-green)'
             : 'bg-(--linear-orange)/15 text-(--linear-orange)'
@@ -689,10 +689,13 @@ export function PlanLimitLine({ className, provider }: { className?: string; pro
         : null
 
   return (
-    <div className={cn('text-[0.62rem] leading-snug', className)}>
-      <span className={limit.then === 'wait' ? 'text-(--linear-orange)' : 'text-muted-foreground'}>{head}</span>
+    <div className={cn('text-[0.6875rem] leading-snug', className)}>
+      <span className={limit.then === 'wait' ? 'text-(--linear-orange)' : 'text-(--linear-text-tertiary)'}>{head}</span>
       {then ? (
-        <span className={limit.then === 'credits' ? 'text-foreground' : 'text-muted-foreground'}> · {then}</span>
+        <span className={limit.then === 'credits' ? 'text-(--linear-text-primary)' : 'text-(--linear-text-tertiary)'}>
+          {' '}
+          · {then}
+        </span>
       ) : null}
     </div>
   )
@@ -712,7 +715,7 @@ function PlanUsageSummary({ provider, usage }: { provider: ModelOptionProvider; 
   const limited = planLimit(provider) !== null
 
   return (
-    <div className="px-6 pb-2 pt-0.5 text-[0.62rem] leading-relaxed text-muted-foreground">
+    <div className="px-6 pb-2 pt-0.5 text-[0.6875rem] leading-relaxed text-(--linear-text-tertiary)">
       <div className="flex flex-col gap-0.5">
         {limited ? (
           <PlanLimitLine provider={provider} />
@@ -731,7 +734,7 @@ function PlanUsageSummary({ provider, usage }: { provider: ModelOptionProvider; 
             <div className="flex items-center gap-2 font-mono" key={g.label}>
               <span className="w-[4.5rem] shrink-0">{gaugeLabel(g, copy)}</span>
               <UsageBar gauge={g} />
-              {when ? <span className="text-muted-foreground">{copy.resetsIn(when)}</span> : null}
+              {when ? <span className="text-(--linear-text-tertiary)">{copy.resetsIn(when)}</span> : null}
             </div>
           )
         })}
@@ -756,8 +759,10 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
         {typeof price.discount_percent === 'number' ? (
           <span
             className={cn(
-              'rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold',
-              isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-orange)/15 text-(--linear-orange)'
+              'rounded-sm px-1 py-0.5 text-[0.6875rem] font-medium',
+              isCurrent
+                ? 'bg-(--linear-bg-chip) text-(--linear-text-chip)'
+                : 'bg-(--linear-orange)/15 text-(--linear-orange)'
             )}
           >
             -{price.discount_percent}%
@@ -765,8 +770,10 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
         ) : null}
         <span
           className={cn(
-            'shrink-0 rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold uppercase tracking-wide',
-            isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-green)/15 text-(--linear-green)'
+            'shrink-0 rounded-sm px-1 py-0.5 text-[0.6875rem] font-medium',
+            isCurrent
+              ? 'bg-(--linear-bg-chip) text-(--linear-text-chip)'
+              : 'bg-(--linear-green)/15 text-(--linear-green)'
           )}
         >
           {copy.free}
@@ -780,16 +787,18 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
   return (
     <span
       className={cn(
-        'shrink-0 inline-flex items-center gap-1.5 text-[0.66rem] tabular-nums',
-        isCurrent ? 'text-primary-foreground/80' : 'text-muted-foreground'
+        'shrink-0 inline-flex items-center gap-1.5 text-[0.6875rem] tabular-nums',
+        isCurrent ? 'text-(--linear-text-tertiary)' : 'text-(--linear-text-tertiary)'
       )}
       title={copy.priceTitle}
     >
       {onSale ? (
         <span
           className={cn(
-            'rounded-sm px-1 py-0.5 text-[0.62rem] font-semibold',
-            isCurrent ? 'bg-primary-foreground/20' : 'bg-(--linear-orange)/15 text-(--linear-orange)'
+            'rounded-sm px-1 py-0.5 text-[0.6875rem] font-medium',
+            isCurrent
+              ? 'bg-(--linear-bg-chip) text-(--linear-text-chip)'
+              : 'bg-(--linear-orange)/15 text-(--linear-orange)'
           )}
         >
           -{price.discount_percent}%
@@ -802,7 +811,7 @@ function ModelPrice({ price, isCurrent }: { price?: ModelPricing; isCurrent: boo
         <span
           className={cn(
             'line-through decoration-from-font opacity-70',
-            isCurrent ? 'text-primary-foreground/60' : 'text-muted-foreground/80'
+            isCurrent ? 'text-(--linear-text-quaternary)' : 'text-(--linear-text-tertiary)'
           )}
         >
           {copy.wasPrice} {price.was_input || '?'} / {price.was_output || '?'}
@@ -836,15 +845,15 @@ function ProviderHeading({ provider }: { provider: ModelOptionProvider }) {
 
   const tierBadge =
     provider.plan_usage?.kind === 'usage_window' && planName ? (
-      <span className="rounded-sm bg-primary/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-primary">
+      <span className="rounded-sm bg-(--linear-accent)/15 px-1 py-0.5 text-[0.6875rem] font-medium text-(--linear-accent)">
         {planName}
       </span>
     ) : provider.free_tier === true || provider.free_tier_row === true ? (
-      <span className="rounded-sm bg-(--linear-green)/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-(--linear-green)">
+      <span className="rounded-sm bg-(--linear-green)/15 px-1 py-0.5 text-[0.6875rem] font-medium text-(--linear-green)">
         {copy.freeTier}
       </span>
     ) : provider.free_tier === false ? (
-      <span className="rounded-sm bg-primary/15 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-primary">
+      <span className="rounded-sm bg-(--linear-accent)/15 px-1 py-0.5 text-[0.6875rem] font-medium text-(--linear-accent)">
         {copy.pro}
       </span>
     ) : null
@@ -852,7 +861,7 @@ function ProviderHeading({ provider }: { provider: ModelOptionProvider }) {
   return (
     <span className="flex min-w-0 items-center gap-2">
       <span className="truncate">{provider.name}</span>
-      <span className="font-mono text-xs font-normal normal-case tracking-normal text-muted-foreground">
+      <span className="text-xs font-normal normal-case tracking-normal text-(--linear-text-tertiary)">
         {provider.slug} · {provider.total_models ?? provider.models?.length ?? 0}
       </span>
       {tierBadge}

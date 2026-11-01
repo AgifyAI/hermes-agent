@@ -120,7 +120,7 @@ function SudoDialog({ sessionId }: { sessionId: string | null }) {
 
   return (
     <Dialog onOpenChange={onOpenChange} open>
-      <DialogContent blurBackdrop={false} showCloseButton={false}>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle icon={Lock}>{copy.sudoTitle}</DialogTitle>
           <DialogDescription>{request.description ?? copy.sudoDesc}</DialogDescription>

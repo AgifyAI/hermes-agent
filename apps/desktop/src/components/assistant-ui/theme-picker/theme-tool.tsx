@@ -26,7 +26,7 @@ import { ModePickerCard } from './mode-picker-card'
 
 const SHELL_CLASS = cn(
   WIDGET_SHELL_CLASS,
-  'my-1.5 text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)'
+  'my-1.5 text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary)'
 )
 
 const MODES: readonly ThemeMode[] = ['light', 'dark', 'system']
@@ -58,7 +58,7 @@ export function ThemeReceipt({ values }: { values: AppliedAppearance | null }) {
   if (!values) {
     return (
       <div className={SHELL_CLASS} data-theme-settled="">
-        <p className="italic text-(--ui-text-tertiary)">{copy.noPick}</p>
+        <p className="italic text-(--linear-text-tertiary)">{copy.noPick}</p>
       </div>
     )
   }
@@ -67,13 +67,13 @@ export function ThemeReceipt({ values }: { values: AppliedAppearance | null }) {
     <div className={cn(SHELL_CLASS, 'flex flex-wrap items-center gap-x-4 gap-y-1')} data-theme-settled="">
       {values.mode && (
         <span className="flex items-center gap-1.5">
-          <span className="text-(--ui-text-tertiary)">{copy.mode}</span>
+          <span className="text-(--linear-text-tertiary)">{copy.mode}</span>
           <span>{t.settings.modeOptions[values.mode].label}</span>
         </span>
       )}
       {values.layout && (
         <span className="flex items-center gap-1.5">
-          <span className="text-(--ui-text-tertiary)">{copy.layout}</span>
+          <span className="text-(--linear-text-tertiary)">{copy.layout}</span>
           <span>{presets.find(preset => preset.id === values.layout)?.title ?? values.layout}</span>
         </span>
       )}
@@ -133,7 +133,7 @@ export function ThemeTool(props: ToolCallMessagePartProps) {
         <span className={CARD_LABEL_CLASS}>{picker === 'accent' ? copy.mode : copy.layout}</span>
         <button
           aria-label={copy.noPick}
-          className="grid size-6 place-items-center rounded-md text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground"
+          className="grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
           onClick={() => cancelThemePick(sessionId)}
           type="button"
         >

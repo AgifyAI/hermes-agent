@@ -66,14 +66,16 @@ export function SubagentTranscript({ sessionId, subagentId }: { sessionId: strin
 
   return (
     <section className="mt-2 text-xs" data-slot="subagent-transcript">
-      <h4 className="text-(--ui-text-secondary)">{t.agents.extendedTranscript}</h4>
-      {tail?.truncated && <p className="text-(--ui-text-tertiary)">{t.agents.transcriptTruncated}</p>}
+      <h4 className="text-(--linear-text-secondary)">{t.agents.extendedTranscript}</h4>
+      {tail?.truncated && <p className="text-(--linear-text-tertiary)">{t.agents.transcriptTruncated}</p>}
       {tail?.available ? (
         <pre className="max-h-[30vh] overflow-auto overscroll-y-auto whitespace-pre-wrap break-words font-mono text-[0.68rem]">
           {tail.text}
         </pre>
       ) : (
-        <p className="text-(--ui-text-tertiary)">{tail ? t.agents.transcriptUnavailable : t.agents.waitingActivity}</p>
+        <p className="text-(--linear-text-tertiary)">
+          {tail ? t.agents.transcriptUnavailable : t.agents.waitingActivity}
+        </p>
       )}
     </section>
   )

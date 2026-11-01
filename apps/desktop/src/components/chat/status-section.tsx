@@ -41,7 +41,7 @@ export function StatusSection({
       <div className="status-section-header flex items-center gap-1 pr-1">
         <button
           aria-expanded={!collapsed}
-          className="status-section-trigger flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left text-xs font-normal text-muted-foreground/92 transition-colors hover:text-foreground/90"
+          className="status-section-trigger flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left text-xs font-normal text-(--linear-text-tertiary) transition-colors hover:text-(--linear-text-primary)"
           onClick={() => setCollapsed(open => !open)}
           type="button"
         >

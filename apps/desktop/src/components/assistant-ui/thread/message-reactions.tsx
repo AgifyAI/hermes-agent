@@ -42,14 +42,14 @@ const FullEmojiPicker: FC<{ onSelect: (emoji: string) => void }> = ({ onSelect }
         ("lol" → 😂), which frimousse handles natively. */}
     <EmojiPicker.Search
       autoFocus
-      className="mx-1 border-b border-(--ui-stroke-tertiary) bg-transparent px-1 pb-1 text-sm outline-hidden focus:border-(--ui-stroke-secondary)"
+      className="mx-1 border-b-[0.5px] border-(--linear-border-panel) bg-transparent px-1 pb-1 text-[0.8125rem] outline-hidden focus:border-(--linear-border-secondary)"
       placeholder="Search…"
     />
     <EmojiPicker.Viewport className="relative flex-1 outline-hidden">
-      <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-xs text-(--ui-text-tertiary)">
+      <EmojiPicker.Loading className="absolute inset-0 grid place-items-center text-xs text-(--linear-text-tertiary)">
         Loading emoji…
       </EmojiPicker.Loading>
-      <EmojiPicker.Empty className="absolute inset-0 grid place-items-center text-xs text-(--ui-text-tertiary)">
+      <EmojiPicker.Empty className="absolute inset-0 grid place-items-center text-xs text-(--linear-text-tertiary)">
         No emoji found.
       </EmojiPicker.Empty>
       <EmojiPicker.List
@@ -57,7 +57,7 @@ const FullEmojiPicker: FC<{ onSelect: (emoji: string) => void }> = ({ onSelect }
         components={{
           CategoryHeader: ({ category, ...props }) => (
             <div
-              className="bg-(--ui-bg-elevated) px-1.5 pt-2 pb-1 text-[0.6875rem] text-(--ui-text-tertiary)"
+              className="bg-(--linear-bg-overlay) px-1.5 pt-2 pb-1 text-[0.6875rem] text-(--linear-text-tertiary)"
               {...props}
             >
               {category.label}
@@ -114,10 +114,8 @@ export const ReactionPicker: FC<{
       <PopoverAnchor asChild>{children}</PopoverAnchor>
       <PopoverContent
         align={align}
-        // Opt this one surface out of the shared popover glass: emoji hover
-        // tints at 15% alpha are unreadable over blurred transcript text.
         // Overriding the local surface var keeps the arrow matched for free.
-        className={cn('w-auto p-1 [--popover-surface:var(--ui-bg-elevated)]', !expanded && 'flex gap-0.5')}
+        className={cn('w-auto p-1 [--popover-surface:var(--linear-bg-overlay)]', !expanded && 'flex gap-0.5')}
         onCloseAutoFocus={event => event.preventDefault()}
         side="top"
       >
@@ -129,7 +127,7 @@ export const ReactionPicker: FC<{
               <Button
                 aria-label={emoji}
                 aria-pressed={selected === emoji}
-                className={cn('text-base', selected === emoji && 'bg-(--chrome-action-hover)')}
+                className={cn('text-base', selected === emoji && 'bg-(--linear-hover-control)')}
                 key={emoji}
                 onClick={() => {
                   triggerHaptic('selection')

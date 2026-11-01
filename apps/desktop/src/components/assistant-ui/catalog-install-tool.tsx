@@ -30,9 +30,9 @@ import { profileLabel } from '@/store/profile'
 type CatalogCopy = ReturnType<typeof useI18n>['t']['assistant']['catalogInstall']
 type CatalogTarget = ConnectionTarget & { catalog: CatalogEntry; kind: 'plugin' | 'skill' }
 
-const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)`
+const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary)`
 const CAPTION = 'text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height)'
-const PILL = 'inline-flex items-center rounded-full px-1.5 py-0.5 text-[0.62rem] font-medium leading-[0.93rem]'
+const PILL = 'inline-flex items-center rounded-full px-1.5 py-0.5 text-[0.6875rem] font-[450] leading-4'
 
 const KIND_GLYPH = { plugin: Plug, skill: Book } as const
 
@@ -108,8 +108,8 @@ export function CatalogInstallTool(props: ToolCallMessagePartProps) {
 
   return (
     <div className={cn(SHELL_CLASS, 'my-1.5 flex max-w-lg items-center gap-2')} data-slot="connector-card">
-      <Loader2 aria-hidden className="size-4 animate-spin text-(--ui-text-tertiary) motion-reduce:animate-none" />
-      <span className="text-(--ui-text-tertiary)">{t.assistant.catalogInstall.preparing}</span>
+      <Loader2 aria-hidden className="size-4 animate-spin text-(--linear-text-tertiary) motion-reduce:animate-none" />
+      <span className="text-(--linear-text-tertiary)">{t.assistant.catalogInstall.preparing}</span>
     </div>
   )
 }
@@ -135,7 +135,7 @@ export function CatalogInstallCard({ request }: { request: ConnectionRequest }) 
           </Button>
         ) : null}
         {profile ? (
-          <span className={cn(CAPTION, 'text-(--ui-text-tertiary)')}>
+          <span className={cn(CAPTION, 'text-(--linear-text-tertiary)')}>
             {t.assistant.catalogInstall.targetProfile(profileLabel({ name: profile }))}
           </span>
         ) : null}
@@ -223,27 +223,29 @@ export function CatalogRow({ request, target }: CatalogRowProps) {
       <div className="flex min-w-0 items-start gap-3">
         <span
           aria-hidden
-          className="grid size-10 shrink-0 place-items-center rounded-xl bg-(--ui-bg-quaternary) text-(--ui-text-secondary)"
+          className="grid size-10 shrink-0 place-items-center rounded-xl bg-(--linear-bg-secondary) text-(--linear-icon)"
         >
           <Glyph className="size-5" stroke={1.75} />
         </span>
         <div className="grid min-w-0 flex-1 gap-0.5">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1">
             <span className="font-medium leading-4.5 wrap-anywhere">{catalog.display}</span>
-            <span className={cn(PILL, 'bg-(--ui-bg-quaternary) text-muted-foreground')}>{copy.kind[target.kind]}</span>
+            <span className={cn(PILL, 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)')}>
+              {copy.kind[target.kind]}
+            </span>
             {catalog.tier ? (
-              <span className={cn(PILL, 'bg-(--ui-bg-quaternary) text-muted-foreground')}>
+              <span className={cn(PILL, 'bg-(--linear-bg-secondary) text-(--linear-text-tertiary)')}>
                 {copy.tier[catalog.tier]}
               </span>
             ) : null}
             {catalog.platforms.map(platform => (
-              <span className={cn(PILL, 'bg-primary/8 text-primary')} key={platform}>
+              <span className={cn(PILL, 'bg-(--linear-accent)/8 text-(--linear-accent)')} key={platform}>
                 {platformName(platform)}
               </span>
             ))}
           </div>
           {catalog.description ? (
-            <p className="leading-4.5 text-(--ui-text-secondary) wrap-anywhere">{catalog.description}</p>
+            <p className="leading-4.5 text-(--linear-text-secondary) wrap-anywhere">{catalog.description}</p>
           ) : null}
         </div>
       </div>
@@ -349,10 +351,10 @@ function RowOutcome({
           ) : null}
         </p>
         {notes.length > 0 ? (
-          <p className={cn(CAPTION, 'text-(--ui-text-tertiary) wrap-anywhere')}>{notes.join(' · ')}</p>
+          <p className={cn(CAPTION, 'text-(--linear-text-tertiary) wrap-anywhere')}>{notes.join(' · ')}</p>
         ) : null}
         {namesOpen ? (
-          <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 font-mono text-[0.6875rem] leading-4 text-(--ui-text-secondary)">
+          <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 font-mono text-[0.6875rem] leading-4 text-(--linear-text-secondary)">
             {target.tools.map(tool => (
               <li className="min-w-0 break-all" key={tool}>
                 {tool}
@@ -367,18 +369,11 @@ function RowOutcome({
   if (target.state === 'failed' || target.state === 'expired') {
     return (
       <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-        <p className={cn(CAPTION, 'min-w-0 text-destructive wrap-anywhere')} role="status">
+        <p className={cn(CAPTION, 'min-w-0 text-(--linear-red) wrap-anywhere')} role="status">
           {target.detail ? `${copy.failed} · ${target.detail}` : copy.failed}
         </p>
         {onRetry ? (
-          <Button
-            className="h-6 px-1.5 text-(--ui-text-tertiary)"
-            disabled={sending}
-            loading={sending}
-            onClick={onRetry}
-            size="xs"
-            variant="ghost"
-          >
+          <Button disabled={sending} loading={sending} onClick={onRetry} size="xs" variant="ghost">
             {retryLabel}
           </Button>
         ) : null}
@@ -388,23 +383,23 @@ function RowOutcome({
 
   if (target.state === 'skipped') {
     return (
-      <p className={cn(CAPTION, 'text-(--ui-text-tertiary)')} role="status">
+      <p className={cn(CAPTION, 'text-(--linear-text-tertiary)')} role="status">
         {skippedLabel}
       </p>
     )
   }
 
   if (settled) {
-    return <p className={cn(CAPTION, 'text-(--ui-text-tertiary)')}>{copy.notInstalled}</p>
+    return <p className={cn(CAPTION, 'text-(--linear-text-tertiary)')}>{copy.notInstalled}</p>
   }
 
   if (target.state === 'initiated' || sending) {
     return (
       <div className="grid min-w-0 gap-1.5" role="status">
-        <p className={cn(CAPTION, 'text-(--ui-text-tertiary)')}>{copy.installing}</p>
-        <Progress animated aria-label={copy.installing} className="h-0.5 bg-primary/15" indeterminate />
+        <p className={cn(CAPTION, 'text-(--linear-text-tertiary)')}>{copy.installing}</p>
+        <Progress animated aria-label={copy.installing} className="h-0.5 bg-(--linear-accent)/15" indeterminate />
         {target.state === 'initiated' && target.catalog.phase ? (
-          <p className={cn(CAPTION, 'text-(--ui-text-quaternary)')}>{copy.phase[target.catalog.phase]}</p>
+          <p className={cn(CAPTION, 'text-(--linear-text-quaternary)')}>{copy.phase[target.catalog.phase]}</p>
         ) : null}
       </div>
     )
@@ -412,20 +407,13 @@ function RowOutcome({
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-      <span className="inline-flex h-6 items-stretch overflow-hidden rounded-md border border-primary/25 bg-primary/10 text-primary">
-        <Button
-          className="h-full rounded-none px-2 text-xs font-medium text-primary hover:bg-primary/15 hover:text-primary"
-          onClick={onInstall}
-          size="xs"
-          variant="ghost"
-        >
-          {copy.install}
-        </Button>
-      </span>
-      <Button className="h-6 px-1.5 text-(--ui-text-tertiary)" onClick={onAdvanced} size="xs" variant="ghost">
+      <Button onClick={onInstall} size="xs">
+        {copy.install}
+      </Button>
+      <Button onClick={onAdvanced} size="xs" variant="ghost">
         {copy.advanced}
       </Button>
-      <Button className="h-6 px-1.5 text-(--ui-text-tertiary)" onClick={onSkip} size="xs" variant="ghost">
+      <Button onClick={onSkip} size="xs" variant="ghost">
         {copy.skip}
       </Button>
     </div>

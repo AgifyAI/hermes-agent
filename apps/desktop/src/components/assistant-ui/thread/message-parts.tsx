@@ -323,7 +323,7 @@ const ThinkingDisclosure: FC<{
 
   return (
     <div
-      className="text-[length:var(--conversation-tool-font-size)] text-(--ui-text-tertiary)"
+      className="text-[length:var(--conversation-tool-font-size)] text-(--linear-text-tertiary)"
       data-conversation-scaffold=""
       data-slot="aui_thinking-disclosure"
       ref={enterRef}
@@ -451,7 +451,7 @@ const ReasoningTextPart: ReasoningMessagePartComponent = () => {
 
   return (
     <MarkdownTextContent
-      containerClassName="text-xs leading-snug text-muted-foreground/85"
+      containerClassName="text-xs leading-snug text-(--linear-text-tertiary)"
       containerProps={{ 'data-slot': 'aui_reasoning-text' } as ComponentProps<'div'>}
       isRunning={status.type === 'running' || messageRunning}
       scratchpad

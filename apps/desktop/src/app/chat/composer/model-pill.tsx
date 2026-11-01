@@ -33,7 +33,7 @@ const UNKNOWN_TIER = atom('')
 
 const PILL = cn(
   'h-(--composer-control-size) min-w-0 shrink gap-1 rounded-md px-2 text-xs font-normal',
-  'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+  'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)'
 )
 
 /**
@@ -151,7 +151,7 @@ export function ModelPill({
       {pinnedOverride && (
         <span
           aria-label={copy.modelPinned}
-          className="size-1 shrink-0 rounded-full bg-(--ui-accent)"
+          className="size-1 shrink-0 rounded-full bg-(--linear-accent)"
           data-testid="model-pinned-dot"
           role="img"
         />
@@ -165,7 +165,7 @@ export function ModelPill({
   const pillClass = compact
     ? cn(
         'size-(--composer-control-size) shrink-0 justify-center gap-0 rounded-md p-0',
-        'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+        'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)'
       )
     : PILL
 

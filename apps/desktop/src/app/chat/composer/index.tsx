@@ -48,7 +48,6 @@ import { deriveBusySubmitState } from './busy-submit-state'
 import { ComposerDockGlow, QueuedEditBanner } from './chat-bar-parts'
 import {
   acceptsTriggerCompletion,
-  COMPOSER_FADE_BACKGROUND,
   composerInputWidthClass,
   implicitSlashAcceptIndex,
   liveComposerDraft,
@@ -1414,12 +1413,6 @@ export function ChatBar({
                 scope={trigger.scope}
               />
             )}
-            {!poppedOut && (
-              <div
-                className="pointer-events-none absolute inset-0 rounded-[inherit]"
-                style={{ background: COMPOSER_FADE_BACKGROUND }}
-              />
-            )}
             {/* Drag region: covers the transparent grab margin around the surface.
               The surface sits on top (z-4) so only the exposed ring receives this
               element's hover/cursor — grab cursor + a diagonal hatch (/////)
@@ -1451,7 +1444,7 @@ export function ChatBar({
                   // track past the surface — and every `w-full` child (the fade,
                   // the input/controls row) laid out against that phantom width
                   // and got clipped by overflow-hidden, send button first.
-                  'group/composer-surface relative z-4 isolate grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr] overflow-hidden rounded-[inherit] border border-[color-mix(in_srgb,var(--dt-composer-ring)_calc(18%*var(--composer-ring-strength)),var(--dt-input))]',
+                  'group/composer-surface relative z-4 isolate grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr] overflow-hidden rounded-[inherit] border border-(--ui-stroke-secondary)',
                   COMPOSER_DROP_FADE_CLASS,
                   dragActive && COMPOSER_DROP_ACTIVE_CLASS
                 )}
@@ -1552,7 +1545,7 @@ export function ChatBarFallback() {
       )}
       data-slot="composer-root"
     >
-      <div className="composer-fallback-surface relative isolate h-(--composer-fallback-height) w-full rounded-[inherit] border border-[color-mix(in_srgb,var(--dt-composer-ring)_calc(18%*var(--composer-ring-strength)),var(--dt-input))]">
+      <div className="composer-fallback-surface relative isolate h-(--composer-fallback-height) w-full rounded-[inherit] border border-(--ui-stroke-secondary)">
         <div aria-hidden className={composerInputBacking} />
       </div>
     </div>

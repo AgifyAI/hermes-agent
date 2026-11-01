@@ -30,10 +30,7 @@ export function Wordmark({
   return (
     <p
       aria-label={text}
-      className={cn(
-        'wordmark fit-text mx-auto text-midground mix-blend-plus-lighter dark:text-foreground/90',
-        className
-      )}
+      className={cn('wordmark fit-text mx-auto text-(--linear-text-primary)', className)}
       style={{ '--fit-min': fitMin, width } as CSSProperties}
     >
       <span>

@@ -3,6 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { type ComponentProps, useEffect } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { useZoomPan } from '@/components/ui/use-zoom-pan'
 import { useImageDownload } from '@/hooks/use-image-download'
@@ -140,32 +141,36 @@ export function ImageLightbox({
               onClick={event => event.stopPropagation()}
               onPointerDown={event => event.stopPropagation()}
             >
-              <button
+              <Button
                 aria-label={copy.zoomOut}
-                className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                 disabled={scale <= 0.25}
                 onClick={() => zoomOut()}
+                size="icon-lg"
                 type="button"
+                variant="ghost"
               >
-                <ZoomOut className="size-4" />
-              </button>
-              <button
+                <ZoomOut />
+              </Button>
+              <Button
                 aria-label={copy.resetZoom}
-                className="min-w-14 rounded-full px-2 text-center text-xs font-medium tabular-nums text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="min-w-14 tabular-nums"
                 onClick={() => reset()}
+                size="sm"
                 type="button"
+                variant="ghost"
               >
                 {Math.round(scale * 100)}%
-              </button>
-              <button
+              </Button>
+              <Button
                 aria-label={copy.zoomIn}
-                className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                 disabled={scale >= 8}
                 onClick={() => zoomIn()}
+                size="icon-lg"
                 type="button"
+                variant="ghost"
               >
-                <ZoomIn className="size-4" />
-              </button>
+                <ZoomIn />
+              </Button>
             </div>
           )
         }
@@ -180,7 +185,7 @@ export function ImageLightbox({
         // attribute selector out-specifies the plain utilities — hence the
         // important utilities and the data-variant opt-out in styles.css.
         data-variant="media-lightbox"
-        overlayClassName="bg-black/60"
+        overlayClassName="bg-(--linear-scrim)"
         showCloseButton={false}
       >
         <div className="group/lightbox relative inline-block">

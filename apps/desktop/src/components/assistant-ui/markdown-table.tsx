@@ -157,7 +157,7 @@ export function ResizableMarkdownTable({ children, className, ...props }: Compon
     <div className="aui-md-table my-2 max-w-full overflow-x-auto rounded-lg border-[0.5px] border-(--linear-border-panel)">
       <table
         className={cn(
-          'm-0 w-full min-w-[18rem] border-collapse text-[length:var(--conversation-text-font-size)] [&_tr]:border-b [&_tr]:border-(--ui-stroke-tertiary) last:[&_tr]:border-0',
+          'm-0 w-full min-w-[18rem] border-collapse text-[length:var(--conversation-text-font-size)] [&_tr]:border-b-[0.5px] [&_tr]:border-(--linear-border-panel) last:[&_tr]:border-0',
           widths && 'table-fixed [&_td]:wrap-anywhere',
           className
         )}
@@ -203,7 +203,7 @@ export function ResizableMarkdownTh({ children, className, ...props }: Component
         className="group/mdcol absolute inset-y-0 -end-1 z-10 w-2 cursor-col-resize select-none"
         data-md-col-handle
       >
-        <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-(--ui-stroke-secondary) opacity-0 transition-opacity duration-100 group-hover/mdcol:opacity-100 [[data-md-col-active]_&]:opacity-100" />
+        <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-(--linear-border-secondary) opacity-0 transition-opacity duration-100 group-hover/mdcol:opacity-100 [[data-md-col-active]_&]:opacity-100" />
       </span>
     </th>
   )

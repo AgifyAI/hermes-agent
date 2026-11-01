@@ -175,16 +175,16 @@ export const AssistantMessage: FC<AssistantMessageProps> = props => {
 /** The compact stand-in a settled inter-agent reply collapses to (Grok-bots
  *  parity — the transcript shows the event; the text is one click away). */
 const InterAgentCollapsedNotice: FC<{ sender: string }> = ({ sender }) => (
-  <div className="flex max-w-[min(86%,44rem)] flex-col gap-0.5 self-center px-2 py-0.5 text-[0.6875rem] leading-5 text-muted-foreground/60">
+  <div className="flex max-w-[min(86%,44rem)] flex-col gap-0.5 self-center px-2 py-0.5 text-[0.6875rem] leading-5 text-(--linear-text-quaternary)">
     <span className="flex items-center justify-center gap-1.5">
-      <Codicon className="shrink-0 text-muted-foreground/55" name="arrow-small-right" size="0.8125rem" />
+      <Codicon className="shrink-0 text-(--linear-text-quaternary)" name="arrow-small-right" size="0.8125rem" />
       <span className="wrap-anywhere">Replied to {sender}</span>
     </span>
     <details className="self-center">
-      <summary className="cursor-pointer select-none text-center text-muted-foreground/45 hover:text-muted-foreground/70">
+      <summary className="cursor-pointer select-none text-center text-(--linear-text-quaternary) hover:text-(--linear-text-tertiary)">
         show reply
       </summary>
-      <div className="mt-1 max-w-[36rem] rounded-lg border border-(--ui-stroke-tertiary) px-3 py-2 text-left text-[0.75rem] leading-5 text-foreground/85">
+      <div className="mt-1 max-w-[36rem] rounded-lg border-[0.5px] border-(--linear-border-panel) px-3 py-2 text-left text-[0.75rem] leading-5 text-(--linear-text-secondary)">
         {MESSAGE_PARTS}
       </div>
     </details>
@@ -322,7 +322,7 @@ const AssistantMessageBody: FC<AssistantMessageProps & { collapsedNotice?: null 
             <AssistantPreviewEmbeds />
             <MessagePrimitive.Error>
               <ErrorPrimitive.Root
-                className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--dt-destructive)_35%,transparent)] bg-[color-mix(in_srgb,var(--dt-destructive)_7%,transparent)] px-3 py-2 text-[0.78rem] leading-5 text-[color-mix(in_srgb,var(--dt-destructive)_78%,var(--ui-text-secondary))]"
+                className="mt-1.5 flex flex-col gap-1.5 rounded-lg border-[0.5px] border-[color-mix(in_srgb,var(--linear-red)_35%,transparent)] bg-[color-mix(in_srgb,var(--linear-red)_7%,transparent)] px-3 py-2 text-xs leading-5 text-[color-mix(in_srgb,var(--linear-red)_78%,var(--linear-text-secondary))]"
                 role="alert"
               >
                 <div className="flex items-start gap-1.5">
@@ -385,7 +385,7 @@ const StoppedNotice: FC = () => {
 
   return (
     <div
-      className="flex items-center gap-1 px-(--message-text-indent) pt-1 text-[0.72rem] text-(--ui-text-tertiary)"
+      className="flex items-center gap-1 px-(--message-text-indent) pt-1 text-xs text-(--linear-text-tertiary)"
       data-slot="aui_assistant-message-stopped"
     >
       <Codicon className="size-3" name="debug-stop" />
@@ -620,7 +620,7 @@ const ErrorCardHeadline: FC = () => {
       <div className="font-medium">{title}</div>
       <div>{body}</div>
       {errorText && (
-        <details className="mt-0.5 min-w-0 text-[0.72rem] opacity-70">
+        <details className="mt-0.5 min-w-0 text-xs opacity-70">
           <summary className="cursor-pointer select-none">{t.assistant.thread.errorDetails}</summary>
           <div className="wrap-anywhere mt-0.5 whitespace-pre-wrap font-mono">{errorText}</div>
         </details>
@@ -913,7 +913,7 @@ const ScheduledRetryAction: FC<{ resetsAt: number }> = ({ resetsAt }) => {
   if (fireAt !== null) {
     return (
       <span className="inline-flex items-center gap-1.5" data-testid="error-retry-scheduled">
-        <span className="px-1 text-xs text-muted-foreground">
+        <span className="px-1 text-xs text-(--linear-text-tertiary)">
           {copy.errorRetryScheduled(formatResetClock(resetsAt), formatCountdown(fireAt - now))}
         </span>
         <button className="aui-error-action" onClick={() => setFireAt(null)} type="button">
@@ -1112,7 +1112,7 @@ const ErrorRecoveryActions: FC = () => {
         </ActionBarPrimitive.Reload>
       )}
       {plan.retry && limitReset && (
-        <span className="px-1 text-xs text-muted-foreground" data-testid="error-limit-reset">
+        <span className="px-1 text-xs text-(--linear-text-tertiary)" data-testid="error-limit-reset">
           {copy.errorLimitResets(limitReset)}
         </span>
       )}
@@ -1287,7 +1287,7 @@ const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
     <div className="relative flex w-full shrink-0 items-center justify-end gap-1.5">
       {durationS !== undefined && (
         <span
-          className="mr-auto select-none px-0.5 text-[0.6875rem] leading-5 tabular-nums text-muted-foreground"
+          className="mr-auto select-none px-0.5 text-[0.6875rem] leading-5 tabular-nums text-(--linear-text-tertiary)"
           data-slot="aui_turn-duration"
           title={t.assistant.thread.turnDuration(formatElapsed(durationS))}
         >
@@ -1424,16 +1424,16 @@ const AssistantFooter: FC<MessageActionProps & { durationS?: number }> = ({ dura
   return (
     <div className="flex min-h-6 flex-col items-end gap-1 pr-(--message-text-indent) pl-(--message-text-indent)">
       <BranchPickerPrimitive.Root
-        className="inline-flex h-6 items-center gap-1 text-xs text-muted-foreground"
+        className="inline-flex h-6 items-center gap-1 text-xs text-(--linear-text-tertiary)"
         hideWhenSingleBranch
       >
-        <BranchPickerPrimitive.Previous className="grid size-6 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-default disabled:opacity-35">
+        <BranchPickerPrimitive.Previous className="grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-100 hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none disabled:cursor-default disabled:opacity-60">
           <Codicon name="chevron-left" size="0.875rem" />
         </BranchPickerPrimitive.Previous>
         <span className="tabular-nums">
           <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
         </span>
-        <BranchPickerPrimitive.Next className="grid size-6 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-default disabled:opacity-35">
+        <BranchPickerPrimitive.Next className="grid size-6 place-items-center rounded-full text-(--linear-text-tertiary) transition-colors duration-100 hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) hover:transition-none disabled:cursor-default disabled:opacity-60">
           <Codicon name="chevron-right" size="0.875rem" />
         </BranchPickerPrimitive.Next>
       </BranchPickerPrimitive.Root>

@@ -60,7 +60,7 @@ export const SessionControlLoopSection = memo(function SessionControlLoopSection
 
   const iconClass =
     loop.status === 'done'
-      ? 'text-muted-foreground/70'
+      ? 'text-(--linear-text-tertiary)'
       : loop.status === 'paused' || loop.deferred_by_goal
         ? 'text-(--linear-yellow)'
         : 'text-(--linear-green)'
@@ -168,7 +168,7 @@ export const SessionControlLoopSection = memo(function SessionControlLoopSection
                       <Button
                         aria-haspopup="menu"
                         aria-label={ctrl.loopActions}
-                        className="size-6 rounded-md text-muted-foreground/70 hover:text-foreground/90"
+                        className="text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                         disabled={isBusy}
                         onClick={event => {
                           // Radix opens pointer interactions from pointerdown. Keyboard,
@@ -201,7 +201,10 @@ export const SessionControlLoopSection = memo(function SessionControlLoopSection
               label={headerLabel}
             >
               <div>
-                <StatusControlRow className="text-[0.73rem] leading-4 text-foreground/92 break-words" icon="comment">
+                <StatusControlRow
+                  className="text-xs leading-4 text-(--linear-text-secondary) break-words"
+                  icon="comment"
+                >
                   {loop.prompt}
                 </StatusControlRow>
                 <StatusControlRow icon="clock">

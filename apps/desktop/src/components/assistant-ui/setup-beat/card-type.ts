@@ -3,7 +3,7 @@
 
 /** The card's question line and section labels. */
 export const CARD_LABEL_CLASS =
-  'text-[length:var(--conversation-tool-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)'
+  'text-[length:var(--conversation-tool-font-size)] leading-(--conversation-caption-line-height) text-(--linear-text-tertiary)'
 
 /** Option names (pills, tiles, picker cards). */
 export const CARD_OPTION_CLASS = 'text-[length:var(--conversation-caption-font-size)]'

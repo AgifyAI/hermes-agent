@@ -68,7 +68,7 @@ export function ExpandableBlock({ children, className }: ExpandableBlockProps) {
       {horizontalOverflowing && !horizontalAtEnd && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-linear-to-l from-[var(--expandable-fade-from,var(--ui-chat-surface-background))] to-transparent"
+          className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-linear-to-l from-[var(--expandable-fade-from,var(--linear-bg-panel))] to-transparent"
           data-slot="expandable-horizontal-fade"
         />
       )}
@@ -79,11 +79,11 @@ export function ExpandableBlock({ children, className }: ExpandableBlockProps) {
         // both sideways scrolling and text selection. Keep the fade
         // `pointer-events-none` and pin the only clickable target — a compact
         // toggle — to the right edge, clear of the draggable scrollbar track.
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-7 justify-end bg-linear-to-t from-[var(--expandable-fade-from,var(--ui-chat-surface-background))] to-transparent">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-7 justify-end bg-linear-to-t from-[var(--expandable-fade-from,var(--linear-bg-panel))] to-transparent">
           <button
             aria-expanded={expanded}
             aria-label={expanded ? 'Collapse' : 'Expand'}
-            className="pointer-events-auto flex h-7 w-9 cursor-pointer items-end justify-center pb-1 text-muted-foreground/70 transition-colors hover:text-foreground"
+            className="pointer-events-auto flex h-7 w-9 cursor-pointer items-end justify-center pb-1 text-(--linear-text-tertiary) transition-colors hover:text-(--linear-text-primary)"
             onClick={() => setExpanded(v => !v)}
             type="button"
           >

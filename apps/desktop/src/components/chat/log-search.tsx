@@ -81,7 +81,7 @@ export function LogSearchField({ containerClassName, onChange, placeholder, sear
               aria-live="polite"
               className={cn(
                 'mr-0.5 text-[0.6875rem] leading-none tabular-nums',
-                search.hits.length ? 'text-(--ui-text-secondary)' : 'text-destructive'
+                search.hits.length ? 'text-(--linear-text-secondary)' : 'text-(--linear-red)'
               )}
             >
               {label}
@@ -93,7 +93,7 @@ export function LogSearchField({ containerClassName, onChange, placeholder, sear
                 <Tip key={direction} label={t.findInPage[direction]}>
                   <Button
                     aria-label={t.findInPage[direction]}
-                    className="size-5 shrink-0 text-muted-foreground/85 hover:bg-accent/60 hover:text-foreground"
+                    className="size-5 shrink-0 text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)"
                     disabled={search.hits.length === 0}
                     onClick={search[direction]}
                     size="icon-xs"

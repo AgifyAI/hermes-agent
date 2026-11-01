@@ -172,12 +172,12 @@ function AttachmentPill({ attachment, onRemove }: { attachment: ComposerAttachme
               )}
               {isUploading && (
                 <span className="absolute inset-0 grid place-items-center bg-(--linear-bg-chip)/70">
-                  <Loader2 className="size-3.5 animate-spin text-foreground/75" />
+                  <Loader2 className="size-3.5 animate-spin text-(--linear-text-secondary)" />
                 </span>
               )}
               {hasUploadError && (
-                <span className="absolute inset-0 grid place-items-center bg-destructive/15">
-                  <AlertCircle className="size-3.5 text-destructive" />
+                <span className="absolute inset-0 grid place-items-center bg-(--linear-red)/15">
+                  <AlertCircle className="size-3.5 text-(--linear-red)" />
                 </span>
               )}
             </span>

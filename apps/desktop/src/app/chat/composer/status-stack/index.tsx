@@ -270,7 +270,7 @@ export function ComposerStatusStack({ onSubmit, queue, sessionId }: ComposerStat
             group.type === 'subagent' ? (
               <Tip label={<TipKeybindLabel actionId="nav.agents" text={t.statusStack.agents} />}>
                 <Button
-                  className="text-muted-foreground/75 hover:text-foreground/90"
+                  className="text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                   onClick={openAgents}
                   size="micro"
                   type="button"
@@ -285,13 +285,13 @@ export function ComposerStatusStack({ onSubmit, queue, sessionId }: ComposerStat
             hasRunningTodo(group) ? (
               <GlyphSpinner
                 ariaLabel={t.statusStack.running}
-                className="text-[0.8rem] leading-none text-muted-foreground/80"
+                className="text-[0.8rem] leading-none text-(--linear-text-tertiary)"
                 spinner="braille"
               />
             ) : undefined
           }
           defaultCollapsed={group.type !== 'todo'}
-          icon={<Codicon className="text-muted-foreground/70" name={GROUP_ICON[group.type]} size="0.8rem" />}
+          icon={<Codicon className="text-(--linear-text-tertiary)" name={GROUP_ICON[group.type]} size="0.8rem" />}
           label={groupLabel(group, t.statusStack)}
         >
           {group.items.map(item => (
@@ -317,7 +317,7 @@ export function ComposerStatusStack({ onSubmit, queue, sessionId }: ComposerStat
       node: (
         <StatusSection
           defaultCollapsed
-          icon={<Codicon className="text-muted-foreground/70" name="checklist" size="0.8rem" />}
+          icon={<Codicon className="text-(--linear-text-tertiary)" name="checklist" size="0.8rem" />}
           label={t.statusStack.previousTodos(done, retainedTodos.length)}
         >
           {todoTree(retainedTodos).map(([todo, depth]) => (

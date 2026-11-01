@@ -43,9 +43,9 @@ export function ComposerCompletionDrawer({
 
 export function CompletionDrawerEmpty({ children, title }: { children?: ReactNode; title: string }) {
   return (
-    <div className="px-3 py-3 text-xs text-(--ui-text-tertiary)">
+    <div className="px-3 py-3 text-xs text-(--linear-text-tertiary)">
       <p>{title}</p>
-      {children && <p className="mt-1 text-xs text-(--ui-text-tertiary)">{children}</p>}
+      {children && <p className="mt-1 text-xs text-(--linear-text-tertiary)">{children}</p>}
     </div>
   )
 }

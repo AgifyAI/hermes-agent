@@ -41,22 +41,22 @@ export function SubagentSection({ sessionId }: SubagentSectionProps) {
       leading={
         <GlyphSpinner
           ariaLabel={item.status === 'queued' ? t.agents.queued : t.agents.running}
-          className="text-(--ui-purple)"
+          className="text-(--linear-accent)"
           spinner="braille"
         />
       }
       onActivate={() => setSelected(selected === item.id ? null : item.id)}
       trailing={
         <ActivityTimerText
-          className="shrink-0 text-[0.65rem]"
+          className="shrink-0 text-[0.6875rem]"
           seconds={Math.max(0, Math.floor((nowMs - item.startedAt) / 1000))}
         />
       }
       trailingVisible
     >
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-xs text-(--ui-text-primary)">{item.goal}</span>
-        <span className="block truncate text-[0.68rem] text-(--ui-text-tertiary)">
+        <span className="block truncate text-xs text-(--linear-text-primary)">{item.goal}</span>
+        <span className="block truncate text-[0.6875rem] text-(--linear-text-tertiary)">
           {item.stream.at(-1)?.text || (item.status === 'queued' ? t.agents.queued : t.agents.waitingActivity)}
         </span>
       </span>
@@ -71,11 +71,11 @@ export function SubagentSection({ sessionId }: SubagentSectionProps) {
         collapsedIndicator={
           <GlyphSpinner
             ariaLabel={live.some(item => item.status === 'running') ? t.agents.running : t.agents.queued}
-            className="text-(--ui-purple)"
+            className="text-(--linear-accent)"
             spinner="braille"
           />
         }
-        icon={<Codicon className="text-(--ui-purple)" name="agent" size="0.8rem" />}
+        icon={<Codicon className="text-(--linear-accent)" name="agent" size="0.8rem" />}
         label={t.statusStack.subagents(live.length)}
       >
         <div className="max-h-[25vh] overflow-y-auto overscroll-y-auto">{live.map(row)}</div>

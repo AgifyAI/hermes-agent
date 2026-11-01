@@ -17,7 +17,7 @@ const toolLabel = (name: string) => name.split('_').filter(Boolean).map(capitali
 // is still open (pending), codicons once it resolves, a live spinner only on
 // the in-progress item.
 const TODO_GLYPHS: Record<Exclude<TodoStatus, 'in_progress' | 'pending'>, { icon: string; tone: string }> = {
-  cancelled: { icon: 'circle-slash', tone: 'text-muted-foreground/45' },
+  cancelled: { icon: 'circle-slash', tone: 'text-(--linear-text-quaternary)' },
   completed: { icon: 'pass-filled', tone: 'text-(--linear-green)/80' }
 }
 
@@ -26,7 +26,7 @@ const TODO_GLYPHS: Record<Exclude<TodoStatus, 'in_progress' | 'pending'>, { icon
 function leadingGlyph(item: ComposerStatusItem, s: Translations['statusStack'], historical = false): ReactNode {
   if (item.type === 'goal') {
     if (item.goalStatus === 'paused') {
-      return <Codicon className="text-muted-foreground/60" name="debug-pause" size="0.8rem" />
+      return <Codicon className="text-(--linear-text-quaternary)" name="debug-pause" size="0.8rem" />
     }
 
     if (item.goalStatus === 'done') {
@@ -56,7 +56,7 @@ function leadingGlyph(item: ComposerStatusItem, s: Translations['statusStack'], 
     return (
       <GlyphSpinner
         ariaLabel={s.running}
-        className="text-[0.85rem] leading-none text-muted-foreground/80"
+        className="text-[0.85rem] leading-none text-(--linear-text-tertiary)"
         spinner="braille"
       />
     )
@@ -65,7 +65,10 @@ function leadingGlyph(item: ComposerStatusItem, s: Translations['statusStack'], 
   return (
     <span
       aria-hidden
-      className={cn('size-1.5 rounded-full', item.state === 'failed' ? 'bg-destructive/80' : 'bg-(--linear-green)/70')}
+      className={cn(
+        'size-1.5 rounded-full',
+        item.state === 'failed' ? 'bg-(--linear-red)/80' : 'bg-(--linear-green)/70'
+      )}
     />
   )
 }
@@ -122,34 +125,34 @@ export const StatusItemRow = memo(function StatusItemRow({
         onActivate={onActivate}
         trailing={
           canOpen ? (
-            <Codicon aria-hidden className="text-muted-foreground/55" name="link-external" size="0.85rem" />
+            <Codicon aria-hidden className="text-(--linear-text-quaternary)" name="link-external" size="0.85rem" />
           ) : undefined
         }
       >
         <span
           className={cn(
-            'min-w-0 flex-1 truncate text-[0.73rem] leading-4',
+            'min-w-0 flex-1 truncate text-xs leading-4',
             failed
-              ? 'text-destructive/90'
+              ? 'text-(--linear-red)/90'
               : item.todoStatus && item.todoStatus !== 'in_progress'
-                ? 'text-muted-foreground/75'
-                : 'text-foreground/92'
+                ? 'text-(--linear-text-tertiary)'
+                : 'text-(--linear-text-secondary)'
           )}
         >
           {item.title}
         </span>
         {item.type === 'subagent' && item.currentTool && (
-          <span className="shrink-0 truncate text-[0.62rem] leading-4 text-muted-foreground/70">
+          <span className="shrink-0 truncate text-[0.6875rem] leading-4 text-(--linear-text-tertiary)">
             {toolLabel(item.currentTool)}
           </span>
         )}
         {item.type === 'goal' && item.currentTool && (
-          <span className="shrink-0 truncate text-[0.62rem] leading-4 text-muted-foreground/70">
+          <span className="shrink-0 truncate text-[0.6875rem] leading-4 text-(--linear-text-tertiary)">
             {item.currentTool}
           </span>
         )}
         {failed && typeof item.exitCode === 'number' && item.exitCode !== 0 && (
-          <span className="shrink-0 rounded bg-destructive/15 px-1 text-[0.58rem] font-semibold text-destructive tabular-nums">
+          <span className="shrink-0 rounded-(--linear-radius-kbd) bg-(--linear-red)/15 px-1 text-[0.6875rem] font-medium text-(--linear-red) tabular-nums">
             {s.exit(item.exitCode)}
           </span>
         )}

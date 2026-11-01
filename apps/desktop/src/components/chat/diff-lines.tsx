@@ -65,7 +65,7 @@ const PREVIEW_OVERSCAN_LINES = 400
 // the page (no scroll-trap); `overscroll-x-contain` keeps a trackpad's sideways
 // overscroll on long code lines from firing browser back/forward navigation.
 const DIFF_BOX_CLASS =
-  '-mx-1.5 -mb-1.5 max-h-[12rem] max-w-none min-w-0 overflow-auto overscroll-x-contain overscroll-y-auto font-mono text-[0.7rem] leading-relaxed text-(--ui-text-secondary)'
+  '-mx-1.5 -mb-1.5 max-h-[12rem] max-w-none min-w-0 overflow-auto overscroll-x-contain overscroll-y-auto font-mono text-[0.7rem] leading-relaxed text-(--linear-text-secondary)'
 
 function diffKind(line: string): DiffKind {
   if (line.startsWith('+') && !line.startsWith('+++')) {
@@ -633,13 +633,14 @@ export function FileDiffPanel({
     <PreviewDiffRows afterLines={afterRows} beforeLines={beforeRows} chunks={visibleLineChunks} />
   )
 
-  const compactBody = !canHighlight || !seen ? (
-    <DiffBody lines={lines} />
-  ) : fullText != null ? (
-    <TokenizedDiffBody language={language} lines={lines} />
-  ) : (
-    <SyntaxDiff language={language} lines={lines} />
-  )
+  const compactBody =
+    !canHighlight || !seen ? (
+      <DiffBody lines={lines} />
+    ) : fullText != null ? (
+      <TokenizedDiffBody language={language} lines={lines} />
+    ) : (
+      <SyntaxDiff language={language} lines={lines} />
+    )
 
   if (!windowed) {
     return (
@@ -663,9 +664,7 @@ export function FileDiffPanel({
       >
         {showLineNumbers ? (
           <div className="grid min-w-max grid-cols-[auto_minmax(0,1fr)]">
-            <div
-              className="sticky left-0 z-1 select-none bg-(--ui-editor-surface-background) py-3 text-muted-foreground/55"
-            >
+            <div className="sticky left-0 z-1 select-none bg-(--linear-bg-panel) py-3 text-(--linear-text-quaternary)">
               {beforeRows > 0 && <div aria-hidden style={{ height: beforeRows * PREVIEW_LINE_PX }} />}
               {visibleLineChunks.map(chunk => (
                 <div className="block" key={chunk.start}>

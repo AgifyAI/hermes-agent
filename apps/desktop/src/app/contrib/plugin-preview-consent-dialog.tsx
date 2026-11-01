@@ -47,9 +47,11 @@ export function PluginPreviewConsentDialog() {
         </DialogHeader>
 
         <div className="grid gap-2 text-[length:var(--conversation-caption-font-size)]">
-          <code className="w-fit rounded bg-(--ui-bg-tertiary) px-1.5 py-0.5 text-foreground">{request.origin}</code>
-          <p className="text-(--ui-text-secondary)">{copy.previewScriptPromptRisk}</p>
-          <p className="text-(--ui-text-tertiary)">{copy.previewScriptPromptRevokeHint}</p>
+          <code className="w-fit rounded-(--linear-radius-kbd) bg-(--linear-bg-quaternary) px-1.5 py-0.5 text-(--linear-text-primary)">
+            {request.origin}
+          </code>
+          <p className="text-(--linear-text-secondary)">{copy.previewScriptPromptRisk}</p>
+          <p className="text-(--linear-text-tertiary)">{copy.previewScriptPromptRevokeHint}</p>
         </div>
 
         <DialogFooter>

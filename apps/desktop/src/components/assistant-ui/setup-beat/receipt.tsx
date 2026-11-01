@@ -14,7 +14,7 @@ import type { SetupBeatAnswerFields, SetupBeatToolResult } from '@/store/setup-b
 
 export const SETUP_BEAT_SHELL_CLASS = cn(
   WIDGET_SHELL_CLASS,
-  'my-1.5 text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)'
+  'my-1.5 text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary)'
 )
 
 /** What a settled card shows: the beat's pick, or how the card closed without one. */
@@ -134,9 +134,9 @@ function ReceiptLine({ outcome }: { outcome: Exclude<SetupBeatOutcome, { kind: '
   return (
     <div className={cn(SETUP_BEAT_SHELL_CLASS, 'flex flex-wrap items-center gap-x-2')} data-setup-beat-settled="">
       {outcome.beat && outcome.kind !== 'skipped_all' && (
-        <span className="text-(--ui-text-tertiary)">{copy.beats[outcome.beat]}</span>
+        <span className="text-(--linear-text-tertiary)">{copy.beats[outcome.beat]}</span>
       )}
-      <span className={cn(outcome.kind !== 'answer' && 'italic text-(--ui-text-tertiary)')}>{text}</span>
+      <span className={cn(outcome.kind !== 'answer' && 'italic text-(--linear-text-tertiary)')}>{text}</span>
     </div>
   )
 }

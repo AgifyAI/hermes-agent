@@ -182,7 +182,7 @@ function DirectoryBody({ onContinue, owner, returnRoute, suggested = NO_SUGGESTI
         className={cn('w-full', CARD_CHIP_CLASS)}
         icon={
           <ConnectorLogo
-            className="size-7 rounded-full text-sm"
+            className="size-7 rounded-full text-[0.8125rem]"
             connector={{ iconUrl: connectorIconUrl(card.slug), name: card.slug, title: card.name }}
           />
         }
@@ -207,12 +207,12 @@ function DirectoryBody({ onContinue, owner, returnRoute, suggested = NO_SUGGESTI
       <div
         className={cn(
           WIDGET_SHELL_CLASS,
-          'grid gap-3 text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)'
+          'grid gap-3 text-[length:var(--conversation-text-font-size)] text-(--linear-text-primary)'
         )}
       >
         <div className="flex items-start gap-2">
           <span className={cn('flex-1', CARD_LABEL_CLASS)}>{copy.title}</span>
-          <Plug aria-hidden className="mt-px size-4 shrink-0 text-(--ui-text-tertiary)" />
+          <Plug aria-hidden className="mt-px size-4 shrink-0 text-(--linear-text-tertiary)" />
         </div>
 
         <HostedNotice hasGuest={freeTier?.has_guest === true} phase={hosted.phase} />
@@ -234,7 +234,7 @@ function DirectoryBody({ onContinue, owner, returnRoute, suggested = NO_SUGGESTI
           <div className="grid grid-cols-3 gap-2" role="status">
             <span className="sr-only">{t.connectorsPage.page.loading}</span>
             {Array.from({ length: 6 }, (_, index) => (
-              <div className="h-10 animate-pulse rounded-lg bg-muted/40" key={index} />
+              <div className="h-10 animate-pulse rounded-lg bg-(--linear-bg-secondary)" key={index} />
             ))}
           </div>
         ) : (

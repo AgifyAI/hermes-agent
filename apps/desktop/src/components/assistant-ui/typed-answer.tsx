@@ -12,7 +12,7 @@ export function TypedAnswer({ text }: { text: string }) {
       <div
         className={cn(
           USER_BUBBLE_BASE_CLASS,
-          'border-(--ui-stroke-tertiary) text-[length:var(--conversation-text-font-size)] leading-(--dt-line-height) text-foreground/95'
+          'border-(--linear-border-panel) text-[length:var(--conversation-text-font-size)] leading-(--dt-line-height) text-foreground/95'
         )}
       >
         <UserMessageText className="wrap-anywhere" text={text} />

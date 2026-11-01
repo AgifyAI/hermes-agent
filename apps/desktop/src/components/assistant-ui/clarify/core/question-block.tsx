@@ -73,7 +73,7 @@ export function QuestionBlock({
             />
           ))}
           <label
-            className={cn(OPTION_ROW_CLASS, 'items-center', otherActive && 'bg-(--chrome-action-hover)')}
+            className={cn(OPTION_ROW_CLASS, 'items-center', otherActive && 'bg-(--linear-hover-control)')}
             data-highlighted={otherActive || undefined}
           >
             <KeyBadge

@@ -47,9 +47,9 @@ export const ChangedFilesCard: FC<{ parts: readonly unknown[] }> = ({ parts }) =
       data-slot="aui_changed-files"
     >
       <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-(--ui-text-primary)">{copy.filesChanged(files.length)}</span>
+        <span className="min-w-0 flex-1 truncate text-(--linear-text-primary)">{copy.filesChanged(files.length)}</span>
         <button
-          className="shrink-0 cursor-pointer text-(--ui-text-tertiary) transition-colors hover:text-(--ui-text-primary)"
+          className="shrink-0 cursor-pointer text-(--linear-text-tertiary) transition-colors hover:text-(--linear-text-primary)"
           onClick={() => revealReview(scopeCwd, composerScope.target)}
           type="button"
         >
@@ -64,8 +64,8 @@ export const ChangedFilesCard: FC<{ parts: readonly unknown[] }> = ({ parts }) =
               onClick={() => void openReviewForPath(file.path, scopeCwd, composerScope.target)}
               type="button"
             >
-              <FileTypeIcon className="shrink-0 text-(--ui-text-tertiary)" path={file.path} size="0.875rem" />
-              <span className="min-w-0 flex-1 truncate text-(--ui-text-secondary)">{file.name}</span>
+              <FileTypeIcon className="shrink-0 text-(--linear-text-tertiary)" path={file.path} size="0.875rem" />
+              <span className="min-w-0 flex-1 truncate text-(--linear-text-secondary)">{file.name}</span>
               <DiffCount added={file.added} removed={file.removed} />
             </button>
           </Tip>

@@ -19,7 +19,7 @@ import type { ChatBarState } from './types'
 
 const PILL = cn(
   'h-(--composer-control-size) shrink-0 gap-1 rounded-md px-2 text-xs font-normal',
-  'text-(--ui-text-tertiary) hover:bg-(--chrome-action-hover) hover:text-foreground'
+  'text-(--linear-text-tertiary) hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary)'
 )
 
 /**

@@ -143,9 +143,9 @@ const ProgressHint: FC<{ label: string; percent: null | number }> = ({ label, pe
     <span className={cn(SCAFFOLD_LABEL_CLASS, 'shimmer min-w-0 shrink truncate')}>{label}</span>
     {percent !== null && (
       <>
-        <span className="h-1 w-24 shrink-0 overflow-hidden rounded-full bg-(--ui-bg-tertiary)">
+        <span className="h-1 w-24 shrink-0 overflow-hidden rounded-full bg-(--linear-bg-quaternary)">
           <span
-            className="block h-full rounded-full bg-primary transition-[width] duration-500"
+            className="block h-full rounded-full bg-(--linear-accent) transition-[width] duration-500"
             style={{ width: `${Math.max(2, percent)}%` }}
           />
         </span>
@@ -236,7 +236,7 @@ export const CenteredThreadSpinner: FC = () => {
     >
       <Loader
         aria-hidden="true"
-        className="size-12 text-midground/70"
+        className="size-12 text-(--linear-accent)/70"
         pathSteps={220}
         role="presentation"
         strokeScale={0.72}
@@ -260,7 +260,7 @@ export const ResponseLoadingIndicator: FC = () => {
     <StatusRow data-slot="aui_response-loading" label={hint || t.assistant.thread.loadingResponse}>
       <StatusPulse
         aria-hidden="true"
-        className="dither inline-block size-3 rounded-[2px] text-midground/80"
+        className="dither inline-block size-3 rounded-[2px] text-(--linear-accent)/80"
         kind="opacity"
       />
       {hint ? (
@@ -336,7 +336,7 @@ const TurnActivityRow: FC<TurnActivityRowProps> = ({ active, elapsed, hint, loca
         <>
           <StatusPulse
             aria-hidden="true"
-            className="dither inline-block size-3 rounded-[2px] text-midground/80"
+            className="dither inline-block size-3 rounded-[2px] text-(--linear-accent)/80"
             kind="opacity"
           />
           {hint ? (

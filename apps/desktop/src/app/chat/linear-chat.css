@@ -125,7 +125,6 @@
   line-height: 1.3;
   letter-spacing: -0.04em;
   color: var(--chat-text);
-  mix-blend-mode: normal;
 }
 
 .linear-chat [data-slot='aui_intro'] .fit-text > :not([aria-hidden]) > * {

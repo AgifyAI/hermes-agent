@@ -215,7 +215,7 @@ export function ConnectorDirectoryReceipt({ result }: { result: unknown }) {
           <ScaffoldRow>
             {added.map(name => (
               <ConnectorLogo
-                className="size-4 rounded-[0.25rem]"
+                className="size-4 rounded-(--linear-radius-kbd)"
                 connector={{ iconUrl: connectorIconUrl(name), name, title: connectorTitle(name) }}
                 key={name}
               />
@@ -477,7 +477,7 @@ function NamedAccountNotice({ alias, connectionId, name, owner }: NamedAccountPr
   const inRouter = useInRouterContext()
 
   return (
-    <p className="flex flex-wrap items-center gap-x-1.5 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-secondary)">
+    <p className="flex flex-wrap items-center gap-x-1.5 text-[length:var(--conversation-caption-font-size)] text-(--linear-text-tertiary)">
       {t.connectors.namedAccount(connectorTitle(name), alias)}
       {inRouter && connectionId ? (
         <RenameAccountLink alias={alias} connectionId={connectionId} name={name} owner={owner} />

@@ -106,7 +106,7 @@ function baseName(filePath: string): string {
 const MONO_FONT = 'var(--font-mono)'
 const ROW_HEIGHT = '1.25rem'
 const CODE_SIZE = '0.7rem'
-const GUTTER_COLOR = 'color-mix(in oklab, var(--muted-foreground) 55%, transparent)'
+const GUTTER_COLOR = 'color-mix(in oklab, var(--linear-text-tertiary) 55%, transparent)'
 
 const LAYOUT_THEME = EditorView.theme({
   '&': {
@@ -156,7 +156,7 @@ const LAYOUT_THEME = EditorView.theme({
     overflow: 'auto'
   },
   '.cm-hermes-active-block': {
-    backgroundColor: 'color-mix(in srgb, var(--dt-foreground) 5%, transparent)'
+    backgroundColor: 'color-mix(in srgb, var(--linear-text-primary) 5%, transparent)'
   }
 })
 
@@ -378,7 +378,7 @@ export function CodeEditor({
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-(--ui-stroke-tertiary)',
+        'flex h-full min-h-0 flex-col overflow-hidden rounded-md border-[0.5px] border-(--linear-border-panel)',
         className
       )}
     >

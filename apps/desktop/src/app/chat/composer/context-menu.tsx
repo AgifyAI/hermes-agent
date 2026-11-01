@@ -52,7 +52,7 @@ export function ContextMenu({
               aria-label={state.tools.label}
               className={cn(
                 GHOST_ICON_BTN,
-                'data-[state=open]:bg-(--chrome-action-hover) data-[state=open]:text-foreground'
+                'data-[state=open]:bg-(--linear-hover-control) data-[state=open]:text-(--linear-text-primary)'
               )}
               disabled={!state.tools.enabled}
               size="icon"

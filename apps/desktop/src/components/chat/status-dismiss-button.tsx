@@ -11,7 +11,7 @@ export function StatusDismissButton({ label, onDismiss }: StatusDismissButtonPro
   return (
     <Button
       aria-label={label}
-      className="status-dismiss-button text-muted-foreground/60 hover:text-foreground/90"
+      className="status-dismiss-button text-(--linear-text-quaternary) hover:text-(--linear-text-primary)"
       data-slot="status-dismiss"
       onClick={event => {
         event.stopPropagation()

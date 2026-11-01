@@ -56,7 +56,7 @@ export const SessionControlSections = memo(function SessionControlSections({
     <>
       {displayError && (
         <div
-          className="flex items-center justify-between gap-2 border-b border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs text-destructive"
+          className="flex items-center justify-between gap-2 border-b-[0.5px] border-(--linear-red)/20 bg-(--linear-red)/10 px-3 py-1.5 text-xs text-(--linear-red)"
           role="alert"
         >
           <div className="flex items-center gap-1.5 truncate">
@@ -65,7 +65,7 @@ export const SessionControlSections = memo(function SessionControlSections({
           </div>
           <Button
             aria-label={ctrl.dismissError}
-            className="size-6 shrink-0 p-0 text-destructive hover:bg-destructive/20"
+            className="text-(--linear-red) hover:bg-(--linear-red)/20"
             onClick={handleDismissError}
             size="icon-xs"
             type="button"

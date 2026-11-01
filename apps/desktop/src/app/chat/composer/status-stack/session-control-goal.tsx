@@ -158,7 +158,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
     goal.last_verdict === 'blocked'
       ? 'text-(--linear-red)'
       : visibleState === 'done'
-        ? 'text-muted-foreground/70'
+        ? 'text-(--linear-text-tertiary)'
         : visibleState === 'active'
           ? 'text-(--linear-green)'
           : 'text-(--linear-yellow)'
@@ -298,7 +298,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                       <Button
                         aria-haspopup="menu"
                         aria-label={ctrl.goalActions}
-                        className="size-6 rounded-md text-muted-foreground/70 hover:text-foreground/90"
+                        className="text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                         disabled={isBusy}
                         onClick={event => {
                           // Radix opens pointer interactions from pointerdown. Keyboard,
@@ -330,7 +330,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
               label={headerLabel}
             >
               <div>
-                <StatusControlRow className="text-[0.73rem] leading-4 text-foreground/92 break-words" icon="flag">
+                <StatusControlRow className="text-xs leading-4 text-(--linear-text-secondary) break-words" icon="flag">
                   {goal.title}
                 </StatusControlRow>
                 {!detailsOpen && goal.wait_barrier && (
@@ -347,7 +347,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                 {hasDetails && (
                   <StatusControlRow icon="eye">
                     <Button
-                      className="text-[0.7rem] text-muted-foreground/75 hover:text-foreground/90"
+                      className="text-[0.6875rem] text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                       onClick={() => setDetailsOpen(true)}
                       size="inline"
                       type="button"
@@ -359,13 +359,13 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                 )}
 
                 {/* Criteria subsection */}
-                <div className="mt-1.5 border-t border-(--ui-stroke-tertiary)/40 pt-1.5">
+                <div className="mt-1.5 border-t-[0.5px] border-(--linear-border-panel) pt-1.5">
                   <StatusRow
-                    className="text-[0.68rem] font-medium text-muted-foreground/75"
+                    className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)"
                     leading={
                       <span
                         aria-hidden="true"
-                        className="inline-flex text-muted-foreground/70"
+                        className="inline-flex text-(--linear-text-tertiary)"
                         data-slot="criteria-state-marker"
                       >
                         <Codicon name="checklist" size="0.8rem" />
@@ -374,7 +374,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                     trailing={
                       <div className="flex items-center gap-1">
                         <Button
-                          className="text-[0.68rem] text-muted-foreground/75 hover:text-foreground/90"
+                          className="text-[0.6875rem] text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                           disabled={isBusy}
                           onClick={openAddCriterion}
                           size="micro"
@@ -385,7 +385,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                         </Button>
                         {goal.subgoals.length > 0 && (
                           <Button
-                            className="text-[0.68rem] text-muted-foreground/60 hover:text-destructive"
+                            className="text-[0.6875rem] text-(--linear-text-quaternary) hover:text-(--linear-red)"
                             disabled={isBusy}
                             onClick={confirmClearCriteria}
                             size="micro"
@@ -409,7 +409,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
 
                         return (
                           <StatusRow
-                            className="text-xs leading-4 text-foreground/85"
+                            className="text-xs leading-4 text-(--linear-text-secondary)"
                             depth={1}
                             key={`${index}-${subgoal}`}
                             leading={<StatusPendingIcon />}
@@ -418,7 +418,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                                 <Tip label={ctrl.copyCriterion(index)}>
                                   <Button
                                     aria-label={ctrl.copyCriterion(index)}
-                                    className="size-6 rounded text-muted-foreground/60 hover:text-foreground/90"
+                                    className="text-(--linear-text-quaternary) hover:text-(--linear-text-primary)"
                                     onClick={() => void copyCriterionText(subgoal)}
                                     size="icon-xs"
                                     type="button"
@@ -429,7 +429,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
                                 </Tip>
                                 <Button
                                   aria-label={ctrl.removeCriterion(index)}
-                                  className="size-6 rounded text-muted-foreground/60 hover:text-destructive"
+                                  className="text-(--linear-text-quaternary) hover:text-(--linear-red)"
                                   disabled={isBusy}
                                   onClick={() => confirmRemoveCriterion(index)}
                                   size="icon-xs"
@@ -493,7 +493,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
               <textarea
                 aria-label={ctrl.criterionLabel}
                 autoFocus
-                className="w-full rounded-md border border-(--ui-stroke-secondary) bg-transparent p-2 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-md border-[0.5px] border-(--linear-border-input) bg-(--linear-bg-input) p-2 text-[0.8125rem] text-(--linear-text-primary) placeholder:text-(--linear-text-quaternary) focus:border-(--linear-focus) focus:outline-none"
                 disabled={isBusy}
                 onChange={e => setNewCriterionText(e.target.value)}
                 placeholder={ctrl.addCriterionPlaceholder}
@@ -502,7 +502,7 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
               />
             </div>
             {addCriterionError && (
-              <div className="text-xs text-destructive" role="alert">
+              <div className="text-xs text-(--linear-red)" role="alert">
                 {addCriterionError}
               </div>
             )}
@@ -526,67 +526,65 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div>
-              <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
-                {ctrl.objectiveLabel}
-              </div>
-              <div className="mt-0.5 text-foreground leading-relaxed break-words">{goal.title}</div>
+              <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{ctrl.objectiveLabel}</div>
+              <div className="mt-0.5 text-(--linear-text-primary) leading-relaxed break-words">{goal.title}</div>
             </div>
 
             {/* Contract fields */}
             {goal.contract.outcome && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
-                  {ctrl.contractOutcome}
-                </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">{goal.contract.outcome}</div>
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{ctrl.contractOutcome}</div>
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">{goal.contract.outcome}</div>
               </div>
             )}
             {goal.contract.verification && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.contractVerification}
                 </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">{goal.contract.verification}</div>
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">
+                  {goal.contract.verification}
+                </div>
               </div>
             )}
             {goal.contract.constraints && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.contractConstraints}
                 </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">{goal.contract.constraints}</div>
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">{goal.contract.constraints}</div>
               </div>
             )}
             {goal.contract.boundaries && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.contractBoundaries}
                 </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">{goal.contract.boundaries}</div>
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">{goal.contract.boundaries}</div>
               </div>
             )}
             {goal.contract.stop_when && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.contractStopWhen}
                 </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">{goal.contract.stop_when}</div>
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">{goal.contract.stop_when}</div>
               </div>
             )}
 
             {/* Wait Barrier */}
             {goal.wait_barrier && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.waitBarrierTitle}
                 </div>
-                <div className="mt-0.5 text-foreground/90 leading-relaxed">
+                <div className="mt-0.5 text-(--linear-text-secondary) leading-relaxed">
                   {goal.wait_barrier.type === 'until' &&
                     ctrl.waitUntil(new Date(goal.wait_barrier.until_at * 1000).toLocaleTimeString())}
                   {goal.wait_barrier.type === 'session' && ctrl.waitSession(goal.wait_barrier.target)}
                   {goal.wait_barrier.type === 'pid' && ctrl.waitPid(goal.wait_barrier.target)}
                   {goal.wait_barrier.reason && (
-                    <div className="italic text-muted-foreground/80 mt-0.5">{goal.wait_barrier.reason}</div>
+                    <div className="italic text-(--linear-text-tertiary) mt-0.5">{goal.wait_barrier.reason}</div>
                   )}
                 </div>
               </div>
@@ -595,21 +593,21 @@ export const SessionControlGoalSection = memo(function SessionControlGoalSection
             {/* Quality Gates */}
             {goal.gates.length > 0 && (
               <div>
-                <div className="font-semibold text-muted-foreground/75 uppercase tracking-wider text-[0.68rem]">
+                <div className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">
                   {ctrl.qualityGatesTitle}
                 </div>
                 <div className="mt-1 space-y-1.5">
                   {goal.gates.map((gate, i) => (
                     <div
-                      className="rounded border border-(--ui-stroke-tertiary)/60 bg-(--ui-control-active-background)/20 p-2"
+                      className="rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-secondary) p-2"
                       key={`${i}-${gate.command}`}
                     >
-                      <div className="font-mono text-[0.7rem] text-foreground/95">{gate.command}</div>
-                      <div className="mt-1 flex items-center gap-2 text-[0.68rem] text-muted-foreground/80">
+                      <div className="font-mono text-[0.7rem] text-(--linear-text-secondary)">{gate.command}</div>
+                      <div className="mt-1 flex items-center gap-2 text-[0.6875rem] text-(--linear-text-tertiary)">
                         <span>{ctrl.gateAttempts(gate.attempts, gate.max_retries)}</span>
-                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-(--linear-text-quaternary)">·</span>
                         <span>{ctrl.gateTimeout(gate.timeout_seconds)}</span>
-                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-(--linear-text-quaternary)">·</span>
                         <span>{ctrl.gateLastExit(gate.last_exit_code)}</span>
                       </div>
                     </div>
