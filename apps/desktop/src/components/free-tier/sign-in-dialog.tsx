@@ -171,8 +171,10 @@ export function FreeTierSignInDialog({ onSelectModel }: FreeTierSignInDialogProp
         {state.status === 'code' && (
           <Screen heading={copy.finishInBrowser}>
             {/* The code is only there to compare with the browser page, so it stays small. */}
-            <p className="flex flex-wrap items-baseline gap-x-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)">
-              <span className="font-mono text-sm tracking-widest text-foreground">{state.code}</span>
+            <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-(--linear-text-tertiary)">
+              <span className="font-mono text-[0.8125rem] tracking-widest text-(--linear-text-primary)">
+                {state.code}
+              </span>
               {copy.doNotShare}
             </p>
             <div className="flex items-center justify-between gap-3">
@@ -285,10 +287,7 @@ function Screen({ body, children, heading }: { body?: string; children: ReactNod
 
 function Spinner({ children }: { children: ReactNode }) {
   return (
-    <span
-      className="flex items-center gap-2 text-[length:var(--conversation-caption-font-size)] text-(--ui-text-tertiary)"
-      role="status"
-    >
+    <span className="flex items-center gap-2 text-xs text-(--linear-text-tertiary)" role="status">
       <Loader2 className="size-3 animate-spin" />
       {children}
     </span>
@@ -316,17 +315,17 @@ function SignedInScreen({
       <DialogHeader>
         <DialogTitle icon={CheckCircle2}>{email ? copy.signedInAsLabel : copy.signedIn}</DialogTitle>
         {email ? (
-          <p className="min-w-0 truncate text-xl font-semibold tracking-tight text-foreground">{email}</p>
+          <p className="min-w-0 truncate text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary)">
+            {email}
+          </p>
         ) : null}
         {handoff?.lines.length ? null : <DialogDescription>{copy.completedBody}</DialogDescription>}
       </DialogHeader>
       {handoff ? <HandoffResult handoff={handoff} /> : null}
       {model && (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-muted-foreground">
-            {copy.defaultModel}
-          </span>
-          <span className="min-w-0 truncate font-mono text-[length:var(--conversation-text-font-size)]">{model}</span>
+          <span className="text-xs font-medium text-(--linear-text-tertiary)">{copy.defaultModel}</span>
+          <span className="min-w-0 truncate font-mono text-[0.8125rem]">{model}</span>
           <Button
             onClick={() => finish(model, () => setModelPickerOpen(true))}
             size="inline"
@@ -363,7 +362,7 @@ export function HandoffResult({ handoff }: { handoff: AppHandoffStatus }) {
   }
 
   return (
-    <div className="grid gap-1 text-[length:var(--conversation-text-font-size)] text-foreground">
+    <div className="grid gap-1 text-[0.8125rem] text-(--linear-text-primary)">
       {handoff.lines.map(line => (
         <p key={line}>{line}</p>
       ))}

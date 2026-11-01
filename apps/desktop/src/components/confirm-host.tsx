@@ -41,8 +41,8 @@ export function ConfirmHost() {
         <dl className="space-y-3 text-xs">
           {shown.details.map(({ label, value }) => (
             <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3" key={label}>
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="m-0 whitespace-pre-wrap break-words text-foreground">{value}</dd>
+              <dt className="text-(--linear-text-tertiary)">{label}</dt>
+              <dd className="m-0 whitespace-pre-wrap break-words text-(--linear-text-primary)">{value}</dd>
             </div>
           ))}
         </dl>

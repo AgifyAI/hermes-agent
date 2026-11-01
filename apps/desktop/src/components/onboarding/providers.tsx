@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge'
 import { RowButton } from '@/components/ui/row-button'
 import { useI18n } from '@/i18n'
 import { Check, ChevronRight, Terminal } from '@/lib/icons'
@@ -38,7 +39,7 @@ export function FeaturedProviderRow({
 
   return (
     <button
-      className="group relative flex w-full items-center justify-between gap-4 rounded-[8px] bg-primary/[0.06] px-3 py-2.5 text-left transition-colors hover:bg-primary/10"
+      className="group relative flex w-full items-center justify-between gap-4 rounded-(--linear-radius-card) bg-[color-mix(in_srgb,var(--linear-accent)_6%,transparent)] px-3 py-2.5 text-left transition-colors duration-(--linear-speed-quick) hover:bg-[color-mix(in_srgb,var(--linear-accent)_10%,transparent)] hover:transition-none"
       onClick={() => onSelect(provider)}
       type="button"
     >
@@ -46,7 +47,7 @@ export function FeaturedProviderRow({
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <img alt="" className="size-5 shrink-0 rounded" src={assetPath('apple-touch-icon.png')} />
-          <span className="text-[length:var(--conversation-text-font-size)] font-semibold">
+          <span className="text-[0.8125rem] font-medium">
             {freeTier ? t.freeTier.providerRowTitle : providerTitle(provider)}
           </span>
           {freeTier ? (
@@ -54,17 +55,17 @@ export function FeaturedProviderRow({
           ) : loggedIn ? (
             <ConnectedTag />
           ) : (
-            <span className="inline-flex items-center gap-1.5 bg-primary px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-primary-foreground">
+            <Badge variant="solid">
               <span aria-hidden="true" className="dither inline-block size-2 shrink-0" />
               {t.onboarding.recommended}
-            </span>
+            </Badge>
           )}
         </div>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        <p className="mt-1 text-xs leading-5 text-(--linear-text-tertiary)">
           {freeTier ? t.freeTier.providerRowPitch : t.onboarding.featuredPitch}
         </p>
       </div>
-      <ChevronRight className="size-4 shrink-0 text-primary transition group-hover:translate-x-0.5" />
+      <ChevronRight className="size-3.5 shrink-0 text-(--linear-accent) transition group-hover:translate-x-0.5" />
     </button>
   )
 }
@@ -73,36 +74,32 @@ export function FeaturedProviderRow({
 function FreeTierTag() {
   const { t } = useI18n()
 
-  return (
-    <span className="inline-flex items-center gap-1 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-      {t.onboarding.freeTier}
-    </span>
-  )
+  return <Badge>{t.onboarding.freeTier}</Badge>
 }
 
 function ConnectedTag() {
   const { t } = useI18n()
 
   return (
-    <span className="inline-flex items-center gap-1 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-      <Check className="size-3" />
+    <Badge>
+      <Check />
       {t.onboarding.connected}
-    </span>
+    </Badge>
   )
 }
 
 const PROVIDER_ROW_CLASS =
-  'group flex w-full items-center justify-between gap-3 rounded-[6px] px-3 py-2.5 text-left transition-colors hover:bg-(--ui-control-hover-background)'
+  'group flex w-full items-center justify-between gap-3 rounded-(--linear-radius-control) px-3 py-2.5 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none'
 
 /** Quick-key row for API-key providers (Fireworks leads the expanded list after Nous, OpenRouter further down). */
 export function KeyProviderRow({ onClick, pitch, title }: { onClick: () => void; pitch: string; title: string }) {
   return (
     <RowButton className={PROVIDER_ROW_CLASS} onClick={onClick}>
       <div className="min-w-0">
-        <span className="text-[length:var(--conversation-text-font-size)] font-semibold">{title}</span>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">{pitch}</p>
+        <span className="text-[0.8125rem] font-medium">{title}</span>
+        <p className="mt-1 text-xs leading-5 text-(--linear-text-tertiary)">{pitch}</p>
       </div>
-      <ChevronRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
+      <ChevronRight className="size-3.5 text-(--linear-icon) transition group-hover:text-(--linear-text-primary)" />
     </RowButton>
   )
 }
@@ -145,14 +142,16 @@ export function ProviderRow({
     <RowButton className={PROVIDER_ROW_CLASS} onClick={() => onSelect(provider)}>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-[length:var(--conversation-text-font-size)] font-semibold">
+          <span className="text-[0.8125rem] font-medium">
             {freeTier ? t.freeTier.providerRowTitle : providerTitle(provider)}
           </span>
           {freeTier ? <FreeTierTag /> : loggedIn ? <ConnectedTag /> : null}
         </div>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">{t.onboarding.flowSubtitles[provider.flow]}</p>
+        <p className="mt-1 text-xs leading-5 text-(--linear-text-tertiary)">
+          {t.onboarding.flowSubtitles[provider.flow]}
+        </p>
       </div>
-      <Trail className="size-4 text-muted-foreground transition group-hover:text-foreground" />
+      <Trail className="size-3.5 text-(--linear-icon) transition group-hover:text-(--linear-text-primary)" />
     </RowButton>
   )
 }

@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { Upload } from '@/lib/icons'
@@ -56,7 +57,6 @@ export function ShareControls({ imported = false, onImport, onResetMap, shareCod
     <div className="flex items-center gap-1">
       {imported && (
         <Button
-          className="text-muted-foreground hover:text-foreground"
           onClick={() => onResetMap?.()}
           size="xs"
           variant="text"
@@ -78,13 +78,8 @@ export function ShareControls({ imported = false, onImport, onResetMap, shareCod
       >
         <Tip label={t.starmap.shareTitle}>
           <DialogTrigger asChild>
-            <Button
-              aria-label={t.starmap.shareTitle}
-              className="text-muted-foreground hover:text-foreground"
-              size="icon"
-              variant="ghost"
-            >
-              <Upload className="size-3.5" />
+            <Button aria-label={t.starmap.shareTitle} size="icon-sm" variant="ghost">
+              <Upload />
             </Button>
           </DialogTrigger>
         </Tip>
@@ -99,9 +94,9 @@ export function ShareControls({ imported = false, onImport, onResetMap, shareCod
             or paste another and Load. Copy button floats in on hover, like a
             thread code block. */}
           <div className="group/code relative">
-            <textarea
+            <Textarea
               aria-label={t.starmap.shareTitle}
-              className="h-24 w-full resize-none rounded-md bg-foreground/5 p-2.5 pr-9 font-mono text-xs leading-relaxed break-all text-muted-foreground/90 outline-none transition placeholder:text-muted-foreground/50 focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-ring/40"
+              className="h-24 resize-none pr-9 font-mono text-xs leading-relaxed break-all text-(--linear-text-secondary) focus-visible:text-(--linear-text-primary)"
               onChange={e => {
                 setValue(e.target.value)
                 setError(null)
@@ -122,7 +117,7 @@ export function ShareControls({ imported = false, onImport, onResetMap, shareCod
             )}
           </div>
 
-          {error && <p className="text-[0.7rem] text-destructive">{error}</p>}
+          {error && <p className="text-xs text-(--linear-red)">{error}</p>}
 
           <Button className="w-full" disabled={!canLoad} onClick={load} type="button">
             {t.starmap.importBtn}

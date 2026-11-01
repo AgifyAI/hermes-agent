@@ -53,7 +53,7 @@ export function SendDiagnosticsHost() {
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Lock className="size-4 text-(--ui-text-tertiary)" />
+                <Lock className="size-4 text-(--linear-text-tertiary)" />
                 {copy.title}
               </DialogTitle>
               <DialogDescription className="whitespace-pre-line text-left">{copy.privacyNotice}</DialogDescription>
@@ -98,7 +98,7 @@ export function SendDiagnosticsHost() {
             </DialogHeader>
             {(state.result?.viewUrl || state.result?.uploadId) && (
               <div
-                className="flex items-center gap-2 rounded-md border border-(--ui-stroke-tertiary) px-3 py-2"
+                className="flex items-center gap-2 rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2"
                 data-selectable-text="true"
               >
                 {state.result.viewUrl ? (
@@ -110,7 +110,7 @@ export function SendDiagnosticsHost() {
                   // preview pane would open BEHIND this modal dialog; the
                   // support buttons below already go to the system browser.
                   <ExternalLinkAnchor
-                    className="min-w-0 flex-1 truncate font-mono text-[0.78rem] text-(--ui-text-secondary)"
+                    className="min-w-0 flex-1 truncate font-mono text-xs text-(--linear-text-secondary)"
                     href={state.result.viewUrl}
                     native
                     title={state.result.viewUrl}
@@ -118,7 +118,7 @@ export function SendDiagnosticsHost() {
                     {state.result.viewUrl}
                   </ExternalLinkAnchor>
                 ) : (
-                  <code className="min-w-0 flex-1 truncate text-[0.78rem] text-(--ui-text-secondary)">
+                  <code className="min-w-0 flex-1 truncate text-xs text-(--linear-text-secondary)">
                     {copy.uploadIdFallback(state.result.uploadId ?? '')}
                   </code>
                 )}
@@ -130,11 +130,11 @@ export function SendDiagnosticsHost() {
                 />
               </div>
             )}
-            <div className="text-[0.8rem] text-(--ui-text-secondary)">{copy.handoffLead}</div>
+            <div className="text-[0.8125rem] text-(--linear-text-secondary)">{copy.handoffLead}</div>
             <div className="flex flex-wrap gap-1.5">
               {SUPPORT_LINKS.map(link => (
                 <Button key={link.key} onClick={() => openExternalLink(link.url)} size="sm" variant="outline">
-                  <ExternalLink className="size-3" />
+                  <ExternalLink />
                   {copy.links[link.key]}
                 </Button>
               ))}

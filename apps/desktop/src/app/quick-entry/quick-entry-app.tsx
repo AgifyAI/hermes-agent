@@ -15,8 +15,8 @@ import {
 // Paint both sides of the contrast pair on every option so Chromium cannot
 // combine a dark-theme foreground with an OS-provided light popup surface.
 const QUICK_TARGET_OPTION_STYLE = {
-  backgroundColor: 'var(--ui-bg-elevated, var(--background))',
-  color: 'var(--ui-text-primary, var(--foreground))'
+  backgroundColor: 'var(--linear-bg-overlay)',
+  color: 'var(--linear-text-overlay)'
 }
 
 /**
@@ -99,100 +99,51 @@ export function QuickEntryApp() {
   }, [])
 
   return (
-    <div
-      style={{
-        alignItems: 'center',
-        background: 'transparent',
-        display: 'flex',
-        height: '100vh',
-        justifyContent: 'center',
-        padding: 12,
-        width: '100vw'
-      }}
-    >
-      <div
-        style={{
-          background: 'var(--ui-bg-elevated, var(--background))',
-          border: '1px solid var(--ui-stroke-secondary, rgba(127,127,127,0.35))',
-          borderRadius: 12,
-          // Shadow budget is capped by the 12px transparent padding around the
-          // card: extent (offset + blur) beyond 12px gets clipped by the fixed
-          // 640x168 window bounds, slicing the gradient into a hard edge.
-          // 2 + 8 = 10px stays inside the padding and fades out cleanly.
-          boxShadow: '0 2px 8px rgba(0,0,0,0.22)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          padding: '10px 14px',
-          width: '100%'
-        }}
-      >
-        <div style={{ alignItems: 'center', display: 'flex', gap: 10 }}>
-          <span
-            aria-hidden
-            style={{
-              color: 'var(--muted-foreground, #8a8a8a)',
-              flexShrink: 0,
-              fontSize: 15,
-              lineHeight: 1,
-              userSelect: 'none'
-            }}
-          >
-            ›
-          </span>
-          <input
-            aria-label="Quick Entry"
-            autoCapitalize="off"
-            autoComplete="off"
-            autoCorrect="off"
-            disabled={!state.connected}
-            onBlur={event => {
-              // Moving focus to the target picker is not leaving the window.
-              if (!event.relatedTarget) {
-                dispatch({ type: 'blur' })
-              }
-            }}
-            onChange={event => dispatch({ draft: event.target.value, type: 'edit' })}
-            onKeyDown={event => {
-              if (isSubmitEnter(event) && !event.shiftKey) {
-                event.preventDefault()
-                dispatch({ submitId: ++submitIdRef.current, type: 'submit' })
-              } else if (event.key === 'Escape') {
-                event.preventDefault()
-                dispatch({ type: 'dismiss' })
-              }
-            }}
-            placeholder={state.connected ? 'Ask Hermes…' : 'Not connected — open Hermes to reconnect'}
-            ref={inputRef}
-            spellCheck={false}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--foreground, #eee)',
-              flex: 1,
-              fontFamily: 'inherit',
-              fontSize: 15,
-              minWidth: 0,
-              opacity: state.connected ? 1 : 0.55,
-              outline: 'none'
-            }}
-            value={state.draft}
-          />
-        </div>
-        <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
+    <div className="flex h-screen w-screen items-center justify-center bg-transparent p-3">
+      {/* Linear's new-issue modal, sized to the fixed 640x168 window. The card's
+          shadow must stay inside the 12px transparent padding (extent beyond it
+          is clipped by the window bounds into a hard edge), so it wears the low
+          elevation, not the full dialog shadow. */}
+      <div className="flex w-full flex-col gap-3 rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) px-4 py-3.5 text-(--linear-text-primary) shadow-(--linear-shadow-low)">
+        <input
+          aria-label="Quick Entry"
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+          className="w-full min-w-0 border-none bg-transparent font-[inherit] text-[1.125rem] leading-[1.8rem] font-semibold text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) disabled:opacity-55"
+          disabled={!state.connected}
+          onBlur={event => {
+            // Moving focus to the target picker is not leaving the window.
+            if (!event.relatedTarget) {
+              dispatch({ type: 'blur' })
+            }
+          }}
+          onChange={event => dispatch({ draft: event.target.value, type: 'edit' })}
+          onKeyDown={event => {
+            if (isSubmitEnter(event) && !event.shiftKey) {
+              event.preventDefault()
+              dispatch({ submitId: ++submitIdRef.current, type: 'submit' })
+            } else if (event.key === 'Escape') {
+              event.preventDefault()
+              dispatch({ type: 'dismiss' })
+            }
+          }}
+          placeholder={state.connected ? 'Ask Hermes…' : 'Not connected — open Hermes to reconnect'}
+          ref={inputRef}
+          spellCheck={false}
+          value={state.draft}
+        />
+        <div className="flex items-center gap-2">
           <label
+            className="shrink-0 select-none text-xs font-medium text-(--linear-text-tertiary)"
             htmlFor="quick-entry-target"
-            style={{
-              color: 'var(--muted-foreground, #8a8a8a)',
-              flexShrink: 0,
-              fontSize: 11,
-              userSelect: 'none'
-            }}
           >
             Send to
           </label>
+          {/* A Linear property chip: 24px pill, hairline, chip fill. */}
           <select
             aria-label="Target session"
+            className="h-6 max-w-80 cursor-pointer rounded-full border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) pr-2 pl-1.5 text-xs font-medium text-(--linear-text-chip) outline-none hover:bg-(--linear-bg-chip-hover) focus-visible:ring-1 focus-visible:ring-(--linear-focus) disabled:cursor-default disabled:opacity-60"
             disabled={!state.connected}
             id="quick-entry-target"
             onChange={event => dispatch({ target: event.target.value, type: 'target' })}
@@ -201,15 +152,6 @@ export function QuickEntryApp() {
                 event.preventDefault()
                 dispatch({ type: 'dismiss' })
               }
-            }}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--ui-stroke-secondary, rgba(127,127,127,0.35))',
-              borderRadius: 6,
-              color: 'var(--foreground, #eee)',
-              fontSize: 11,
-              maxWidth: 320,
-              padding: '2px 6px'
             }}
             value={state.target}
           >
@@ -227,7 +169,7 @@ export function QuickEntryApp() {
           </select>
         </div>
         {state.error ? (
-          <div role="alert" style={{ color: 'var(--destructive, #ef4444)', fontSize: 11 }}>
+          <div className="text-[0.6875rem] text-(--linear-red)" role="alert">
             {state.error}
           </div>
         ) : null}

@@ -141,15 +141,15 @@ export function ModelVisibilityDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent bodyClassName="gap-0 overflow-hidden p-0" className="max-w-xs">
-        <DialogHeader className="px-3 pb-1 pt-3">
-          <DialogTitle className="text-[0.8125rem]">{copy.title}</DialogTitle>
+        <DialogHeader className="px-4 pb-1 pt-4 pr-12">
+          <DialogTitle>{copy.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5">
-          <Search className="pointer-events-none size-3.5 shrink-0 text-muted-foreground/70" />
+        <div className="flex items-center gap-2 px-4 py-2">
+          <Search className="pointer-events-none size-3.5 shrink-0 text-(--linear-text-quaternary)" />
           <input
             autoFocus
-            className="h-5 w-full bg-transparent text-xs text-foreground placeholder:text-(--ui-text-tertiary) focus:outline-none"
+            className="h-5 w-full bg-transparent text-[0.8125rem] text-(--linear-text-primary) placeholder:text-(--linear-text-quaternary) focus:outline-none"
             onChange={event => setSearch(event.target.value)}
             placeholder={copy.search}
             type="text"
@@ -157,9 +157,9 @@ export function ModelVisibilityDialog({
           />
         </div>
 
-        <div className="max-h-[55vh] overflow-y-auto pb-1">
+        <div className="max-h-[55vh] overflow-y-auto px-1.5 pb-1">
           {providers.length === 0 ? (
-            <div className="px-3 py-5 text-center text-xs text-muted-foreground">
+            <div className="px-2 py-5 text-center text-xs text-(--linear-text-tertiary)">
               {modelOptions.isPending ? <GlyphSpinner className="mx-auto text-sm" /> : copy.noAuthenticatedProviders}
             </div>
           ) : (
@@ -182,9 +182,9 @@ export function ModelVisibilityDialog({
 
               return (
                 <div className="py-0.5" key={provider.slug}>
-                  <div className="flex items-center gap-2 px-3 pb-0.5 pt-1">
+                  <div className="flex h-7 items-center gap-2 px-2">
                     <button
-                      className="group/label flex w-full items-center gap-1 pb-0.5 pt-0.5 text-left text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-secondary) hover:bg-transparent"
+                      className="group/label flex w-full items-center gap-1 text-left text-xs font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
                       onClick={() => toggleCollapsedProvider(provider.slug)}
                       type="button"
                     >
@@ -209,17 +209,17 @@ export function ModelVisibilityDialog({
 
                       return (
                         <label
-                          className="flex cursor-pointer items-center gap-2 px-3 py-1 text-xs hover:bg-(--ui-control-active-background)"
+                          className="flex min-h-8 cursor-pointer items-center gap-2 rounded-(--linear-radius-control) px-2 text-[0.8125rem] transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
                           key={key}
                         >
                           <span className="min-w-0 flex-1 truncate">
                             <HighlightMatches foldSeparators query={search} text={name} />
-                            {tag ? <span className="text-(--ui-text-tertiary)"> {tag}</span> : null}
+                            {tag ? <span className="text-(--linear-text-tertiary)"> {tag}</span> : null}
                           </span>
                           {isCustomModel(customModels, provider.slug, family.id) && (
                             <Button
                               aria-label={copy.removeCustomModel}
-                              className="-my-1 text-(--ui-text-tertiary)"
+                              className="-my-1 text-(--linear-text-tertiary)"
                               onClick={event => {
                                 event.preventDefault()
                                 removeCustomModel(provider.slug, family.id)
@@ -245,12 +245,12 @@ export function ModelVisibilityDialog({
           )}
           {customSlug && providers.length > 0 && (
             <div className="py-0.5">
-              <div className="px-3 pb-0.5 pt-1 text-[0.625rem] font-semibold uppercase tracking-wider text-(--ui-text-tertiary)">
+              <div className="flex h-7 items-center px-2 text-xs font-medium text-(--linear-text-tertiary)">
                 {copy.addCustomModel}
               </div>
               {providers.map(provider => (
                 <RowButton
-                  className="flex w-full items-center gap-2 px-3 py-1 text-left text-xs hover:bg-(--ui-control-active-background)"
+                  className="flex min-h-8 w-full items-center gap-2 text-left rounded-(--linear-radius-control) px-2 text-[0.8125rem] transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
                   key={`custom:${provider.slug}`}
                   onClick={() => {
                     addCustomModel(provider.slug, customSlug, provider)
@@ -259,18 +259,18 @@ export function ModelVisibilityDialog({
                 >
                   <span className="min-w-0 flex-1 truncate">
                     {customSlug}
-                    <span className="text-(--ui-text-tertiary)"> {provider.name}</span>
+                    <span className="text-(--linear-text-tertiary)"> {provider.name}</span>
                   </span>
-                  <Plus className="size-3 shrink-0 text-(--ui-text-tertiary)" />
+                  <Plus className="size-3 shrink-0 text-(--linear-text-tertiary)" />
                 </RowButton>
               ))}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between px-3 py-2">
+        <div className="flex items-center justify-between px-4 py-3">
           <Button
-            className="-ml-2 text-(--ui-text-tertiary)"
+            className="text-(--linear-text-tertiary)"
             onClick={() => {
               onOpenChange(false)
               onOpenProviders()
@@ -283,7 +283,7 @@ export function ModelVisibilityDialog({
           </Button>
           {/* Only once there is something to undo, like the sidebar view reset. */}
           {stored !== null && modelOptions.isSuccess && (
-            <Button className="-mr-2" onClick={() => void resetToDefaults()} size="xs" type="button" variant="text">
+            <Button onClick={() => void resetToDefaults()} size="xs" type="button" variant="text">
               {copy.resetToDefaults}
             </Button>
           )}

@@ -58,7 +58,7 @@ export function ReviewShipBar() {
     // it's a deliberate read-only view, not a broken pane.
     return (
       <div
-        className="shrink-0 px-2 pb-1.5 text-center text-[0.64rem] text-(--ui-text-tertiary)"
+        className="shrink-0 px-2 pb-1.5 text-center text-[0.6875rem] text-(--linear-text-tertiary)"
         data-suppress-pane-reveal-side=""
       >
         {c.readOnlyScope}
@@ -113,7 +113,7 @@ export function ReviewShipBar() {
           value={message}
         />
         <GenerateButton
-          className="absolute top-px right-px h-6 w-8 rounded-l-none rounded-r-[2px]"
+          className="absolute top-px right-px h-6 w-8 rounded-l-none rounded-r-[calc(var(--linear-radius-control)-1px)]"
           disabled={!canGenerate}
           generating={generating}
           generatingLabel={c.stopGenerating}
@@ -146,7 +146,7 @@ export function ReviewShipBar() {
           the whole bar; px-7 reserves the icon's width on both sides. */}
       <div className="relative flex min-w-0 items-center">
         <Button
-          className="min-w-0 flex-1 justify-center px-7 text-[0.7rem] text-muted-foreground/85 hover:text-foreground"
+          className="min-w-0 flex-1 justify-center px-7 text-(--linear-text-tertiary)"
           disabled={!hasFiles}
           onClick={() => {
             if (!requestComposerSubmit(c.agentShipPrompt, { target: scopeTarget })) {
@@ -162,7 +162,7 @@ export function ReviewShipBar() {
           <span className="absolute inset-y-0 right-0 flex items-center">
             <Button
               aria-label={prLabel}
-              className="size-7 text-muted-foreground/80 hover:text-foreground"
+              className="size-7 text-(--linear-text-tertiary)"
               disabled={!ship.ghReady || busy}
               onClick={() => void createOrOpenPr().catch(err => notifyError(err, prLabel))}
               size="icon-xs"

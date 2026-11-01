@@ -123,19 +123,21 @@ export function SharedMetricsConsentDialog({ enabled, profile, requestGateway }:
         </DialogHeader>
 
         <div className="grid gap-2">
-          <button
+          <Button
             aria-controls={detailsId}
             aria-expanded={expanded}
-            className="flex w-fit items-center gap-1 text-sm font-medium text-(--ui-text-secondary) hover:text-(--ui-text-primary)"
+            className="w-fit"
             onClick={() => setExpanded(value => !value)}
+            size="sm"
             type="button"
+            variant="ghost"
           >
-            <ChevronDown className={cn('size-3.5 transition-transform', expanded ? 'rotate-0' : '-rotate-90')} />
+            <ChevronDown className={cn('transition-transform', expanded ? 'rotate-0' : '-rotate-90')} />
             {copy.whatIsCollected}
-          </button>
+          </Button>
           {expanded ? (
             <div
-              className="rounded-lg bg-(--ui-bg-tertiary)/40 px-3 py-2.5 text-[0.8125rem] leading-5 text-(--ui-text-secondary)"
+              className="rounded-(--linear-radius-card) bg-(--linear-bg-secondary) px-3 py-2.5 text-[0.8125rem] leading-5 text-(--linear-text-secondary)"
               id={detailsId}
             >
               <ul className="list-disc space-y-0.5 pl-5">
@@ -151,7 +153,7 @@ export function SharedMetricsConsentDialog({ enabled, profile, requestGateway }:
           ) : null}
         </div>
 
-        <div className="grid gap-2 text-[0.8125rem] leading-5 text-(--ui-text-secondary)">
+        <div className="grid gap-2 text-[0.8125rem] leading-5 text-(--linear-text-secondary)">
           <p>{copy.sending}</p>
           <div>
             <DocsLink href={SHARED_METRICS_DOCS_URL}>{copy.readDocs}</DocsLink>

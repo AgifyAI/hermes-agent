@@ -74,9 +74,9 @@ const SPECS: Partial<Record<PetState, Spec>> = {
 }
 
 const TONE_COLOR: Record<Tone, string> = {
-  error: 'var(--ui-red)',
+  error: 'var(--linear-red)',
   info: 'currentColor',
-  wait: 'var(--ui-yellow)'
+  wait: 'var(--linear-yellow)'
 }
 
 const TONE_GLYPH: Partial<Record<Tone, IconComponent>> = { error: AlertCircle, wait: Clock }
@@ -86,14 +86,14 @@ const TONE_GLYPH: Partial<Record<Tone, IconComponent>> = { error: AlertCircle, w
 const PRIORITY_TONES: ReadonlySet<Tone | undefined> = new Set(['error', 'wait'])
 
 const BUBBLE_SURFACE = {
-  // Solid, theme-driven surface (the prior --ui-bg-card mixes in
-  // `transparent`, so the bubble was see-through).
-  background: 'var(--ui-bg-elevated)',
-  border: '1px solid var(--ui-stroke-secondary)',
-  boxShadow: '0 4px 14px rgba(0,0,0,0.22)',
-  color: 'var(--foreground)',
+  // Linear's tooltip surface: opaque overlay fill, overlay hairline, menu
+  // shadow, 11px/450 overlay text.
+  background: 'var(--linear-bg-overlay)',
+  border: '0.5px solid var(--linear-border-overlay)',
+  boxShadow: 'var(--linear-shadow-menu)',
+  color: 'var(--linear-text-overlay)',
   fontSize: 11,
-  fontWeight: 500,
+  fontWeight: 450,
   pointerEvents: 'none'
 } as const
 
@@ -164,7 +164,7 @@ export function PetBubble({ showStatus = true }: PetBubbleProps = {}) {
         data-slot="pet-plugin-bubble"
         style={{
           ...BUBBLE_SURFACE,
-          borderRadius: 10,
+          borderRadius: 8,
           display: 'inline-flex',
           flexDirection: 'column',
           gap: 3,
@@ -176,7 +176,7 @@ export function PetBubble({ showStatus = true }: PetBubbleProps = {}) {
       >
         <span
           style={{
-            color: 'var(--ui-text-secondary, var(--muted-foreground))',
+            color: 'var(--linear-text-tertiary)',
             fontSize: 9,
             fontWeight: 600,
             letterSpacing: 0.2,
@@ -213,7 +213,7 @@ export function PetBubble({ showStatus = true }: PetBubbleProps = {}) {
       style={{
         ...BUBBLE_SURFACE,
         alignItems: 'center',
-        borderRadius: hasText ? 10 : 999,
+        borderRadius: hasText ? 8 : 999,
         display: 'inline-flex',
         gap: hasText ? 5 : 0,
         lineHeight: 1,

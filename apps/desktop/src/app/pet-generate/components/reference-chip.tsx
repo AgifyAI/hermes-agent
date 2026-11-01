@@ -19,19 +19,19 @@ export function ReferenceChip({ name, onRemove, src }: ReferenceChipProps) {
   const [viewing, setViewing] = useState(false)
 
   return (
-    <div className="ml-auto flex h-6 items-center gap-2 self-start rounded-lg border border-border/60 bg-background/50 pl-1 pr-2">
+    <div className="ml-auto flex h-6 items-center gap-1.5 self-start rounded-full border-[0.5px] border-(--linear-border-tertiary) bg-(--linear-bg-chip) pr-2 pl-1">
       <button aria-label={t.desktop.openImage} className="shrink-0" onClick={() => setViewing(true)} type="button">
-        <img alt={name} className="size-4 rounded-md object-cover" src={src} />
+        <img alt={name} className="size-4 rounded-full object-cover" src={src} />
       </button>
 
-      <span className="max-w-40 truncate text-[0.64rem] font-medium text-foreground/50">{name || 'Reference'}</span>
+      <span className="max-w-40 truncate text-xs font-medium text-(--linear-text-chip)">{name || 'Reference'}</span>
       <button
         aria-label="Remove reference"
-        className="text-(--ui-text-tertiary) transition not-hover:opacity-50"
+        className="cursor-pointer text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) hover:transition-none"
         onClick={onRemove}
         type="button"
       >
-        <X className="size-3" />
+        <X className="size-3.5" />
       </button>
 
       <ImageLightbox

@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 
 import { useGatewayRequest } from '@/app/gateway/hooks/use-gateway-request'
 import { skipIntro } from '@/components/onboarding/first-run/intro'
+import { Button } from '@/components/ui/button'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { notifyError } from '@/store/notifications'
@@ -25,17 +26,19 @@ function SkipButton({ runtimeId }: { runtimeId: string }) {
 
   return (
     <Tip label={t.firstRun.skipTip}>
-      <button
-        className="ml-auto text-[11px] text-(--ui-text-quaternary) transition-colors hover:text-(--ui-text-secondary)"
+      <Button
+        className="ml-auto"
         onClick={() =>
           void skipOnboarding(requestGateway, runtimeId).then(skipIntro, error =>
             notifyError(error, t.firstRun.skipFailed)
           )
         }
+        size="micro"
         type="button"
+        variant="text"
       >
         {t.firstRun.skip}
-      </button>
+      </Button>
     </Tip>
   )
 }

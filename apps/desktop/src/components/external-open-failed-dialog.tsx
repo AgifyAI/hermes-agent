@@ -46,7 +46,9 @@ export function ExternalOpenFailedDialog() {
           <DialogTitle>{header.title}</DialogTitle>
           <DialogDescription>{header.message}</DialogDescription>
         </DialogHeader>
-        <div className="max-h-40 overflow-auto break-all rounded-md border bg-muted p-3 select-all">{failure?.url}</div>
+        <div className="max-h-40 overflow-auto break-all rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2 font-mono text-xs text-(--linear-text-secondary) select-all">
+          {failure?.url}
+        </div>
         <DialogFooter>
           {failure ? <CopyButton text={failure.url}>{copy.copyUrl}</CopyButton> : null}
           <Button onClick={() => setFailure(null)} variant="ghost">

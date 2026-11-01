@@ -122,7 +122,7 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       case 'succeeded':
 
       case 'skipped':
-        return <Codicon className="text-muted-foreground" name="check" size="0.8125rem" />
+        return <Codicon className="text-(--linear-text-tertiary)" name="check" size="0.8125rem" />
 
       case 'failed':
         return <ErrorIcon size="1rem" />
@@ -130,7 +130,7 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       case 'pending':
 
       default:
-        return <div className="size-1.5 rounded-full border border-(--ui-stroke-secondary)" />
+        return <div className="size-1.5 rounded-full border border-(--linear-border-secondary)" />
     }
   }, [state])
 
@@ -143,14 +143,21 @@ function StageRow({ descriptor, result, now }: StageRowProps) {
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className={cn('truncate text-sm', state === 'running' ? 'font-medium' : 'text-muted-foreground')}>
+          <span
+            className={cn(
+              'truncate text-[0.8125rem]',
+              state === 'running' ? 'font-medium' : 'text-(--linear-text-tertiary)'
+            )}
+          >
             {formatStageName(descriptor.name)}
           </span>
           {state !== 'running' && <span className="flex size-4 shrink-0 items-center justify-center">{icon}</span>}
         </div>
-        {reason && state !== 'pending' && <p className="mt-0.5 truncate text-xs text-muted-foreground">{reason}</p>}
+        {reason && state !== 'pending' && (
+          <p className="mt-0.5 truncate text-xs text-(--linear-text-tertiary)">{reason}</p>
+        )}
       </div>
-      <span className="flex-shrink-0 text-xs tabular-nums text-muted-foreground">
+      <span className="flex-shrink-0 text-xs tabular-nums text-(--linear-text-tertiary)">
         {state === 'running' ? (elapsed ? `${copy.stageStates[state]} · ${elapsed}` : copy.stageStates[state]) : null}
         {state === 'succeeded' || state === 'skipped' ? formatDuration(result?.durationMs) : null}
         {state === 'failed' ? copy.stageStates[state] : null}
@@ -446,13 +453,13 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
     const localPres = localCardPresentation(localState)
 
     return (
-      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 p-4 backdrop-blur-md">
-        <div className="w-full max-w-2xl rounded-xl border border-(--stroke-nous) bg-card p-8 shadow-nous">
+      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-4">
+        <div className="w-full max-w-2xl rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog) p-8">
           <div className="flex items-start gap-4">
             <BrandMark className="size-11 shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold tracking-tight">{copy.setupChoiceTitle}</h2>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+              <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{copy.setupChoiceTitle}</h2>
+              <p className="mt-1 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
                 {localState === 'none' ? copy.setupChoiceDesc : copy.setupChoiceDescLocal}
               </p>
             </div>
@@ -460,19 +467,19 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button
-              className="rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-4 text-left transition hover:bg-(--chrome-action-hover)"
+              className="rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-card) p-4 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none"
               onClick={() => setRemoteOpen(true)}
               type="button"
             >
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Globe className="size-4 text-muted-foreground" />
+              <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
+                <Globe className="size-4 text-(--linear-icon)" />
                 <span>{copy.connectExistingTitle}</span>
               </div>
-              <p className="mt-2 text-sm leading-5 text-muted-foreground">{copy.connectExistingDesc}</p>
+              <p className="mt-1 text-xs leading-4 text-(--linear-text-tertiary)">{copy.connectExistingDesc}</p>
             </button>
 
             <button
-              className="rounded-lg border border-(--ui-stroke-tertiary) bg-(--ui-bg-quinary) p-4 text-left transition hover:bg-(--chrome-action-hover) disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-card) p-4 text-left transition-colors duration-(--linear-speed-quick) hover:bg-(--linear-hover-row) hover:transition-none disabled:cursor-not-allowed disabled:opacity-60"
               disabled={localStarting}
               onClick={async () => {
                 setLocalStart({ root: activeRoot, starting: true, error: null })
@@ -491,29 +498,29 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
               }}
               type="button"
             >
-              <div className="flex items-center gap-2 text-sm font-medium">
+              <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
                 {localStarting ? (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="size-4 animate-spin text-(--linear-icon)" />
                 ) : (
-                  <Monitor className="size-4 text-muted-foreground" />
+                  <Monitor className="size-4 text-(--linear-icon)" />
                 )}
                 <span>{copy[localPres.title]}</span>
               </div>
-              <p className="mt-2 text-sm leading-5 text-muted-foreground">{copy[localPres.desc]}</p>
+              <p className="mt-1 text-xs leading-4 text-(--linear-text-tertiary)">{copy[localPres.desc]}</p>
             </button>
           </div>
 
           {localStartError ? (
-            <div className="mt-4 flex items-start gap-2 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <div className="mt-4 flex items-start gap-2 rounded-(--linear-radius-control) bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] px-3 py-2 text-[0.8125rem] text-(--linear-red)">
+              <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
               <span>{localStartError}</span>
             </div>
           ) : null}
 
           {localPres.showInstallTo ? (
-            <div className="mt-6 text-xs text-muted-foreground">
+            <div className="mt-6 text-xs text-(--linear-text-tertiary)">
               {copy.installTo}{' '}
-              <code className="font-mono text-(--ui-text-secondary)">{state.setupChoice.activeRoot}</code>
+              <code className="font-mono text-(--linear-text-secondary)">{state.setupChoice.activeRoot}</code>
             </div>
           ) : null}
         </div>
@@ -530,14 +537,16 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
     const platformLabel = ups.platform === 'darwin' ? 'macOS' : ups.platform === 'linux' ? 'Linux' : ups.platform
 
     return (
-      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 backdrop-blur-md">
-        <div className="w-full max-w-xl rounded-xl border border-(--stroke-nous) bg-card p-8 shadow-nous">
-          <h2 className="text-xl font-semibold tracking-tight">{copy.oneTimeTitle}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{copy.unsupportedDesc(platformLabel)}</p>
+      <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-4">
+        <div className="w-full max-w-xl rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog) p-8">
+          <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{copy.oneTimeTitle}</h2>
+          <p className="mt-1 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+            {copy.unsupportedDesc(platformLabel)}
+          </p>
 
           <div className="mt-4">
-            <div className="mb-1.5 text-xs font-medium text-muted-foreground">{copy.installCommand}</div>
-            <pre className="overflow-x-auto rounded-md border border-(--stroke-nous) px-3 py-2.5 font-mono text-[12px]">
+            <div className="mb-1.5 text-xs font-medium text-(--linear-text-tertiary)">{copy.installCommand}</div>
+            <pre className="overflow-x-auto rounded-(--linear-radius-control) border-[0.5px] border-(--linear-border-secondary) bg-(--linear-bg-secondary) px-3 py-2.5 font-mono text-xs">
               <code>{ups.installCommand}</code>
             </pre>
             <div className="mt-2 flex items-center gap-2">
@@ -563,12 +572,12 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
           </div>
 
           <div className="mt-6 flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {copy.installTo} <code className="font-mono text-(--ui-text-secondary)">{ups.activeRoot}</code>
+            <span className="text-xs text-(--linear-text-tertiary)">
+              {copy.installTo} <code className="font-mono text-(--linear-text-secondary)">{ups.activeRoot}</code>
             </span>
             <div className="flex items-center gap-2">
               <Button onClick={() => setRemoteOpen(true)} size="sm" variant="secondary">
-                <Globe className="size-4" />
+                <Globe />
                 {copy.connectExistingShort}
               </Button>
               <Button onClick={() => window.location.reload()} size="sm" variant="default">
@@ -602,16 +611,18 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
   const currentElapsed = typeof currentStartedAt === 'number' ? formatElapsed(now - currentStartedAt) : ''
 
   return (
-    <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 backdrop-blur-md p-4">
-      <div className="flex w-full max-w-2xl max-h-[90vh] flex-col rounded-xl border border-(--stroke-nous) bg-card shadow-nous">
+    <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-4">
+      <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         {/* Header -- always visible, never scrolls */}
         <div className="flex flex-shrink-0 items-start gap-4 p-8 pb-4">
           {!failed && <BrandMark className="size-11 shrink-0" />}
           <div className="min-w-0">
-            <h2 className="text-xl font-semibold tracking-tight">
+            <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">
               {failed ? copy.failedTitle : state.active ? copy.settingUpTitle : copy.finishingTitle}
             </h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">{failed ? copy.failedDesc : copy.activeDesc}</p>
+            <p className="mt-1 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
+              {failed ? copy.failedDesc : copy.activeDesc}
+            </p>
           </div>
         </div>
 
@@ -619,7 +630,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
         <div className="min-h-0 flex-1 overflow-y-auto px-8 pb-2">
           {totalCount > 0 && (
             <div className="mb-4">
-              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="mb-1 flex items-center justify-between text-xs text-(--linear-text-tertiary)">
                 <span>
                   {copy.progress(completedCount, totalCount)}
                   {currentStage && copy.currentStage(formatStageName(currentStage))}
@@ -629,7 +640,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
               </div>
               <Progress
                 aria-label={copy.progress(completedCount, totalCount)}
-                className="bg-(--ui-bg-tertiary)"
+                className="bg-(--linear-bg-tertiary)"
                 destructive={failed}
                 value={progressPct / 100}
               />
@@ -637,20 +648,20 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
           )}
 
           {totalCount === 0 && state.active && (
-            <div className="mb-4 flex items-center gap-2.5 text-sm text-muted-foreground">
+            <div className="mb-4 flex items-center gap-2.5 text-[0.8125rem] text-(--linear-text-tertiary)">
               <Loader className="size-5" type="fourier-flow" />
               <span>{copy.fetchingManifest}</span>
             </div>
           )}
 
           {failed && state.error && (
-            <div className="mb-4 flex items-start gap-2 text-sm">
+            <div className="mb-4 flex items-start gap-2 text-[0.8125rem]">
               <ErrorIcon className="mt-0.5 shrink-0" size="1rem" />
               <div className="min-w-0">
-                <div className="font-medium text-destructive">{copy.error}</div>
-                <p className="mt-0.5 whitespace-pre-wrap break-words text-foreground/90">{failureLead}</p>
+                <div className="font-medium text-(--linear-red)">{copy.error}</div>
+                <p className="mt-0.5 whitespace-pre-wrap break-words text-(--linear-text-secondary)">{failureLead}</p>
                 {failureDetail ? (
-                  <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-muted-foreground">
+                  <p className="mt-1 whitespace-pre-wrap break-words font-mono text-xs text-(--linear-text-tertiary)">
                     {failureDetail}
                   </p>
                 ) : null}
@@ -668,7 +679,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
 
           <div className="pt-3">
             <Button
-              className="-ml-2 text-muted-foreground hover:text-foreground"
+              className="-ml-2 text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
               onClick={() => setLogOpen(v => !v)}
               size="xs"
               type="button"
@@ -686,8 +697,8 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
                 ) : (
                   <>
                     {state.log.map((entry, i) => (
-                      <div className={cn(entry.stream === 'stderr' && 'text-muted-foreground/70')} key={i}>
-                        {entry.stage ? <span className="text-muted-foreground/60">[{entry.stage}] </span> : null}
+                      <div className={cn(entry.stream === 'stderr' && 'text-(--linear-text-quaternary)')} key={i}>
+                        {entry.stage ? <span className="text-(--linear-text-quaternary)">[{entry.stage}] </span> : null}
                         <span>{entry.line}</span>
                       </div>
                     ))}
@@ -701,7 +712,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
 
         {/* Active footer: let the user actually cancel a running install. */}
         {state.active && !failed && (
-          <div className="flex-shrink-0 bg-card p-4">
+          <div className="flex-shrink-0 p-4">
             <div className="flex items-center justify-end">
               <Button
                 disabled={cancelling}
@@ -726,11 +737,11 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
 
         {/* Footer -- always visible, never scrolls; only renders on failure */}
         {failed && (
-          <div className="flex-shrink-0 bg-card p-4">
+          <div className="flex-shrink-0 p-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-(--linear-text-tertiary)">
                 {copy.transcriptSaved}{' '}
-                <code className="font-mono text-(--ui-text-secondary)">%LOCALAPPDATA%\hermes\logs\</code>
+                <code className="font-mono text-(--linear-text-secondary)">%LOCALAPPDATA%\hermes\logs\</code>
               </span>
               <div className="flex gap-2">
                 <Button onClick={() => setState(EMPTY_STATE)} size="sm" variant="ghost">

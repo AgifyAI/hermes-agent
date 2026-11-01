@@ -39,18 +39,18 @@ export function FirstRunRemoteSetup({ onBack }: FirstRunRemoteSetupProps): React
   }
 
   return (
-    <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-background/90 p-4 backdrop-blur-md">
-      <div className="flex w-full max-w-xl flex-col rounded-xl border border-(--stroke-nous) bg-card p-8 shadow-nous">
+    <div className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-4">
+      <div className="flex w-full max-w-xl flex-col rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog) p-8">
         <div className="flex items-start gap-4">
           <BrandMark className="size-11 shrink-0" />
           <div className="min-w-0">
-            <h2 className="text-xl font-semibold tracking-tight">{copy.remoteSetupTitle}</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">{copy.remoteSetupDesc}</p>
+            <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{copy.remoteSetupTitle}</h2>
+            <p className="mt-1 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">{copy.remoteSetupDesc}</p>
           </div>
         </div>
         <div className="mt-6">
           <RemoteSetupFields disabled={applying} setup={setup} />
-          {error ? <div className="mt-3 text-sm text-destructive">{error}</div> : null}
+          {error ? <div className="mt-3 text-xs text-(--linear-red)">{error}</div> : null}
         </div>
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           <Button disabled={applying} onClick={onBack} size="sm" variant="ghost">

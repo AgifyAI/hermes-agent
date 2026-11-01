@@ -24,11 +24,11 @@ export function ProviderPicker() {
       <DropdownMenuTrigger asChild>
         {/* Plain text affordance (matches "Add a reference"), not a padded pill. */}
         <button
-          className="flex h-6 items-center gap-1 text-[0.6875rem] text-(--ui-text-tertiary) transition hover:text-foreground"
+          className="flex h-6 cursor-pointer items-center gap-1.5 text-xs font-medium text-(--linear-text-tertiary) transition-colors duration-(--linear-speed-quick) hover:text-(--linear-text-primary) hover:transition-none"
           type="button"
         >
           {current?.label}
-          <ChevronDown className="size-3" />
+          <ChevronDown className="size-3.5" />
         </button>
       </DropdownMenuTrigger>
       {/* The picker lives inside the pet-gen Dialog and portals to body, so its
@@ -41,8 +41,8 @@ export function ProviderPicker() {
             // Picking the default clears the override (no need to pin it).
             onSelect={() => setPetGenProvider(provider.default ? '' : provider.name)}
           >
-            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{provider.label}</span>
-            {provider.name === current?.name && <Check className="size-3.5 text-primary" />}
+            <span className="min-w-0 flex-1 truncate font-medium text-(--linear-text-overlay-strong)">{provider.label}</span>
+            {provider.name === current?.name && <Check className="size-3.5 text-(--linear-accent)" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

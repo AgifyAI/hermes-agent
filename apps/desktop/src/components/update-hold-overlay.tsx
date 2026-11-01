@@ -84,18 +84,18 @@ export function UpdateHoldOverlay() {
     <div
       aria-labelledby={titleId}
       aria-modal="true"
-      className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--ui-chat-surface-background) p-6"
+      className="fixed inset-0 z-(--z-setup) flex items-center justify-center bg-(--linear-bg-panel) p-6"
       data-testid="update-hold-overlay"
       role="alertdialog"
     >
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-(--linear-radius-modal) border-[0.5px] border-(--linear-border-overlay) bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-dialog)">
         <div className="flex items-start gap-3 px-5 py-4">
-          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+          <AlertTriangle className="mt-1.5 size-4 shrink-0 text-(--linear-yellow)" />
           <div>
-            <h2 className="text-[0.9375rem] font-semibold tracking-tight" id={titleId}>
+            <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold" id={titleId}>
               {confirming ? copy.confirmTitle : unverified ? copy.titleUnverified : copy.title}
             </h2>
-            <p className="mt-1 text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">
+            <p className="mt-0.5 text-[0.8125rem] leading-5 text-(--linear-text-tertiary)">
               {confirming ? copy.confirmBody : copy.description}
             </p>
           </div>
@@ -103,16 +103,16 @@ export function UpdateHoldOverlay() {
 
         <div className="grid gap-4 p-5 pt-0">
           <div
-            className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-(--ui-text-secondary)"
+            className="rounded-(--linear-radius-card) bg-[color-mix(in_srgb,var(--linear-yellow)_10%,transparent)] px-3 py-2.5 text-[0.8125rem] leading-5 text-(--linear-text-secondary)"
             data-testid="update-hold-detail"
           >
             <p>{unverified ? copy.unverified : hold.ownerPid ? copy.heldByProcess(hold.ownerPid) : copy.heldUnknown}</p>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-xs text-(--linear-text-tertiary)">
               {copy.since(formatTime(hold.since))} · {copy.lastChecked(formatTime(hold.checkedAt))}
             </p>
           </div>
 
-          {refused ? <p className="text-xs text-destructive">{copy.startAnywayRefused}</p> : null}
+          {refused ? <p className="text-xs text-(--linear-red)">{copy.startAnywayRefused}</p> : null}
 
           {confirming ? (
             <div className="flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export function UpdateHoldOverlay() {
                   {copy.startAnyway}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">{copy.recoveryHint}</p>
+              <p className="text-xs text-(--linear-text-tertiary)">{copy.recoveryHint}</p>
             </div>
           )}
         </div>

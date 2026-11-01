@@ -60,11 +60,11 @@ export function FreeTierNoticeStrip() {
 
   return (
     <StatusRow
-      leading={<Codicon aria-hidden className="text-(--ui-text-tertiary)" name="account" size="0.8rem" />}
+      leading={<Codicon aria-hidden className="text-(--linear-text-tertiary)" name="account" size="0.8rem" />}
       trailing={
         <>
           <Button
-            className="text-foreground/90 hover:text-foreground"
+            className="text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
             onClick={() => consume(() => setModelPickerOpen(true))}
             size="micro"
             type="button"
@@ -73,7 +73,7 @@ export function FreeTierNoticeStrip() {
             {copy.openModelPicker}
           </Button>
           <Button
-            className="text-foreground/90 hover:text-foreground"
+            className="text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
             onClick={() => consume(() => openFreeTierSignIn())}
             size="micro"
             type="button"
@@ -82,7 +82,7 @@ export function FreeTierNoticeStrip() {
             {copy.signIn}
           </Button>
           <Button
-            className="text-muted-foreground/75 hover:text-foreground/90"
+            className="text-(--linear-text-quaternary) hover:text-(--linear-text-secondary)"
             onClick={() => {
               recordFriction('notice_dismissed', 'free_tier_notice')
               consume()
@@ -97,9 +97,9 @@ export function FreeTierNoticeStrip() {
       }
       trailingVisible
     >
-      <span className="min-w-0 truncate text-[0.73rem] leading-4 text-foreground/92">
+      <span className="min-w-0 truncate text-xs leading-4 text-(--linear-text-secondary)">
         <span className="font-medium">{copy.stripTitle}</span>
-        <span className="text-muted-foreground/80"> {copy.stripBody}</span>
+        <span className="text-(--linear-text-quaternary)"> {copy.stripBody}</span>
       </span>
     </StatusRow>
   )

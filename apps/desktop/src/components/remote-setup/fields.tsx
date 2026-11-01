@@ -18,9 +18,9 @@ interface FieldProps {
 function Field({ stacked, title, description, children }: FieldProps): ReactElement {
   return stacked ? (
     <div className="grid gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{title}</span>
+      <span className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{title}</span>
       {children}
-      {description ? <span className="text-xs text-muted-foreground">{description}</span> : null}
+      {description ? <span className="text-xs text-(--linear-text-tertiary)">{description}</span> : null}
     </div>
   ) : (
     <ListRow action={children} description={description} title={title} />
@@ -79,14 +79,14 @@ export function RemoteSetupFields({
         />
       </Field>
       {!registry && setup.probeStatus === 'probing' ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
+        <div className="flex items-center gap-2 text-xs text-(--linear-text-tertiary)">
+          <Loader2 className="size-3.5 animate-spin" />
           {copy.probing}
         </div>
       ) : null}
       {!registry && setup.probeStatus === 'error' ? (
-        <div className="flex items-center gap-2 text-sm text-destructive">
-          <AlertCircle className="size-4" />
+        <div className="flex items-center gap-2 text-xs text-(--linear-red)">
+          <AlertCircle className="size-3.5" />
           {copy.probeError}
         </div>
       ) : null}
@@ -148,8 +148,8 @@ export function RemoteSetupFields({
           />
         </Field>
       ) : null}
-      {setup.error ? <div className="text-sm text-destructive">{setup.error}</div> : null}
-      {setup.success ? <div className="text-sm text-primary">{setup.success}</div> : null}
+      {setup.error ? <div className="text-xs text-(--linear-red)">{setup.error}</div> : null}
+      {setup.success ? <div className="text-xs text-(--linear-green)">{setup.success}</div> : null}
     </div>
   )
 }

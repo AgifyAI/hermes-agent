@@ -189,18 +189,18 @@ export function RemoteFolderPicker() {
           }
         }}
       >
-        <div className="shrink-0 border-b border-border/70 px-4 py-3">
-          <DialogTitle className="text-sm">{pending?.title || r.remotePickerTitle}</DialogTitle>
-          <DialogDescription className="mt-1 text-xs">{r.remotePickerDescription}</DialogDescription>
+        <div className="grid shrink-0 gap-1 border-b-[0.5px] border-(--linear-border-primary) px-5 pt-4 pb-3">
+          <DialogTitle>{pending?.title || r.remotePickerTitle}</DialogTitle>
+          <DialogDescription className="text-[0.8125rem]">{r.remotePickerDescription}</DialogDescription>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="shrink-0 flex flex-wrap items-center gap-1 border-b border-border/50 px-3 py-2 text-xs text-muted-foreground">
+          <div className="shrink-0 flex flex-wrap items-center gap-1 border-b-[0.5px] border-(--linear-border-primary) px-3 py-2 text-xs font-medium text-(--linear-text-tertiary)">
             {crumbs.map((crumb, index) => (
               <button
                 className={cn(
-                  'rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground',
-                  index === crumbs.length - 1 && 'text-foreground'
+                  'cursor-pointer rounded-(--linear-radius-control) px-1.5 py-0.5 hover:bg-(--linear-hover-row) hover:text-(--linear-text-primary)',
+                  index === crumbs.length - 1 && 'text-(--linear-text-primary)'
                 )}
                 key={crumb.path}
                 onClick={() => navigate(crumb.path)}
@@ -216,7 +216,7 @@ export function RemoteFolderPicker() {
             {newFolderName !== null && (
               <div className="px-2 py-1">
                 <div className="flex items-center gap-2">
-                  <Codicon className="text-(--ui-text-secondary)" name="new-folder" size="0.875rem" />
+                  <Codicon className="text-(--linear-icon)" name="new-folder" size="0.875rem" />
                   <Input
                     aria-invalid={Boolean(newFolderError)}
                     aria-label={r.remotePickerFolderName}
@@ -254,14 +254,14 @@ export function RemoteFolderPicker() {
               </div>
             )}
             {loading ? (
-              <div className="flex items-center gap-2 px-2 py-3 text-xs text-muted-foreground">
-                <Codicon name="loading" size="0.8rem" spinning />
+              <div className="flex items-center gap-2 px-2 py-3 text-[0.8125rem] text-(--linear-text-tertiary)">
+                <Codicon name="loading" size="0.875rem" spinning />
                 {r.loadingFiles}
               </div>
             ) : error ? (
-              <div className="px-2 py-3 text-xs text-destructive">{r.unreadableBody(error)}</div>
+              <div className="px-2 py-3 text-[0.8125rem] text-(--linear-red)">{r.unreadableBody(error)}</div>
             ) : entries.length === 0 ? (
-              <div className="px-2 py-3 text-xs text-muted-foreground">{r.emptyBody}</div>
+              <div className="px-2 py-3 text-[0.8125rem] text-(--linear-text-tertiary)">{r.emptyBody}</div>
             ) : (
               entries.map(entry => (
                 <FolderRow key={entry.path} name={pathName(entry.path)} onClick={() => navigate(entry.path)} />
@@ -270,22 +270,21 @@ export function RemoteFolderPicker() {
           </div>
         </div>
 
-        <div className="shrink-0 flex items-center justify-between gap-2 border-t border-border/70 px-4 py-3">
-          <div className="min-w-0 truncate text-xs text-muted-foreground">{displayPath(currentPath)}</div>
+        <div className="shrink-0 flex items-center justify-between gap-2 border-t-[0.5px] border-(--linear-border-primary) px-4 py-3">
+          <div className="min-w-0 truncate text-xs text-(--linear-text-tertiary)">{displayPath(currentPath)}</div>
           <div className="flex shrink-0 items-center gap-2">
             <Button
               disabled={newFolderName !== null || Boolean(error)}
               onClick={() => setNewFolderName('')}
-              size="sm"
               variant="ghost"
             >
               <Codicon name="new-folder" size="0.875rem" />
               {r.remotePickerNewFolder}
             </Button>
-            <Button onClick={() => close()} size="sm" variant="ghost">
+            <Button onClick={() => close()} variant="ghost">
               {t.common.cancel}
             </Button>
-            <Button onClick={() => close([currentPath])} size="sm">
+            <Button onClick={() => close([currentPath])}>
               {r.remotePickerSelect}
             </Button>
           </div>
@@ -298,7 +297,7 @@ export function RemoteFolderPicker() {
 function FolderRow({ disabled = false, name, onClick }: { disabled?: boolean; name: string; onClick: () => void }) {
   return (
     <button
-      className="row-hover flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-(--ui-text-secondary) hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+      className="row-hover flex h-8 w-full cursor-pointer items-center gap-2 rounded-(--linear-radius-control) px-2 text-left text-[0.8125rem] text-(--linear-text-secondary) hover:bg-(--linear-hover-row) hover:text-(--linear-text-primary) disabled:pointer-events-none disabled:opacity-40"
       disabled={disabled}
       onClick={onClick}
       type="button"

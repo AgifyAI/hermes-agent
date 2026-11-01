@@ -18,7 +18,7 @@ const INSTANCE_CLASS = 'absolute inset-0 flex flex-col bg-(--ui-terminal-surface
 // WebGL fast-path paints the canvas from ITheme.background instead) — both
 // resolve to the same token, so the two renderers can't disagree.
 const HOST_CLASS =
-  'h-full min-h-0 overflow-hidden text-(--ui-text-secondary) [&_.xterm]:h-full [&_.xterm-screen]:bg-(--ui-terminal-surface-background)! [&_.xterm-viewport]:bg-(--ui-terminal-surface-background)!'
+  'h-full min-h-0 overflow-hidden text-(--linear-text-secondary) [&_.xterm]:h-full [&_.xterm-screen]:bg-(--ui-terminal-surface-background)! [&_.xterm-viewport]:bg-(--ui-terminal-surface-background)!'
 
 interface TerminalInstanceProps {
   id: string
@@ -64,7 +64,7 @@ export function TerminalInstance({
       {status === 'starting' && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
           <Loader
-            className="size-8 text-(--ui-text-tertiary)"
+            className="size-8 text-(--linear-text-tertiary)"
             pathSteps={180}
             strokeScale={0.68}
             type="spiral-search"
@@ -74,15 +74,15 @@ export function TerminalInstance({
       {selection.trim() && (
         <div className="absolute z-50 flex items-center gap-1" style={selectionStyle ?? { right: 12, top: 8 }}>
           <Button
-            className="h-6 rounded-md px-2 text-[0.68rem] shadow-md backdrop-blur-md"
             onClick={event => event.preventDefault()}
             onMouseDown={event => {
               event.preventDefault()
               event.stopPropagation()
               addSelectionToChat()
             }}
+            size="xs"
             type="button"
-            variant="secondary"
+            variant="floating"
           >
             {t.rightSidebar.addToChat}
             <KbdCombo className="ml-1 opacity-70" combo="mod+l" size="sm" />
@@ -117,10 +117,10 @@ export function AgentTerminalInstance({ active, id, procId }: AgentTerminalInsta
       // close-tab chord keeps its close meaning here.
       data-terminal=""
     >
-      <div className="flex shrink-0 flex-wrap items-center gap-2 py-2 text-xs text-(--ui-text-secondary)">
-        <div className="min-w-0 flex-1">
-          <p className="font-medium">{t.rightSidebar.terminalReadOnly}</p>
-          <p>{t.rightSidebar.terminalReadOnlyHelp}</p>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 py-2">
+        <div className="grid min-w-0 flex-1 gap-[3px]">
+          <p className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{t.rightSidebar.terminalReadOnly}</p>
+          <p className="text-xs text-(--linear-text-tertiary)">{t.rightSidebar.terminalReadOnlyHelp}</p>
         </div>
         <Button onClick={() => createTerminal()} size="sm" type="button" variant="secondary">
           {t.rightSidebar.terminalOpenInteractive}

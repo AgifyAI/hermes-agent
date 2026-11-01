@@ -156,16 +156,14 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
   const { t } = useI18n()
 
   return (
-    <div
-      className="fixed inset-0 z-(--z-crash) grid place-items-center bg-(--ui-chat-surface-background) p-6"
-    >
+    <div className="fixed inset-0 z-(--z-crash) grid place-items-center bg-(--linear-bg-panel) p-6">
       <ErrorState
         className="w-full max-w-[28rem]"
         description={
           <>
             {t.errors.boundaryDesc}
             {error.message ? (
-              <details className="mt-2 text-left text-xs text-muted-foreground">
+              <details className="mt-2 text-left text-xs text-(--linear-text-tertiary)">
                 <summary className="cursor-pointer select-none text-center">{t.errors.boundaryDetails}</summary>
                 <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[0.6875rem]">
                   {error.message}
@@ -176,9 +174,7 @@ function RootErrorFallback({ error, reset }: ErrorBoundaryFallbackProps) {
         }
         title={t.errors.boundaryTitle}
       >
-        <Button className="font-semibold" onClick={reset} size="lg">
-          {t.common.retry}
-        </Button>
+        <Button onClick={reset}>{t.common.retry}</Button>
         <Button onClick={() => window.location.reload()} variant="text">
           {t.errors.reloadWindow}
         </Button>

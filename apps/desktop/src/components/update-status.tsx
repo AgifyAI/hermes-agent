@@ -239,9 +239,9 @@ export function VersionHero({
         {renderHeading ? (
           renderHeading(u.appName)
         ) : (
-          <h2 className="text-lg font-semibold tracking-tight">{u.appName}</h2>
+          <h2 className="text-[1.125rem] leading-[1.8rem] font-semibold">{u.appName}</h2>
         )}
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-(--linear-text-tertiary)">
           {version?.appVersion ? u.version(shortVersion(version.appVersion)) : u.versionUnavailable}
           {version?.channel
             ? ` · ${Object.entries(u.channels).find(([name]: [string, string]): boolean => name === version.channel)?.[1] ?? version.channel}`
@@ -249,12 +249,12 @@ export function VersionHero({
         </p>
       </div>
       {(version?.bundleSwapPending || version?.bundleOutOfSync) && (
-        <div className="mx-auto w-full max-w-2xl rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-left text-sm">
+        <div className="mx-auto w-full max-w-2xl rounded-(--linear-radius-card) bg-[color-mix(in_srgb,var(--linear-yellow)_10%,transparent)] px-4 py-3 text-left text-[0.8125rem]">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-(--linear-yellow)" />
             <div className="min-w-0">
               <p className="font-medium">{version.bundleSwapPending ? u.bundleSwapPending : u.bundleOutOfSync}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-(--linear-text-tertiary)">
                 {version.bundleSwapPending ? u.bundleSwapPendingDesc : u.bundleOutOfSyncDesc}
               </p>
               {version.bundleSwapPending ? (
@@ -378,23 +378,25 @@ function UpdateStatusCardBody({
   return (
     <div
       className={cn(
-        'rounded-xl border px-4 py-3 text-sm',
-        view.tone === 'available' && 'border-primary/30 bg-primary/5 text-foreground',
-        view.tone === 'error' && 'border-destructive/35 bg-destructive/5 text-destructive',
-        (view.tone === 'idle' || view.tone === 'unsupported') && 'border-border/70 bg-muted/20 text-foreground'
+        'rounded-(--linear-radius-card) px-4 py-3 text-[0.8125rem]',
+        view.tone === 'available' &&
+          'bg-[color-mix(in_srgb,var(--linear-accent)_10%,transparent)] text-(--linear-text-primary)',
+        view.tone === 'error' && 'bg-[color-mix(in_srgb,var(--linear-red)_10%,transparent)] text-(--linear-red)',
+        (view.tone === 'idle' || view.tone === 'unsupported') &&
+          'bg-(--linear-bg-card) text-(--linear-text-primary) shadow-(--linear-shadow-card)'
       )}
     >
       <div className="flex items-start gap-2">
         {view.tone === 'available' ? (
-          <Codicon className="mt-0.5 size-4 shrink-0 text-primary" name="cloud-download" size="1rem" />
+          <Codicon className="mt-0.5 size-4 shrink-0 text-(--linear-accent)" name="cloud-download" size="1rem" />
         ) : view.tone === 'error' || view.tone === 'unsupported' ? null : (
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-(--linear-green)" />
         )}
         <div className="min-w-0">
           <p className="font-medium">{view.line}</p>
-          {view.error && <p className="mt-1 text-xs text-muted-foreground">{view.error}</p>}
+          {view.error && <p className="mt-1 text-xs text-(--linear-text-tertiary)">{view.error}</p>}
           {view.tone !== 'unsupported' && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-(--linear-text-tertiary)">
               {u.lastChecked(relativeTime(status?.fetchedAt, u))}
               {justChecked && !checking ? u.justNowSuffix : ''}
             </p>

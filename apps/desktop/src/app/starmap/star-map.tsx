@@ -89,7 +89,7 @@ function RevealLabel({ axis, revealStore }: { axis: TimeAxis; revealStore: Writa
   }, [revealStore, sync])
 
   return (
-    <span className="tabular-nums text-foreground/75" ref={labelRef}>
+    <span className="tabular-nums text-(--linear-text-secondary)" ref={labelRef}>
       {revealText(axis, revealStore.get())}
     </span>
   )
@@ -937,7 +937,7 @@ export function StarMap({
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden" ref={wrapRef}>
       <canvas
-        className="block touch-none select-none text-foreground"
+        className="block touch-none select-none text-(--linear-text-primary)"
         onContextMenu={onContextMenu}
         onDoubleClick={resetView}
         onMouseDown={onMouseDown}
@@ -978,14 +978,14 @@ export function StarMap({
       </div>
 
       {/* Legend — bottom-left, one entry per line like a conventional key. */}
-      <div className="pointer-events-none absolute bottom-2 left-2 flex flex-col gap-1 text-[0.62rem] text-muted-foreground">
+      <div className="pointer-events-none absolute bottom-2 left-2 flex flex-col gap-1 text-[0.6875rem] text-(--linear-text-tertiary)">
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2 rounded-full bg-[var(--linear-accent)]/80" /> skill
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2 rotate-45" style={{ backgroundColor: memoryColor }} /> memory
         </span>
-        <span className="text-[0.58rem] text-muted-foreground/65">core = oldest · outer = newer</span>
+        <span className="text-[0.6875rem] text-(--linear-text-quaternary)">core = oldest · outer = newer</span>
         <RevealLabel axis={timeAxis} revealStore={revealStore} />
       </div>
     </div>
