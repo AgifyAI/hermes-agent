@@ -1114,7 +1114,7 @@ export function restoreHiddenTreeSideTabs(side: TreeSide): void {
   }
 }
 
-/** Restore minimized zones without changing their active tab (including Bots). */
+/** Restore sidebar zones, preserving their active tabs and each tool’s own open state. */
 export function restoreMinimizedTreeSide(side: TreeSide): boolean {
   const tree = $layoutTree.get()
   const row = rootRow()
@@ -1132,8 +1132,6 @@ export function restoreMinimizedTreeSide(side: TreeSide): boolean {
 
     for (const id of groupLeafIds(child)) {
       const group = findGroup(next, id)
-      // Tool panes have their own open state. Opening the enclosing sidebar
-      // must leave a folded terminal folded until its own shortcut is pressed.
       if (group?.minimized && !group.panes.every(isCollapsePane)) {
         next = setGroupMinimized(next, id, false)
       }
