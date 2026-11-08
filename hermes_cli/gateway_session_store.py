@@ -216,8 +216,10 @@ class GatewaySessionStore:
         try:
             self._mutate(session_id, "rename", {"title": title})
         except GatewayClientError as exc:
-            # The owner's SessionDB ValueError text never crosses the wire (bounded reason codes):
-            # print main's "already in use" copy from the reader when another row holds the title.
+            # The owner's SessionDB ValueError text never crosses the wire (bounded reason codes).
+            # Only the hidden canonical Bot Chat still has a name conflict; ordinary display
+            # labels are deliberately allowed to repeat, so a transport failure must not be
+            # rewritten as a false "already in use" error for them.
             holder = self._title_holder(session_id, title)
             if holder:
                 raise ValueError(f"Title '{title}' is already in use by session {holder}") from exc
@@ -272,10 +274,13 @@ class GatewaySessionStore:
 
     def _title_holder(self, session_id, title):
         db = self._db()
-        if db is None or not title:
+        if db is None or title != "Bot Chat":
             return None
         with db._read_ctx() as conn:
-            row = conn.execute("SELECT id FROM sessions WHERE title = ? AND id != ?", (title, session_id)).fetchone()
+            row = conn.execute(
+                "SELECT id FROM sessions WHERE title = ? AND hidden = 1 AND id != ?",
+                (title, session_id),
+            ).fetchone()
         return row[0] if row else None
 
     def _leave(self, session_id):

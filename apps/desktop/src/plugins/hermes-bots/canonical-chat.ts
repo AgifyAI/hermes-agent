@@ -21,8 +21,8 @@ import type { BotMeta, CanonicalSession, RosterRow } from './types'
 
 // ── canonical bot chat ───────────────────────────────────────────────────────
 // Each bot has ONE forever chat, identified by NAME, never by pointer: the
-// session titled exactly "Bot Chat" on that bot's profile. The core
-// UNIQUE(title) index makes (profile, "Bot Chat") an exact registry, so every
+// hidden session titled exactly "Bot Chat" on that bot's profile. A partial
+// unique index reserves that hidden row, so every
 // open consults that registry directly — there is nothing to verify, re-pin,
 // grandfather, or recover. Stored-id pins (ui_meta['hermes-bots'].chat) were
 // the previous identity and are REMOVED: every lost-chat incident traced to a
@@ -270,8 +270,8 @@ export function notifyBotOpenFailure(error: unknown, bot: RosterRow, step: BotOp
   })
 }
 
-/** THE identity lookup: the profile's session titled exactly "Bot Chat",
- *  consulted on the bot's OWN source. The core UNIQUE title index guarantees
+/** THE identity lookup: the profile's hidden session titled exactly "Bot Chat",
+ *  consulted on the bot's OWN source. The partial unique index guarantees
  *  at most ONE such row per profile db — Profile → Named Session is an exact
  *  registry, so consult it exactly: `title` asks the gateway for an indexed
  *  WHERE title = ? lookup (window-free; a busy profile can push the

@@ -34,8 +34,10 @@ import { $sessionsLoading } from '@/store/session'
 
 import { cloneAttachments, type QueueEditState } from '../composer-utils'
 import { replaceQueuedPrompt } from '../discard-lost-prompt'
+import { onComposerQueueSendRequest } from '../queue-send'
 import { useComposerScope } from '../scope'
 import type { ChatBarProps } from '../types'
+import { useComposerVisible } from '../visibility'
 
 /** Freeze terminal chips for queue persistence. Persists the chip/display
  *  form; fenced selection CONTENTS stay in the runtime map. Returns null when
@@ -142,6 +144,7 @@ export function useComposerQueue({
 }: UseComposerQueueArgs) {
   const { t } = useI18n()
   const scope = useComposerScope()
+  const composerVisible = useComposerVisible()
 
   // Per-session slice (edge): re-renders only when THIS session's queue changes,
   // not on cross-session queue churn (the plain atom's map ref changes on every
@@ -598,6 +601,25 @@ export function useComposerQueue({
       return runDrain(entries => entries.find(e => e.id === id))
     },
     [activeQueueSessionKey, busy, queueEdit, runDrain]
+  )
+
+  // The right sidebar has no composer instance of its own. Route its Send
+  // action through the same per-composer drain so busy sessions are scheduled,
+  // attachments keep their ownership, and the queue entry is removed only
+  // after the real submit is accepted. `claimed` makes a main pane and a
+  // keep-alive tile with the same session share one owner instead of sending
+  // the entry twice.
+  useEffect(
+    () =>
+      onComposerQueueSendRequest(detail => {
+        if (!composerVisible || detail.claimed || detail.sessionKey !== activeQueueSessionKey) {
+          return
+        }
+
+        detail.claimed = true
+        void sendQueuedNow(detail.entryId)
+      }),
+    [activeQueueSessionKey, composerVisible, sendQueuedNow]
   )
 
   // Deliver a queued entry as a mid-turn redirect — the queue-panel sibling of

@@ -78,7 +78,6 @@ export type DesktopActionId =
   | 'timestamps'
   | 'title'
   | 'undo'
-  | 'wake'
   | 'yolo'
 
 /** A command fulfilled by opening a desktop overlay picker. */
@@ -209,12 +208,6 @@ const DESKTOP_COMMAND_SPECS: readonly DesktopCommandSpec[] = [
     name: '/reasoning',
     description: 'Reasoning effort or display [<level> [--global]|show|hide|full|clamp]',
     surface: action('reasoning'),
-    argumentMode: 'options'
-  },
-  {
-    name: '/wake',
-    description: 'Control the desktop wake-word listener [on|off|status]',
-    surface: action('wake'),
     argumentMode: 'options'
   },
   {
@@ -391,7 +384,7 @@ const REGISTRY_DESKTOP_SURFACE: Readonly<Record<string, string | null>> = deskto
  */
 export const TS_ONLY_NO_DESKTOP_SURFACE: Record<DesktopUnavailableReason, readonly string[]> = {
   advanced: [],
-  'composer-voice': ['/wake'],
+  'composer-voice': [],
   messaging: [],
   settings: [],
   terminal: ['/density', '/details', '/logs', '/mouse', '/pets']

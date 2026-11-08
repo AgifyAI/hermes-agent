@@ -81,7 +81,8 @@ def validate_title(title):
 
 def title_new_session(authority, ref, title):
     """User-provenance title on a just-created local session (auto-titling never overwrites it).
-    A concurrent creator that won the unique title is a conflict, not a silent orphan."""
+    A concurrent creator that won the hidden canonical Bot Chat registry is a
+    conflict, not a silent orphan; ordinary display names may be duplicated."""
     try:
         authority.db.set_session_title(ref.session_id, title)
     except ValueError:

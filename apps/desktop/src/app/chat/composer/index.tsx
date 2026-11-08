@@ -128,6 +128,37 @@ function controlRowGridClass(singleColumn: boolean, stacked: boolean, hudMode: b
     : 'grid-cols-[auto_1fr_auto] items-center gap-(--composer-control-gap) [grid-template-areas:"menu_input_controls"]'
 }
 
+function handleCodeShortcut(
+  event: KeyboardEvent<HTMLDivElement>,
+  draftMirror: string,
+  withUndoPoint: (edit: () => boolean) => boolean,
+  flushEditorToDraft: (editor: HTMLDivElement) => void
+): boolean {
+  if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'e') {
+    const editor = event.currentTarget
+    const selection = window.getSelection()
+    const selectionInEditor = Boolean(selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode))
+    const collapsed = Boolean(selectionInEditor && selection?.isCollapsed)
+    const emptyDraft = !liveComposerDraft(editor, draftMirror).trim()
+    let edit = () => toggleCodeBlock(editor)
+
+    if (collapsed && isInlineCodeMode(editor)) {
+      edit = () => endInlineCodeMode(editor)
+    } else if (collapsed && emptyDraft) {
+      edit = () => beginInlineCodeMode(editor)
+    }
+
+    if (withUndoPoint(edit)) {
+      event.preventDefault()
+      flushEditorToDraft(editor)
+    }
+
+    return true
+  }
+
+  return false
+}
+
 export function ChatBar({
   busy,
   cwd,
@@ -717,29 +748,7 @@ export function ChatBar({
       return
     }
 
-    // Linear's composer shortcut: ⌘E (or Ctrl+E) starts inline-code typing in
-    // an empty draft. With text selected, keep the product contract from the
-    // improvement list and wrap the selection/line in a Markdown code block;
-    // the same shortcut on an inline-code draft exits that mode.
-    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'e') {
-      const editor = event.currentTarget
-      const selection = window.getSelection()
-      const selectionInEditor = Boolean(selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode))
-      const collapsed = selectionInEditor && selection?.isCollapsed
-      const emptyDraft = !liveComposerDraft(editor, draftRef.current).trim()
-
-      const edit =
-        collapsed && isInlineCodeMode(editor)
-          ? () => endInlineCodeMode(editor)
-          : collapsed && emptyDraft
-            ? () => beginInlineCodeMode(editor)
-            : () => toggleCodeBlock(editor)
-
-      if (withUndoPoint(edit)) {
-        event.preventDefault()
-        flushEditorToDraft(editor)
-      }
-
+    if (handleCodeShortcut(event, draftRef.current, withUndoPoint, flushEditorToDraft)) {
       return
     }
 

@@ -59,7 +59,7 @@ import {
   resolveNewChatOwnerRoute
 } from '@/store/profile'
 import { $projectScope } from '@/store/project-scope'
-import { projectProfile, resolveNewSessionCwd } from '@/store/projects'
+import { resolveNewSessionCwd } from '@/store/projects'
 import { clearAllPrompts } from '@/store/prompts'
 import { clearStoredTranscriptReadOnly, markStoredTranscriptReadOnly } from '@/store/read-only-transcript'
 import {
@@ -190,6 +190,7 @@ import {
 } from './resume-reconcile'
 import { backgroundRuntimeOptions, runtimeOwner, runtimeOwnerProfile } from './runtime-owner'
 import { createGatewaySession, desktopSessionCreateParams } from './session-create-request'
+import { resolveTileProfiles } from './session-tile-target'
 import {
   createPersistedDisplayTranscriptProvenance,
   hasPersistedDisplayTranscriptProvenance,
@@ -944,18 +945,9 @@ export function useSessionActions({
       const listed = options?.listed ?? true
 
       try {
-        // A tile anchored at a project path belongs to the profile the project
-        // tree is rendered under — the same owner the fresh-draft "+" pins
-        // (#79005). The occupied-chat "+" and project-row drags reach this
-        // path instead, where a stale $newChatProfile pin would otherwise win
-        // and land the session in the wrong profile (#124265). All-profiles
-        // view has no owner and keeps the ordinary fallback.
-        const projectOwnerProfile =
-          options?.profile === undefined && typeof options?.cwd === 'string'
-            ? (projectProfile() ?? undefined)
-            : undefined
-
-        const optionProfile = options?.profile ?? projectOwnerProfile
+        // A project tile belongs to the profile that rendered its tree; a
+        // caller-supplied profile remains authoritative.
+        const { optionProfile, projectOwnerProfile } = resolveTileProfiles(options ?? {})
 
         // Fresh tile → the caller's workspace when one was named (the sidebar
         // "+" on a project/worktree lane), explicit null means Home/detached,

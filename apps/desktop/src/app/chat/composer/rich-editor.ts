@@ -1021,6 +1021,14 @@ function isBlankNode(node: ChildNode | null): boolean {
   return false
 }
 
+function isUnwrappableComposerBlock(node: HTMLElement): boolean {
+  return (
+    (node.tagName === 'DIV' || node.tagName === 'P') &&
+    node.dataset.slot !== RICH_INPUT_SLOT &&
+    !node.hasAttribute(INLINE_CODE_BLOCK)
+  )
+}
+
 /** Drop contenteditable junk that serializes as `\n` and falsely expands the
  *  composer. Editing around a contenteditable=false chip makes Chromium wrap the
  *  remainder in stray block <div>s / trailing <br>s — none of which our own
@@ -1053,11 +1061,7 @@ export function normalizeComposerEditorDom(editor: HTMLElement) {
   if (editor.childNodes.length === 1 && editor.firstChild?.nodeType === Node.ELEMENT_NODE) {
     const wrapper = editor.firstChild as HTMLElement
 
-    if (
-      (wrapper.tagName === 'DIV' || wrapper.tagName === 'P') &&
-      wrapper.dataset.slot !== RICH_INPUT_SLOT &&
-      !wrapper.hasAttribute(INLINE_CODE_BLOCK)
-    ) {
+    if (isUnwrappableComposerBlock(wrapper)) {
       // Moving the text nodes out resets Chromium's selection to the editor's
       // start. Keep DOM endpoints (and direction), not serialized text offsets:
       // chips are atomic and the wrapper's trailing newline is being removed.

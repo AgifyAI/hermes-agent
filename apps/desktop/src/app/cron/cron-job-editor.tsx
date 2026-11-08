@@ -240,52 +240,52 @@ export function CronJobInlineEditor({
           </Select>
         </Field>
 
-        <Field htmlFor="cron-inline-provider" label="Provider" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-provider" label={c.providerLabel} optional optionalLabel={c.optional}>
           <Input id="cron-inline-provider" onBlur={() => void persist('provider', { provider: provider.trim() || null })} onChange={e => setProvider(e.target.value)} value={provider} />
         </Field>
-        <Field htmlFor="cron-inline-base-url" label="Base URL" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-base-url" label={c.baseUrlLabel} optional optionalLabel={c.optional}>
           <Input className="font-mono" id="cron-inline-base-url" onBlur={() => void persist('base_url', { base_url: baseUrl.trim() || null })} onChange={e => setBaseUrl(e.target.value)} value={baseUrl} />
         </Field>
-        <Field htmlFor="cron-inline-repeat" label="Repeat" optional optionalLabel={c.optional}>
-          <Input id="cron-inline-repeat" onBlur={() => void persist('repeat', { repeat: parseRepeat(repeat) })} onChange={e => setRepeat(e.target.value)} placeholder="forever" value={repeat} />
+        <Field htmlFor="cron-inline-repeat" label={c.repeatLabel} optional optionalLabel={c.optional}>
+          <Input id="cron-inline-repeat" onBlur={() => void persist('repeat', { repeat: parseRepeat(repeat) })} onChange={e => setRepeat(e.target.value)} placeholder={c.repeatPlaceholder} value={repeat} />
         </Field>
-        <Field htmlFor="cron-inline-skills" label="Skills" optional optionalLabel={c.optional}>
-          <Textarea id="cron-inline-skills" onBlur={() => void persist('skills', { skills: splitList(skills) })} onChange={e => setSkills(e.target.value)} placeholder="skill-a, skill-b" value={skills} />
+        <Field htmlFor="cron-inline-skills" label={c.skillsLabel} optional optionalLabel={c.optional}>
+          <Textarea id="cron-inline-skills" onBlur={() => void persist('skills', { skills: splitList(skills) })} onChange={e => setSkills(e.target.value)} placeholder={c.skillsPlaceholder} value={skills} />
         </Field>
-        <Field htmlFor="cron-inline-script" label="Script" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-script" label={c.scriptLabel} optional optionalLabel={c.optional}>
           <Textarea className="font-mono" id="cron-inline-script" onBlur={() => void persist('script', { script: script.trim() || null })} onChange={e => setScript(e.target.value)} value={script} />
         </Field>
-        <Field htmlFor="cron-inline-context" label="Context from" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-context" label={c.contextFromLabel} optional optionalLabel={c.optional}>
           <Textarea id="cron-inline-context" onBlur={() => void persist('context_from', { context_from: splitList(contextFrom) })} onChange={e => setContextFrom(e.target.value)} value={contextFrom} />
         </Field>
-        <Field htmlFor="cron-inline-toolsets" label="Enabled toolsets" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-toolsets" label={c.enabledToolsetsLabel} optional optionalLabel={c.optional}>
           <Textarea id="cron-inline-toolsets" onBlur={() => void persist('enabled_toolsets', { enabled_toolsets: splitList(enabledToolsets) })} onChange={e => setEnabledToolsets(e.target.value)} value={enabledToolsets} />
         </Field>
-        <Field htmlFor="cron-inline-workdir" label="Working directory" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-workdir" label={c.workdirLabel} optional optionalLabel={c.optional}>
           <Input className="font-mono" id="cron-inline-workdir" onBlur={() => void persist('workdir', { workdir: workdir.trim() || null })} onChange={e => setWorkdir(e.target.value)} value={workdir} />
         </Field>
-        <Field htmlFor="cron-inline-monitor-script" label="Monitor script" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-monitor-script" label={c.monitorScriptLabel} optional optionalLabel={c.optional}>
           <Textarea className="font-mono" id="cron-inline-monitor-script" onBlur={() => void persist('monitor_script', { monitor_script: monitorScript.trim() || null })} onChange={e => setMonitorScript(e.target.value)} value={monitorScript} />
         </Field>
-        <Field htmlFor="cron-inline-monitor-url" label="Monitor URL" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-monitor-url" label={c.monitorUrlLabel} optional optionalLabel={c.optional}>
           <Input className="font-mono" id="cron-inline-monitor-url" onBlur={() => void persist('monitor_url', { monitor_url: monitorUrl.trim() || null })} onChange={e => setMonitorUrl(e.target.value)} value={monitorUrl} />
         </Field>
-        <Field htmlFor="cron-inline-failure-deliver" label="Failure delivery" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-failure-deliver" label={c.failureDeliveryLabel} optional optionalLabel={c.optional}>
           <Input id="cron-inline-failure-deliver" onBlur={() => void persist('failure_deliver', { failure_deliver: failureDeliver.trim() || null })} onChange={e => setFailureDeliver(e.target.value)} value={failureDeliver} />
         </Field>
-        <Field htmlFor="cron-inline-interpreter" label="Python interpreter" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-interpreter" label={c.interpreterLabel} optional optionalLabel={c.optional}>
           <Input className="font-mono" id="cron-inline-interpreter" onBlur={() => void persist('interpreter', { interpreter: interpreter.trim() || null })} onChange={e => setInterpreter(e.target.value)} value={interpreter} />
         </Field>
-        <Field htmlFor="cron-inline-reasoning" label="Reasoning effort" optional optionalLabel={c.optional}>
+        <Field htmlFor="cron-inline-reasoning" label={c.reasoningEffortLabel} optional optionalLabel={c.optional}>
           <Select onValueChange={next => { const value = next === '__default__' ? '' : next; setReasoningEffort(value); void persist('reasoning_effort', { reasoning_effort: value || null }) }} value={reasoningEffort || '__default__'}>
             <SelectTrigger id="cron-inline-reasoning"><SelectValue /></SelectTrigger>
-            <SelectContent>{['__default__', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'].map(value => <SelectItem key={value} value={value}>{value === '__default__' ? 'Default' : value}</SelectItem>)}</SelectContent>
+            <SelectContent>{['__default__', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'].map(value => <SelectItem key={value} value={value}>{value === '__default__' ? c.reasoningDefault : value}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
 
         <div className="grid gap-2">
-          <InlineBooleanField checked={noAgent} id="cron-inline-no-agent" label="Run script without agent" onChange={checked => { setNoAgent(checked); void persist('no_agent', { no_agent: checked }) }} />
-          <InlineBooleanField checked={attachToSession} id="cron-inline-attach" label="Attach output to session" onChange={checked => { setAttachToSession(checked); void persist('attach_to_session', { attach_to_session: checked }) }} />
+          <InlineBooleanField checked={noAgent} id="cron-inline-no-agent" label={c.noAgentLabel} onChange={checked => { setNoAgent(checked); void persist('no_agent', { no_agent: checked }) }} />
+          <InlineBooleanField checked={attachToSession} id="cron-inline-attach" label={c.attachToSessionLabel} onChange={checked => { setAttachToSession(checked); void persist('attach_to_session', { attach_to_session: checked }) }} />
         </div>
       </div>
 

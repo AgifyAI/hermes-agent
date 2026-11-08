@@ -197,11 +197,9 @@ class SessionPortabilityMixin:
             existing = self._find_foreign_import_on_conn(conn, origin)
             if existing:
                 return {"session_id": existing, "already_imported": True}
-            # Titles are globally unique within a profile. Preserve a readable
-            # title while giving unrelated conversations with the same text room.
+            # Session titles are display labels, so an imported conversation
+            # keeps the exact name even when another chat already uses it.
             item = normalized[0]
-            if conn.execute("SELECT 1 FROM sessions WHERE title = ?", (title,)).fetchone():
-                item["session"]["title"] = f"{title} ({session_id[-12:]})"
             self._import_session_row(conn, item["session"], item["messages"], session_id)
             conn.execute("UPDATE sessions SET origin_json = ?, profile_name = ? WHERE id = ?",
                          (json.dumps({"imported_from": origin}), profile, session_id))

@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { ProfileGlyph } from '@/components/ui/profile-glyph'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Loader2 } from '@/lib/icons'
@@ -54,8 +53,9 @@ import { PROFILES_ROUTE } from '../../routes'
 import { FleetGatewayMenuGroup } from './fleet-gateway-menu-group'
 import { buildRestGroups, type FleetAgent, fleetRouteKey } from './fleet-rail'
 import { useLocalDeviceSwitch } from './local-device-switch'
+import { ProfileAvatar } from './profile-avatar'
 import { ProfileLaunchContextMenu } from './profile-launch-menu'
-import { ProfileRowGlyph, UnservedProfileNote, useUnservedProfiles } from './unserved-profiles'
+import { UnservedProfileNote, useUnservedProfiles } from './unserved-profiles'
 import { useFleetRoster } from './use-fleet-roster'
 import { useProfilePrewarm } from './use-profile-prewarm'
 import { useProfileRailRefreshOnActive } from './use-profile-rail-refresh-on-active'
@@ -206,10 +206,11 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
               ) : showAll || !active ? (
                 <Codicon aria-hidden="true" className="shrink-0" name="layers" size="0.75rem" />
               ) : (
-                <ProfileGlyph
+                <ProfileAvatar
                   aria-hidden="true"
                   className="size-3 text-[0.4375rem]"
                   color={resolveProfileColor(active.name, colors)}
+                  hasAvatar={active.has_avatar === true}
                   isDefault={active.is_default}
                   name={active.name}
                 />
@@ -225,6 +226,7 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
               <ProfileItem
                 color={resolveProfileColor(profile.name, colors)}
                 connectionId={profile.is_default ? activeConnectionId : namedConnectionId}
+                hasAvatar={profile.has_avatar === true}
                 isDefault={profile.is_default}
                 key={profile.name}
                 label={profileLabel(profile)}
@@ -299,6 +301,7 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
 interface ProfileItemProps {
   color: null | string
   connectionId: null | string
+  hasAvatar: boolean
   isDefault: boolean
   label: string
   /** Wrap the row in the rail's right-click launch menu (the Webapp's picker). */
@@ -308,7 +311,7 @@ interface ProfileItemProps {
   unserved: boolean
 }
 
-function ProfileItem({ color, connectionId, isDefault, label, launchMenu, name, unserved }: ProfileItemProps) {
+function ProfileItem({ color, connectionId, hasAvatar, isDefault, label, launchMenu, name, unserved }: ProfileItemProps) {
   const { cancelPrewarm, notePointerMove, startPrewarm } = useProfilePrewarm(name, prewarmProfilePick)
 
   const row = (
@@ -321,7 +324,15 @@ function ProfileItem({ color, connectionId, isDefault, label, launchMenu, name, 
       value={name}
     >
       <span className="flex min-w-0 items-center gap-1.5">
-        <ProfileRowGlyph color={color} isDefault={isDefault} name={name} unserved={unserved} />
+        <ProfileAvatar
+          aria-hidden="true"
+          className={cn(unserved && 'grayscale')}
+          color={color}
+          connectionId={connectionId}
+          hasAvatar={hasAvatar}
+          isDefault={isDefault}
+          name={name}
+        />
         <span className="truncate">{label}</span>
       </span>
       {unserved && <UnservedProfileNote />}

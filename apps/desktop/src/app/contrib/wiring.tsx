@@ -43,7 +43,6 @@ import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
 import { $billingSettingsRequest } from '@/store/billing-block'
 import { $desktopBoot } from '@/store/boot'
-import { stashSessionDraft } from '@/store/composer'
 import { $activeConnectionId } from '@/store/connections'
 import { $cronReviewRequest, setCronFocusJobId } from '@/store/cron'
 import { reconnectGateway } from '@/store/gateway-reconnect'
@@ -102,10 +101,7 @@ import { useHudHandoff } from '../hud/handoff'
 import { ModelPickerOverlay } from '../model-picker-overlay'
 import { ModelVisibilityOverlay } from '../model-visibility-overlay'
 import { mainChatOccupied, openSession, openSessionFromPicker } from '../open-session'
-import {
-  createPersonalSkillSessionLauncher,
-  setPersonalSkillSessionLauncher
-} from '../personal-skills/session-launcher'
+import { usePersonalSkillSessionLauncher } from '../personal-skills/use-personal-skill-session-launcher'
 import { FileActionDialogs } from '../right-sidebar/file-actions'
 import { RemoteFolderPicker } from '../right-sidebar/files/remote-picker'
 import { resetProjectTreeState } from '../right-sidebar/files/use-project-tree'
@@ -565,22 +561,7 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     updateSessionState
   })
 
-  const launchPersonalSkillSession = useMemo(
-    () =>
-      createPersonalSkillSessionLauncher({
-        activeProfile: activeGatewayProfile,
-        openNewSessionTile: (dir, options) => openNewSessionTile(dir, options),
-        setWorkspaceScope: () => setWorkspaceScope('sessions'),
-        stashSessionDraft: (scope, prompt) => stashSessionDraft(scope, prompt, [])
-      }),
-    [activeGatewayProfile, openNewSessionTile]
-  )
-
-  useEffect(() => {
-    setPersonalSkillSessionLauncher(launchPersonalSkillSession)
-
-    return () => setPersonalSkillSessionLauncher(null)
-  }, [launchPersonalSkillSession])
+  const launchPersonalSkillSession = usePersonalSkillSessionLauncher(activeGatewayProfile, openNewSessionTile)
 
   useFreshSessionRequest(startFreshSessionDraft)
   useGatewayScopeRefresh(activeConnectionId, activeGatewayProfile, refreshCurrentModel, refreshHermesConfig)

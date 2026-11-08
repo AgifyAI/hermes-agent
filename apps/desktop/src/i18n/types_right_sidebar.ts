@@ -4,6 +4,10 @@ export interface RightSidebarTranslations {
   pendingMemoryTextAria: string
   pendingMemoryLoading: string
   pendingMemoryEmpty: string
+  pendingMemoryLoadFailed: string
+  pendingMemoryRequestFailed: string
+  pendingMemoryCurrent: string
+  pendingMemoryProposed: string
   pendingMemoryCancel: string
   pendingMemorySave: string
   pendingMemoryEdit: string

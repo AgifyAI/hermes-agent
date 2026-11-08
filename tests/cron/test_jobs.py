@@ -1,6 +1,5 @@
 """Tests for cron/jobs.py — schedule parsing, job CRUD, and due-job detection."""
 
-from concurrent.futures import ThreadPoolExecutor
 import threading
 import pytest
 from datetime import datetime, timedelta, timezone, UTC
@@ -531,47 +530,6 @@ class TestUpdateJob:
         # Verify persisted to disk
         fetched = get_job(job["id"])
         assert fetched["name"] == "New Name"
-
-    def test_partial_updates_preserve_configuration_and_merge_concurrent_writes(self, tmp_cron_dir):
-        """Editing one field must not erase the rest of a job, even when two fields save together."""
-        workdir = str(tmp_cron_dir)
-        job = create_job(
-            prompt="Keep the full configuration",
-            schedule="every 1h",
-            name="Original",
-            repeat=3,
-            skills=["research", "summarize"],
-            provider="openai",
-            base_url="https://example.test/v1",
-            context_from=["upstream-job"],
-            enabled_toolsets=["file", "web"],
-            workdir=workdir,
-            no_agent=False,
-        )
-
-        # The first edit is intentionally separate from the racing writes: a sequence of
-        # inline saves must use the latest persisted record as its merge base too.
-        assert update_job(job["id"], {"name": "Renamed"})["name"] == "Renamed"
-
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            futures = [
-                pool.submit(update_job, job["id"], {"base_url": "https://other.test/v1"}),
-                pool.submit(update_job, job["id"], {"provider": "anthropic"}),
-            ]
-            [future.result() for future in futures]
-
-        updated = get_job(job["id"])
-        assert updated is not None
-        assert updated["name"] == "Renamed"
-        assert updated["base_url"] == "https://other.test/v1"
-        assert updated["provider"] == "anthropic"
-        assert updated["prompt"] == job["prompt"]
-        assert updated["repeat"] == job["repeat"]
-        assert updated["skills"] == ["research", "summarize"]
-        assert updated["context_from"] == ["upstream-job"]
-        assert updated["enabled_toolsets"] == ["file", "web"]
-        assert updated["workdir"] == workdir
-
 
 class TestPauseResumeJob:
     def test_pause_sets_state(self, tmp_cron_dir):

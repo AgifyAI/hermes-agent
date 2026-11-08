@@ -9,7 +9,7 @@ import {
   type PendingMemoryWrite,
   rejectPendingMemoryWrite
 } from '@/api/memory'
-import { $rightSidebarSectionRequest } from '@/app/right-sidebar/store'
+import { $rightSidebarSectionRequest } from '@/app/right-sidebar/section-request'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
 import {
@@ -26,12 +26,6 @@ interface MemoryOperationView {
   action: string
   oldText?: string
   proposedText?: string
-}
-
-interface MemorySectionLabels {
-  pendingMemoryOldText?: string
-  pendingMemoryProposed?: string
-  pendingMemoryRequestFailed?: string
 }
 
 function textField(value: unknown): string | undefined {
@@ -83,7 +77,6 @@ function PendingMemoryRow({ labels, onChanged, record, scope }: { labels: Return
   const [draft, setDraft] = useState(() => proposedText(record))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const extraLabels = labels as typeof labels & MemorySectionLabels
   const operations = operationViews(record)
   const editable = record.payload.action !== 'remove' && record.payload.action !== 'batch'
 
@@ -96,7 +89,7 @@ function PendingMemoryRow({ labels, onChanged, record, scope }: { labels: Return
       after?.()
       onChanged()
     } catch (cause) {
-      setError(errorMessage(cause, extraLabels.pendingMemoryRequestFailed ?? 'Memory request failed'))
+      setError(errorMessage(cause, labels.pendingMemoryRequestFailed))
     } finally {
       setPending(false)
     }
@@ -117,13 +110,13 @@ function PendingMemoryRow({ labels, onChanged, record, scope }: { labels: Return
             <div className="space-y-0.5" key={`${record.id}-${index}`}>
               {operation.oldText && (
                 <p className="whitespace-pre-wrap break-words text-(--linear-text-tertiary)">
-                  <span className="mr-1 font-medium">{extraLabels.pendingMemoryOldText ?? 'Old'}</span>
+                  <span className="mr-1 font-medium">{labels.pendingMemoryCurrent}</span>
                   {operation.oldText}
                 </p>
               )}
               {operation.proposedText && (
                 <p className="whitespace-pre-wrap break-words text-(--linear-text-secondary)">
-                  <span className="mr-1 font-medium">{extraLabels.pendingMemoryProposed ?? 'Proposed'}</span>
+                  <span className="mr-1 font-medium">{labels.pendingMemoryProposed}</span>
                   {operation.proposedText}
                 </p>
               )}
@@ -225,7 +218,6 @@ export function MemorySection() {
       : undefined
   }, [connectionId, connectionProfile, hasOwnerScope, ownerConnectionId, ownerProfile])
 
-  const requestScopeKey = JSON.stringify(requestScope ?? null)
   const [entries, setEntries] = useState<PendingMemoryWrite[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -242,7 +234,7 @@ export function MemorySection() {
     setError(null)
     void getPendingMemoryWrites(requestScope)
       .then(response => setEntries(response.pending))
-      .catch(cause => setError(errorMessage(cause, 'Memory requests could not be loaded')))
+      .catch(cause => setError(errorMessage(cause, labels.pendingMemoryLoadFailed)))
       .finally(() => setLoading(false))
   }, [requestScope])
 

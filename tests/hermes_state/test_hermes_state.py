@@ -1840,7 +1840,7 @@ class TestSessionTitleLineage:
         # User renames the visible tip back to the base name — must succeed.
         assert db.set_session_title("tip", "fingerprint-scanner") is True
         assert db.get_session("tip")["title"] == "fingerprint-scanner"
-        # Title transferred off the hidden ancestor — no duplicate titles.
+        # Compression keeps one visible title by transferring it off the hidden ancestor.
         assert db.get_session("root")["title"] is None
 
 

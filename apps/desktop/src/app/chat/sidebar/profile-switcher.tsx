@@ -185,6 +185,10 @@ function useProfileStatus(profile: null | string, connectionId: null | string | 
 const RAIL_TRANSITION = REORDER_RAIL_TRANSITION
 const DRAG_TRANSITION = REORDER_DRAG_TRANSITION_CSS
 
+function ProfileSquareFace({ avatar, label }: { avatar: null | string; label: string }) {
+  return avatar ? <img alt="" className="size-full rounded-[3px] object-cover" src={avatar} /> : profileShortLabel(label)
+}
+
 // The rail is a single horizontal strip of fixed cells. Pin drags to the x-axis
 // (no cross-axis scrollbar), snap to whole cells so a square steps slot-to-slot
 // instead of gliding, and clamp to the occupied strip so it can't float past the
@@ -1051,6 +1055,7 @@ function ProfileDropdownItem({
       >
         <span className="flex min-w-0 items-center gap-1.5">
           <ProfileAvatar
+            aria-hidden="true"
             className={cn(unserved && 'grayscale')}
             color={color}
             connectionId={connectionId}
@@ -1166,7 +1171,7 @@ function ProfilePill({
       >
         {pending ? (
           <Loader2 className="animate-spin" />
-        ) : profile ? (
+        ) : profile && glyph === 'home' ? (
           <ProfileAvatar
             color={null}
             connectionId={connectionId}
@@ -1606,7 +1611,7 @@ function ProfileSquare({
                     onPointerMove={notePointerMove}
                     onPointerUp={clearPress}
                   >
-                    {avatar ? <img alt="" className="size-full rounded-[3px] object-cover" src={avatar} /> : profileShortLabel(label)}
+                    <ProfileSquareFace avatar={avatar} label={label} />
                     {/* The "remote" badge: a tiny globe pinned to the corner of an
                         overridden profile's square, so which profiles leave this
                         machine is visible at a glance (#91349). */}

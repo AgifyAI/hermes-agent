@@ -2550,6 +2550,23 @@ catalog: CatalogTranslations
     customScheduleLabel: string
     customPlaceholder: string
     customHint: string
+    providerLabel: string
+    baseUrlLabel: string
+    repeatLabel: string
+    repeatPlaceholder: string
+    skillsLabel: string
+    skillsPlaceholder: string
+    contextFromLabel: string
+    enabledToolsetsLabel: string
+    workdirLabel: string
+    monitorScriptLabel: string
+    monitorUrlLabel: string
+    failureDeliveryLabel: string
+    interpreterLabel: string
+    reasoningEffortLabel: string
+    reasoningDefault: string
+    noAgentLabel: string
+    attachToSessionLabel: string
     optional: string
     promptRequired: string
     promptScheduleRequired: string

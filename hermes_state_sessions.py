@@ -1058,51 +1058,6 @@ class SessionSessionsMixin:
                 self._set_lineage_column("hidden", session_id, 0)
         return result
 
-    def set_session_hidden(self, session_id: str, hidden: bool) -> bool:
-        """Hide/unhide a session and its compression lineage from the default listing; still resumable."""
-        if not hidden:
-            return self._set_lineage_column("hidden", session_id, 0)
-
-        def _hide(conn):
-            row = conn.execute("SELECT title FROM sessions WHERE id = ?", (session_id,)).fetchone()
-            if row and row[0] == self.CANONICAL_BOT_CHAT_TITLE:
-                conflict = conn.execute(
-                    "SELECT id, archived FROM sessions "
-                    "WHERE id != ? AND title = ? AND hidden = 1 LIMIT 1",
-                    (session_id, self.CANONICAL_BOT_CHAT_TITLE),
-                ).fetchone()
-                if conflict:
-                    if conflict[1]:
-                        conn.execute(
-                            "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
-                            (conflict[0],),
-                        )
-                    else:
-                        raise ValueError(
-                            "A hidden canonical Bot Chat already exists for this profile "
-                            f"(session {conflict[0]})"
-                        )
-
-            return self._set_lineage_column_in_transaction(conn, "hidden", session_id, 1)
-
-        return bool(self._execute_write(_hide))
-
-    def set_session_read(self, session_id: str, read: bool = True) -> bool:
-        """Mark read/unread across the compression lineage. ``last_read_at`` is a watermark: unread when
-        activity postdates it (no write on the message path). NULL = never tracked = read; 0 = unread."""
-        return self._set_lineage_column("last_read_at", session_id, time.time() if read else 0.0)
-
-    def set_session_scratchpad(self, session_id: str, content: Optional[str]) -> bool:
-        """Save the private Desktop scratchpad across every compression segment.
-
-        The value lives on the session row, so it is included by the existing session
-        export/import path and never enters the model transcript. Updating the lineage
-        keeps an open chat's note attached when context compression rotates its id.
-        """
-        value = None if content is None else str(content)
-
-        return self._set_lineage_column("scratchpad", session_id, value)
-
     @staticmethod
     def session_unread(session_row: dict[str, Any]) -> bool:
         """Unread = activity postdates the ``last_read_at`` watermark (NULL = read)."""

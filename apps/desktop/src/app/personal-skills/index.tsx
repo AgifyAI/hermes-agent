@@ -16,10 +16,10 @@ import { $activeGatewayProfile } from '@/store/profile'
 import type { SkillInfo } from '@/types/hermes'
 
 import { useCapabilityScope } from '../capabilities/scope-selector'
-import { parseFrontmatter } from '../capabilities/skills/frontmatter'
 import { isEditableProvenance } from '../capabilities/skills/skill-provenance'
 import { skillsQueryKey } from '../capabilities/skills/skills-data'
 
+import { parseSkillDocument, type SkillMetadataField, updateSkillDocument } from './document'
 import { launchPersonalSkillSession } from './session-launcher'
 
 export interface PersonalSkillsPageProps extends ComponentProps<'section'> {
@@ -110,6 +110,60 @@ function SkillRow({ owner, selected, skill, onClick }: { onClick: () => void; ow
   )
 }
 
+function EditableText({
+  ariaLabel,
+  className,
+  onSave,
+  saving,
+  value
+}: {
+  ariaLabel: string
+  className?: string
+  onSave?: (value: string) => Promise<void>
+  saving: boolean
+  value: string
+}) {
+  const editorRef = useRef<HTMLSpanElement>(null)
+  const dirty = useRef(false)
+  const lastValue = useRef(value)
+
+  const save = useCallback(async () => {
+    const next = editorRef.current ? editableText(editorRef.current) : ''
+
+    if (!onSave || !dirty.current || next === lastValue.current) {
+      return
+    }
+
+    await onSave(next)
+    lastValue.current = next
+    dirty.current = false
+  }, [onSave])
+
+  return (
+    <span
+      aria-label={ariaLabel}
+      className={cn('personal-skills-inline-editor', className)}
+      contentEditable={Boolean(onSave) && !saving}
+      onBlur={() => void save().catch(() => undefined)}
+      onInput={() => {
+        dirty.current = true
+      }}
+      onKeyDown={event => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault()
+          void save().catch(() => undefined)
+        }
+      }}
+      ref={editorRef}
+      role={onSave ? 'textbox' : undefined}
+      spellCheck
+      suppressContentEditableWarning
+    >
+      {value}
+    </span>
+  )
+}
+
 function SkillEditor({
   content,
   onSave,
@@ -184,7 +238,42 @@ function SkillDetail({
   skill: SkillInfo
   t: ReturnType<typeof useI18n>['t']
 }) {
-  const parsed = useMemo(() => (content === undefined ? null : parseFrontmatter(content)), [content])
+  const parsed = useMemo(() => (content === undefined ? null : parseSkillDocument(content)), [content])
+  const metadata = parsed?.metadata ?? []
+  const nameField = metadata.find(field => field.key === 'name')
+  const descriptionField = metadata.find(field => field.key === 'description')
+
+  const saveMetadata = useCallback(
+    (field: SkillMetadataField, value: string) => {
+      if (content === undefined) {
+        return Promise.resolve()
+      }
+
+      return onSave(updateSkillDocument(content, { [field.key]: value }))
+    },
+    [content, onSave]
+  )
+
+  const saveBody = useCallback(
+    (body: string) => {
+      if (content === undefined) {
+        return Promise.resolve()
+      }
+
+      return onSave(updateSkillDocument(content, {}, body))
+    },
+    [content, onSave]
+  )
+
+  const editableField = (field: SkillMetadataField) => (
+    <EditableText
+      ariaLabel={field.key}
+      key={`${field.key}:${field.value}`}
+      onSave={value => saveMetadata(field, value)}
+      saving={saving}
+      value={field.value}
+    />
+  )
 
   return (
     <div className="personal-skills-detail-inner space-y-7">
@@ -192,10 +281,10 @@ function SkillDetail({
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="break-words text-[1.5rem] leading-8 font-medium tracking-[-0.16px] text-(--linear-text-primary)">
-              {skill.name}
+              {nameField ? editableField(nameField) : skill.name}
             </h1>
             <p className="mt-1 text-[0.8125rem] leading-5 text-(--linear-text-secondary)">
-              {skill.description || t.skills.noDescription}
+              {descriptionField ? editableField(descriptionField) : skill.description || t.skills.noDescription}
             </p>
           </div>
           <Button onClick={onOpenSession} size="sm">
@@ -210,14 +299,16 @@ function SkillDetail({
         </div>
       </header>
 
-      {parsed?.meta.length ? (
+      {metadata.length ? (
         <section aria-label={t.skills.metadata} className="space-y-2">
           <h2 className="text-[0.8125rem] font-medium text-(--linear-text-primary)">{t.skills.metadata}</h2>
           <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-5 gap-y-2 rounded-(--linear-radius-card) bg-(--linear-bg-secondary) p-4 text-xs">
-            {parsed.meta.map(([key, value]) => (
-              <div className="contents" key={key}>
-                <dt className="text-(--linear-text-tertiary)">{key}</dt>
-                <dd className="m-0 whitespace-pre-wrap break-words text-(--linear-text-secondary)">{value}</dd>
+            {metadata.map(field => (
+              <div className="contents" key={field.key}>
+                <dt className="text-(--linear-text-tertiary)">{field.key}</dt>
+                <dd className="m-0 whitespace-pre-wrap break-words text-(--linear-text-secondary)">
+                  {editableField(field)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -238,7 +329,7 @@ function SkillDetail({
             {error instanceof Error ? error.message : t.skills.skillsLoadFailed}
           </p>
         ) : parsed ? (
-          <SkillEditor content={content ?? ''} key={editorKey} onSave={onSave} saving={saving} skillName={skill.name} />
+          <SkillEditor content={parsed.body} key={editorKey} onSave={saveBody} saving={saving} skillName={skill.name} />
         ) : null}
       </section>
     </div>

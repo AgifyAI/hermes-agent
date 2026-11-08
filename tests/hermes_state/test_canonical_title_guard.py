@@ -61,6 +61,18 @@ def test_visible_session_titled_bot_chat_stays_renameable(db):
     assert db.get_session("ordinary")["title"] == "renamed away"
 
 
+def test_visible_bot_chat_duplicate_never_replaces_hidden_registry(db):
+    canonical = _make_canonical(db)
+    db.create_session("ordinary", source="desktop")
+    assert db.set_session_title("ordinary", SessionDB.CANONICAL_BOT_CHAT_TITLE)
+
+    # The user-facing duplicate remains a normal selectable session, while all
+    # name-based Bot Mode lookups keep resolving the hidden registry row.
+    assert db.get_session("ordinary")["hidden"] == 0
+    assert db.get_session_by_title(SessionDB.CANONICAL_BOT_CHAT_TITLE)["id"] == canonical
+    assert db.resolve_session_by_title(SessionDB.CANONICAL_BOT_CHAT_TITLE) == canonical
+
+
 def test_deliberately_archived_canonical_chat_releases_name_for_replacement(db):
     """Retiring a Bot Chat must not leave its registry name permanently locked."""
     retired = _make_canonical(db, "retired")

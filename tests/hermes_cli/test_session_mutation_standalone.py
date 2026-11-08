@@ -62,6 +62,38 @@ async def test_standalone_edits_commit_with_owner_guards(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_standalone_scratchpad_patch_round_trips_and_clears(tmp_path, monkeypatch):
+    """The Desktop's fenced PATCH reaches the dashboard mutation route, not only the API adapter."""
+    app = _standalone_app(tmp_path, monkeypatch)
+    with SessionDB(db_path=tmp_path / 'state.db') as db:
+        db.create_session('scratchpad-chat', source='desktop')
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://localhost',
+                                     headers=AUTH) as client:
+            snapshot = await client.get('/api/sessions/scratchpad-chat/mutation-snapshot')
+            assert snapshot.status_code == 200, snapshot.text
+            identity = snapshot.json()
+            saved = await client.patch('/api/sessions/scratchpad-chat', json={
+                'request_id': 'scratchpad-save',
+                'expected_revision': identity['runtime_revision'],
+                'expected_generation': identity['runtime_generation'],
+                'scratchpad': 'private note',
+            })
+            assert saved.status_code == 200, saved.text
+            assert saved.json()['scratchpad'] == 'private note'
+            assert db.get_session('scratchpad-chat')['scratchpad'] == 'private note'
+
+            cleared = await client.patch('/api/sessions/scratchpad-chat', json={
+                'request_id': 'scratchpad-clear',
+                'expected_revision': saved.json()['revision'],
+                'expected_generation': identity['runtime_generation'],
+                'scratchpad': None,
+            })
+            assert cleared.status_code == 200, cleared.text
+            assert cleared.json()['scratchpad'] is None
+            assert db.get_session('scratchpad-chat')['scratchpad'] is None
+
+
+@pytest.mark.asyncio
 async def test_standalone_edit_refuses_while_a_gateway_owns_the_store(tmp_path, monkeypatch, caplog):
     app = _standalone_app(tmp_path, monkeypatch)
     with SessionDB(db_path=tmp_path / 'state.db') as db:

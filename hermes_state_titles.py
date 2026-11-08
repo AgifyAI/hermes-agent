@@ -91,6 +91,35 @@ class SessionTitlesMixin:
             lambda conn: self._set_session_title_in_transaction(conn, session_id, title, source=source)
         ))
 
+    def set_session_hidden(self, session_id: str, hidden: bool) -> bool:
+        """Hide/unhide a session; keep hidden canonical Bot Chat names unique."""
+        if not hidden:
+            return self._set_lineage_column("hidden", session_id, 0)
+
+        def _hide(conn):
+            row = conn.execute("SELECT title FROM sessions WHERE id = ?", (session_id,)).fetchone()
+            if row and row[0] == self.CANONICAL_BOT_CHAT_TITLE:
+                conflict = conn.execute(
+                    "SELECT id, archived FROM sessions "
+                    "WHERE id != ? AND title = ? AND hidden = 1 LIMIT 1",
+                    (session_id, self.CANONICAL_BOT_CHAT_TITLE),
+                ).fetchone()
+                if conflict:
+                    if conflict[1]:
+                        conn.execute(
+                            "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
+                            (conflict[0],),
+                        )
+                    else:
+                        raise ValueError(
+                            "A hidden canonical Bot Chat already exists for this profile "
+                            f"(session {conflict[0]})"
+                        )
+
+            return self._set_lineage_column_in_transaction(conn, "hidden", session_id, 1)
+
+        return bool(self._execute_write(_hide))
+
     def _set_session_title_in_transaction(self, conn, session_id: str, title: str, *, source: str):
         """Reuse title rules within an authority-owned transaction; never commit here."""
         title = self.sanitize_title(title)
@@ -139,12 +168,26 @@ class SessionTitlesMixin:
         partial index protects the same rule during concurrent writes, while
         this check keeps the error readable and handles deliberate retirement.
         """
-        if title != self.CANONICAL_BOT_CHAT_TITLE:
-            return None
-        conflict = conn.execute(
+        conflicts = conn.execute(
             f"SELECT id, archived, hidden, {self._EMPTY_SESSION_WHERE} AS ghost "
-            "FROM sessions WHERE title = ? AND hidden = 1 AND id != ?", (title, session_id),
-        ).fetchone()
+            "FROM sessions WHERE title = ? AND id != ? ORDER BY started_at ASC, rowid ASC",
+            (title, session_id),
+        ).fetchall()
+        if title != self.CANONICAL_BOT_CHAT_TITLE:
+            # Duplicate labels are valid across independent chats. A
+            # compression continuation is the one exception: transfer the
+            # label off its hidden ancestor so the projected conversation has
+            # one display title and the ancestor stays out of the picker.
+            for conflict in conflicts:
+                if self._is_compression_ancestor(conn, ancestor_id=conflict["id"], descendant_id=session_id):
+                    conn.execute(
+                        "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
+                        (conflict["id"],),
+                    )
+                    return conflict["id"]
+            return None
+
+        conflict = next((row for row in conflicts if bool(row["hidden"])), None)
         if not conflict:
             return None
         conflict_id = conflict["id"]

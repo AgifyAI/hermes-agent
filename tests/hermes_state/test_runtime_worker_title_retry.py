@@ -6,12 +6,12 @@ from hermes_state_runtime import RuntimeStoreError, mutate_worker_execution
 from tests.hermes_state.test_runtime_worker_lifecycle import setup_store
 
 
-def test_worker_title_collision_can_dedupe_without_poisoning_persistence(tmp_path):
+def test_worker_duplicate_title_persists_without_poisoning_persistence(tmp_path):
     db, store, scope = setup_store(tmp_path)
     try:
         db.set_session_title('foreign', 'shared-title')
-        # Call the real consumer: it catches ValueError, gets a suffix, then retries.
-        assert _persist_session_title(store, 'owned', 'shared-title', source='llm') == 'shared-title #2'
+        # Call the real consumer: user-facing labels may be reused exactly.
+        assert _persist_session_title(store, 'owned', 'shared-title', source='llm') == 'shared-title'
         assert db.get_session('owned')['title_source'] == 'llm'
         assert db.get_session('foreign')['title'] == 'shared-title'
         with pytest.raises(ValueError):

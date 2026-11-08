@@ -125,7 +125,7 @@
   "/verbose": "terminal",
   "/version": null,
   "/voice": "composer-voice",
-  "/wake": null,
+  "/wake": "composer-voice",
   "/whoami": null,
   "/worktree": "terminal",
   "/yolo": null
