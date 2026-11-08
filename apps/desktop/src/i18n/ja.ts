@@ -106,7 +106,8 @@ export const jaOverrides = {
   keybinds: {
     actions: {
       'session.nextConversation': '次の会話',
-      'session.prevConversation': '前の会話'
+      'session.prevConversation': '前の会話',
+      'view.openRightSidebar': '右サイドバーを開く'
     }
   },
 

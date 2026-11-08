@@ -105,6 +105,7 @@ export const arChrome = {
       'composer.reasoningDown': 'خفض مستوى التفكير',
       'view.toggleSidebar': 'تبديل الشريط الجانبي للجلسات',
       'view.toggleRightSidebar': 'تبديل متصفح الملفات',
+      'view.openRightSidebar': 'فتح الشريط الجانبي الأيمن',
       'view.toggleReview': 'تبديل لوحة المراجعة',
       'view.showFiles': 'إظهار متصفح الملفات',
       'view.showBrowser': 'تبديل المتصفح',

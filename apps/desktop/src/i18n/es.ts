@@ -606,6 +606,7 @@ export const esOverrides = {
       'view.toggleSidebar': 'Alternar barra lateral de sesiones',
       'view.cycleSidebarGrouping': 'Cambiar la agrupación de sesiones',
       'view.toggleRightSidebar': 'Alternar explorador de archivos',
+      'view.openRightSidebar': 'Abrir barra lateral derecha',
       'view.toggleReview': 'Alternar panel de revisión',
       'view.toggleStatusbar': 'Alternar barra de estado',
       'view.toggleTabStrip': 'Mostrar u ocultar pestañas',

@@ -1841,6 +1841,7 @@
     "keybinds.actions.view.flipPanes",
     "keybinds.actions.view.newTerminal",
     "keybinds.actions.view.nextTerminal",
+    "keybinds.actions.view.openRightSidebar",
     "keybinds.actions.view.prevTerminal",
     "keybinds.actions.view.reload",
     "keybinds.actions.view.reopenTab",

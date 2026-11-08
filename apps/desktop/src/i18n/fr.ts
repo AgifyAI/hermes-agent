@@ -603,6 +603,7 @@ export const frOverrides = {
       'view.toggleSidebar': 'Basculer la barre latérale des sessions',
       'view.cycleSidebarGrouping': 'Changer le regroupement des sessions',
       'view.toggleRightSidebar': "Basculer l'explorateur de fichiers",
+      'view.openRightSidebar': 'Ouvrir la barre latérale droite',
       'view.toggleReview': 'Basculer le panneau de révision',
       'view.toggleStatusbar': 'Basculer la barre de statut',
       'view.toggleTabStrip': 'Basculer les onglets',

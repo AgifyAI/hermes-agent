@@ -46,6 +46,7 @@ import { $capture, $comboIndex, captureStep, endCapture, setBinding } from '@/st
 import {
   cycleSidebarGrouping,
   layoutHasRightSide,
+  openRightSide,
   requestSessionSearchFocus,
   setFileBrowserOpen,
   togglePanesFlipped,
@@ -466,9 +467,7 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     // Narrow-viewport reveal is handled inside the store toggles now.
     'view.toggleSidebar': toggleSidebarOpen,
     'view.cycleSidebarGrouping': cycleSidebarGrouping,
-    // ⌘J toggles the physical right side — whatever column lives there in the
-    // live tree (the Browser preview column, the files column). Falls back to
-    // the terminal when nothing lives on the right (terminal-on-bottom).
+    'view.openRightSidebar': openRightSide,
     'view.toggleRightSidebar': () => (layoutHasRightSide() ? toggleRightSide() : toggleTerminalPane()),
     'view.toggleReview': toggleReview,
     'view.toggleStatusbar': toggleStatusbarVisible,
@@ -481,7 +480,7 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'view.showFiles': showFiles,
     'view.showBrowser': toggleBrowserTab,
     'view.toggleHud': () => toggleHud(hudTargetSessionId()),
-    'view.showTerminal': () => toggleTerminalPane(),
+    'view.showTerminal': () => toggleTerminalPane(IS_MAC),
     // Create first so the pane's open-effect ensure sees a non-empty set and
     // doesn't also spawn one — net effect is exactly one fresh terminal.
     'view.newTerminal': () => {

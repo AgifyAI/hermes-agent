@@ -261,6 +261,7 @@ export const ruOverrides = {
       'composer.reasoningDown': 'Понизить уровень размышлений',
       'view.toggleSidebar': 'Показать / скрыть панель сеансов',
       'view.toggleRightSidebar': 'Показать / скрыть браузер файлов',
+      'view.openRightSidebar': 'Открыть правую боковую панель',
       'view.toggleReview': 'Показать / скрыть панель ревью',
       'view.toggleStatusbar': 'Показать / скрыть строку состояния',
       'view.toggleTabStrip': 'Показать / скрыть вкладки',
