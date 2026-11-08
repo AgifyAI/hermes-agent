@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { $connection, $selectedStoredSessionId, $sessions } from '@/store/session'
@@ -50,5 +50,61 @@ describe('MemorySection', () => {
       path: '/api/memory/pending/pending-1/approve',
       profile: 'calvin'
     })))
+  })
+
+  it('does not let a late response from the previous profile repopulate the new owner', async () => {
+    let resolveCalvin: ((value: unknown) => void) | undefined
+    let resolveDaisy: ((value: unknown) => void) | undefined
+
+    api.mockImplementation((request: { path: string; profile?: string }) => {
+      if (request.path !== '/api/memory/pending') {
+        return Promise.resolve({ id: 'unused', ok: true })
+      }
+
+      return new Promise(resolve => {
+        if (request.profile === 'daisy') {
+          resolveDaisy = resolve
+        } else {
+          resolveCalvin = resolve
+        }
+      })
+    })
+
+    render(<MemorySection />)
+    fireEvent.click(screen.getByRole('button', { name: /memories|mémoires/i }))
+    await waitFor(() => expect(resolveCalvin).toBeTypeOf('function'))
+
+    act(() => {
+      $connection.set({ connectionId: 'tertiary', profile: 'daisy' } as never)
+      $sessions.set([
+        { connection_id: 'tertiary', id: 'chat-2', profile: 'daisy' }
+      ] as never)
+      $selectedStoredSessionId.set('chat-2')
+    })
+    await waitFor(() => expect(resolveDaisy).toBeTypeOf('function'))
+
+    act(() => {
+      resolveDaisy?.({ approval_enabled: true, pending: [{
+        created_at: 2,
+        id: 'daisy-pending',
+        origin: 'foreground',
+        payload: { action: 'add', content: 'Daisy fact', target: 'memory' },
+        summary: 'daisy fact'
+      }] })
+    })
+    expect(await screen.findByText('Daisy fact')).toBeTruthy()
+
+    act(() => {
+      resolveCalvin?.({ approval_enabled: true, pending: [{
+        created_at: 1,
+        id: 'calvin-pending',
+        origin: 'foreground',
+        payload: { action: 'add', content: 'Calvin fact', target: 'memory' },
+        summary: 'calvin fact'
+      }] })
+    })
+
+    await waitFor(() => expect(screen.queryByText('Calvin fact')).toBeNull())
+    expect(screen.getByText('Daisy fact')).toBeTruthy()
   })
 })

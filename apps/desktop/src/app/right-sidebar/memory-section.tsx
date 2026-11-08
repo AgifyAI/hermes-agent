@@ -185,6 +185,57 @@ function PendingMemoryRow({ labels, onChanged, record, scope }: { labels: Return
   )
 }
 
+interface PendingMemoryListProps {
+  labels: ReturnType<typeof useI18n>['t']['rightSidebar']
+  onCountChange: (count: number) => void
+  scope?: ProfileScope
+}
+
+/** Keep one request lifecycle per owner. The parent keys this component by the
+ * profile/connection scope, so an old response can only update its unmounted
+ * owner instance and never repaint the newly selected profile. */
+function PendingMemoryList({ labels, onCountChange, scope }: PendingMemoryListProps) {
+  const [entries, setEntries] = useState<PendingMemoryWrite[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const refresh = useCallback(() => {
+    if (typeof window.hermesDesktop?.api !== 'function') {
+      setEntries([])
+      setError(null)
+
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    void getPendingMemoryWrites(scope)
+      .then(response => setEntries(response.pending))
+      .catch(cause => setError(errorMessage(cause, labels.pendingMemoryLoadFailed)))
+      .finally(() => setLoading(false))
+  }, [labels.pendingMemoryLoadFailed, scope])
+
+  useEffect(() => {
+    onCountChange(entries.length)
+  }, [entries.length, onCountChange])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  return loading ? (
+    <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{labels.pendingMemoryLoading}</p>
+  ) : error ? (
+    <p className="px-2.5 pb-2 text-xs text-(--linear-red)" role="alert">{error}</p>
+  ) : entries.length === 0 ? (
+    <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{labels.pendingMemoryEmpty}</p>
+  ) : (
+    entries.map(record => (
+      <PendingMemoryRow key={record.id} labels={labels} onChanged={refresh} record={record} scope={scope} />
+    ))
+  )
+}
+
 /** Pending memory writes stay available in the right rail until a decision.
  * The query is lazy so opening an empty rail does not add a boot request. */
 export function MemorySection() {
@@ -218,31 +269,12 @@ export function MemorySection() {
       : undefined
   }, [connectionId, connectionProfile, hasOwnerScope, ownerConnectionId, ownerProfile])
 
-  const [entries, setEntries] = useState<PendingMemoryWrite[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const refresh = useCallback(() => {
-    if (typeof window.hermesDesktop?.api !== 'function') {
-      setEntries([])
-      setError(null)
-
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    void getPendingMemoryWrites(requestScope)
-      .then(response => setEntries(response.pending))
-      .catch(cause => setError(errorMessage(cause, labels.pendingMemoryLoadFailed)))
-      .finally(() => setLoading(false))
-  }, [labels.pendingMemoryLoadFailed, requestScope])
+  const scopeKey = JSON.stringify(requestScope ?? null)
+  const [entryCount, setEntryCount] = useState(0)
 
   useEffect(() => {
-    if (open) {
-      refresh()
-    }
-  }, [open, refresh, selectedSession])
+    setEntryCount(0)
+  }, [scopeKey])
 
   useEffect(() => {
     if (sectionRequest?.section !== 'memory') {
@@ -266,22 +298,12 @@ export function MemorySection() {
             ›
           </span>
           <span>{labels.pendingMemoryTitle}</span>
-          {entries.length > 0 && <span className="text-[0.6875rem] text-(--linear-text-tertiary)">{entries.length}</span>}
+          {entryCount > 0 && <span className="text-[0.6875rem] text-(--linear-text-tertiary)">{entryCount}</span>}
         </button>
       </div>
       {open && (
         <div className="max-h-64 overflow-y-auto">
-          {loading ? (
-            <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{labels.pendingMemoryLoading}</p>
-          ) : error ? (
-            <p className="px-2.5 pb-2 text-xs text-(--linear-red)" role="alert">{error}</p>
-          ) : entries.length === 0 ? (
-            <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{labels.pendingMemoryEmpty}</p>
-          ) : (
-            entries.map(record => (
-              <PendingMemoryRow key={record.id} labels={labels} onChanged={refresh} record={record} scope={requestScope} />
-            ))
-          )}
+          <PendingMemoryList key={scopeKey} labels={labels} onCountChange={setEntryCount} scope={requestScope} />
         </div>
       )}
     </section>

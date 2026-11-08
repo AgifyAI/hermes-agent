@@ -20,6 +20,7 @@ import { reconcilePendingSubmissions } from '@/store/pending-submissions'
 import { $connection, setSessionsLoading } from '@/store/session'
 
 import type { QueueEditState } from '../composer-utils'
+import { requestComposerQueueSend } from '../queue-send'
 import type { ChatBarProps } from '../types'
 
 import { useComposerQueue } from './use-composer-queue'
@@ -230,6 +231,24 @@ describe('useComposerQueue park integration', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(0)
+  })
+
+  it('routes a sidebar send to one visible composer when a session has two mounted owners', async () => {
+    const entry = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'sidebar send' })
+    const first = renderQueueHook({ busy: true })
+    const second = renderQueueHook({ busy: true })
+
+    act(() => {
+      expect(requestComposerQueueSend(SESSION_KEY, entry!.id)).toBe(true)
+    })
+
+    expect(first.onSubmit).not.toHaveBeenCalled()
+    expect(second.onSubmit).not.toHaveBeenCalled()
+    expect(getQueuedPrompts(SESSION_KEY)[0]?.sendWhenIdle).toBe(true)
+
+    first.hook.rerender({ busy: false })
+    await waitFor(() => expect(first.onSubmit).toHaveBeenCalledTimes(1))
+    expect(second.onSubmit).not.toHaveBeenCalled()
   })
 
   it('holds a parked queue at the idle settle (the Stop edge)', async () => {

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type * as CronApi from '@/api/cron'
 import type * as HermesApi from '@/hermes'
 import type { AutomationBlueprint, CronJob, SessionInfo } from '@/hermes'
 import { queryClient } from '@/lib/query-client'
@@ -13,7 +14,9 @@ import { CronView } from './index'
 
 const getCronJobRuns = vi.fn()
 const getCronJobs = vi.fn()
+const getCronDeliveryTargets = vi.fn()
 const triggerCronJob = vi.fn()
+const updateCronJob = vi.fn()
 const getAutomationBlueprints = vi.fn()
 
 vi.mock('@/hermes', async importOriginal => ({
@@ -21,7 +24,17 @@ vi.mock('@/hermes', async importOriginal => ({
   getAutomationBlueprints: (profile?: string) => getAutomationBlueprints(profile),
   getCronJobRuns: (jobId: string) => getCronJobRuns(jobId),
   getCronJobs: (profile?: string) => getCronJobs(profile),
-  triggerCronJob: (jobId: string) => triggerCronJob(jobId)
+  triggerCronJob: (jobId: string) => triggerCronJob(jobId),
+  updateCronJob: (jobId: string, updates: Record<string, unknown>) => updateCronJob(jobId, updates)
+}))
+
+vi.mock('@/api/cron', async importOriginal => ({
+  ...(await importOriginal<typeof CronApi>()),
+  getCronDeliveryTargets: () => getCronDeliveryTargets()
+}))
+
+vi.mock('@/lib/model-options', () => ({
+  requestModelOptions: vi.fn().mockResolvedValue({ providers: [] })
 }))
 
 vi.mock('@/store/notifications', () => ({
@@ -77,9 +90,11 @@ beforeEach(() => {
   setCronFocusJobId(null)
   setChangeEventsAvailable(false)
   getCronJobs.mockResolvedValue([job])
+  getCronDeliveryTargets.mockResolvedValue([{ home_env_var: null, home_target_set: true, id: 'local', name: 'Local' }])
   getCronJobRuns.mockResolvedValue([])
   getAutomationBlueprints.mockResolvedValue({ blueprints: [] })
   triggerCronJob.mockResolvedValue(job)
+  updateCronJob.mockResolvedValue(job)
 })
 
 afterEach(() => {
@@ -294,6 +309,22 @@ describe('CronView as a routed page', () => {
     })
 
     expect(await screen.findByText('New cron job')).toBeTruthy()
+  })
+
+  it('keeps the complete job configuration directly editable on the detail page', async () => {
+    await renderLoadedCron()
+
+    expect(screen.queryByRole('button', { name: 'Edit job' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull()
+
+    const name = screen.getByRole('textbox', { name: /^Name/ })
+
+    await act(async () => {
+      fireEvent.change(name, { target: { value: 'Renamed report' } })
+      fireEvent.blur(name)
+    })
+
+    await waitFor(() => expect(updateCronJob).toHaveBeenCalledWith('job-1', { name: 'Renamed report' }))
   })
 
   it('reports a failed first load instead of claiming there are no jobs', async () => {

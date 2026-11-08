@@ -159,6 +159,29 @@ function handleCodeShortcut(
   return false
 }
 
+/** Keep composition and page-navigation keys out of the submit decision tree. */
+function handleEditorKeyGuard(event: KeyboardEvent<HTMLDivElement>, composingRef: { current: boolean }): boolean {
+  if (composingRef.current && !event.nativeEvent.isComposing) {
+    composingRef.current = false
+  }
+
+  if (composingRef.current || event.nativeEvent.isComposing) {
+    return true
+  }
+
+  if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+
+    return true
+  }
+
+  if (event.key === 'Enter' && event.keyCode === 229) {
+    return true
+  }
+
+  return false
+}
+
 export function ChatBar({
   busy,
   cwd,
@@ -688,46 +711,7 @@ export function ChatBar({
   }
 
   const handleEditorKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    // Self-heal a stale composition flag before the guard below reads it.
-    // compositionend can be missed (focus jumps, input-source switches, or a
-    // programmatic DOM swap mid-preedit abort the composition without the
-    // event reaching us), and a wedged composingRef silently swallows every
-    // Enter — and, via the form onSubmit guard, the Send button — until the
-    // component remounts (#44135). Chromium stamps isComposing on every
-    // keydown of a genuine composition, so when the native flag says we're
-    // not composing, trust it and recover.
-    if (composingRef.current && !event.nativeEvent.isComposing) {
-      composingRef.current = false
-    }
-
-    // IME composition: Enter confirms composed text, not a message submission.
-    // We check both composingRef (set by compositionstart/compositionend, robust
-    // across browsers) and nativeEvent.isComposing (Chromium fallback).  Without
-    // this guard, pressing Enter to finalise a Korean/Japanese/Chinese IME
-    // preedit fires submitDraft() and splits the message mid-word.
-    if (composingRef.current || event.nativeEvent.isComposing) {
-      return
-    }
-
-    // PageUp/PageDown: the composer is a single-line contentEditable — these
-    // keys have no text-editing purpose, and letting their default bubble to
-    // the browser's scroll-the-nearest-scrollable-ancestor behavior breaks the
-    // chat layout in the desktop pane tree (large blank area, sidebar pushed
-    // off-screen — #49978). Swallow the default here; the global
-    // conversation.scrollPageUp/Down keybind turns the intent into an
-    // explicit, focused-transcript page instead.
-    if (event.key === 'PageUp' || event.key === 'PageDown') {
-      event.preventDefault()
-
-      return
-    }
-
-    // macOS Chinese IME (and some 3rd-party IMEs on Windows) emit Enter with
-    // keyCode 229 (legacy VK_PROCESSKEY) while isComposing is already false.
-    // The compositionend has fired but the keydown still carries 229, signalling
-    // "this Enter is an IME commit, not a user send".  If we let it through,
-    // the message fires before the committed text is fully in the DOM.
-    if (event.key === 'Enter' && event.keyCode === 229) {
+    if (handleEditorKeyGuard(event, composingRef)) {
       return
     }
 

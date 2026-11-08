@@ -14,11 +14,10 @@ import { requestModelOptions } from '@/lib/model-options'
 import { cn } from '@/lib/utils'
 import type { CronDeliveryTarget, CronJob, CronJobUpdates } from '@/types/hermes'
 
-import { PANEL_ERROR_NOTICE, PanelBlock, PanelSectionLabel } from '../overlays/panel'
+import { PANEL_ERROR_NOTICE } from '../overlays/panel'
 
 import {
   cronModelChoiceValue,
-  jobDescription,
   jobIsScriptOnly,
   parseCronDeliveryTargets,
   parseCronModelChoiceValue,
@@ -178,7 +177,6 @@ export function CronJobInlineEditor({
   return (
     <section className="space-y-4" data-slot="cron-inline-editor">
       <div className="flex items-center justify-between gap-2">
-        <PanelSectionLabel>{c.editTitle}</PanelSectionLabel>
         {savingField ? (
           <span className="flex items-center gap-1 text-xs text-(--linear-text-tertiary)" role="status">
             <Codicon name="loading" size="0.75rem" spinning />
@@ -196,13 +194,6 @@ export function CronJobInlineEditor({
           <Field htmlFor="cron-inline-prompt" label={c.promptLabel}>
             <Textarea id="cron-inline-prompt" onBlur={() => void persist('prompt', { prompt: prompt.trim() })} onChange={e => setPrompt(e.target.value)} placeholder={c.promptPlaceholder} value={prompt} />
           </Field>
-        ) : null}
-
-        {scriptOnlyJob ? (
-          <section className="space-y-1">
-            <PanelSectionLabel>{c.scriptLabel}</PanelSectionLabel>
-            <PanelBlock>{jobDescription(job)}</PanelBlock>
-          </section>
         ) : null}
 
         <Field htmlFor="cron-inline-frequency" label={c.frequencyLabel}>

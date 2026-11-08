@@ -2,6 +2,7 @@ import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { useLayoutEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { createPersonalSkillSessionLauncher } from '@/app/personal-skills/session-launcher'
 import { PaneVisibleContext } from '@/components/pane-shell/pane-visibility'
 import {
   $freshDraftKey,
@@ -116,6 +117,65 @@ describe('useComposerDraft — attachment scope stays coherent with the committe
     // By the layout phase the scope must already be B's (empty) — a submit
     // fired the instant B renders must never ship session A's attachment.
     expect(snapshots[0]).toEqual([])
+  })
+
+  it('loads a personal-skill launch draft into the mounted tile composer', async () => {
+    const storedSessionId = 'personal-skill-mounted-tile'
+    const prompt = '/follow-up\n\n'
+
+    const skill = {
+      category: 'general',
+      description: 'A personal skill',
+      enabled: true,
+      name: 'follow-up',
+      provenance: 'agent' as const
+    }
+
+    clearSessionDraft(storedSessionId)
+
+    const launcher = createPersonalSkillSessionLauncher({
+      activeProfile: 'default',
+      openNewSessionTile: vi.fn().mockResolvedValue(storedSessionId),
+      setWorkspaceScope: vi.fn(),
+      stashSessionDraft: (scope, text) => stashSessionDraft(scope, text, [])
+    })
+
+    const textSnapshots: string[] = []
+
+    const { rerender } = render(
+      <ProbeHarness
+        activeQueueSessionKey={null}
+        onLayoutSnapshot={() => undefined}
+        onTextSnapshot={text => textSnapshots.push(text)}
+        sessionId=""
+      />
+    )
+
+    try {
+      await act(async () => {
+        await launcher({ profile: 'default', prompt, skill })
+      })
+
+      expect(takeSessionDraft(storedSessionId).text).toBe(prompt)
+      mockComposerApi.setText.mockClear()
+      textSnapshots.length = 0
+
+      act(() => {
+        rerender(
+          <ProbeHarness
+            activeQueueSessionKey={storedSessionId}
+            onLayoutSnapshot={() => undefined}
+            onTextSnapshot={text => textSnapshots.push(text)}
+            sessionId={storedSessionId}
+          />
+        )
+      })
+
+      expect(textSnapshots[0]).toBe(prompt)
+      expect(mockComposerApi.setText).toHaveBeenCalledWith(prompt)
+    } finally {
+      clearSessionDraft(storedSessionId)
+    }
   })
 
   it("swaps the draft TEXT before paint: the layout phase of session B never observes A's draft (#66662 review)", () => {

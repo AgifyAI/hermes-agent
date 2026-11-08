@@ -722,7 +722,7 @@ describe('usePromptActions slash session targeting', () => {
   })
 })
 
-describe('usePromptActions /wake', () => {
+describe('usePromptActions removed Desktop voice commands', () => {
   beforeEach(() => {
     setSessions(() => [sessionInfo()])
     resetWakeWordState()
@@ -734,83 +734,29 @@ describe('usePromptActions /wake', () => {
     vi.restoreAllMocks()
   })
 
-  it('starts the GUI-owned listener through wake.start and never spawns the slash worker', async () => {
-    const seeds: Record<string, unknown>[] = []
-
-    const requestGateway = vi.fn(async (method: string, _params?: Record<string, unknown>, _timeoutMs?: number) => {
-      if (method === 'wake.start') {
-        return {
-          owner_surface: 'gui',
-          phrase: 'hey hermes',
-          provider: 'openwakeword',
-          started: true
-        } as never
-      }
-
-      if (method === 'wake.status') {
-        return {
-          available: true,
-          configured_surface: 'gui',
-          enabled: true,
-          input_device: {
-            hostapi: 'Windows WASAPI',
-            name: 'Microphone Array',
-            selector: 'Microphone Array'
-          },
-          listening: true,
-          owner_surface: 'gui',
-          phrase: 'hey hermes',
-          provider: 'openwakeword'
-        } as never
-      }
+  it('does not start the listener when the old /wake on command is typed', async () => {
+    const methods: string[] = []
+    const requestGateway = vi.fn(async (method: string) => {
+      methods.push(method)
 
       return {} as never
     })
 
     let handle: HarnessHandle | null = null
     await actRender(
-      <Harness
-        onReady={h => (handle = h)}
-        onSeedState={state => seeds.push(state)}
-        refreshSessions={async () => undefined}
-        requestGateway={requestGateway}
-      />
+      <Harness onReady={h => (handle = h)} refreshSessions={async () => undefined} requestGateway={requestGateway} />
     )
 
     await handle!.submitText('/wake on')
 
-    expect(requestGateway).toHaveBeenCalledWith(
-      'wake.start',
-      { client_capture: true, persist: true, surface: 'gui' },
-      180_000
-    )
-    expect(requestGateway).toHaveBeenCalledWith('wake.status', { client_capture: true, surface: 'gui' })
-    expect(requestGateway).not.toHaveBeenCalledWith('slash.exec', expect.anything())
-    expect(requestGateway).not.toHaveBeenCalledWith('command.dispatch', expect.anything())
-    expect($wakeWord.get()).toMatchObject({ available: true, enabled: true, listening: true })
-    expect(renderedSeedTexts(seeds).join('\n')).toContain('Input: Microphone Array (Windows WASAPI)')
+    expect(methods.some(method => method.startsWith('wake.'))).toBe(false)
+    expect($wakeWord.get()).toMatchObject({ available: false, enabled: false, listening: false })
   })
 
-  it('uses gateway truth for a bare toggle and stops through wake.stop', async () => {
-    let statusCalls = 0
-
+  it('does not stop the listener when a historical bare /wake path is submitted', async () => {
+    const methods: string[] = []
     const requestGateway = vi.fn(async (method: string) => {
-      if (method === 'wake.status') {
-        statusCalls += 1
-
-        return {
-          available: true,
-          enabled: statusCalls === 1,
-          listening: statusCalls === 1,
-          owner_surface: statusCalls === 1 ? 'gui' : null,
-          phrase: 'hey hermes',
-          provider: 'openwakeword'
-        } as never
-      }
-
-      if (method === 'wake.stop') {
-        return { disabled_persisted: true, stopped: true } as never
-      }
+      methods.push(method)
 
       return {} as never
     })
@@ -822,14 +768,7 @@ describe('usePromptActions /wake', () => {
 
     await handle!.submitText('/wake')
 
-    expect(requestGateway.mock.calls.map(([method]) => method).filter(m => m !== SLASH_METRIC)).toEqual([
-      'wake.status',
-      'wake.stop',
-      'wake.status'
-    ])
-    expect(requestGateway).toHaveBeenCalledWith('wake.stop', { persist: true })
-    expect(requestGateway).not.toHaveBeenCalledWith('slash.exec', expect.anything())
-    expect(requestGateway).not.toHaveBeenCalledWith('command.dispatch', expect.anything())
+    expect(methods.some(method => method.startsWith('wake.'))).toBe(false)
     expect($wakeWord.get()).toMatchObject({ enabled: false, listening: false })
   })
 })

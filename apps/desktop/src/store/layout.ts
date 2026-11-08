@@ -703,6 +703,39 @@ export function toggleRightSide() {
   restoreTreePane(pane)
 }
 
+/** Open the physical right side without depending on the file pane's flag.
+ *
+ * The file pane can be registered but hidden (for example, a detached chat has
+ * no project to browse), and a restored layout can have no right group yet.
+ * Calling the generic toggle in that state can only flip a boolean while the
+ * visible tree remains empty. An explicit open first restores the side's
+ * actual pane, so the titlebar button always has a visible result.
+ */
+export function openRightSide() {
+  if (revealNarrowPane(FILE_BROWSER_PANE_ID, 'open')) {
+    return
+  }
+
+  const group = rightSideGroup()
+
+  if (!group) {
+    setFileBrowserOpen(true)
+    restoreTreePane(FILES_PANE_ID)
+
+    return
+  }
+
+  const pane = group.active ?? group.panes[0]
+  const side = paneRootSide(pane)
+
+  if (side && $collapsedTreeSides.get().has(side)) {
+    const openSide = side === sidebarSide() ? setSidebarOpen : setFileBrowserOpen
+    openSide(true)
+  }
+
+  restoreTreePane(pane)
+}
+
 // ⌘J's dispatch gate, from the same resolution the toggle mutates through
 // (plus the semantic right side it falls back to). False only when nothing
 // lives on the right, so ⌘J can fall to the terminal instead.
@@ -772,6 +805,19 @@ function rightSideShown(group: GroupNode): boolean {
 
   return !group.minimized && !(side && $collapsedTreeSides.get().has(side)) && shownPanesInGroup(group).length > 0
 }
+
+// The titlebar must describe what is actually visible, not only the file
+// pane's preference. A detached chat can keep that preference open while its
+// right group is still empty/hidden; reading the tree lets the button offer
+// "Show" and route the next click through openRightSide.
+export const $rightSideOpen: ReadableAtom<boolean> = computed(
+  [$layoutTree, $collapsedTreeSides, $hiddenTreePanes, $fileBrowserOpen],
+  () => {
+    const group = rightSideGroup()
+
+    return group ? rightSideShown(group) : $fileBrowserOpen.get()
+  }
+)
 
 // Is `paneId` a main surface (the workspace or a session/route tile)? Those
 // mark THE main column; preview tiles share `placement: 'main'` with them but

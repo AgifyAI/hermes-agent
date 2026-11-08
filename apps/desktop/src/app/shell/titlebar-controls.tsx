@@ -21,11 +21,12 @@ import { cn } from '@/lib/utils'
 import { recordAction } from '@/store/desktop-metrics'
 import { $interfaceMode, shownInMode, type Tiered } from '@/store/interface-mode'
 import {
-  $fileBrowserOpen,
   $leftSideOpen,
   $panesFlipped,
+  $rightSideOpen,
   CHAT_SIDEBAR_PANE_ID,
   FILE_BROWSER_PANE_ID,
+  openRightSide,
   toggleLeftSide,
   toggleRightSide
 } from '@/store/layout'
@@ -153,15 +154,15 @@ interface SidebarEdge {
  * perform the labelled Hide. A narrow native window keeps the docked toggles, which already route
  * through the overlay's toggle. */
 function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
-  const fileBrowserOpen = useStore($fileBrowserOpen)
   const leftSideOpen = useStore($leftSideOpen)
+  const rightSideOpen = useStore($rightSideOpen)
   const narrow = useStore($narrowViewport)
   const overlayPanes = useStore($narrowOverlayPaneIds)
   const browserHost = isBrowserHostedDesktop()
   const overlayChrome = narrow && browserHost
   const rightOverlayId = overlayPanes.has(REVIEW_PANE_ID) ? REVIEW_PANE_ID : FILE_BROWSER_PANE_ID
 
-  const edge = (id: string, dockedOpen: boolean, toggleDocked: () => void): SidebarEdge => {
+  const edge = (id: string, dockedOpen: boolean, toggleDocked: () => void, openDocked = toggleDocked): SidebarEdge => {
     const open = overlayChrome ? overlayPanes.has(id) : dockedOpen
     const revealMode = open ? 'close' : 'open'
 
@@ -170,13 +171,15 @@ function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
       expanded: browserHost ? open : undefined,
       toggle: overlayChrome
         ? () => window.dispatchEvent(new CustomEvent(PANE_TOGGLE_REVEAL_EVENT, { detail: { id, mode: revealMode } }))
-        : toggleDocked
+        : open
+          ? toggleDocked
+          : openDocked
     }
   }
 
   return {
     left: edge(CHAT_SIDEBAR_PANE_ID, leftSideOpen, toggleLeftSide),
-    right: edge(rightOverlayId, fileBrowserOpen, toggleRightSide)
+    right: edge(rightOverlayId, rightSideOpen, toggleRightSide, openRightSide)
   }
 }
 

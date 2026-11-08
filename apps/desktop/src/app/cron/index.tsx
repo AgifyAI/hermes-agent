@@ -61,11 +61,9 @@ import { DetailColumn, ListColumn, MasterDetail } from '../master-detail'
 import {
   PANEL_ERROR_NOTICE,
   PanelAction,
-  PanelBlock,
   PanelEmpty,
   PanelListRow,
   type PanelMenuItem,
-  PanelMeta,
   PanelPill,
   type PanelPillTone,
   PanelSectionLabel,
@@ -79,7 +77,6 @@ import { CronJobInlineEditor } from './cron-job-editor'
 import {
   cronEditorUpdates,
   cronModelChoiceValue,
-  jobDescription,
   jobIsScriptOnly,
   lastErrorSummary,
   parseCronDeliveryTargets,
@@ -87,7 +84,7 @@ import {
   toggleCronDeliveryTarget,
   validateCronEditor
 } from './cron-job-model'
-import { jobState, jobTitle, nextRunOverdueMs, STATE_DOT, truncateText } from './job-state'
+import { jobState, jobTitle, STATE_DOT, truncateText } from './job-state'
 import { isCronRunRow, openCronRun, reconcileCronRunVerdicts } from './open-cron-run'
 
 const DEFAULT_DELIVER = 'local'
@@ -287,20 +284,6 @@ function scheduleSummary(option: ScheduleOption, expr: string, c: Translations['
   return c.scheduleHints[option.value] ?? ''
 }
 
-function formatTime(iso?: null | string): string {
-  if (!iso) {
-    return '—'
-  }
-
-  const date = new Date(iso)
-
-  if (Number.isNaN(date.valueOf())) {
-    return iso
-  }
-
-  return date.toLocaleString()
-}
-
 function matchesQuery(job: CronJob, q: string): boolean {
   if (!q) {
     return true
@@ -375,9 +358,8 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
   const focusJobId = useStore($cronFocusJobId)
 
   const [editor, setEditor] = useState<EditorState>({ mode: 'closed' })
-  // Existing jobs edit in the detail page so the complete configuration stays
-  // visible. The dialog remains the create surface.
-  const [inlineEditJobId, setInlineEditJobId] = useState<null | string>(null)
+  // Existing jobs stay editable in their detail page. The dialog remains the
+  // create surface (and the blueprint surface).
   const [pendingDelete, setPendingDelete] = useState<CronJob | null>(null)
 
   // Jobs live per-profile on disk and the list endpoint aggregates 'all' by
@@ -841,7 +823,6 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
                 job={job}
                 key={job.id}
                 menuItems={[
-                  { icon: 'edit', label: c.edit, onSelect: () => setInlineEditJobId(job.id) },
                   { icon: 'trash', label: t.common.delete, onSelect: () => setPendingDelete(job), tone: 'danger' }
                 ]}
                 menuLabel={`${c.manage}: ${jobTitle(job)}`}
@@ -883,10 +864,7 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
               <CronJobDetail
                 busy={busyJobTokens.has(selectedJob.id) || triggeringJobKeys.has(`${profile}:${selectedJob.id}`)}
                 c={c}
-                editing={inlineEditJobId === selectedJob.id}
                 job={selectedJob}
-                onEdit={() => setInlineEditJobId(selectedJob.id)}
-                onEditClose={() => setInlineEditJobId(null)}
                 onInlineUpdate={values => handleInlineUpdate(selectedJob, values)}
                 onOpenSession={onOpenSession}
                 onPauseResume={() => void handlePauseResume(selectedJob)}
@@ -988,10 +966,7 @@ function CronJobListRow({
 interface CronJobDetailProps {
   busy: boolean
   c: Translations['cron']
-  editing: boolean
   job: CronJob
-  onEdit: () => void
-  onEditClose: () => void
   onInlineUpdate: (updates: CronJobUpdates) => Promise<void>
   onOpenSession?: (sessionId: string, session?: SessionInfo) => void
   onPauseResume: () => void
@@ -1004,10 +979,7 @@ interface CronJobDetailProps {
 function CronJobDetail({
   busy,
   c,
-  editing,
   job,
-  onEdit,
-  onEditClose,
   onInlineUpdate,
   onOpenSession,
   onPauseResume,
@@ -1016,14 +988,9 @@ function CronJobDetail({
   pendingJobKey,
   pendingRunAt
 }: CronJobDetailProps) {
-  const { t } = useI18n()
   const state = jobState(job)
   const isPaused = state === 'paused'
-  const deliver = jobDeliver(job)
-  const prompt = jobPrompt(job)
   const scriptOnly = jobIsScriptOnly(job)
-  const description = jobDescription(job)
-  const modelOverride = jobModel(job)
 
   return (
     <>
@@ -1035,15 +1002,6 @@ function CronJobDetail({
             <PanelPill tone={STATE_TONE[state] ?? 'muted'}>{c.states[state] ?? state}</PanelPill>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            {editing ? (
-              <PanelAction disabled={busy} icon="close" onClick={onEditClose}>
-                {t.common.cancel}
-              </PanelAction>
-            ) : (
-              <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
-                {c.editJob}
-              </PanelAction>
-            )}
             <PanelAction disabled={busy} icon={isPaused ? 'play' : 'debug-pause'} onClick={onPauseResume}>
               {isPaused ? c.resumeTitle : c.pauseTitle}
             </PanelAction>
@@ -1059,19 +1017,6 @@ function CronJobDetail({
           </div>
         </div>
 
-        <PanelMeta
-          rows={[
-            { label: c.frequencyLabel, value: jobScheduleDisplay(job) },
-            { label: c.last.replace(/:$/, ''), value: formatTime(job.last_run_at) },
-            {
-              label: (nextRunOverdueMs(job) === null ? c.next : c.overdueSince).replace(/:$/, ''),
-              value: formatTime(job.next_run_at)
-            },
-            { label: c.deliverLabel, value: c.deliveryLabels[deliver] ?? deliver },
-            ...(modelOverride ? [{ label: c.modelLabel, value: modelOverride }] : [])
-          ]}
-        />
-
         {job.last_error ? (
           <div className={cn(PANEL_ERROR_NOTICE, 'space-y-2 px-3 py-2.5 text-[0.8125rem]')}>
             <div className="flex items-start gap-1.5">
@@ -1081,9 +1026,6 @@ function CronJobDetail({
               </span>
             </div>
             <div className="flex items-center gap-1.5 pl-5">
-              <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
-                {c.editJob}
-              </PanelAction>
               <PanelAction disabled={busy} icon="zap" onClick={onTrigger}>
                 {c.runAgain}
               </PanelAction>
@@ -1092,14 +1034,7 @@ function CronJobDetail({
         ) : null}
       </header>
 
-      {editing ? (
-        <CronJobInlineEditor c={c} job={job} key={job.id} onUpdate={onInlineUpdate} />
-      ) : description ? (
-        <section className="space-y-1">
-          <PanelSectionLabel>{scriptOnly && !prompt ? c.scriptLabel : c.promptLabel}</PanelSectionLabel>
-          <PanelBlock>{description}</PanelBlock>
-        </section>
-      ) : null}
+      <CronJobInlineEditor c={c} job={job} key={job.id} onUpdate={onInlineUpdate} />
 
       <CronJobRuns
         c={c}
