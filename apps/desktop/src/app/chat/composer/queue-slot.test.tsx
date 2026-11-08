@@ -72,19 +72,28 @@ it('Delete on a server-queued card cancels its admission at the authority', asyn
   await vi.waitFor(() => expect(request).toHaveBeenCalledWith('prompt.cancel', { session_id: 'runtime-1', admission_id: 'adm-1' }))
 })
 
-it('a server-queued card shows the Steer and Edit its owner serves, and never Next (RT-35)', async () => {
+it('separates server-owned controls from one-message Send and Steer (RT-35)', async () => {
   reconcilePendingSubmissions('stored', [
     { admission_id: 'adm-1', status: 'queued', user: 'later please', controls: ['steer', 'replace'] }
   ])
-  enqueueQueuedPrompt('stored', { text: 'local words', attachments: [] })
-  renderSlot()
+  const local = enqueueQueuedPrompt('stored', { text: 'local words', attachments: [] })
+  const inputs = renderSlot()
 
   await expand()
   expect(labels(rowButtons('later please')).sort()).toEqual(
     [en.composer.queueDelete, en.composer.queueEdit, en.composer.queueSteer].sort()
   )
-  // The local row keeps its own controls, Next included.
-  expect(labels(rowButtons('local words'))).toContain(en.composer.queueSendNext)
+  // A locally prepared row can be sent on its own. The server-owned row keeps
+  // its authority-provided Steer/Edit controls and never gets this Send action.
+  const localRow = rowButtons('local words')
+  expect(labels(localRow)).toContain(en.composer.queueSend)
+  expect(labels(localRow)).not.toContain(en.composer.queueSendNext)
+
+  fireEvent.click(localRow.getByRole('button', { name: en.composer.queueSend }))
+  expect(inputs.sendQueuedNow).toHaveBeenCalledWith(local?.id)
+
+  fireEvent.click(localRow.getByRole('button', { name: en.composer.queueSteer }))
+  expect(inputs.steerQueuedNow).toHaveBeenCalledWith(local?.id)
 })
 
 it('a server-queued card from an owner without the queued-row verbs keeps only Delete', async () => {

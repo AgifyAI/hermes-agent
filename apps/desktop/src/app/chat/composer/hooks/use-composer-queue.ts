@@ -586,6 +586,11 @@ export function useComposerQueue({
         // settle. It does not interrupt the work in progress. Marking the row
         // is durable, so a refresh keeps the user's explicit choice.
         scheduleQueuedPrompt(activeQueueSessionKey, id)
+        // Sending one row is also an explicit resume gesture after Stop/Esc.
+        // Without lifting the park here, the marked row would remain blocked
+        // when the current turn settles and the user would have to press
+        // Resume separately after already asking to send it.
+        unparkQueuedPrompts(activeQueueSessionKey)
         triggerHaptic('selection')
 
         return true
