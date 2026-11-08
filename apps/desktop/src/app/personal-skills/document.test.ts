@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parseDocument } from 'yaml'
 
 import { parseSkillDocument, updateSkillDocument } from './document'
 
@@ -43,5 +44,30 @@ describe('personal skill documents', () => {
 
     expect(next).toContain('description: "A \\"quoted\\" description"')
     expect(next).toContain('\n\nBody')
+  })
+
+  it('quotes YAML-sensitive input and keeps comments and unknown fields intact', () => {
+    const source = [
+      '---',
+      'name: sample',
+      'description: Old text # keep this comment',
+      'custom:',
+      '  note: test',
+      '# next field comment',
+      'version: 1',
+      '---',
+      '',
+      'Body'
+    ].join('\n')
+
+    const next = updateSkillDocument(source, { description: 'note: test\n# hash' })
+    const header = /^---\n([\s\S]*?)\n---/.exec(next)
+    const document = parseDocument(header?.[1] ?? '')
+
+    expect(document.errors).toHaveLength(0)
+    expect(document.get('description')).toBe('note: test\n# hash')
+    expect(next).toContain('# keep this comment')
+    expect(next).toContain('# next field comment')
+    expect(next).toContain('custom:\n  note: test')
   })
 })

@@ -170,6 +170,7 @@ async def test_forked_session_stays_listable_and_parent_survives_failed_fork(ada
 async def test_list_sessions_resurrects_bot_chat_off_the_event_loop(adapter, session_db, monkeypatch):
     """Canonical Bot Chat recovery must not run SQLite work in the HTTP loop."""
     session_id = session_db.create_session("archived-bot-chat", "gateway_botmode")
+    assert session_db.set_session_hidden(session_id, True)
     assert session_db.set_session_title(session_id, "Bot Chat")
     session_db.end_session(session_id, "ws_orphan_reap")
     assert session_db.set_session_archived(session_id, True)
@@ -192,7 +193,9 @@ async def test_list_sessions_resurrects_bot_chat_off_the_event_loop(adapter, ses
 
     app = _create_session_app(adapter)
     async with TestClient(TestServer(app)) as cli:
-        response = await cli.get("/api/sessions?title=Bot%20Chat")
+        # Bot Chat is a hidden registry row; exact-title callers opt into the
+        # hidden registry surface explicitly.
+        response = await cli.get("/api/sessions?title=Bot%20Chat&include_hidden=1")
         payload = await response.json()
 
     assert response.status == 200
@@ -728,8 +731,8 @@ def _patch_api_server_runtime(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_create_session_respects_browser_source_and_model_lock(adapter, session_db):
-    # The requested title is held by an ended empty visible ghost, which must yield (#81888);
-    # a live holder must still reject the create without leaving a half-made row.
+    # User-facing titles are display labels and may be reused. The create must
+    # still preserve the browser source and model lock on the new row.
     session_db.create_session("ghost", "desktop")
     session_db.set_session_title("ghost", "Browser lock")
     session_db.end_session("ghost", "user_exit")
@@ -738,9 +741,9 @@ async def test_create_session_respects_browser_source_and_model_lock(adapter, se
     app = _create_session_app(adapter)
     async with TestClient(TestServer(app)) as cli:
         taken = await cli.post("/api/sessions", json={"id": "dup", "title": "Taken"})
-        assert taken.status == 400
-        assert (await taken.json())["error"]["code"] == "invalid_title"
-        assert session_db.get_session("dup") is None
+        assert taken.status == 201, await taken.text()
+        assert (await taken.json())["session"]["id"] == "dup"
+        assert session_db.get_session("dup")["title"] == "Taken"
         resp = await cli.post(
             "/api/sessions",
             json={
@@ -769,7 +772,7 @@ async def test_create_session_respects_browser_source_and_model_lock(adapter, se
     assert model_config["browser_model_lock"]["model"] == "x-ai/grok-4.5"
     assert model_config["browser_model_lock"]["confirmed"] is True
     assert row["title"] == "Browser lock"
-    assert session_db.get_session("ghost")["title"] is None
+    assert session_db.get_session("ghost")["title"] == "Browser lock"
 
 
 @pytest.mark.asyncio
@@ -1222,6 +1225,15 @@ async def test_patch_session_persists_pinned_and_archived(adapter, session_db):
         resp = await cli.patch(f"/api/sessions/{session_id}", json={"archived": True})
         assert (await resp.json())["session"]["archived"] is True
         assert bool(session_db.get_session(session_id)["archived"]) is True
+
+        resp = await cli.patch(f"/api/sessions/{session_id}", json={"scratchpad": "private note"})
+        assert resp.status == 200, await resp.text()
+        assert (await resp.json())["session"]["scratchpad"] == "private note"
+        assert session_db.get_session(session_id)["scratchpad"] == "private note"
+
+        resp = await cli.patch(f"/api/sessions/{session_id}", json={"scratchpad": None})
+        assert (await resp.json())["session"]["scratchpad"] is None
+        assert session_db.get_session(session_id)["scratchpad"] is None
 
 
 @pytest.mark.asyncio

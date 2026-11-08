@@ -46,15 +46,13 @@ function personalSkill(skill: SkillInfo): boolean {
 }
 
 function scopeProfileName(profile: ProfileScope): string {
-  return typeof profile === 'string' ? profile : profile?.profile ?? $activeGatewayProfile.get()
+  return typeof profile === 'string' ? profile : (profile?.profile ?? $activeGatewayProfile.get())
 }
 
 function scopeFromOption(value: string): ProfileScope {
   const separator = value.indexOf('::')
 
-  return separator >= 0
-    ? { connectionId: value.slice(0, separator), profile: value.slice(separator + 2) }
-    : value
+  return separator >= 0 ? { connectionId: value.slice(0, separator), profile: value.slice(separator + 2) } : value
 }
 
 function ownedSkillKey(profile: ProfileScope, skill: SkillInfo): string {
@@ -93,7 +91,17 @@ function skillPrompt(skill: SkillInfo): string {
   return `/${skill.name}\n\n`
 }
 
-function SkillRow({ owner, selected, skill, onClick }: { onClick: () => void; owner: string; selected: boolean; skill: SkillInfo }) {
+function SkillRow({
+  owner,
+  selected,
+  skill,
+  onClick
+}: {
+  onClick: () => void
+  owner: string
+  selected: boolean
+  skill: SkillInfo
+}) {
   return (
     <RowButton
       aria-current={selected ? 'true' : undefined}
@@ -336,7 +344,12 @@ function SkillDetail({
   )
 }
 
-export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSession, ...props }: PersonalSkillsPageProps) {
+export function PersonalSkillsPage({
+  fixedConnection,
+  fixedProfile,
+  onOpenSession,
+  ...props
+}: PersonalSkillsPageProps) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -370,9 +383,7 @@ export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSessio
   const [selectedKey, setSelectedKey] = useState<string | null>(selectedFromUrl)
 
   const selected =
-    skills.find(item => item.key === selectedKey) ??
-    skills.find(item => item.skill.name === selectedKey) ??
-    skills[0]
+    skills.find(item => item.key === selectedKey) ?? skills.find(item => item.skill.name === selectedKey) ?? skills[0]
 
   const selectedIndex = selected ? skills.findIndex(item => item.key === selected.key) : -1
   const [saving, setSaving] = useState(false)
@@ -381,31 +392,37 @@ export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSessio
     const next =
       selectedFromUrl && skills.some(item => item.key === selectedFromUrl || item.skill.name === selectedFromUrl)
         ? selectedFromUrl
-        : skills[0]?.key ?? null
+        : (skills[0]?.key ?? null)
 
     setSelectedKey(current => (current === next ? current : next))
   }, [selectedFromUrl, skills])
 
   useEffect(() => {
     if (selected?.key && selected.key !== searchParams.get('skill')) {
-      setSearchParams(current => {
-        const next = new URLSearchParams(current)
-        next.set('skill', selected.key)
+      setSearchParams(
+        current => {
+          const next = new URLSearchParams(current)
+          next.set('skill', selected.key)
 
-        return next
-      }, { replace: true })
+          return next
+        },
+        { replace: true }
+      )
     }
   }, [searchParams, selected?.key, setSearchParams])
 
   const selectSkill = useCallback(
     (key: string) => {
       setSelectedKey(key)
-      setSearchParams(current => {
-        const next = new URLSearchParams(current)
-        next.set('skill', key)
+      setSearchParams(
+        current => {
+          const next = new URLSearchParams(current)
+          next.set('skill', key)
 
-        return next
-      }, { replace: true })
+          return next
+        },
+        { replace: true }
+      )
     },
     [setSearchParams]
   )
@@ -458,7 +475,11 @@ export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSessio
             current ? { ...current, content: next } : current
         )
         void queryClient.invalidateQueries({ queryKey: skillsQueryKey(selected.profile), exact: true })
-        notify({ kind: 'success', title: t.skills.skillUpdated, message: t.skills.appliesToNewSessions(selected.skill.name) })
+        notify({
+          kind: 'success',
+          title: t.skills.skillUpdated,
+          message: t.skills.appliesToNewSessions(selected.skill.name)
+        })
       } catch (error) {
         notifyError(error, t.skills.failedToUpdate(selected.skill.name))
         throw error
@@ -539,7 +560,9 @@ export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSessio
               t={t}
             />
           ) : (
-            <div className="grid h-full min-h-56 place-items-center px-8 text-sm text-(--linear-text-tertiary)">{t.skills.personalEmpty}</div>
+            <div className="grid h-full min-h-56 place-items-center px-8 text-sm text-(--linear-text-tertiary)">
+              {t.skills.personalEmpty}
+            </div>
           )}
         </main>
       </div>
@@ -551,4 +574,3 @@ export function PersonalSkillsPage({ fixedConnection, fixedProfile, onOpenSessio
 export const PersonalSkillsView = PersonalSkillsPage
 
 export default PersonalSkillsPage
-

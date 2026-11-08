@@ -1,3 +1,5 @@
+import { type Document, isMap, isNode, isScalar, type Node, type Pair, parseDocument } from 'yaml'
+
 export interface SkillMetadataField {
   key: string
   value: string
@@ -8,16 +10,16 @@ export interface ParsedSkillDocument {
   metadata: SkillMetadataField[]
 }
 
-interface FrontmatterField extends SkillMetadataField {
-  endLine: number
-  firstValue: string
-  startLine: number
+interface FrontmatterParts {
+  body: string
+  document: Document.Parsed
+  header: RegExpExecArray
+  newline: string
 }
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
-const TOP_LEVEL_FIELD_RE = /^(\w[\w-]*):(?:[ \t]?(.*))?$/
 
-function frontmatterParts(content: string): { body: string; header: RegExpExecArray; newline: string } | null {
+function frontmatterParts(content: string): FrontmatterParts | null {
   const header = FRONTMATTER_RE.exec(content)
 
   if (!header) {
@@ -26,47 +28,52 @@ function frontmatterParts(content: string): { body: string; header: RegExpExecAr
 
   return {
     body: content.slice(header[0].length),
+    document: parseDocument(header[1], { keepSourceTokens: true }),
     header,
     newline: header[0].includes('\r\n') ? '\r\n' : '\n'
   }
 }
 
-function frontmatterFields(frontmatter: string): FrontmatterField[] {
-  const lines = frontmatter.split(/\r?\n/)
-  const fields: FrontmatterField[] = []
-  let current: FrontmatterField | null = null
+function topLevelPairs(document: Document.Parsed): Pair<Node, Node | null>[] {
+  return isMap<Node, Node | null>(document.contents) ? document.contents.items : []
+}
 
-  const flush = (endLine: number) => {
-    if (current) {
-      current.endLine = endLine
-      fields.push(current)
-    }
+function pairKey(pair: Pair<Node, Node | null>): string | null {
+  return isScalar(pair.key) && typeof pair.key.value === 'string' ? pair.key.value : null
+}
+
+function pairValue(pair: Pair<Node, Node | null>, source: string): string {
+  const value = pair.value
+
+  if (!value) {
+    return ''
   }
 
-  lines.forEach((line, lineNumber) => {
-    const match = TOP_LEVEL_FIELD_RE.exec(line)
+  if (isScalar(value)) {
+    return value.value === null || value.value === undefined ? '' : String(value.value)
+  }
 
-    if (match) {
-      flush(lineNumber)
-      current = {
-        endLine: lines.length,
-        firstValue: match[2] ?? '',
-        key: match[1],
-        startLine: lineNumber,
-        value: match[2] ?? ''
-      }
+  const range = value.range
 
-      return
-    }
+  if (!range) {
+    return value.toString().trim()
+  }
 
-    if (current) {
-      current.value = `${current.value}\n${line.replace(/^ {2}/, '')}`.trim()
-    }
+  // Collection nodes stringify as flow YAML by default. Read their original
+  // range instead, keeping the user's block layout while removing the one
+  // indentation level belonging to the top-level field.
+  return source
+    .slice(range[0], range[2])
+    .replace(/\r?\n {2}/g, '\n')
+    .trim()
+}
+
+function metadataFrom(parts: FrontmatterParts): SkillMetadataField[] {
+  return topLevelPairs(parts.document).flatMap(pair => {
+    const key = pairKey(pair)
+
+    return key ? [{ key, value: pairValue(pair, parts.header[1]) }] : []
   })
-
-  flush(lines.length)
-
-  return fields
 }
 
 export function parseSkillDocument(content: string): ParsedSkillDocument {
@@ -76,65 +83,55 @@ export function parseSkillDocument(content: string): ParsedSkillDocument {
     return { body: content, metadata: [] }
   }
 
-  return {
-    body: parts.body,
-    metadata: frontmatterFields(parts.header[1]).map(({ key, value }) => ({ key, value }))
-  }
+  return { body: parts.body, metadata: metadataFrom(parts) }
 }
 
-function quoteUpdatedValue(value: string, original: string): string {
-  const trimmed = original.trim()
-
-  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-    return JSON.stringify(value)
+function preserveComments(previous: Node | null, next: Node): void {
+  if (!previous) {
+    return
   }
 
-  if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
-    return `'${value.replaceAll("'", "''")}'`
+  next.comment = previous.comment
+  next.commentBefore = previous.commentBefore
+  next.spaceBefore = previous.spaceBefore
+
+  if (isScalar(previous) && isScalar(next) && (previous.type === 'QUOTE_DOUBLE' || previous.type === 'QUOTE_SINGLE')) {
+    next.type = previous.type
   }
-
-  return value
-}
-
-function replacementLines(field: FrontmatterField, value: string): string[] {
-  const lines = value.replace(/\r\n/g, '\n').split('\n')
-  const scalar = lines.length === 1
-
-  if (scalar) {
-    return [`${field.key}: ${quoteUpdatedValue(lines[0], field.firstValue)}`.trimEnd()]
-  }
-
-  return [`${field.key}:`, ...lines.map(line => `  ${line}`)]
 }
 
 /**
- * Rebuilds only the requested top-level fields and the instruction body. Any
- * other YAML field, comment, or ordering remains untouched. The caller keeps
- * the original skill name as the storage id when sending this new document.
+ * Rebuilds only the requested top-level fields and the instruction body. The
+ * YAML document owns parsing and serialization, so special characters and
+ * multiline values stay valid while comments and unknown fields remain intact.
+ * The caller keeps the original skill name as the storage id when sending this
+ * new document.
  */
 export function updateSkillDocument(content: string, updates: Record<string, string>, body?: string): string {
   const parts = frontmatterParts(content)
 
-  if (!parts) {
+  if (!parts || !isMap<Node, Node | null>(parts.document.contents)) {
     return body ?? content
   }
 
-  const lines = parts.header[1].split(/\r?\n/)
-  const fields = frontmatterFields(parts.header[1])
-  const nextLines: string[] = []
-  let lineNumber = 0
+  for (const pair of parts.document.contents.items) {
+    const key = pairKey(pair)
+    const nextValue = key === null ? undefined : updates[key]
 
-  for (const field of fields) {
-    nextLines.push(...lines.slice(lineNumber, field.startLine))
-    const nextValue = updates[field.key]
-    nextLines.push(...(nextValue === undefined ? lines.slice(field.startLine, field.endLine) : replacementLines(field, nextValue)))
-    lineNumber = field.endLine
+    if (nextValue === undefined) {
+      continue
+    }
+
+    const previous = isNode(pair.value) ? pair.value : null
+    const next = parts.document.createNode(nextValue)
+    preserveComments(previous, next)
+    pair.value = next as NonNullable<typeof pair.value>
   }
 
-  nextLines.push(...lines.slice(lineNumber))
-  const closing = /\r?\n---(\r?\n?)$/.exec(parts.header[0])
-  const closingEnding = closing?.[1] ?? parts.newline
-  const nextHeader = `---${parts.newline}${nextLines.join(parts.newline)}${parts.newline}---${closingEnding}`
+  const serialized = parts.document.toString({ lineWidth: 0 }).replace(/\r?\n$/, '')
+  const normalized = serialized.replace(/\r?\n/g, parts.newline)
+  const closingEnding = /\r?\n---(\r?\n?)$/.exec(parts.header[0])?.[1] ?? ''
+  const nextHeader = `---${parts.newline}${normalized}${parts.newline}---${closingEnding}`
 
   return `${nextHeader}${body ?? parts.body}`
 }

@@ -3,10 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { setWorkspaceScope } from '@/components/pane-shell/workspace-scope'
 import { stashSessionDraft } from '@/store/composer'
 
-import {
-  createPersonalSkillSessionLauncher,
-  setPersonalSkillSessionLauncher
-} from './session-launcher'
+import { createPersonalSkillSessionLauncher, setPersonalSkillSessionLauncher } from './session-launcher'
 
 interface OpenNewSessionTile {
   (
