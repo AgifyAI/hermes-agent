@@ -1,6 +1,6 @@
 import { type MutableRefObject, useEffect, useRef } from 'react'
 
-import { isNewChatRoute } from '@/app/routes'
+import { isNewChatRoute, routeSessionId } from '@/app/routes'
 import { type SessionResumeRequest, setResumeExhaustedSessionId } from '@/store/session'
 import type { SessionProfileRoute } from '@/store/session-request-router'
 import { markSelectionRestore } from '@/store/session-states'
@@ -75,18 +75,7 @@ function rawHashLooksLikeSession(): boolean {
     return false
   }
 
-  const hash = window.location.hash.replace(/^#/, '')
-
-  if (!hash || hash === '/') {
-    return false
-  }
-
-  return (
-    !hash.startsWith('/settings') &&
-    !hash.startsWith('/capabilities') &&
-    !hash.startsWith('/messaging') &&
-    !hash.startsWith('/artifacts')
-  )
+  return routeSessionId(window.location.hash.slice(1)) !== null
 }
 
 export function useRouteResume({

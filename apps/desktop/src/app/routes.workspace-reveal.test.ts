@@ -85,6 +85,7 @@ describe('classification of targets carrying a query', () => {
   // servers), and Settings redirects old /settings?tab=mcp deep links to the
   // last one. Unstripped, they parsed as SESSION ids and read as 'chat'.
   it.each([
+    ['/skills?skill=weekly-notes', 'skills'],
     [`${CAPABILITIES_ROUTE}?tab=skills`, 'capabilities'],
     [`${CAPABILITIES_ROUTE}?tab=connectors&server=ctx7`, 'capabilities'],
     [`${SETTINGS_ROUTE}?tab=keys`, 'settings']
