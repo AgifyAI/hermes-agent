@@ -573,6 +573,8 @@ export const en: Translations = {
       'session.newWindow': 'New window',
       'session.next': 'Next session',
       'session.prev': 'Previous session',
+      'session.nextConversation': 'Next conversation',
+      'session.prevConversation': 'Previous conversation',
       'session.slot.1': 'Switch to recent session 1',
       'session.slot.2': 'Switch to recent session 2',
       'session.slot.3': 'Switch to recent session 3',

@@ -11,6 +11,10 @@ function avatarKey(name: string, connectionId?: null | string): string {
   return `${connectionId || LOCAL_CONNECTION_ID}\u0000${name.trim() || 'default'}`
 }
 
+export function invalidateProfileAvatar(name: string, connectionId?: null | string): void {
+  avatarCache.delete(avatarKey(name, connectionId))
+}
+
 async function loadAvatar(name: string, connectionId?: null | string): Promise<null | string> {
   const request = connectionId && connectionId !== LOCAL_CONNECTION_ID
     ? requestGatewayForAgent<{ data?: string; found?: boolean }>(connectionId, name, 'profiles.get_asset', {

@@ -103,6 +103,13 @@ export const jaOverrides = {
 
   boot: jaBoot.boot,
 
+  keybinds: {
+    actions: {
+      'session.nextConversation': '次の会話',
+      'session.prevConversation': '前の会話'
+    }
+  },
+
   notifications: {
     sharedProfileWarning:
       '別の Hermes インストールがこのプロファイルを使用しています。両方が設定とデータを共有しているため、変更が競合する可能性があります。このまま続けるか、変更する前にもう一方を終了してください。',

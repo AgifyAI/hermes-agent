@@ -136,6 +136,12 @@ export const zhHantOverrides = {
   common: zhHantCommon.common,
   fileMenu: zhHantChrome.fileMenu,
   boot: zhHantBoot.boot,
+  keybinds: {
+    actions: {
+      'session.nextConversation': '下一個對話',
+      'session.prevConversation': '上一個對話'
+    }
+  },
   notifications: zhHantDiagnostics.notifications,
   remoteDisplayBanner: zhHantBoot.remoteDisplayBanner,
   butterbar: zhHantBoot.butterbar,

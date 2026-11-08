@@ -236,7 +236,7 @@ export function MemorySection() {
       .then(response => setEntries(response.pending))
       .catch(cause => setError(errorMessage(cause, labels.pendingMemoryLoadFailed)))
       .finally(() => setLoading(false))
-  }, [requestScope])
+  }, [labels.pendingMemoryLoadFailed, requestScope])
 
   useEffect(() => {
     if (open) {

@@ -25,6 +25,7 @@ import {
   setProfileNickname
 } from '@/store/profile'
 
+import { invalidateProfileAvatar } from '../chat/sidebar/profile-avatar'
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import {
   Panel,
@@ -370,6 +371,7 @@ function ProfileIdentityEditor({ onUpdated, profile }: { onUpdated: () => Promis
         )
       }
 
+      invalidateProfileAvatar(profile.name)
       await onUpdated()
       notify({ kind: 'success', title: p.identitySaved, message: profileLabel({ ...profile, display_name: nickname.trim() }) })
     } catch (err) {

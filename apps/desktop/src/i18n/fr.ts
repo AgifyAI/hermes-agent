@@ -577,6 +577,8 @@ export const frOverrides = {
       'session.newWindow': 'Nouvelle fenêtre',
       'session.next': 'Session suivante',
       'session.prev': 'Session précédente',
+      'session.nextConversation': 'Conversation suivante',
+      'session.prevConversation': 'Conversation précédente',
       'session.slot.1': 'Basculer vers la session récente 1',
       'session.slot.2': 'Basculer vers la session récente 2',
       'session.slot.3': 'Basculer vers la session récente 3',
