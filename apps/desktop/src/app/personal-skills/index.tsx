@@ -358,6 +358,7 @@ export function PersonalSkillsPage({
   const sidebarProfile = useStore($profileScope)
   const connectionId = useStore($activeConnectionId)
   const profile = fixedProfile ?? (sidebarProfile === ALL_PROFILES ? undefined : sidebarProfile)
+
   const scope = useCapabilityScope({
     fixedConnection: fixedConnection ?? connectionId ?? undefined,
     fixedProfile: profile
