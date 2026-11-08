@@ -1,7 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { findGroupOfPane, group, type LayoutNode, split } from '@/components/pane-shell/tree/model'
-import { $collapsedTreeSides, $hiddenTreePanes, $layoutTree, setTreePaneHidden } from '@/components/pane-shell/tree/store'
+import {
+  $collapsedTreeSides,
+  $hiddenTreePanes,
+  $layoutTree,
+  setTreePaneHidden
+} from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 import {
   $fileBrowserOpen,
@@ -111,6 +116,24 @@ describe('positional right-side toggle', () => {
     expect($collapsedTreeSides.get().has('right')).toBe(false)
     expect(Boolean(groupOf('files')?.minimized)).toBe(false)
     expect($fileBrowserOpen.get()).toBe(true)
+  })
+
+  it('opens the live right column when a disabled plugin still owns the last saved slot', () => {
+    $layoutTree.set(
+      split('row', [
+        group(['sessions', 'files']),
+        group(['workspace']),
+        group(['terminal']),
+        group([BROWSER], { minimized: true }),
+        group(['inactive-plugin:panel'])
+      ])
+    )
+    expect($rightSideOpen.get()).toBe(false)
+    openRightSide()
+    openRightSide()
+    expect($rightSideOpen.get()).toBe(true)
+    expect(groupOf(BROWSER)?.minimized).toBe(false)
+    expect(groupOf('files')?.panes).toContain('sessions')
   })
 
   it('opens an empty right pane when the registered file view is hidden', () => {
