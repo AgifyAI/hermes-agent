@@ -1,8 +1,18 @@
 import { paletteToggle } from '@/app/command-palette/contrib'
-import { isPaneVisible, togglePaneVisible } from '@/components/pane-shell/tree/store'
+import { findGroupOfPane } from '@/components/pane-shell/tree/model'
+import {
+  $collapsedTreeSides,
+  $layoutTree,
+  closeTreePane,
+  isPaneVisible,
+  moveTreePane,
+  paneRootSide,
+  restoreTreePane
+} from '@/components/pane-shell/tree/store'
 import { Terminal } from '@/lib/icons'
 import { isFocusWithin } from '@/lib/keybinds/combo'
 import { trackArea } from '@/store/desktop-metrics'
+import { setFileBrowserOpen, setSidebarOpen, sidebarSide } from '@/store/layout'
 
 const TERMINAL_FOCUS_SCOPE = '[data-terminal]'
 
@@ -46,14 +56,48 @@ function scheduleFocusAttempt(attempts: number): void {
   })
 }
 
+// Older layouts can dock the terminal below the conversation. Move just its
+// pane when the Mac shortcut asks to reveal it inside the right sidebar.
+function dockTerminalOnRight(): void {
+  const tree = $layoutTree.get()
+  if (!tree || paneRootSide('terminal') === 'right') {
+    return
+  }
+
+  const belowFiles = paneRootSide('files') === 'right'
+  const anchor = findGroupOfPane(tree, belowFiles ? 'files' : 'workspace')
+  if (anchor) {
+    moveTreePane('terminal', { groupId: anchor.id, pos: belowFiles ? 'bottom' : 'right' })
+  }
+}
+
 /**
  * User toggle of the terminal pane. The reveal direction claims keyboard
  * focus; the hide direction does not.
  */
-export function toggleTerminalPane(): void {
+export function toggleTerminalPane(inRightSidebar = false): void {
   const revealed = !isPaneVisible('terminal')
 
-  togglePaneVisible('terminal')
+  if (revealed) {
+    if (inRightSidebar) {
+      dockTerminalOnRight()
+    }
+    const side = paneRootSide('terminal')
+
+    if (side && $collapsedTreeSides.get().has(side)) {
+      // A terminal can live inside the right rail while its owner is closed.
+      // Open that owner first; revealing only the tree would show the terminal
+      // with the rail's state still closed, so the next toggle would fight the
+      // layout and the terminal would appear to need two presses.
+      const openSide = side === sidebarSide() ? setSidebarOpen : setFileBrowserOpen
+      openSide(true)
+    }
+
+    restoreTreePane('terminal')
+  } else {
+    closeTreePane('terminal')
+  }
+
   trackArea('terminal_pane', revealed)
 
   if (revealed) {

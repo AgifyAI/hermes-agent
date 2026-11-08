@@ -603,6 +603,7 @@ export const deOverrides = {
       'view.toggleSidebar': 'Session-Sidebar umschalten',
       'view.cycleSidebarGrouping': 'Session-Gruppierung wechseln',
       'view.toggleRightSidebar': 'Dateibrowser umschalten',
+      'view.openRightSidebar': 'Rechte Seitenleiste öffnen',
       'view.toggleReview': 'Review-Bereich umschalten',
       'view.toggleStatusbar': 'Statusleiste umschalten',
       'view.toggleTabStrip': 'Tabs umschalten',

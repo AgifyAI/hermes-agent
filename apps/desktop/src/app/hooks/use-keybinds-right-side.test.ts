@@ -7,6 +7,11 @@ vi.mock('@/themes/context', () => ({
   useTheme: () => ({ resolvedMode: 'dark' as const, setMode: () => undefined })
 }))
 
+vi.mock('@/lib/platform', async importOriginal => ({
+  ...(await importOriginal<object>()),
+  isMacPlatform: () => true
+}))
+
 const toggleTerminalPane = vi.hoisted(() => vi.fn())
 
 vi.mock('@/app/right-sidebar/terminal/reveal-focus', async importOriginal => ({
@@ -18,11 +23,6 @@ import { useKeybinds } from '@/app/hooks/use-keybinds'
 import { findGroupOfPane, group, type LayoutNode, split } from '@/components/pane-shell/tree/model'
 import { $layoutTree } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
-import { isMacPlatform } from '@/lib/platform'
-
-// ⌘J dispatch must resolve the SAME physical right target the toggle mutates:
-// a Browser column registers `placement: 'main'`, so the semantic side gate
-// saw no right side and sent ⌘J to the terminal instead of folding it.
 
 const BROWSER = 'preview-tile:url:browser'
 const wrapper = ({ children }: { children: ReactNode }) => createElement(MemoryRouter, null, children)
@@ -58,22 +58,42 @@ afterEach(() => {
   $layoutTree.set(null)
 })
 
-describe('⌘J (view.toggleRightSidebar)', () => {
-  it('folds a Browser column on the right instead of toggling the terminal', () => {
-    $layoutTree.set(split('row', [group(['sessions', 'files']), group(['workspace']), group([BROWSER])]))
+function press(key: string, target: EventTarget = window, shiftKey = false) {
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      code: 'Key' + key.toUpperCase(),
+      key,
+      metaKey: true,
+      shiftKey
+    })
+  )
+}
 
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        bubbles: true,
-        cancelable: true,
-        code: 'KeyJ',
-        ctrlKey: !isMacPlatform(),
-        key: 'j',
-        metaKey: isMacPlatform()
-      })
-    )
+describe('Mac right sidebar shortcuts', () => {
+  it('opens the right column and keeps it open on the second press', () => {
+    $layoutTree.set(split('row', [group(['workspace']), { ...group([BROWSER]), minimized: true }]))
 
-    expect(findGroupOfPane($layoutTree.get() as LayoutNode, BROWSER)?.minimized).toBe(true)
+    for (let pressCount = 0; pressCount < 2; pressCount++) {
+      press('b', window, true)
+      const rightGroup = findGroupOfPane($layoutTree.get() as LayoutNode, BROWSER)
+      expect(rightGroup?.id).toBeDefined()
+      expect(rightGroup?.minimized).toBeFalsy()
+    }
     expect(toggleTerminalPane).not.toHaveBeenCalled()
+  })
+
+  it('dispatches Command J to the terminal while its text input is focused', () => {
+    const input = document.createElement('textarea')
+    input.dataset.terminal = ''
+    document.body.append(input)
+    try {
+      input.focus()
+      press('j', input)
+      expect(toggleTerminalPane).toHaveBeenCalledOnce()
+    } finally {
+      input.remove()
+    }
   })
 })

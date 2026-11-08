@@ -138,8 +138,7 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // every user — surfaced in the panel for opt-in binding (the issue suggests
   // ⌘⇧⌫ / Ctrl+Shift+⌫).
   { id: 'session.archive', category: 'session', defaults: [] },
-  // ⌘⇧B — "b" for branch: spin up a new git worktree from the active repo.
-  { id: 'workspace.newWorktree', category: 'session', defaults: ['mod+shift+b'] },
+  { id: 'workspace.newWorktree', category: 'session', defaults: isMacPlatform() ? [] : ['mod+shift+b'] },
   // ⌘O — the editor-standard "open folder" chord (VS Code ⌘O, Zed's
   // workspace::Open). Picks a folder and opens it as a project (upsert:
   // enters the owning project when one exists, else creates one), landing on
@@ -162,7 +161,8 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // Expose the sidebar's mouse-only grouping control to keyboard-first users.
   // Ships unbound so it is opt-in and cannot claim another global chord.
   { id: 'view.cycleSidebarGrouping', category: 'view', defaults: [] },
-  { id: 'view.toggleRightSidebar', category: 'view', defaults: ['mod+j'] },
+  { id: 'view.openRightSidebar', category: 'view', defaults: isMacPlatform() ? ['mod+shift+b'] : [] },
+  { id: 'view.toggleRightSidebar', category: 'view', defaults: isMacPlatform() ? [] : ['mod+j'] },
   // ⌘⇧S — "s" for status bar. VS Code ships
   // `workbench.action.toggleStatusbarVisibility` unbound (it's a chord-free
   // gap in their View family) and Hermes has no chord dispatcher, so this
@@ -194,7 +194,7 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // cycling app windows, so VS Code/Cursor/Zed bind the terminal to Ctrl+` on
   // every platform. Off macOS `ctrl` folds to `mod` (= Ctrl), so it's unchanged.
   // Toggle reveals the terminal (opening one if none exist); Shift spawns a new one.
-  { id: 'view.showTerminal', category: 'view', defaults: ['ctrl+`'] },
+  { id: 'view.showTerminal', category: 'view', defaults: isMacPlatform() ? ['mod+j', 'ctrl+`'] : ['ctrl+`'] },
   { id: 'view.newTerminal', category: 'view', defaults: ['ctrl+shift+`'] },
   // Same Ctrl(+Shift) terminal family: arrows walk the (vertical) tab rail, W
   // kills the active one. ⌘W is taken (close preview tab) and ⌘⇧[ ] are profiles,

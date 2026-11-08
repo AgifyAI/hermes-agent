@@ -139,7 +139,8 @@ export const zhHantOverrides = {
   keybinds: {
     actions: {
       'session.nextConversation': '下一個對話',
-      'session.prevConversation': '上一個對話'
+      'session.prevConversation': '上一個對話',
+      'view.openRightSidebar': '開啟右側邊欄'
     }
   },
   notifications: zhHantDiagnostics.notifications,

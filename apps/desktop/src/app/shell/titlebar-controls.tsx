@@ -16,7 +16,7 @@ import { useContributions } from '@/contrib/react/use-contributions'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { formatModifierToken } from '@/lib/keybinds/combo'
-import { isBrowserHostedDesktop } from '@/lib/platform'
+import { isBrowserHostedDesktop, isMacPlatform } from '@/lib/platform'
 import { cn } from '@/lib/utils'
 import { recordAction } from '@/store/desktop-metrics'
 import { $interfaceMode, shownInMode, type Tiered } from '@/store/interface-mode'
@@ -231,7 +231,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const rightSidebarTool: TitlebarTool = {
     ...TITLEBAR_FIXED_TOOLS['right-sidebar'],
-    actionId: 'view.toggleRightSidebar',
+    actionId: isMacPlatform() && !rightEdge.expanded ? 'view.openRightSidebar' : 'view.toggleRightSidebar',
     badge: panesFlipped ? unreadBadge : undefined,
     icon: <TitlebarIcon name="layout-sidebar-right" />,
     id: 'right-sidebar',

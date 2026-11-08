@@ -10,19 +10,22 @@ vi.mock('@/themes/context', () => ({
 import { PALETTE_AREA, type PaletteContribution } from '@/app/command-palette/contrib'
 import { useKeybinds } from '@/app/hooks/use-keybinds'
 import { $terminalTakeover, setTerminalTakeover } from '@/app/right-sidebar/store'
-import { terminalPaletteToggle } from '@/app/right-sidebar/terminal/reveal-focus'
+import { terminalPaletteToggle, toggleTerminalPane } from '@/app/right-sidebar/terminal/reveal-focus'
 import { useStatusbarItems } from '@/app/shell/hooks/use-statusbar-items'
-import { group, split } from '@/components/pane-shell/tree/model'
+import { findGroupOfPane, group, split } from '@/components/pane-shell/tree/model'
 import {
+  $collapsedTreeSides,
   $layoutTree,
   bindToolPaneCollapse,
   collapseTreePane,
   isPaneVisible,
+  paneRootSide,
   revealTreePane,
   setPaneCollapsed
 } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 import { $showsAdvancedChrome } from '@/store/interface-mode'
+import { $fileBrowserOpen, openRightSide, setFileBrowserOpen } from '@/store/layout'
 
 // Ctrl+`, the ⌘K row, and the statusbar pill reveal the terminal. That reveal
 // must make the on-screen xterm the keyboard target, and the claim has to
@@ -32,6 +35,27 @@ const wrapper = ({ children }: { children: ReactNode }) => createElement(MemoryR
 
 let unmountKeybinds: (() => void) | undefined
 
+const baseTree = () =>
+  split('row', [
+    group(['workspace'], { active: 'workspace', id: 'grp-main' }),
+    group(['terminal'], { active: 'terminal', id: 'grp-terminal' })
+  ])
+
+const nestedDefaultTree = () =>
+  split('row', [
+    group(['sessions'], { active: 'sessions', id: 'grp-sessions' }),
+    group(['workspace'], { active: 'workspace', id: 'grp-main' }),
+    split(
+      'column',
+      [
+        split('row', [group(['review'], { id: 'grp-review' }), group(['files'], { id: 'grp-files' })]),
+        group(['terminal'], { active: 'terminal', id: 'grp-terminal' })
+      ],
+      [1.6, 1],
+      'spl-right'
+    )
+  ])
+
 // The contrib controller owns this wiring in the app, but importing it pulls
 // the whole app graph (every pane, bundled plugin, HUD) into a hook: minutes of
 // cold transform under the parallel ui run, which blew the 30s hook timeout in
@@ -39,6 +63,13 @@ let unmountKeybinds: (() => void) | undefined
 // the same palette row the controller registers.
 beforeAll(() => {
   registry.registerMany([
+    {
+      area: 'panes',
+      data: { placement: 'left' },
+      id: 'sessions',
+      render: () => null,
+      title: 'sessions'
+    },
     {
       area: 'panes',
       data: { placement: 'main', uncloseable: true },
@@ -53,14 +84,23 @@ beforeAll(() => {
       render: () => null,
       title: 'terminal'
     },
+    {
+      area: 'panes',
+      data: { placement: 'right' },
+      id: 'files',
+      render: () => null,
+      title: 'files'
+    },
+    {
+      area: 'panes',
+      data: { placement: 'right' },
+      id: 'review',
+      render: () => null,
+      title: 'review'
+    },
     terminalPaletteToggle
   ])
-  $layoutTree.set(
-    split('column', [
-      group(['workspace'], { active: 'workspace', id: 'grp-main' }),
-      group(['terminal'], { active: 'terminal', id: 'grp-terminal' })
-    ])
-  )
+  $layoutTree.set(baseTree())
   bindToolPaneCollapse(
     'terminal',
     $terminalTakeover,
@@ -94,8 +134,10 @@ afterAll(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   document.body.replaceChildren()
+  setFileBrowserOpen(true)
   setTerminalTakeover(false)
   setPaneCollapsed('terminal', true)
+  $layoutTree.set(baseTree())
 })
 
 function installRaf() {
@@ -209,6 +251,74 @@ function showTerminalPane() {
     revealTreePane('terminal')
   }
 }
+
+it('opens the closed right rail with the terminal, then hides only the terminal while keeping its PTY', () => {
+  setFileBrowserOpen(false)
+  setTerminalTakeover(false)
+
+  expect($fileBrowserOpen.get()).toBe(false)
+  expect($collapsedTreeSides.get().has('right')).toBe(true)
+  expect(isPaneVisible('terminal')).toBe(false)
+
+  toggleTerminalPane()
+
+  expect($fileBrowserOpen.get()).toBe(true)
+  expect($collapsedTreeSides.get().has('right')).toBe(false)
+  expect(isPaneVisible('terminal')).toBe(true)
+  expect($terminalTakeover.get()).toBe(true)
+
+  toggleTerminalPane()
+
+  expect($fileBrowserOpen.get()).toBe(true)
+  expect($collapsedTreeSides.get().has('right')).toBe(false)
+  expect(isPaneVisible('terminal')).toBe(false)
+  expect($terminalTakeover.get()).toBe(false)
+  expect(findGroupOfPane($layoutTree.get()!, 'terminal')).not.toBeNull()
+
+  toggleTerminalPane()
+
+  expect(isPaneVisible('terminal')).toBe(true)
+  expect($terminalTakeover.get()).toBe(true)
+})
+
+it('shows the shell on the first terminal shortcut after opening an empty right sidebar', () => {
+  $layoutTree.set(nestedDefaultTree())
+  hideTerminal()
+  setFileBrowserOpen(false)
+  openRightSide()
+  openRightSide()
+  expect(isPaneVisible('terminal')).toBe(false)
+
+  toggleTerminalPane(true)
+
+  expect($terminalTakeover.get()).toBe(true)
+  expect(isPaneVisible('terminal')).toBe(true)
+})
+
+it('opens a terminal nested below the right file rail in one press', () => {
+  $layoutTree.set(nestedDefaultTree())
+  setFileBrowserOpen(false)
+  setTerminalTakeover(false)
+
+  toggleTerminalPane()
+
+  expect($fileBrowserOpen.get()).toBe(true)
+  expect($collapsedTreeSides.get().has('right')).toBe(false)
+  expect(isPaneVisible('terminal')).toBe(true)
+  expect($terminalTakeover.get()).toBe(true)
+})
+
+it('reveals the existing bottom terminal beneath the files in the right sidebar', () => {
+  $layoutTree.set(split('row', [split('column', [group(['workspace']), group(['terminal'])]), group(['files'])]))
+  setFileBrowserOpen(false)
+  hideTerminal()
+
+  toggleTerminalPane(true)
+
+  expect(paneRootSide('terminal')).toBe('right')
+  expect(isPaneVisible('terminal')).toBe(true)
+  expect($fileBrowserOpen.get()).toBe(true)
+})
 
 describe('terminal reveal keyboard focus', () => {
   it('takes focus from the keybind on reveal and keeps it when the composer steals it', () => {
