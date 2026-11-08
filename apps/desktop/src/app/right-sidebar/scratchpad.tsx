@@ -278,7 +278,7 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
           value={value}
         />
       )}
-      {failed && <p className="px-2.5 pb-2 text-xs text-(--linear-text-danger)">{copy.error}</p>}
+      {failed && <p className="px-2.5 pb-2 text-xs text-(--linear-red)">{copy.error}</p>}
     </section>
   )
 }
