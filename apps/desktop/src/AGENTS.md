@@ -65,8 +65,8 @@ user-activated extensions. If you tighten `desktop-slash-commands.ts`, keep
 Each bot is a Hermes **profile** with a persistent identity. This invariant regressed repeatedly,
 cost users conversation history each time, and is not open for re-litigation in a routine PR.
 
-The chat's only identity is **(profile, session titled exactly "Bot Chat")**; the state DB's
-UNIQUE(title) index makes that pair a registry of at most one row. Clicking a bot row:
+The chat’s identity is the **hidden session titled exactly "Bot Chat" in its profile**. A partial
+unique index protects this registry. Visible conversations may share any display title. Clicking a bot row:
 1. **Resolve the registry, every time:** `session.list {title, include_hidden: true}` (indexed,
    window-free; hidden rows resolve because canonical chats are always hidden; compression lineages
    resolve to the live tip). Row exists → open it. That is the whole happy path.

@@ -18,6 +18,7 @@ import {
 } from 'react'
 
 import { useSessionView } from '@/app/chat/session-view'
+import { requestRightSidebarSection } from '@/app/right-sidebar/store'
 import { AnsiText } from '@/components/assistant-ui/ansi-text'
 import { MarkdownImage } from '@/components/assistant-ui/markdown-text'
 import { SET_THEME_TOOL, setThemeCall } from '@/components/assistant-ui/theme-picker/args'
@@ -416,7 +417,8 @@ function ToolEntry({ part }: ToolEntryProps) {
   const disclosureId = toolEntryDisclosureId(messageId, stablePart)
   const dismissed = useStore($toolRowDismissed(disclosureId))
   const isPending = messageRunning && result === undefined && completedAt === undefined
-  const inlineDiff = inlineDiffFromResult(toolResultRecord(stablePart))
+  const resultRecord = toolResultRecord(stablePart)
+  const inlineDiff = inlineDiffFromResult(resultRecord)
   const isFileEdit = isFileEditTool(toolName)
   const defaultOpen = Boolean(inlineDiff) && !hideCodeDiffs
   const disclosureOpen = useDisclosureOpen(disclosureId, defaultOpen)
@@ -583,6 +585,29 @@ function ToolEntry({ part }: ToolEntryProps) {
     </Button>
   ) : undefined
 
+  const reviewMemoryAction = !isPending && toolName === 'memory' && resultRecord.staged === true && typeof resultRecord.pending_id === 'string' ? (
+    <Button
+      aria-label="Review pending memory"
+      className="h-5 px-1.5 text-[0.6875rem] text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+      onClick={event => {
+        event.stopPropagation()
+        requestRightSidebarSection('memory')
+      }}
+      size="micro"
+      type="button"
+      variant="text"
+    >
+      Review
+    </Button>
+  ) : undefined
+
+  const rowAction = reviewMemoryAction || dismissAction ? (
+    <>
+      {reviewMemoryAction}
+      {dismissAction}
+    </>
+  ) : undefined
+
   if (dismissed) {
     return null
   }
@@ -611,7 +636,7 @@ function ToolEntry({ part }: ToolEntryProps) {
     >
       <div className={cn(open && 'border-b-[0.5px] border-(--linear-border-panel) px-2 py-1.5')}>
         <DisclosureRow
-          action={dismissAction}
+          action={rowAction}
           onToggle={
             hasExpandableContent
               ? () => {

@@ -267,9 +267,9 @@ function renderEntryActions({
         </Tip>
       )}
       {!entry.serverStatus && (
-        <Tip label={busy ? c.queueSendNext : c.queueSend}>
+        <Tip label={c.queueSend}>
           <Button
-            aria-label={busy ? c.queueSendNext : c.queueSend}
+            aria-label={c.queueSend}
             className="size-5 rounded-md"
             disabled={isEditing}
             onClick={() => onSendNow(entry.id)}

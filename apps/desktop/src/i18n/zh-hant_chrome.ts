@@ -421,6 +421,22 @@ export const zhHantChrome = {
 
   rightSidebar: {
     terminalDropUnquotable: (shell, paths) => `無法在 ${shell} 中安全地輸入這些名稱：${paths}`,
+    pendingMemoryTitle: '記憶',
+    pendingMemoryTextAria: '建議的記憶文字',
+    pendingMemoryLoading: '載入中…',
+    pendingMemoryEmpty: '沒有待處理的記憶',
+    pendingMemoryCancel: '取消',
+    pendingMemorySave: '儲存',
+    pendingMemoryEdit: '編輯',
+    pendingMemoryReject: '拒絕',
+    pendingMemoryApprove: '核准',
+    queuedMessagesTitle: '排隊中的訊息',
+    queuedMessagesEmpty: '沒有排隊中的訊息',
+    scratchpadTitle: '記事本',
+    scratchpadPlaceholder: '寫下一則私人備註…',
+    scratchpadEmptySession: '開啟聊天以使用記事本。',
+    scratchpadSaving: '儲存中…',
+    scratchpadError: '無法儲存此備註。',
     terminalReadOnly: '唯讀輸出',
     terminalReadOnlyHelp:
       '如需回應提示，請停止背景命令，再於新終端機中執行。新終端機會開啟獨立的 shell，不會連線至此程序。',

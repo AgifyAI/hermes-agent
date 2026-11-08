@@ -41,11 +41,9 @@ import { emitGatewayEvent } from '@/contrib/events'
 import { translateNow } from '@/i18n'
 import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
-import { activateWakeIndicator } from '@/lib/wake-indicator'
-import { playWakeSound } from '@/lib/wake-sound'
 import { $billingSettingsRequest } from '@/store/billing-block'
 import { $desktopBoot } from '@/store/boot'
-import { requestVoiceConversationStart } from '@/store/composer'
+import { stashSessionDraft } from '@/store/composer'
 import { $activeConnectionId } from '@/store/connections'
 import { $cronReviewRequest, setCronFocusJobId } from '@/store/cron'
 import { reconnectGateway } from '@/store/gateway-reconnect'
@@ -60,14 +58,7 @@ import {
   type OnboardingResume
 } from '@/store/onboarding-run'
 import { $previewTarget } from '@/store/preview'
-import {
-  $activeGatewayProfile,
-  $profileScope,
-  ALL_PROFILES,
-  ensureGatewayProfile,
-  newSessionInProfile,
-  normalizeProfileKey
-} from '@/store/profile'
+import { $activeGatewayProfile, $profileScope, ALL_PROFILES, normalizeProfileKey } from '@/store/profile'
 import { $newProjectSessionRequest, $startWorkSessionRequest, followActiveSessionCwd } from '@/store/projects'
 import { $backendRestartRequest, $routeRequest } from '@/store/recovery-requests'
 import {
@@ -95,7 +86,6 @@ import {
 import { reportPendingUpdateRun } from '@/store/shared-metrics'
 import { $archivedSessions } from '@/store/sidebar-archive'
 import { $titlebarAppActionsSide, titlebarAppActionsClusterCounts } from '@/store/titlebar-app-actions'
-import { armWakeWord, stopClientCapture } from '@/store/wake-word'
 import { isAuxiliaryWindow, isBrowserWindow, isHudWindow, isMainWindow } from '@/store/windows'
 import type { SessionInfo } from '@/types/hermes'
 
@@ -112,6 +102,10 @@ import { useHudHandoff } from '../hud/handoff'
 import { ModelPickerOverlay } from '../model-picker-overlay'
 import { ModelVisibilityOverlay } from '../model-visibility-overlay'
 import { mainChatOccupied, openSession, openSessionFromPicker } from '../open-session'
+import {
+  createPersonalSkillSessionLauncher,
+  setPersonalSkillSessionLauncher
+} from '../personal-skills/session-launcher'
 import { FileActionDialogs } from '../right-sidebar/file-actions'
 import { RemoteFolderPicker } from '../right-sidebar/files/remote-picker'
 import { resetProjectTreeState } from '../right-sidebar/files/use-project-tree'
@@ -571,6 +565,23 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     updateSessionState
   })
 
+  const launchPersonalSkillSession = useMemo(
+    () =>
+      createPersonalSkillSessionLauncher({
+        activeProfile: activeGatewayProfile,
+        openNewSessionTile: (dir, options) => openNewSessionTile(dir, options),
+        setWorkspaceScope: () => setWorkspaceScope('sessions'),
+        stashSessionDraft: (scope, prompt) => stashSessionDraft(scope, prompt, [])
+      }),
+    [activeGatewayProfile, openNewSessionTile]
+  )
+
+  useEffect(() => {
+    setPersonalSkillSessionLauncher(launchPersonalSkillSession)
+
+    return () => setPersonalSkillSessionLauncher(null)
+  }, [launchPersonalSkillSession])
+
   useFreshSessionRequest(startFreshSessionDraft)
   useGatewayScopeRefresh(activeConnectionId, activeGatewayProfile, refreshCurrentModel, refreshHermesConfig)
 
@@ -687,7 +698,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     },
     [branchCurrentSession, refreshSessions]
   )
-
 
   const {
     cancelRun,
@@ -813,45 +823,15 @@ export function ContribWiring({ children }: { children: ReactNode }) {
       emitGatewayEvent(event)
 
       if (event.type === 'wake.detected') {
-        const payload = event.payload as { profile?: null | string; start_new_session?: boolean } | undefined
-
-        // Free the Mac mic so voice conversation can open getUserMedia.
-        // Server already pauses the detector lease; this stops client PCM feed.
-        stopClientCapture()
-
-        // Audible confirmation that the wake registered, before voice capture
-        // starts. Gated by the shared sound-mute toggle.
-        playWakeSound()
-        activateWakeIndicator()
-
-        // Multi-profile routing: a wake phrase enrolled by another profile
-        // re-homes the gateway to that profile first (live swap — same path
-        // as clicking it in the profile rail), then opens the fresh session
-        // and starts voice there.
-        const targetProfile = payload?.profile?.trim()
-        const activeProfile = normalizeProfileKey($activeGatewayProfile.get())
-
-        if (targetProfile && normalizeProfileKey(targetProfile) !== activeProfile) {
-          if (payload?.start_new_session !== false) {
-            newSessionInProfile(targetProfile)
-          } else {
-            void ensureGatewayProfile(normalizeProfileKey(targetProfile)).catch((error: unknown) => {
-              // #81094: the voice-path switch must surface its failure too.
-              notifyError(error, `Failed to switch to profile "${normalizeProfileKey(targetProfile)}"`)
-            })
-          }
-        } else if (payload?.start_new_session !== false) {
-          startFreshSessionDraft()
-        }
-
-        requestVoiceConversationStart()
-
+        // The Electron Desktop no longer owns a wake-word or voice surface.
+        // Leave the event available to other clients/plugins, but do not route
+        // it into a Desktop chat, open a microphone, or create a session here.
         return
       }
 
       handleDesktopGatewayEvent(event)
     },
-    [handleDesktopGatewayEvent, startFreshSessionDraft]
+    [handleDesktopGatewayEvent]
   )
 
   useGatewayBoot({
@@ -872,14 +852,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
     refreshHermesConfig,
     refreshSessions
   })
-
-  useEffect(() => {
-    if (gatewayState === 'open') {
-      // Status-then-arm, syncing $wakeWord so the composer toggle reflects the
-      // same listener this auto-arm claims.
-      void armWakeWord(requestGateway)
-    }
-  }, [gatewayState, requestGateway])
 
   useEffect(() => {
     if (gatewayState !== 'open' || isAuxiliaryWindow()) {
@@ -1392,7 +1364,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
           <AgentsView onClose={closeOverlayToPreviousRoute} />
         </Suspense>
       )}
-
 
       {webhooksOpen && (
         <Suspense fallback={null}>

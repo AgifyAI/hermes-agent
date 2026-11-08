@@ -3,6 +3,7 @@ import { useStore } from '@nanostores/react'
 import { useQuery } from '@tanstack/react-query'
 import type * as React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
 import { PageLoader } from '@/components/page-loader'
 import { Button } from '@/components/ui/button'
@@ -53,6 +54,7 @@ import { $cronFocusJobId, $cronJobs, invalidateCronJobsRequests, setCronFocusJob
 import { $changeEventsAvailable, $cronChangeTick } from '@/store/live-sync'
 import { notify, notifyError } from '@/store/notifications'
 import { $profileScope, ALL_PROFILES } from '@/store/profile'
+import type { CronJobUpdates } from '@/types/hermes'
 
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import { DetailColumn, ListColumn, MasterDetail } from '../master-detail'
@@ -73,6 +75,7 @@ import { PageSearchShell } from '../page-search-shell'
 
 import { BlueprintSlotControl, blueprintSlotHelp, cleanBlueprintFieldError, initialBlueprintValues } from './blueprints'
 import { mutateAndRefreshCronJobs, refreshCronJobs, triggerAndRefreshCronJobs } from './cron-actions'
+import { CronJobInlineEditor } from './cron-job-editor'
 import {
   cronEditorUpdates,
   cronModelChoiceValue,
@@ -96,6 +99,17 @@ const MODEL_DEFAULT_VALUE = '__default__'
 // "Start from" default: the manual editor (blank cron). Any other value is a
 // blueprint key. Blueprint keys never collide with this sentinel.
 const CUSTOM_TEMPLATE = 'custom'
+
+// CronView is also rendered in isolated component tests and plugin previews
+// without a router. Keep deep-linking inert in those embeddings while the
+// routed page uses the real browser URL.
+function useOptionalSearchParams(): ReturnType<typeof useSearchParams> {
+  try {
+    return useSearchParams()
+  } catch {
+    return [new URLSearchParams(), () => undefined]
+  }
+}
 
 function cronProfileForScope(scope: string): string {
   return scope === ALL_PROFILES ? 'all' : scope
@@ -306,6 +320,7 @@ interface CronViewProps extends React.ComponentProps<'section'> {
 export function CronView({ onOpenSession, ...props }: CronViewProps) {
   const { t } = useI18n()
   const c = t.cron
+  const [searchParams, setSearchParams] = useOptionalSearchParams()
   // Source of truth is the shared atom (also fed by the controller poll), so
   // the list and this page never drift, and a create/delete here updates every
   // other surface immediately. `loading` only gates the first paint before the
@@ -353,13 +368,16 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
   }, [])
 
   // Master/detail: the job whose schedule + run history fill the right pane.
-  const [selectedJobId, setSelectedJobId] = useState<null | string>(null)
+  const [selectedJobId, setSelectedJobId] = useState<null | string>(() => searchParams.get('job'))
   // Set when another surface asks for a specific job (review toast, keybind) so
   // we scroll it into view once the row exists. Cleared after the scroll fires.
   const pendingScrollRef = useRef<null | string>(null)
   const focusJobId = useStore($cronFocusJobId)
 
   const [editor, setEditor] = useState<EditorState>({ mode: 'closed' })
+  // Existing jobs edit in the detail page so the complete configuration stays
+  // visible. The dialog remains the create surface.
+  const [inlineEditJobId, setInlineEditJobId] = useState<null | string>(null)
   const [pendingDelete, setPendingDelete] = useState<CronJob | null>(null)
 
   // Jobs live per-profile on disk and the list endpoint aggregates 'all' by
@@ -418,6 +436,81 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
     [jobs, query]
   )
 
+  const selectedJob = useMemo(
+    () => visibleJobs.find(job => job.id === selectedJobId) ?? visibleJobs[0] ?? null,
+    [visibleJobs, selectedJobId]
+  )
+
+  const orderedJobs = useMemo(() => [...jobs].sort((a, b) => jobTitle(a).localeCompare(jobTitle(b))), [jobs])
+
+  // A copied link or browser back/forward can select a concrete job before the
+  // list request completes. Keep the URL as the durable selection source.
+  useEffect(() => {
+    const requested = searchParams.get('job')
+
+    if (requested && jobs.some(job => job.id === requested)) {
+      setSelectedJobId(current => (current === requested ? current : requested))
+    }
+  }, [jobs, searchParams])
+
+  const selectJob = useCallback(
+    (id: string, replace = false) => {
+      setSelectedJobId(id)
+      setSearchParams(current => {
+        const next = new URLSearchParams(current)
+        next.set('job', id)
+
+        return next
+      }, { replace })
+    },
+    [setSearchParams]
+  )
+
+  useEffect(() => {
+    const selectedId = selectedJob?.id
+    const requested = searchParams.get('job')
+
+    if (!selectedId || requested === selectedId || (requested && jobs.some(job => job.id === requested))) {
+      return
+    }
+
+    setSearchParams(current => {
+      const next = new URLSearchParams(current)
+      next.set('job', selectedId)
+
+      return next
+    }, { replace: true })
+  }, [jobs, searchParams, selectedJob?.id, setSearchParams])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+
+      if (
+        !event.metaKey ||
+        !event.altKey ||
+        (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') ||
+        !orderedJobs.length ||
+        target?.matches('input, textarea, [contenteditable="true"]')
+      ) {
+        return
+      }
+
+      const currentIndex = orderedJobs.findIndex(job => job.id === selectedJob?.id)
+      const delta = event.key === 'ArrowDown' ? 1 : -1
+      const nextIndex = Math.min(orderedJobs.length - 1, Math.max(0, currentIndex + delta))
+
+      if (nextIndex !== currentIndex) {
+        event.preventDefault()
+        selectJob(orderedJobs[nextIndex].id)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [orderedJobs, selectJob, selectedJob?.id])
+
   // Blueprint recipes render in the same list rail, below the jobs — clicking
   // one opens the create dialog pre-seeded to that recipe. Same query key as
   // the dialog's "Start from" dropdown, so the catalog is fetched once.
@@ -434,13 +527,6 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
 
     return needle ? list.filter(item => `${item.title} ${item.description}`.toLowerCase().includes(needle)) : list
   }, [blueprintsQuery.data, query])
-
-  // Detail always reflects a concrete job: the explicitly selected one, else the
-  // first visible row, so the right pane is never empty while jobs exist.
-  const selectedJob = useMemo(
-    () => visibleJobs.find(job => job.id === selectedJobId) ?? visibleJobs[0] ?? null,
-    [visibleJobs, selectedJobId]
-  )
 
   // Scroll a job another surface asked for into view once its row is mounted.
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
@@ -654,6 +740,18 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
     setEditor({ mode: 'closed' })
   }
 
+  async function handleInlineUpdate(job: CronJob, updates: CronJobUpdates): Promise<void> {
+    const { refreshError, stale, value } = await mutateAndRefreshCronJobs(profile, () => updateCronJob(job.id, updates))
+
+    if (stale || !value) {
+      return
+    }
+
+    if (refreshError) {
+      notifyError(refreshError, c.failedLoad)
+    }
+  }
+
   // Blueprint instantiation is a distinct backend path (fills typed slots, then
   // creates the job) so it can't share the raw-cron onSave contract. Merge the
   // created job into $cronJobs like every other create path.
@@ -729,7 +827,7 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
           )}
         </div>
       ) : (
-        <MasterDetail>
+        <MasterDetail resizeId="cron-jobs" split="wide">
           <ListColumn
             header={
               visibleJobs.length > 0 ? (
@@ -743,11 +841,11 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
                 job={job}
                 key={job.id}
                 menuItems={[
-                  { icon: 'edit', label: c.edit, onSelect: () => setEditor({ mode: 'edit', job }) },
+                  { icon: 'edit', label: c.edit, onSelect: () => setInlineEditJobId(job.id) },
                   { icon: 'trash', label: t.common.delete, onSelect: () => setPendingDelete(job), tone: 'danger' }
                 ]}
                 menuLabel={`${c.manage}: ${jobTitle(job)}`}
-                onSelect={() => setSelectedJobId(job.id)}
+                onSelect={() => selectJob(job.id)}
               />
             ))}
             {visibleJobs.length === 0 && visibleBlueprints.length === 0 && (
@@ -785,8 +883,11 @@ export function CronView({ onOpenSession, ...props }: CronViewProps) {
               <CronJobDetail
                 busy={busyJobTokens.has(selectedJob.id) || triggeringJobKeys.has(`${profile}:${selectedJob.id}`)}
                 c={c}
+                editing={inlineEditJobId === selectedJob.id}
                 job={selectedJob}
-                onEdit={() => setEditor({ mode: 'edit', job: selectedJob })}
+                onEdit={() => setInlineEditJobId(selectedJob.id)}
+                onEditClose={() => setInlineEditJobId(null)}
+                onInlineUpdate={values => handleInlineUpdate(selectedJob, values)}
                 onOpenSession={onOpenSession}
                 onPauseResume={() => void handlePauseResume(selectedJob)}
                 onPendingRunSettled={settlePendingTrigger}
@@ -887,8 +988,11 @@ function CronJobListRow({
 interface CronJobDetailProps {
   busy: boolean
   c: Translations['cron']
+  editing: boolean
   job: CronJob
   onEdit: () => void
+  onEditClose: () => void
+  onInlineUpdate: (updates: CronJobUpdates) => Promise<void>
   onOpenSession?: (sessionId: string, session?: SessionInfo) => void
   onPauseResume: () => void
   onPendingRunSettled: (key: string, requestedAt: number) => void
@@ -900,8 +1004,11 @@ interface CronJobDetailProps {
 function CronJobDetail({
   busy,
   c,
+  editing,
   job,
   onEdit,
+  onEditClose,
+  onInlineUpdate,
   onOpenSession,
   onPauseResume,
   onPendingRunSettled,
@@ -909,6 +1016,7 @@ function CronJobDetail({
   pendingJobKey,
   pendingRunAt
 }: CronJobDetailProps) {
+  const { t } = useI18n()
   const state = jobState(job)
   const isPaused = state === 'paused'
   const deliver = jobDeliver(job)
@@ -927,9 +1035,15 @@ function CronJobDetail({
             <PanelPill tone={STATE_TONE[state] ?? 'muted'}>{c.states[state] ?? state}</PanelPill>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
-              {c.editJob}
-            </PanelAction>
+            {editing ? (
+              <PanelAction disabled={busy} icon="close" onClick={onEditClose}>
+                {t.common.cancel}
+              </PanelAction>
+            ) : (
+              <PanelAction disabled={busy} icon="edit" onClick={onEdit}>
+                {c.editJob}
+              </PanelAction>
+            )}
             <PanelAction disabled={busy} icon={isPaused ? 'play' : 'debug-pause'} onClick={onPauseResume}>
               {isPaused ? c.resumeTitle : c.pauseTitle}
             </PanelAction>
@@ -978,7 +1092,9 @@ function CronJobDetail({
         ) : null}
       </header>
 
-      {description ? (
+      {editing ? (
+        <CronJobInlineEditor c={c} job={job} key={job.id} onUpdate={onInlineUpdate} />
+      ) : description ? (
         <section className="space-y-1">
           <PanelSectionLabel>{scriptOnly && !prompt ? c.scriptLabel : c.promptLabel}</PanelSectionLabel>
           <PanelBlock>{description}</PanelBlock>

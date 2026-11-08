@@ -428,6 +428,17 @@ export function setSessionPinnedRemote(id: string, pinned: boolean, profile?: st
   return mutateSessionHttp(id, 'PATCH', { pinned }, sessionWriteProfile(profile))
 }
 
+/** Persist the private note attached to a chat. It uses the same fenced session
+ * mutation path as archive/pin so profile and compression-lineage ownership stay
+ * explicit. The note is a session field and never enters the transcript. */
+export function setSessionScratchpadRemote(
+  id: string,
+  scratchpad: null | string,
+  profile?: ProfileScope
+): Promise<{ ok: boolean }> {
+  return mutateSessionHttp(id, 'PATCH', { scratchpad }, profile)
+}
+
 export function setSessionUnreadRemote(id: string, unread: boolean, profile?: string | null): Promise<{ ok: boolean }> {
   return mutateSessionHttp(id, 'PATCH', { unread }, sessionWriteProfile(profile))
 }

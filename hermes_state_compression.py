@@ -350,16 +350,16 @@ class SessionCompressionMixin:
                    system_prompt_hash, tool_names,
                    parent_session_id, cwd, git_branch, git_repo_root,
                    profile_name, user_id, session_key, chat_id, chat_type,
-                   thread_id, display_name, origin_json, pinned, started_at,
+                   thread_id, display_name, origin_json, scratchpad, pinned, started_at,
                    archived, auto_archived
-                ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                ) VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 child_session_id, source, created_source, model, json.dumps(model_config) if model_config else None,
                 system_prompt_hash, parent["tool_names"], parent_session_id, cwd or parent["cwd"], parent["git_branch"],
                 parent["git_repo_root"],
                 profile_name or parent["profile_name"] or self._own_profile_name(),
                 parent["user_id"], parent["session_key"], parent["chat_id"], parent["chat_type"],
-                parent["thread_id"], parent["display_name"], parent["origin_json"],
+                parent["thread_id"], parent["display_name"], parent["origin_json"], parent["scratchpad"],
                 # The pin is lineage-wide (set_session_pinned); a segment published after it joins it.
                 int(parent["pinned"] or 0) if continuation else 0, time.time(),
                 # Inherit the lineage's archive state so a manually archived chat stays uniformly
@@ -422,7 +422,7 @@ class SessionCompressionMixin:
         parent = conn.execute(
             """SELECT ended_at, end_reason, cwd, git_branch, git_repo_root,
                       user_id, session_key, chat_id, chat_type,
-                      thread_id, display_name, origin_json, profile_name, tool_names,
+                      thread_id, display_name, origin_json, profile_name, tool_names, scratchpad,
                       archived, auto_archived, pinned, model_config, created_source
                FROM sessions WHERE id = ?""",
             (parent_session_id,),

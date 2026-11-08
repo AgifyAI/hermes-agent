@@ -15,6 +15,7 @@ import {
 } from '@/components/pane-shell/tree/store'
 import { setWorkspaceScope } from '@/components/pane-shell/workspace-scope'
 import { onReleaseTypingFocus } from '@/components/ui/keyboard-first'
+import { listAllProfileSessions, type SessionInfo } from '@/hermes'
 import { translateNow } from '@/i18n/runtime'
 import { sessionTitle } from '@/lib/chat-runtime'
 import { findBarClaimsCombo } from '@/lib/find-in-page'
@@ -54,6 +55,7 @@ import {
 import { notifyError } from '@/store/notifications'
 import { toggleBrowserTab } from '@/store/preview'
 import {
+  $activeGatewayProfile,
   $newChatProfile,
   cycleProfile,
   requestProfileCreate,
@@ -95,12 +97,7 @@ import { requestThreadPageScroll } from '@/store/thread-scroll'
 import { openNewWindow } from '@/store/windows'
 import { useTheme } from '@/themes/context'
 
-import {
-  requestComposerDictation,
-  requestComposerFocus,
-  requestModelMenuToggle,
-  requestVoiceToggle
-} from '../chat/composer/focus'
+import { requestComposerFocus, requestModelMenuToggle } from '../chat/composer/focus'
 import { handleComposerFocusChord } from '../chat/composer/focus-chord'
 import { handleWindowPaste } from '../chat/composer/paste-to-focus'
 import { openSession } from '../open-session'
@@ -148,6 +145,9 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
   // Keep the latest closures without re-subscribing the listener.
   const handlersRef = useRef<HandlerMap>({})
   const commitSwitcherRef = useRef<() => void>(() => {})
+  const conversationListRef = useRef<{ profile: string; sessions: SessionInfo[]; updatedAt: number } | null>(null)
+  const conversationListPromiseRef = useRef<{ profile: string; promise: Promise<SessionInfo[]> } | null>(null)
+  const conversationCursorRef = useRef<{ baseId: string; profile: string; targetId: string } | null>(null)
 
   const profileSwitchHandlers: HandlerMap = {}
 
@@ -227,6 +227,107 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     }
   }
 
+  // The conversation walk uses the complete active-profile list rather than
+  // the sidebar's current page. That makes ⌘⌥↓ cross a day boundary in one
+  // step and keeps the result independent of collapsed date sections or lazy
+  // pagination. The selected row remains the anchor even when a different
+  // tab currently has focus.
+  const loadConversations = async (profile: string): Promise<SessionInfo[]> => {
+    const cached = conversationListRef.current
+
+    if (cached && cached.profile === profile && Date.now() - cached.updatedAt < 5_000) {
+      return cached.sessions
+    }
+
+    const pending = conversationListPromiseRef.current
+
+    if (pending?.profile === profile) {
+      return pending.promise
+    }
+
+    const request = (async () => {
+      let page = await listAllProfileSessions(200, 1, 'exclude', 'recent', profile)
+      const sessionsById = new Map(page.sessions.map(session => [session.id, session]))
+      const total = page.profile_totals?.[profile] ?? page.total
+      let offset = page.sessions.length
+
+      while (sessionsById.size < total && page.sessions.length > 0) {
+        page = await listAllProfileSessions(200, 1, 'exclude', 'recent', profile, {}, offset)
+        page.sessions.forEach(session => sessionsById.set(session.id, session))
+        offset += page.sessions.length
+      }
+
+      const sessions = [...sessionsById.values()]
+      conversationListRef.current = { profile, sessions, updatedAt: Date.now() }
+
+      return sessions
+    })()
+
+    conversationListPromiseRef.current = { profile, promise: request }
+
+    try {
+      return await request
+    } finally {
+      if (conversationListPromiseRef.current?.promise === request) {
+        conversationListPromiseRef.current = null
+      }
+    }
+  }
+
+  const stepConversation = async (direction: 1 | -1) => {
+    if (appViewForPath(location.pathname) !== 'chat') {
+      return
+    }
+
+    const currentId = $selectedStoredSessionId.get() ?? $focusedStoredSessionId.get()
+
+    if (!currentId) {
+      return
+    }
+
+    const loaded = [...$sessions.get(), ...$messagingSessions.get()].find(row => sessionMatchesStoredId(row, currentId))
+
+    const profile = loaded?.profile?.trim() || $activeGatewayProfile.get() || 'default'
+
+    try {
+      const sessions = await loadConversations(profile)
+      const cursor = conversationCursorRef.current
+      let anchorId = currentId
+
+      if (cursor?.profile === profile) {
+        // A route update can land between two key events. If it has not landed
+        // yet, continue from the optimistic target; if it has, use that target
+        // as the new real anchor. Any other current row means the user changed
+        // chats by another route, so discard the cursor.
+        if (cursor.baseId === currentId) {
+          anchorId = cursor.targetId
+        } else if (cursor.targetId !== currentId) {
+          conversationCursorRef.current = null
+        }
+      }
+
+      const currentIndex = sessions.findIndex(row => sessionMatchesStoredId(row, anchorId))
+
+      if (currentIndex < 0) {
+        conversationCursorRef.current = null
+
+        return
+      }
+
+      const target = sessions[currentIndex + direction]
+
+      if (target) {
+        conversationCursorRef.current = { baseId: currentId, profile, targetId: target.id }
+        goToSession(target.id)
+      } else {
+        conversationCursorRef.current = null
+      }
+    } catch {
+      // Conversation navigation is a convenience action. A transient list
+      // failure leaves the currently open chat untouched.
+    }
+  }
+
   const showFiles = () => {
     setFileBrowserOpen(true)
     setTerminalTakeover(false)
@@ -288,8 +389,6 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
         setModelPickerOpen(true)
       }
     },
-    'composer.voice': requestVoiceToggle,
-    'composer.dictate': requestComposerDictation,
     'composer.reasoningUp': () => stepSessionReasoning(1),
     'composer.reasoningDown': () => stepSessionReasoning(-1),
 
@@ -326,6 +425,8 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'session.newWindow': () => void openNewWindow(),
     'session.next': () => cycleTab(1),
     'session.prev': () => cycleTab(-1),
+    'session.nextConversation': () => void stepConversation(1),
+    'session.prevConversation': () => void stepConversation(-1),
     ...sessionSlotHandlers,
     ...tabSlotHandlers,
     'session.focusSearch': requestSessionSearchFocus,

@@ -1690,17 +1690,14 @@ class TestSessionTitle:
         session = db.get_session("s1")
         assert session["title"] is None
 
-    @pytest.mark.parametrize("holder_has_message,holder_hidden,holder_ended,yields", [
-        (False, False, True, True),    # ended empty visible ghost yields its title (#81888)
-        (False, False, False, False),  # live empty session (/title before its first turn) keeps it
-        (False, True, True, False),    # hidden empty row (fresh canonical Bot Chat) keeps it
-        (True, False, True, False),    # a real conversation keeps it
+    @pytest.mark.parametrize("holder_has_message,holder_hidden,holder_ended", [
+        (False, False, True),
+        (False, False, False),
+        (False, True, True),
+        (True, False, True),
     ])
-    def test_title_conflict_yields_only_to_ended_empty_visible_holder(self, db, holder_has_message, holder_hidden,
-                                                                      holder_ended, yields):
-        """A title holder yields only when it is ended, empty, visible and unarchived (#81888);
-        every other holder still conflicts. The ghost stays writable afterwards (no partial
-        unique index to trip on its first append_message)."""
+    def test_duplicate_titles_are_retained(self, db, holder_has_message, holder_hidden, holder_ended):
+        """Session names are labels and may be reused without rewriting either row."""
         db.create_session("ghost", "desktop")
         db.set_session_title("ghost", "Canada")
         if holder_has_message:
@@ -1710,16 +1707,12 @@ class TestSessionTitle:
             db.end_session("ghost", "user_exit")
         db.create_session("real", "desktop")
         db.append_message("real", "user", "Hello")
-        if not yields:
-            with pytest.raises(ValueError, match="already in use"):
-                db.set_session_title("real", "Canada")
-            assert db.get_session("ghost")["title"] == "Canada"
-            return
         assert db.set_session_title("real", "Canada")
-        assert db.get_session("ghost")["title"] is None
+        assert db.get_session("ghost")["title"] == "Canada"
         assert db.resolve_session_by_title("Canada") == "real"
-        db.append_message("ghost", "user", "late first message")
-        assert db.get_session("ghost")["message_count"] == 1
+        if not holder_has_message and not holder_ended:
+            db.append_message("ghost", "user", "late first message")
+            assert db.get_session("ghost")["message_count"] == 1
 
 
 class TestSessionTitleIndexRepair:
@@ -1747,7 +1740,7 @@ class TestSessionTitleIndexRepair:
 
         return db_path
 
-    def test_duplicate_titles_are_repaired_without_deleting_sessions(self, tmp_path):
+    def test_duplicate_titles_are_preserved_without_deleting_sessions(self, tmp_path):
         db_path = self._seed_legacy_database(tmp_path, duplicate_titles=True)
 
         reopened = SessionDB(db_path=db_path)
@@ -1761,10 +1754,9 @@ class TestSessionTitleIndexRepair:
                 ).fetchall()
             }
             assert set(rows) == {"older", "newer", "unique"}
-            # NULL title_source ranks as user: neither is dropped; the newer gets "#2" so the
-            # "#N"-preferring title lookup still opens the newest session.
+            # Existing duplicate labels remain unchanged when the database is reopened.
             assert rows["older"]["title"] == "shared-title"
-            assert rows["newer"]["title"] == "shared-title #2"
+            assert rows["newer"]["title"] == "shared-title"
             assert reopened.resolve_session_by_title("shared-title") == "newer"
             assert rows["unique"]["title"] == "unique-title"
             assert reopened.get_messages("older")[0]["content"] == "keep older message"
@@ -1773,7 +1765,12 @@ class TestSessionTitleIndexRepair:
                 "SELECT sql FROM sqlite_master "
                 "WHERE type = 'index' AND name = 'idx_sessions_title_unique'"
             ).fetchone()
-            assert index is not None
+            assert index and "title = 'Bot Chat'" in index[0]
+            lookup_index = conn.execute(
+                "SELECT sql FROM sqlite_master "
+                "WHERE type = 'index' AND name = 'idx_sessions_title'"
+            ).fetchone()
+            assert lookup_index and "ON sessions(title)" in lookup_index[0]
         finally:
             reopened.close()
 
@@ -1801,12 +1798,11 @@ class TestSessionTitleIndexRepair:
         reopened = SessionDB(db_path=db_path)
         try:
             titles = dict(reopened._conn.execute("SELECT id, title FROM sessions").fetchall())
-            expected = ({sid: row[0] for sid, row in seed.items()} if broken_rename else
-                        {"a": "Trip", "b": None, "c": "Note", "d": None, "e": "Trip #2"})
+            expected = {sid: row[0] for sid, row in seed.items()}
             assert titles == expected
             assert bool(reopened._conn.execute(
                 "SELECT 1 FROM sqlite_master WHERE name = 'idx_sessions_title_unique'"
-            ).fetchone()) is not broken_rename
+            ).fetchone())
         finally:
             reopened.close()
 
@@ -1848,14 +1844,13 @@ class TestSessionTitleLineage:
         assert db.get_session("root")["title"] is None
 
 
-    def test_unrelated_session_still_conflicts(self, db):
+    def test_unrelated_session_can_reuse_a_title(self, db):
         db.create_session("a", "cli")
         db.create_session("b", "cli")
         db.set_session_title("a", "shared")
-        with pytest.raises(ValueError, match="already in use"):
-            db.set_session_title("b", "shared")
-        # The unrelated holder keeps its title.
+        assert db.set_session_title("b", "shared")
         assert db.get_session("a")["title"] == "shared"
+        assert db.get_session("b")["title"] == "shared"
 
     def test_projected_tip_inherits_root_title_when_untitled(self, db):
         """A rotation that ended the root before the title carry ran leaves the name on the

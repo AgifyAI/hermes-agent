@@ -1093,7 +1093,7 @@ export function useSessionActions({
           await closeCreated.catch(() => undefined)
           notify({ kind: 'error', title: copy.sessionUnavailable, message: copy.createSessionFailed })
 
-          return
+          return undefined
         }
 
         markSessionCreatedThisRun(stored)
@@ -1135,8 +1135,12 @@ export function useSessionActions({
         if (listed) {
           broadcastSessionsChanged()
         }
+
+        return stored
       } catch (error) {
         notifyError(error, copy.createSessionFailed)
+
+        return undefined
       }
     },
     [copy, requestGateway, updateSessionState]

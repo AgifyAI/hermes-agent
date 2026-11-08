@@ -956,6 +956,37 @@ export function applySessionTitle(storedSessionId: string | null | undefined, ti
   setUnlistedSessionOwnerRows(patch)
 }
 
+/** Patch the private note on every sidebar row carrying this conversation.
+ * Compression tips and session slices can each expose a different id, so use
+ * the same lineage matcher as title/archive mutations. */
+export function applySessionScratchpad(storedSessionId: string | null | undefined, scratchpad: null | string): void {
+  const id = storedSessionId?.trim()
+
+  if (!id) {
+    return
+  }
+
+  const patch = (rows: SessionInfo[]): SessionInfo[] => {
+    let changed = false
+    const mapped = rows.map(session => {
+      if (!sessionMatchesStoredId(session, id) || session.scratchpad === scratchpad) {
+        return session
+      }
+
+      changed = true
+
+      return { ...session, scratchpad }
+    })
+
+    return changed ? mapped : rows
+  }
+
+  setSessions(patch)
+  setCronSessions(patch)
+  setMessagingSessions(patch)
+  setUnlistedSessionOwnerRows(patch)
+}
+
 export const $connection = atom<HermesConnection | null>(null)
 export const $gatewayState = atom<ConnectionState>('idle')
 export const $sessions = atom<SessionInfo[]>([])

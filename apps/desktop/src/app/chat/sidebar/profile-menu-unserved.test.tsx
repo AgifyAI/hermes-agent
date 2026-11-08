@@ -62,6 +62,7 @@ vi.mock('@/store/profile', () => ({
   $activeGatewayProfile: atom('solo'),
   $profileColors: atom({}),
   $profileCreateRequest: atom(0),
+  $profileNicknames: atom({}),
   $profileOrder: atom([]),
   $profiles: atom([
     { is_default: true, name: 'default' },

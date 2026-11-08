@@ -21,6 +21,9 @@ import { SidebarPanelLabel } from '../shell/sidebar-label'
 
 import { ProjectTree } from './files/tree'
 import { useProjectTree } from './files/use-project-tree'
+import { MemorySection } from './memory-section'
+import { QueueSection } from './queue-section'
+import { ScratchpadSection } from './scratchpad'
 
 interface RightSidebarPaneProps {
   onActivateFile: (path: string) => void
@@ -98,6 +101,9 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
         panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >
+      <MemorySection />
+      <QueueSection />
+      <ScratchpadSection />
       <FilesystemTab
         canCollapse={canCollapse}
         collapseNonce={collapseNonce}

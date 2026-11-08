@@ -576,6 +576,8 @@ export interface SessionCreateResponse {
 
 export interface SessionInfo {
   archived?: boolean
+  /** Private user scratchpad. Persisted with the session, never sent to the agent. */
+  scratchpad?: null | string
   cwd?: null | string
   /** Git branch checked out in {@link cwd} when the session started/resumed.
    *  The sidebar groups main-checkout sessions by this so feature-branch work
@@ -1049,21 +1051,34 @@ export interface AnalyticsTotals {
 }
 
 export interface CronJob {
+  attach_to_session?: boolean
+  base_url?: null | string
+  context_from?: null | string[]
   deliver?: null | string
   enabled: boolean
+  enabled_toolsets?: null | string[]
+  failure_deliver?: null | string
   id: string
+  interpreter?: null | string
   last_error?: null | string
   last_run_at?: null | string
   model?: null | string
   name?: null | string
+  monitor_script?: null | string
+  monitor_url?: null | string
   next_run_at?: null | string
   no_agent?: boolean
   prompt?: null | string
   provider?: null | string
+  reasoning_effort?: null | string
+  repeat?: null | { completed?: number; times?: null | number }
   schedule?: CronJobSchedule
   schedule_display?: null | string
   script?: null | string
+  skill?: null | string
+  skills?: string[]
   state?: null | string
+  workdir?: null | string
 }
 
 export interface CronJobCreatePayload {
@@ -1083,13 +1098,28 @@ export interface CronJobSchedule {
 }
 
 export interface CronJobUpdates {
+  attach_to_session?: boolean
+  base_url?: null | string
+  context_from?: null | string[]
   deliver?: string
   enabled?: boolean
+  enabled_toolsets?: null | string[]
+  failure_deliver?: null | string
+  interpreter?: null | string
   model?: null | string
+  monitor_script?: null | string
+  monitor_url?: null | string
   name?: string
+  no_agent?: boolean
   prompt?: string
   provider?: null | string
+  reasoning_effort?: null | string
+  repeat?: null | number | { completed?: number; times?: null | number }
   schedule?: string
+  script?: null | string
+  skill?: null | string
+  skills?: string[]
+  workdir?: null | string
 }
 
 // A cron delivery target from GET /api/cron/delivery-targets — the single
@@ -1146,11 +1176,15 @@ export interface ProfileCreatePayload {
 }
 
 export interface ProfileInfo {
+  /** Optional Desktop source id for local presentation preferences. */
+  connectionId?: null | string
   /** Presentation-only label override (profile.yaml display_name). */
   display_name?: string
   /** Bot Mode title (profile.yaml ui_meta['hermes-bots'].title) — the name the
    *  Bots roster shows for this profile. Presentation-only. */
   bot_title?: string
+  /** True when the profile has a stored PNG, JPEG or WebP avatar. */
+  has_avatar?: boolean
   has_env: boolean
   is_default: boolean
   model: null | string

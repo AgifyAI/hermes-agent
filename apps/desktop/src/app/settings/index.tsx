@@ -56,7 +56,7 @@ import { AppearanceSettings } from './appearance-settings'
 import { BILLING_VIEWS, BillingSettings, type BillingSubView } from './billing'
 import { deriveBillingView, useBillingState, useSubscriptionState } from './billing/use-billing-state'
 import { ConfigSettings } from './config-settings'
-import { SECTIONS } from './constants'
+import { DESKTOP_SECTIONS } from './constants'
 import { GatewaySettings } from './gateway-settings'
 import { KeybindSettings } from './keybind-settings'
 import { KEYS_VIEWS, KeysSettings, type KeysView } from './keys-settings'
@@ -79,7 +79,7 @@ import { vaultOwnerKey, VaultSettings } from './vault-settings'
 import { useWebAccessAvailable, WebAccessSettings } from './web-access-settings'
 
 const SETTINGS_VIEWS: readonly SettingsViewId[] = [
-  ...SECTIONS.map(s => `config:${s.id}` as SettingsViewId),
+  ...DESKTOP_SECTIONS.map(s => `config:${s.id}` as SettingsViewId),
   'providers',
   'gateway',
   'web-access',
@@ -264,7 +264,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
     () =>
       (
         [
-          ...SECTIONS.flatMap(s => {
+          ...DESKTOP_SECTIONS.flatMap(s => {
             const view = `config:${s.id}` as SettingsViewId
 
             const entry = {

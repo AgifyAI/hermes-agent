@@ -55,7 +55,7 @@ class TestHandleTitleCommand:
 
     @pytest.mark.asyncio
     async def test_title_conflict(self, tmp_path):
-        """Setting a title already used by another session returns error."""
+        """Setting a title already used by another session keeps both labels."""
         from hermes_state import SessionDB
         db = SessionDB(db_path=tmp_path / "state.db")
         db.create_session("other_session", "telegram")
@@ -65,7 +65,8 @@ class TestHandleTitleCommand:
         runner = _make_runner(session_db=db)
         event = _make_event(text="/title Taken Title")
         result = await runner._handle_title_command(event)
-        assert "already in use" in result
+        assert "Taken Title" in result
+        assert db.get_session_title("test_session_123") == "Taken Title"
         db.close()
 
     @pytest.mark.asyncio
@@ -130,8 +131,8 @@ class TestResetCommandWithTitle:
     """Tests for GatewayRunner._handle_reset_command with a title argument."""
 
     @pytest.mark.asyncio
-    async def test_reset_command_duplicate_title_surfaces_warning(self):
-        """/new <title> with an already-in-use title returns a warning in the reply."""
+    async def test_reset_command_title_error_surfaces_warning(self):
+        """/new <title> reports a backend title error without losing the new session."""
         from datetime import datetime
 
         from gateway.run import GatewayRunner
@@ -174,23 +175,21 @@ class TestResetCommandWithTitle:
         runner._pending_messages = {}
         runner._pending_approvals = {}
         runner._session_db = AsyncMock()
-        runner._session_db.set_session_title.side_effect = ValueError(
-            "Title 'Dup' is already in use by session abc-123"
-        )
+        runner._session_db.set_session_title.side_effect = ValueError("Title cannot be stored")
         runner._agent_cache = {}
         runner._agent_cache_lock = None
         runner._is_user_authorized = lambda _source: True
         runner._format_session_info = lambda: ""
 
-        event = _make_event(text="/new Dup")
+        event = _make_event(text="/new New title")
         result = await runner._handle_reset_command(event)
 
         runner._session_db.set_session_title.assert_called_once()
         reply = str(result)
-        assert "already in use" in reply
+        assert "Title cannot be stored" in reply
         assert "session started untitled" in reply
         # Header must NOT claim the rejected title as the session name
-        assert "New session started: Dup" not in reply
+        assert "New session started: New title" not in reply
 
 # ---------------------------------------------------------------------------
 # /new in help output

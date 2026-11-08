@@ -391,7 +391,7 @@ const REGISTRY_DESKTOP_SURFACE: Readonly<Record<string, string | null>> = deskto
  */
 export const TS_ONLY_NO_DESKTOP_SURFACE: Record<DesktopUnavailableReason, readonly string[]> = {
   advanced: [],
-  'composer-voice': [],
+  'composer-voice': ['/wake'],
   messaging: [],
   settings: [],
   terminal: ['/density', '/details', '/logs', '/mouse', '/pets']
@@ -551,8 +551,7 @@ function isAliasCommand(command: string): boolean {
 const UNAVAILABLE_MESSAGE: Record<DesktopUnavailableReason, (command: string) => string> = {
   advanced: command =>
     `${command} is not shown in the desktop slash palette. Use the relevant desktop control or terminal interface instead.`,
-  'composer-voice': () =>
-    'Voice chat lives in the composer here: click the microphone button and choose "Start voice chat", or use the voice shortcut from Settings → Keyboard Shortcuts.',
+  'composer-voice': () => 'Voice features are not available in the Desktop app.',
   messaging: command => `${command} is only used from messaging platforms.`,
   settings: command => `${command} is managed from the desktop sidebar.`,
   terminal: command => `${command} is only available in the terminal interface.`

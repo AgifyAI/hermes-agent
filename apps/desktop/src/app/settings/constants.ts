@@ -869,6 +869,12 @@ export const SECTIONS: DesktopConfigSection[] = [
   }
 ]
 
+/** Voice is still understood by shared config readers for other clients, but
+ *  the Electron Desktop no longer exposes a voice surface. Keep the complete
+ *  schema list above for config compatibility and use this list for navigation
+ *  and search only. */
+export const DESKTOP_SECTIONS = SECTIONS.filter(section => section.id !== 'voice')
+
 export interface ModeOption {
   id: ThemeMode
   label: string

@@ -17,33 +17,21 @@ import {
   type MenuKit,
   renderActionItem
 } from '@/components/ui/actions-menu'
-import { Codicon } from '@/components/ui/codicon'
-import { ColorSwatches } from '@/components/ui/color-swatches'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CopyButton } from '@/components/ui/copy-button'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { ArchiveOff } from '@/lib/icons'
-import { PROFILE_SWATCHES } from '@/lib/profile-color'
 import { exportSession } from '@/lib/session-export'
-import { notify, notifyError } from '@/store/notifications'
-import {
-  $projectTree,
-  moveSessionToProject,
-  projectIdForCwd,
-  projectRootCwd,
-  refreshProjectTree
-} from '@/store/projects'
+import { notifyError } from '@/store/notifications'
 import {
   $connection,
   $selectedStoredSessionId,
   $sessions,
   $unreadFinishedSessionIds,
   markSessionRead,
-  sessionMatchesStoredId,
-  sessionPinId
+  sessionMatchesStoredId
 } from '@/store/session'
-import { $sessionColorOverrides, setSessionColorOverride } from '@/store/session-color'
 import { requestSessionRename } from '@/store/session-rename'
 import { $sessionTiles, closeAllOpenSessionTiles } from '@/store/session-states'
 import { ackStoredSessionId } from '@/store/session-unread'
@@ -83,75 +71,6 @@ interface SessionActions {
   /** The MAIN tab's escape hatch: hide the zone's tab bar (it sticky-shows
    *  once a tab is ever gained; this is the explicit off switch). */
   onHideTabBar?: () => void
-}
-
-// The color picker inside the session menu's Appearance submenu. Its own
-// component so only an OPEN submenu subscribes to the stores (not every row's
-// menu). Reads/writes the override keyed by the DURABLE id so a color survives
-// compression; clearing falls back to the inherited project color.
-function SessionColorSwatches({ sessionId }: { sessionId: string }) {
-  const { t } = useI18n()
-  const overrides = useStore($sessionColorOverrides)
-  const session = useStore($sessions).find(s => sessionMatchesStoredId(s, sessionId))
-  const durableId = session ? sessionPinId(session) : sessionId
-
-  return (
-    <ColorSwatches
-      clearIcon="circle-slash"
-      clearLabel={t.sidebar.projects.noColor}
-      onChange={color => setSessionColorOverride(durableId, color)}
-      swatches={PROFILE_SWATCHES}
-      value={overrides[durableId] ?? null}
-    />
-  )
-}
-
-// The project list inside the session menu's "Move to project" submenu. Its own
-// component so only an OPEN submenu subscribes to the stores (same reasoning as
-// SessionColorSwatches). Re-homes the session's workspace at the target
-// project's root — the fix for a chat created in the wrong folder. The current
-// owner and folderless projects (the Home bucket) are excluded: there is
-// nothing to move into.
-function MoveToProjectItems({ kit, sessionId, profile }: { kit: MenuKit; sessionId: string; profile?: string }) {
-  const { t } = useI18n()
-  const p = t.sidebar.projects
-  const tree = useStore($projectTree)
-  const session = useStore($sessions).find(s => sessionMatchesStoredId(s, sessionId))
-  const cwd = session?.cwd?.trim() || ''
-  const currentProjectId = cwd ? projectIdForCwd(cwd) : null
-  const targets = tree.filter(node => node.id !== currentProjectId && !node.isNoProject && projectRootCwd(node))
-
-  // The flat (non-grouped) sidebar view only warms $projectTree on a
-  // background timer (PROJECT_TREE_WARM_MS in sidebar/index.tsx), so opening
-  // this submenu before that timer fires — or before the grouped view has
-  // ever been visited this run — showed "No other projects" even when
-  // projects exist. Refresh on open so the list is authoritative regardless
-  // of sidebar grouping state or timing.
-  useEffect(() => {
-    void refreshProjectTree()
-  }, [])
-
-  if (targets.length === 0) {
-    return <kit.Item disabled>{p.moveNoProjects}</kit.Item>
-  }
-
-  return (
-    <>
-      {targets.map(node => (
-        <kit.Item
-          key={node.id}
-          onSelect={() => {
-            triggerHaptic('selection')
-            moveSessionToProject(sessionId, node.id, profile)
-              .then(() => notify({ durationMs: 2_000, kind: 'success', message: p.movedTo(node.label) }))
-              .catch(err => notifyError(err, p.moveFailed))
-          }}
-        >
-          {node.label}
-        </kit.Item>
-      ))}
-    </>
-  )
 }
 
 function useSessionActions({
@@ -450,15 +369,6 @@ function useSessionActions({
       {openItems.map(item => renderActionItem(kit, item))}
       {openItems.length > 0 && <kit.Separator />}
       {identityItems.map(item => renderActionItem(kit, item))}
-      <kit.Sub>
-        <kit.SubTrigger disabled={!sessionId}>
-          <Codicon name="symbol-color" size="0.875rem" />
-          <span>{t.sidebar.projects.menuAppearance}</span>
-        </kit.SubTrigger>
-        <kit.SubContent className="p-2">
-          <SessionColorSwatches sessionId={sessionId} />
-        </kit.SubContent>
-      </kit.Sub>
       <CopyButton
         appearance={kit.copyAppearance}
         disabled={!sessionId}
@@ -471,15 +381,6 @@ function useSessionActions({
       />
       <kit.Separator />
       {workItems.map(item => renderActionItem(kit, item))}
-      <kit.Sub>
-        <kit.SubTrigger disabled={!sessionId}>
-          <Codicon name="folder" size="0.875rem" />
-          <span>{t.sidebar.projects.moveToProject}</span>
-        </kit.SubTrigger>
-        <kit.SubContent>
-          <MoveToProjectItems kit={kit} profile={profile} sessionId={sessionId} />
-        </kit.SubContent>
-      </kit.Sub>
       {tabItems.length > 0 && (
         <>
           <kit.Separator />
@@ -591,6 +492,43 @@ interface SessionContextMenuProps extends SessionActions {
 export function SessionContextMenu({ children, ...actions }: SessionContextMenuProps) {
   const { t } = useI18n()
   const { deleteDialog, onCloseAutoFocus, renderItems } = useSessionActions(actions)
+  const [open, setOpen] = useState(false)
+
+  // A right-click menu is a keyboard target in its own right. Keep the
+  // selected session in the main pane untouched, but let A/P act on the row
+  // whose menu is open. Archived rows reuse the same callback for restore.
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return
+      }
+
+      const key = event.key.toLowerCase()
+
+      if (key !== 'a' && key !== 'p') {
+        return
+      }
+
+      const action = key === 'a' ? actions.onArchive : actions.onPin
+
+      if (!action) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+      triggerHaptic('selection')
+      action()
+    }
+
+    document.addEventListener('keydown', onKeyDown, true)
+
+    return () => document.removeEventListener('keydown', onKeyDown, true)
+  }, [actions.onArchive, actions.onPin, open])
 
   return (
     <>
@@ -598,6 +536,7 @@ export function SessionContextMenu({ children, ...actions }: SessionContextMenuP
         ariaLabel={t.sidebar.row.sessionActions}
         items={renderItems}
         onCloseAutoFocus={onCloseAutoFocus}
+        onOpenChange={setOpen}
       >
         {children}
       </ActionsContextMenu>

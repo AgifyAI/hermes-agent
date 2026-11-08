@@ -167,7 +167,8 @@ async def test_editing_ones_own_branch_leaves_another_logins_parent_alone(tmp_pa
 @pytest.mark.parametrize('root_owner', ['basic:bob', None])
 async def test_renaming_ones_own_branch_leaves_another_logins_parent_title_alone(tmp_path, root_owner):
     """#144596 round-2 review F1: a rename transfers a title off a compression ancestor. alice's branch
-    of bob's compressed chat is not his continuation, so taking his title is a conflict, not a transfer."""
+    of bob's compressed chat is not his continuation, so taking his title leaves both conversations
+    independently named."""
     from types import SimpleNamespace
     from gateway.session_authority import SessionAuthority
     from gateway.session_contract import SessionRef
@@ -190,7 +191,7 @@ async def test_renaming_ones_own_branch_leaves_another_logins_parent_title_alone
         params = {'session_id': 'alice-branch', 'request_id': 'rename', 'operation': 'sidebar',
                   'payload': {'title': 'Bob title'},
                   'expected_revision': db.get_session('alice-branch')['runtime_revision']}
-        with pytest.raises(Exception, match='already in use'):
-            await mutate_session(authority, alice, SessionRef('p', 'alice-branch'), params)
+        await mutate_session(authority, alice, SessionRef('p', 'alice-branch'), params)
         root = db.get_session('root')
         assert (root['title'], root['runtime_revision']) == ('Bob title', before)
+        assert db.get_session('alice-branch')['title'] == 'Bob title'

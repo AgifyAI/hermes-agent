@@ -3,7 +3,6 @@ import { useStore } from '@nanostores/react'
 import { type ComponentProps, type MouseEvent, type ReactNode, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
-import { hudTargetSessionId } from '@/app/hud/handoff'
 import { PANE_TOGGLE_REVEAL_EVENT } from '@/components/pane-shell'
 import { toggleLayoutEditMode } from '@/components/pane-shell/edit-mode'
 import { $narrowOverlayPaneIds } from '@/components/pane-shell/narrow-overlay-state'
@@ -20,7 +19,6 @@ import { formatModifierToken } from '@/lib/keybinds/combo'
 import { isBrowserHostedDesktop } from '@/lib/platform'
 import { cn } from '@/lib/utils'
 import { recordAction } from '@/store/desktop-metrics'
-import { canUseHud, toggleHud } from '@/store/hud'
 import { $interfaceMode, shownInMode, type Tiered } from '@/store/interface-mode'
 import {
   $fileBrowserOpen,
@@ -29,7 +27,6 @@ import {
   CHAT_SIDEBAR_PANE_ID,
   FILE_BROWSER_PANE_ID,
   toggleLeftSide,
-  togglePanesFlipped,
   toggleRightSide
 } from '@/store/layout'
 import { REVIEW_PANE_ID } from '@/store/review'
@@ -229,18 +226,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
     }
   }
 
-  const flipTool: TitlebarTool = {
-    ...TITLEBAR_FIXED_TOOLS['flip-panes'],
-    actionId: 'view.flipPanes',
-    icon: <TitlebarIcon name="arrow-swap" />,
-    id: 'flip-panes',
-    label: t.titlebar.swapSidebarSides,
-    onSelect: () => {
-      triggerHaptic('tap')
-      togglePanesFlipped()
-    }
-  }
-
   const rightSidebarTool: TitlebarTool = {
     ...TITLEBAR_FIXED_TOOLS['right-sidebar'],
     actionId: 'view.toggleRightSidebar',
@@ -291,22 +276,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
       },
       title: t.titlebar.layoutEditorTitle(formatModifierToken('mod'))
     },
-    {
-      ...TITLEBAR_FIXED_TOOLS.hud,
-      // No `title`: TitlebarToolButton passes `title` to TipKeybindLabel as a
-      // text OVERRIDE, so a long sentence there replaces the short label and
-      // crowds the ⌘⇧H hint off the tooltip. Label only — the hint is appended
-      // from the action registry, same as every other tool here.
-      actionId: 'view.toggleHud',
-      hidden: !canUseHud(),
-      icon: <TitlebarIcon name="comment-discussion" />,
-      id: 'hud',
-      label: t.titlebar.enterHud,
-      onSelect: () => {
-        triggerHaptic('open')
-        toggleHud(hudTargetSessionId())
-      }
-    }
   ]
 
   const view = appViewForPath(location.pathname)
@@ -362,7 +331,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const visibleSystemTools = appActionsSide === 'right' ? systemTools.filter(visibleTool) : []
   const visiblePaneTools = tools.filter(visibleTool)
-  const visibleRightFixedTools = [flipTool, rightSidebarTool].filter(visibleTool)
+  const visibleRightFixedTools = [rightSidebarTool].filter(visibleTool)
 
   return (
     <>

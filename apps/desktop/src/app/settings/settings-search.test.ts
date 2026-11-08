@@ -43,9 +43,7 @@ describe('settings search index', () => {
     const entries = buildConfigSearchEntries(schema, config, searchCopy)
 
     expect(entries.map(entry => entry.id)).toEqual([
-      'config-field:display.personality',
-      'config-field:tts.provider',
-      'config-field:tts.edge.voice'
+      'config-field:display.personality'
     ])
     expect(entries[0]).toMatchObject({
       context: 'Chat',
@@ -53,7 +51,7 @@ describe('settings search index', () => {
       label: 'Personality',
       target: { field: 'display.personality', view: 'config:chat' }
     })
-    expect(entries.some(entry => entry.id === 'config-field:tts.openai.voice')).toBe(false)
+    expect(entries.some(entry => entry.id.startsWith('config-field:tts.'))).toBe(false)
   })
 
   it('discovers future tool and setting entries entirely from backend metadata', () => {

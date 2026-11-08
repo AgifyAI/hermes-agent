@@ -116,7 +116,9 @@ class SessionTitlesMixin:
             return []
         if not is_user and current["title"] is not None and self._title_rank(current["title_source"]) >= new_rank:
             return []
-        if title:
+        # A visible user session may freely use the display label "Bot Chat".
+        # Only a hidden row participates in Bot Mode's name-based registry.
+        if title and not (title == self.CANONICAL_BOT_CHAT_TITLE and not bool(current["hidden"])):
             cleared = self._resolve_title_conflict(conn, session_id, title)
             if cleared:
                 affected.append(cleared)
@@ -129,13 +131,19 @@ class SessionTitlesMixin:
         return [*affected, session_id] if changed else affected
 
     def _resolve_title_conflict(self, conn, session_id: str, title: str) -> Optional[str]:
-        """Free ``title`` for ``session_id`` inside the caller's write transaction, or raise
-        ValueError when another session legitimately holds it. The one place the uniqueness
-        rule lives, shared by renames and the API server's create-with-title. Returns the id
-        whose title was cleared (an affected row for mutation receipts), else None."""
+        """Keep the hidden Bot Mode registry unique.
+
+        Ordinary session titles are display labels and may be reused freely.
+        Hidden canonical Bot Chats are the one exception because their exact
+        name is how Bot Mode finds the persistent conversation. The schema's
+        partial index protects the same rule during concurrent writes, while
+        this check keeps the error readable and handles deliberate retirement.
+        """
+        if title != self.CANONICAL_BOT_CHAT_TITLE:
+            return None
         conflict = conn.execute(
             f"SELECT id, archived, hidden, {self._EMPTY_SESSION_WHERE} AS ghost "
-            "FROM sessions WHERE title = ? AND id != ?", (title, session_id),
+            "FROM sessions WHERE title = ? AND hidden = 1 AND id != ?", (title, session_id),
         ).fetchone()
         if not conflict:
             return None
@@ -194,10 +202,14 @@ class SessionTitlesMixin:
 
     def get_session_by_title(self, title: str) -> Optional[dict[str, Any]]:
         """Look up a session by exact title. Returns session dict or None."""
+        # Ordinary names may have several matches after the duplicate-title
+        # migration. Keep the historical single-row API by returning the most
+        # recently started row. Bot Mode resolves only its hidden registry row.
+        canonical_filter = " AND s.hidden = 1" if title == self.CANONICAL_BOT_CHAT_TITLE else ""
         row = self._read_one(
             "SELECT s.*, COALESCE(sp.prompt, s.system_prompt) AS _system_prompt_resolved "
             "FROM sessions s LEFT JOIN system_prompts sp ON sp.hash = s.system_prompt_hash "
-            "WHERE s.title = ?", (title,))
+            f"WHERE s.title = ?{canonical_filter} ORDER BY s.started_at DESC, s.rowid DESC LIMIT 1", (title,))
         return self._session_row_dict(row) if row else None
 
     def resolve_session_by_title(self, title: str) -> Optional[str]:

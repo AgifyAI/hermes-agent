@@ -11,18 +11,20 @@ import { Codicon } from './codicon'
 export function ProfileGlyph({
   className,
   color,
+  image,
   isDefault,
   name,
   ...props
 }: Omit<React.ComponentProps<'span'>, 'color'> & {
   color: null | string
+  image?: null | string
   isDefault: boolean
   name: string
 }) {
   if (isDefault) {
     return (
-      <span className={cn('grid size-4 shrink-0 place-items-center', className)} {...props}>
-        <Codicon className="text-(--ui-text-quaternary)" name="home" size="0.75rem" />
+      <span className={cn('grid size-4 shrink-0 place-items-center overflow-hidden rounded-[3px]', className)} {...props}>
+        {image ? <img alt="" className="size-full object-cover" src={image} /> : <Codicon className="text-(--ui-text-quaternary)" name="home" size="0.75rem" />}
       </span>
     )
   }
@@ -38,7 +40,7 @@ export function ProfileGlyph({
       style={{ backgroundColor: profileColorSoft(color ?? 'var(--ui-text-quaternary)', 22), color: color ?? undefined }}
       {...props}
     >
-      {initial}
+      {image ? <img alt="" className="size-full object-cover" src={image} /> : initial}
     </span>
   )
 }

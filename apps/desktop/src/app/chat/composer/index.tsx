@@ -41,7 +41,6 @@ import { $gatewayState } from '@/store/session'
 import { $botChatSessionIds, $sessionStates, $sessionTiles, isBotChatSession } from '@/store/session-states'
 import { useForcedTextDirection } from '@/store/text-direction'
 import { $threadScrolledUpBySession } from '@/store/thread-scroll'
-import { $autoSpeakReplies } from '@/store/voice-prefs'
 
 import { AttachmentList } from './attachments'
 import { deriveBusySubmitState } from './busy-submit-state'
@@ -77,7 +76,6 @@ import { useComposerSubmit } from './hooks/use-composer-submit'
 import { triggerKeyUpHandler, useComposerTrigger } from './hooks/use-composer-trigger'
 import { useComposerUndo } from './hooks/use-composer-undo'
 import { useComposerUrlDialog } from './hooks/use-composer-url-dialog'
-import { useComposerVoice } from './hooks/use-composer-voice'
 import { useEmojiCompletions } from './hooks/use-emoji-completions'
 import { useComposerMicroActions } from './hooks/use-micro-actions'
 import { useMiddlewareSubmit } from './hooks/use-middleware-submit'
@@ -92,10 +90,14 @@ import { renderComposerQueueSlot, useComposerQueueScopeKey } from './queue-slot'
 import { RestoredDraftNotice } from './restored-draft-notice'
 import {
   beginComposerComposition,
+  beginInlineCodeMode,
   deleteChipBeforeCaret,
   deleteSelectionInEditor,
+  endInlineCodeMode,
   insertComposerContentsAtCaret,
-  RICH_INPUT_SLOT
+  isInlineCodeMode,
+  RICH_INPUT_SLOT,
+  toggleCodeBlock
 } from './rich-editor'
 import { useComposerScope, useComposerSurfaceId } from './scope'
 import { ComposerStatusStack } from './status-stack'
@@ -113,7 +115,6 @@ import {
   resolveExactLinkPaste,
   selectionLinkLabel
 } from './url-refs'
-import { VoiceActivity, VoicePlaybackActivity } from './voice-activity'
 
 /** Desktop keeps input above controls. HUD can use one compact row; narrow
  *  browser windows place each area on its own row so touch controls fit. */
@@ -134,7 +135,6 @@ export function ChatBar({
   focusKey,
   freshDraftKey,
   gateway,
-  maxRecordingSeconds = 120,
   profile,
   queueSessionKey,
   sessionId,
@@ -151,8 +151,7 @@ export function ChatBar({
   onRemoveAttachment,
   onSteer,
   onSteerHidden,
-  onSubmit: onSubmitProp,
-  onTranscribeAudio
+  onSubmit: onSubmitProp
 }: ChatBarProps) {
   const hudMode = useStore($hudMode)
   const hudWindowing = window.hermesDesktop?.hud?.windowing
@@ -164,7 +163,7 @@ export function ChatBar({
   })
 
   // Voice-stop interception + contributed middleware wrap every send.
-  const { onSubmit, voiceStopRef } = useMiddlewareSubmit(onSubmitProp)
+  const { onSubmit } = useMiddlewareSubmit(onSubmitProp)
 
   // Which live composer this instance IS (main | tile) — its attachment set,
   // focus-bus key, and awaiting-input edge. Main scope = the legacy globals.
@@ -178,7 +177,6 @@ export function ChatBar({
     Boolean(scrollSessionId && map[scrollSessionId])
   )
 
-  const autoSpeak = useStore($autoSpeakReplies)
   const textDirection = useForcedTextDirection()
   // The turn is parked on the user (clarify / approval / sudo / secret). Esc must
   // not interrupt it — there's nothing actively running to stop, and stopping
@@ -719,6 +717,32 @@ export function ChatBar({
       return
     }
 
+    // Linear's composer shortcut: ⌘E (or Ctrl+E) starts inline-code typing in
+    // an empty draft. With text selected, keep the product contract from the
+    // improvement list and wrap the selection/line in a Markdown code block;
+    // the same shortcut on an inline-code draft exits that mode.
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'e') {
+      const editor = event.currentTarget
+      const selection = window.getSelection()
+      const selectionInEditor = Boolean(selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode))
+      const collapsed = selectionInEditor && selection?.isCollapsed
+      const emptyDraft = !liveComposerDraft(editor, draftRef.current).trim()
+
+      const edit =
+        collapsed && isInlineCodeMode(editor)
+          ? () => endInlineCodeMode(editor)
+          : collapsed && emptyDraft
+            ? () => beginInlineCodeMode(editor)
+            : () => toggleCodeBlock(editor)
+
+      if (withUndoPoint(edit)) {
+        event.preventDefault()
+        flushEditorToDraft(editor)
+      }
+
+      return
+    }
+
     // Plain Backspace right after a directive chip: remove the chip + its
     // auto-inserted trailing space as one unit, so deleting a directive never
     // leaves an orphaned space. (Modified backspaces stay native.)
@@ -1076,35 +1100,6 @@ export function ChatBar({
   // Same explicit-halt semantics as the Stop button: park the queue.
   useComposerEscCancel({ awaitingInput, busy, onCancel: haltRun, target: scope.target })
 
-  const {
-    conversation,
-    dictate,
-    endConversation,
-    handleToggleAutoSpeak,
-    startConversation,
-    voiceActivityState,
-    voiceConversationActive,
-    voiceStatus
-  } = useComposerVoice({
-    busy,
-    clearDraft,
-    disabled,
-    focusInput,
-    insertText,
-    maxRecordingSeconds,
-    // Voice barge-in mid-generation halts the run like the Stop button.
-    onInterrupt: haltRun,
-    onSubmit,
-    onTranscribeAudio,
-    sessionId,
-    target: scope.target
-  })
-
-  // Keep the typed-stop interceptor (see onSubmit above) in sync with the
-  // live conversation state. Render-time ref assignment, same pattern as
-  // dispatchSubmitRef — no effect needed for a plain mirror.
-  voiceStopRef.current = { active: voiceConversationActive, end: endConversation }
-
   const contextMenu = (
     <ContextMenu
       onInsertText={insertText}
@@ -1119,37 +1114,22 @@ export function ChatBar({
 
   const controls = (
     <ComposerControls
-      autoSpeak={autoSpeak}
       busy={busy}
       busyAction={busyAction}
       canSubmit={canSubmit}
       cardWaiting={cardWaiting}
       compactModelPill={poppedOut || compactPill}
-      conversation={{
-        active: voiceConversationActive,
-        level: conversation.level,
-        muted: conversation.muted,
-        onEnd: endConversation,
-        onStart: startConversation,
-        onStopTurn: conversation.stopTurn,
-        onToggleMute: conversation.toggleMute,
-        status: conversation.status
-      }}
       disabled={disabled}
-      foldVoice={foldVoice}
       hasComposerPayload={hasComposerPayload}
       hideModelPill={guidedChat}
       minimal={minimal || chatOnboardingSolo}
-      onDictate={dictate}
       onQueue={() => {
         // Queueing clears the draft too, so the list over it closes with it.
         closeTrigger()
         queueDraft()
       }}
       onSteer={canSteer ? () => steerDraft('steer') : undefined}
-      onToggleAutoSpeak={handleToggleAutoSpeak}
       state={state}
-      voiceStatus={voiceStatus}
     />
   )
 
@@ -1489,8 +1469,6 @@ export function ChatBar({
                     onUndone={clearDraft}
                     readLiveText={syncDraftFromEditor}
                   />
-                  <VoiceActivity state={voiceActivityState} />
-                  <VoicePlaybackActivity />
                   {queueEdit && editingQueuedPrompt && <QueuedEditBanner onExit={exitQueuedEdit} />}
                   {attachments.length > 0 && <AttachmentList attachments={attachments} onRemove={onRemoveAttachment} />}
                   <div className={cn('grid w-full', controlRowGridClass(singleColumn, stacked, hudMode))}>

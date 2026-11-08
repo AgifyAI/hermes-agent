@@ -5,16 +5,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CodeEditor } from '@/components/chat/code-editor'
 import { PageLoader } from '@/components/page-loader'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ProfileGlyph } from '@/components/ui/profile-glyph'
 import { getProfileSoul, type ProfileInfo, updateProfileSoul } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { displayPath } from '@/lib/display-path'
-import { AlertTriangle, Save } from '@/lib/icons'
+import { AlertTriangle, Save, Upload, X } from '@/lib/icons'
 import { resolveProfileColor } from '@/lib/profile-color'
 import { normalize } from '@/lib/text'
 import { cn } from '@/lib/utils'
+import { requestGatewayForProfile } from '@/store/gateway'
 import { notify, notifyError } from '@/store/notifications'
-import { $profileColors, profileLabel, refreshProfiles } from '@/store/profile'
+import {
+  $profileColors,
+  $profileNicknames,
+  profileLabel,
+  profileNickname,
+  refreshProfiles,
+  setProfileNickname
+} from '@/store/profile'
 
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import {
@@ -51,6 +60,10 @@ export function ProfilesView({ onClose }: ProfilesViewProps) {
   const [createOpen, setCreateOpen] = useState(false)
   const [pendingRename, setPendingRename] = useState<null | ProfileInfo>(null)
   const [pendingDelete, setPendingDelete] = useState<null | ProfileInfo>(null)
+
+  // Nicknames are presentation-only Desktop preferences. Subscribe directly
+  // so the list and detail labels change without waiting for a backend pull.
+  useStore($profileNicknames)
 
   const refresh = useCallback(async () => {
     try {
@@ -153,7 +166,7 @@ export function ProfilesView({ onClose }: ProfilesViewProps) {
             </PanelList>
 
             {selected ? (
-              <ProfileDetail key={selected.name} profile={selected} />
+              <ProfileDetail key={selected.name} onUpdated={refresh} profile={selected} />
             ) : (
               <PanelEmpty description={p.selectPrompt} icon="account" />
             )}
@@ -222,7 +235,7 @@ function ProfileRow({
   )
 }
 
-function ProfileDetail({ profile }: { profile: ProfileInfo }) {
+function ProfileDetail({ onUpdated, profile }: { onUpdated: () => Promise<void>; profile: ProfileInfo }) {
   const { t } = useI18n()
   const p = t.profiles
 
@@ -263,9 +276,173 @@ function ProfileDetail({ profile }: { profile: ProfileInfo }) {
         />
       </header>
 
+      <ProfileIdentityEditor onUpdated={onUpdated} profile={profile} />
       <SoulEditor profileName={profile.name} />
     </PanelDetail>
   )
+}
+
+function readProfileNickname(profile: ProfileInfo): string {
+  return profileNickname(profile)
+}
+
+function ProfileIdentityEditor({ onUpdated, profile }: { onUpdated: () => Promise<void>; profile: ProfileInfo }) {
+  const { t } = useI18n()
+  const p = t.profiles
+  const [nickname, setNickname] = useState(() => readProfileNickname(profile))
+  const [avatar, setAvatar] = useState<null | string>(null)
+  const [initialAvatar, setInitialAvatar] = useState<null | string>(null)
+  const [loadingAvatar, setLoadingAvatar] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<null | string>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setNickname(readProfileNickname(profile))
+    setError(null)
+    setAvatar(null)
+    setInitialAvatar(null)
+
+    let live = true
+    setLoadingAvatar(true)
+    void requestGatewayForProfile<{ data?: string; found?: boolean }>(
+      profile.name,
+      'profiles.get_asset',
+      { asset: 'avatar', name: profile.name }
+    )
+      .then(result => {
+        if (live) {
+          const image = result?.found && result.data ? result.data : null
+          setAvatar(image)
+          setInitialAvatar(image)
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => live && setLoadingAvatar(false))
+
+    return () => {
+      live = false
+    }
+  }, [profile])
+
+  const chooseAvatar = () => inputRef.current?.click()
+
+  const handleImage = async (file: File | undefined) => {
+    if (!file) {
+      return
+    }
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setError(p.avatarFormat)
+
+      return
+    }
+
+    try {
+      const data = await readProfileImage(file, p.avatarFailedRead)
+      setAvatar(data)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : p.avatarFailedRead)
+    }
+  }
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+
+    try {
+      if (nickname.trim() !== readProfileNickname(profile)) {
+        setProfileNickname(profile.name, nickname)
+      }
+
+      if (avatar && avatar !== initialAvatar) {
+        await requestGatewayForProfile(
+          profile.name,
+          'profiles.set_asset',
+          { asset: 'avatar', data: avatar, name: profile.name }
+        )
+      } else if (!avatar && initialAvatar) {
+        await requestGatewayForProfile(
+          profile.name,
+          'profiles.set_asset',
+          { asset: 'avatar', clear: true, name: profile.name }
+        )
+      }
+
+      await onUpdated()
+      notify({ kind: 'success', title: p.identitySaved, message: profileLabel({ ...profile, display_name: nickname.trim() }) })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : p.identitySaveFailed)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const dirty = nickname.trim() !== readProfileNickname(profile) || avatar !== initialAvatar
+
+  return (
+    <section className="grid gap-3 border-y border-(--linear-border-panel) py-4">
+      <div className="flex items-center gap-3">
+        <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-(--linear-bg-tertiary)">
+          {loadingAvatar ? <span className="text-xs text-(--linear-text-tertiary)">…</span> : avatar ? <img alt="" className="size-full object-cover" src={avatar} /> : <ProfileGlyph color={null} isDefault={profile.is_default} name={profile.name} />}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={chooseAvatar} size="xs" type="button" variant="secondary">
+            <Upload />
+            {p.chooseAvatar}
+          </Button>
+          {avatar && <Button aria-label={p.removeAvatar} onClick={() => setAvatar(null)} size="xs" type="button" variant="ghost"><X /></Button>}
+          <input accept="image/png,image/jpeg,image/webp" className="hidden" onChange={event => void handleImage(event.target.files?.[0])} ref={inputRef} type="file" />
+        </div>
+      </div>
+      <div className="grid gap-1.5">
+        <label className="text-xs font-medium text-(--linear-text-primary)" htmlFor="profile-nickname">{p.nicknameLabel}</label>
+        <Input aria-describedby="profile-nickname-hint" id="profile-nickname" onChange={event => setNickname(event.target.value)} placeholder={profile.name} value={nickname} />
+        <p className="text-xs text-(--linear-text-tertiary)" id="profile-nickname-hint">{p.nicknameHint}</p>
+      </div>
+      {error && <div className={cn(PANEL_ERROR_NOTICE, 'px-3 py-2 text-xs')}>{error}</div>}
+      <div className="flex justify-end">
+        <Button disabled={!dirty || saving} onClick={() => void save()} size="sm">
+          {saving ? p.saving : p.saveIdentity}
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+function readProfileImage(file: File, failureMessage: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error(failureMessage))
+
+    reader.onload = () => {
+      const source = typeof reader.result === 'string' ? reader.result : ''
+
+      if (!source) {
+        reject(new Error(failureMessage))
+
+        return
+      }
+
+      const image = new Image()
+      image.onerror = () => reject(new Error(failureMessage))
+
+      image.onload = () => {
+        const edge = 256
+        const side = Math.min(image.naturalWidth, image.naturalHeight)
+        const canvas = document.createElement('canvas')
+        canvas.width = edge
+        canvas.height = edge
+        canvas.getContext('2d')?.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, edge, edge)
+        resolve(canvas.toDataURL('image/png'))
+      }
+
+      image.src = source
+    }
+
+    reader.readAsDataURL(file)
+  })
 }
 
 function SoulEditor({ profileName }: { profileName: string }) {

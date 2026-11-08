@@ -33,6 +33,7 @@ import {
   $activeGatewayProfile,
   $profileColors,
   $profileCreateRequest,
+  $profileNicknames,
   $profileOrder,
   $profiles,
   $showAllProfiles,
@@ -73,6 +74,8 @@ export function ProfileSwitcher({ compact = false }: { compact?: boolean }) {
   const p = t.profiles
   const navigate = useNavigate()
   const profiles = useStore($profiles)
+  // The label is local to Desktop and can change without a new backend list.
+  useStore($profileNicknames)
   const order = useStore($profileOrder)
   const colors = useStore($profileColors)
   const gatewayProfile = useStore($activeGatewayProfile)

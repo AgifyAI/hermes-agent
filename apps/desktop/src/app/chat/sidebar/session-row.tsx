@@ -371,6 +371,10 @@ function SidebarSessionRowImpl({
           // Density-aware minimum heights for the inline (non-card) row: the
           // metadata / preview lines below need the extra rows (#68119).
           isSelected && 'bg-(--linear-active-sidebar) text-(--linear-text-primary)',
+          // Keep the context-menu target visibly distinct when it is not the
+          // currently selected chat. Radix forwards `data-state="open"` from
+          // its asChild trigger onto this row shell.
+          'data-[state=open]:bg-(--linear-hover-sidebar)',
           // Open in another pane: the SAME band, just weaker. Its own mixed
           // token rather than row opacity — dimming the whole row would take
           // the title and the status dot down with it.
@@ -390,6 +394,12 @@ function SidebarSessionRowImpl({
         // activator only; the full handle stays on the grabber (see
         // useSortableBindings).
         onPointerDown={event => {
+          // A secondary click opens the row's context menu. It must not arm a
+          // drag session or change the active chat while that menu is open.
+          if (event.button !== 0) {
+            return
+          }
+
           // The rename dialog and the ⋯ menu portal out of this row's React
           // subtree, so their presses land here with a target outside the row —
           // select the title in the dialog's input and the row would lift.

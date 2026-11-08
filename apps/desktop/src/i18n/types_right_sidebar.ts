@@ -1,5 +1,21 @@
 // The right sidebar's copy (file tree, folder picker, terminals); `Translations.rightSidebar`.
 export interface RightSidebarTranslations {
+  pendingMemoryTitle: string
+  pendingMemoryTextAria: string
+  pendingMemoryLoading: string
+  pendingMemoryEmpty: string
+  pendingMemoryCancel: string
+  pendingMemorySave: string
+  pendingMemoryEdit: string
+  pendingMemoryReject: string
+  pendingMemoryApprove: string
+  queuedMessagesTitle: string
+  queuedMessagesEmpty: string
+  scratchpadTitle: string
+  scratchpadPlaceholder: string
+  scratchpadEmptySession: string
+  scratchpadSaving: string
+  scratchpadError: string
   aria: string
   panelsAria: string
   files: string

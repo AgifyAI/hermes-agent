@@ -18,28 +18,14 @@ function controlsRow() {
   const { container } = render(
     <I18nProvider configClient={null} initialLocale="en">
       <ComposerControls
-        autoSpeak={false}
         busy={false}
         busyAction="stop"
         canSubmit={true}
-        conversation={{
-          active: false,
-          level: 0,
-          muted: false,
-          onEnd: vi.fn(),
-          onStart: vi.fn(),
-          onStopTurn: vi.fn(),
-          onToggleMute: vi.fn(),
-          status: 'idle'
-        }}
         disabled={false}
         hasComposerPayload={true}
         minimal
-        onDictate={vi.fn()}
         onQueue={vi.fn()}
-        onToggleAutoSpeak={vi.fn()}
         state={state}
-        voiceStatus="idle"
       />
     </I18nProvider>
   )

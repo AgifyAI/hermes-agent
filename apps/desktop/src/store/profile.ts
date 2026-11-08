@@ -35,11 +35,94 @@ export function normalizeProfileKey(name: string | null | undefined): string {
   return value || 'default'
 }
 
-// Presentation-only label: the display_name from profile.yaml when set (e.g. a
-// renamed default profile), else the canonical name. Never used for
-// comparison or routing — canonical `name` remains the identity everywhere.
-export function profileLabel(profile: Pick<ProfileInfo, 'display_name' | 'name'>): string {
-  return (profile.display_name ?? '').trim() || profile.name
+// Presentation-only nicknames belong to this Desktop, not the profile backend.
+// Key them by connection and canonical profile id so two machines and two
+// profiles with the same backend display name never overwrite one another.
+const PROFILE_NICKNAMES_STORAGE_KEY = 'hermes.desktop.profileNicknames'
+const PROFILE_SCOPE_SEPARATOR = '\u0000'
+const DEFAULT_PROFILE_NICKNAME = 'Eugène'
+
+const storedProfileNicknames = storedStringRecord(PROFILE_NICKNAMES_STORAGE_KEY)
+const defaultProfileNicknameKey = `${LOCAL_CONNECTION_ID}${PROFILE_SCOPE_SEPARATOR}default`
+
+// The local root profile is the assistant's general profile in the Desktop
+// interface. Give it the requested presentation label on first use, while
+// leaving an existing local choice untouched.
+if (!Object.prototype.hasOwnProperty.call(storedProfileNicknames, defaultProfileNicknameKey)) {
+  storedProfileNicknames[defaultProfileNicknameKey] = DEFAULT_PROFILE_NICKNAME
+}
+
+export const $profileNicknames = atom<Record<string, string>>(storedProfileNicknames)
+
+persistStore(
+  $profileNicknames,
+  (value, options) => persistStringRecord(PROFILE_NICKNAMES_STORAGE_KEY, value, options),
+  {}
+)
+
+function profileNicknameKey(name: string, connectionId?: null | string): string {
+  const normalizedName = normalizeProfileKey(name)
+  const canonicalName = normalizedName === 'general' ? 'default' : normalizedName
+
+  return `${connectionId || $connection.get()?.connectionId || LOCAL_CONNECTION_ID}${PROFILE_SCOPE_SEPARATOR}${canonicalName}`
+}
+
+export function profileNickname(profile: Pick<ProfileInfo, 'name'> & { connectionId?: null | string }): string {
+  return $profileNicknames.get()[profileNicknameKey(profile.name, profile.connectionId)] ?? ''
+}
+
+// A nickname is local presentation state. Duplicate nicknames are rejected in
+// the same connection scope, while the backend profile id remains unchanged.
+export function setProfileNickname(name: string, nickname: string, connectionId?: null | string): void {
+  const key = profileNicknameKey(name, connectionId)
+  const cleaned = nickname.trim()
+  const scope = connectionId || $connection.get()?.connectionId || LOCAL_CONNECTION_ID
+
+  if (cleaned) {
+    const duplicate = Object.entries($profileNicknames.get()).some(
+      ([otherKey, otherValue]) =>
+        otherKey !== key &&
+        otherKey.startsWith(`${scope}${PROFILE_SCOPE_SEPARATOR}`) &&
+        otherValue.trim().toLocaleLowerCase() === cleaned.toLocaleLowerCase()
+    )
+
+    const duplicateServerLabel = $profiles.get().some(profile => {
+      if (normalizeProfileKey(profile.name) === normalizeProfileKey(name)) {
+        return false
+      }
+
+      const otherKey = profileNicknameKey(profile.name, connectionId)
+      const local = $profileNicknames.get()[otherKey]
+      const shown = (local || profile.display_name || '').trim()
+
+      return shown.toLocaleLowerCase() === cleaned.toLocaleLowerCase()
+    })
+
+    if (duplicate || duplicateServerLabel) {
+      throw new Error(`The nickname “${cleaned}” is already used by another profile.`)
+    }
+  }
+
+  const next = { ...$profileNicknames.get() }
+
+  if (cleaned) {
+    next[key] = cleaned
+  } else {
+    delete next[key]
+  }
+
+  $profileNicknames.set(next)
+  // Profile labels are derived from this local atom while the surrounding
+  // views subscribe to the shared profile list. Publish a new list reference
+  // so every existing profile picker repaints immediately, without changing
+  // the backend descriptors or their routing ids.
+  $profiles.set([...$profiles.get()])
+}
+
+// Presentation-only label: a Desktop-local nickname wins, then the server's
+// existing label, then the canonical profile id. Routing always uses `name`.
+export function profileLabel(profile: Pick<ProfileInfo, 'display_name' | 'name'> & { connectionId?: null | string }): string {
+  return profileNickname(profile) || (profile.display_name ?? '').trim() || profile.name
 }
 
 // The profile the running local backend is actually scoped to (mirrors

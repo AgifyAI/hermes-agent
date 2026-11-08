@@ -13,7 +13,7 @@ import { $gatewayState } from '@/store/session'
 import { useHermesConfigRecord } from '../hooks/use-config-record'
 import { useOnProfileSwitch } from '../hooks/use-on-profile-switch'
 
-import { SECTIONS } from './constants'
+import { DESKTOP_SECTIONS } from './constants'
 import { OTHER_SUBPAGES } from './other-subpages'
 import { settingSearchTargets } from './settings-manifest'
 import { buildConfigSearchEntries, buildCredentialSearchEntries, type SettingsSearchEntry } from './settings-search'
@@ -129,7 +129,7 @@ export function useSettingsSearchCatalog(enabled: boolean) {
 
   // The pages that own rows: config sections and the standalone views.
   const parents = [
-    ...SECTIONS.map(section => ({
+    ...DESKTOP_SECTIONS.map(section => ({
       view: `config:${section.id}` as SettingsView,
       label: t.settings.sections[section.id] ?? section.label,
       icon: section.icon

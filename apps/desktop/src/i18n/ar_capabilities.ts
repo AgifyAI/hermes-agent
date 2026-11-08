@@ -31,6 +31,14 @@ export const arCapabilities = {
         loadFailed: (name: string) => `تعذّر تحميل المجلدات المشتركة مع ${name}.`
       }
     },
+    openSession: 'فتح محادثة',
+    personal: 'شخصية',
+    metadata: 'التفاصيل',
+    instructions: 'التعليمات',
+    clickToEdit: 'انقر للتعديل',
+    personalPageTitle: 'المهارات',
+    keyboardHint: '⌘ ⌥ ↑ ↓',
+    personalEmpty: 'لا توجد مهارات شخصية مثبتة.',
     tabSkills: 'المهارات',
     tabToolsets: 'مجموعات الأدوات',
     all: 'الكل',

@@ -2444,7 +2444,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         safe_keys = (
             "id", "source", "user_id", "model", "title", "started_at", "ended_at", "end_reason",
             "message_count", "tool_call_count", "input_tokens", "output_tokens",
-            "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "estimated_cost_usd",
+            "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "estimated_cost_usd", "scratchpad",
             "actual_cost_usd", "api_call_count", "parent_session_id", "last_active", "preview",
             "_lineage_root_id", "pinned", "archived", "hidden")
         payload = {key: session.get(key) for key in safe_keys if key in session}
@@ -2626,7 +2626,11 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                  system_prompt, time.time()))
             if title is not None:
                 clean_title = db.sanitize_title(str(title))
-                if clean_title:
+                # A visible session may reuse the human-facing "Bot Chat"
+                # label. The hidden registry constraint is enforced when the
+                # row is hidden, so ordinary API-created chats must not be
+                # rejected here.
+                if clean_title and clean_title != db.CANONICAL_BOT_CHAT_TITLE:
                     try:
                         db._resolve_title_conflict(conn, session_id, clean_title)
                     except ValueError as exc:  # the DB's uniqueness rule; undo the INSERT
@@ -2662,13 +2666,18 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if err:
             return err
         # pinned/archived/unread are durable desktop-sidebar flags.
-        unknown = sorted(set(body) - {"title", "end_reason", "pinned", "archived", "hidden", "unread"})
+        unknown = sorted(set(body) - {"title", "end_reason", "pinned", "archived", "hidden", "unread", "scratchpad"})
         if unknown:
             return _error_response(
                 f"Unsupported session fields: {', '.join(unknown)}", 400, code="unsupported_session_field")
         for flag in ("pinned", "archived", "hidden", "unread"):
             if flag in body and not isinstance(body[flag], bool):
                 return _error_response(f"'{flag}' must be a boolean", 400, code="invalid_session_field")
+        if "scratchpad" in body and body["scratchpad"] is not None:
+            if not isinstance(body["scratchpad"], str):
+                return _error_response("'scratchpad' must be a string or null", 400, code="invalid_session_field")
+            if len(body["scratchpad"]) > 100_000:
+                return _error_response("'scratchpad' is too long", 400, code="invalid_session_field")
         db = await self._ensure_session_db_async()
         if db is None:
             return self._session_db_unavailable()
@@ -2684,6 +2693,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                              ("pinned", db.set_session_pinned)):
             if flag in body:
                 await asyncio.to_thread(setter, session_id, body[flag])
+        if "scratchpad" in body:
+            await asyncio.to_thread(db.set_session_scratchpad, session_id, body["scratchpad"])
         if "unread" in body:
             await asyncio.to_thread(db.set_session_read, session_id, read=not body["unread"])
         if body.get("end_reason"):
