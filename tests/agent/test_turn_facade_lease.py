@@ -103,6 +103,37 @@ def test_admission_sets_holder_attrs_and_release_clears_them(monkeypatch):
     assert agent._active_session_turn_lease_ttl_seconds is None
 
 
+def test_start_preserves_previous_activity_for_idle_compaction(monkeypatch):
+    """Turn liveness starts at entry, while idle compaction uses the preceding turn's clock."""
+    monkeypatch.setattr(
+        "agent.turn_liveness.resolve_turn_liveness_settings", lambda cfg: (None, 1.0)
+    )
+    monkeypatch.setattr(
+        "hermes_cli.observability.shared_metrics_process.arm_turn", lambda agent: None
+    )
+    monkeypatch.setattr("agent.periodic_scheduler.schedule", lambda *args, **kwargs: None)
+
+    previous_activity = 123.0
+    touched = []
+
+    def touch_activity(description):
+        touched.append(description)
+        agent._last_activity_ts = 456.0
+
+    agent = _agent(_Db(), _last_activity_ts=previous_activity)
+    agent._touch_activity = touch_activity
+    lease = DurableTurnLease(agent, agent._session_db, "s1", "h")
+
+    lease.start()
+
+    assert touched == ["starting new turn"]
+    assert agent._last_activity_ts == 456.0
+    assert agent._idle_compaction_reference_ts == previous_activity
+
+    lease.release()
+    assert agent._idle_compaction_reference_ts is None
+
+
 def test_timeout_and_interrupt_early_results():
     agent = _agent(_Db(acquired=False))
     admission = _admit(agent, [{"role": "user", "content": "x"}])
