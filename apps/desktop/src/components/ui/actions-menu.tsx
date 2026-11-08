@@ -164,6 +164,8 @@ interface ActionsContextMenuProps {
   /** Vetoes an open request, e.g. a touch hold the browser owns. Radix opens
    *  on a touch hold from pointer timers, with no contextmenu event to stop. */
   allowOpen?: () => boolean
+  /** Called after the context menu's open state changes. */
+  onOpenChange?: (open: boolean) => void
   onCloseAutoFocus?: (event: Event) => void
 }
 
@@ -178,7 +180,8 @@ export function ActionsContextMenu({
   contentClassName,
   disabled,
   items,
-  onCloseAutoFocus
+  onCloseAutoFocus,
+  onOpenChange
 }: ActionsContextMenuProps) {
   const [open, setOpen] = useState(false)
 
@@ -187,7 +190,14 @@ export function ActionsContextMenu({
   }
 
   return (
-    <ContextMenu onOpenChange={next => setOpen(next && (allowOpen?.() ?? true))} open={open}>
+    <ContextMenu
+      onOpenChange={next => {
+        const accepted = next && (allowOpen?.() ?? true)
+        setOpen(accepted)
+        onOpenChange?.(accepted)
+      }}
+      open={open}
+    >
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent aria-label={ariaLabel} className={contentClassName} onCloseAutoFocus={onCloseAutoFocus}>
         <ActionItems items={items} kit={CONTEXT_KIT} />

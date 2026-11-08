@@ -3,7 +3,6 @@ import { useStore } from '@nanostores/react'
 import { type ComponentProps, type MouseEvent, type ReactNode, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
-import { hudTargetSessionId } from '@/app/hud/handoff'
 import { PANE_TOGGLE_REVEAL_EVENT } from '@/components/pane-shell'
 import { toggleLayoutEditMode } from '@/components/pane-shell/edit-mode'
 import { $narrowOverlayPaneIds } from '@/components/pane-shell/narrow-overlay-state'
@@ -20,16 +19,15 @@ import { formatModifierToken } from '@/lib/keybinds/combo'
 import { isBrowserHostedDesktop } from '@/lib/platform'
 import { cn } from '@/lib/utils'
 import { recordAction } from '@/store/desktop-metrics'
-import { canUseHud, toggleHud } from '@/store/hud'
 import { $interfaceMode, shownInMode, type Tiered } from '@/store/interface-mode'
 import {
-  $fileBrowserOpen,
   $leftSideOpen,
   $panesFlipped,
+  $rightSideOpen,
   CHAT_SIDEBAR_PANE_ID,
   FILE_BROWSER_PANE_ID,
+  openRightSide,
   toggleLeftSide,
-  togglePanesFlipped,
   toggleRightSide
 } from '@/store/layout'
 import { REVIEW_PANE_ID } from '@/store/review'
@@ -156,15 +154,15 @@ interface SidebarEdge {
  * perform the labelled Hide. A narrow native window keeps the docked toggles, which already route
  * through the overlay's toggle. */
 function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
-  const fileBrowserOpen = useStore($fileBrowserOpen)
   const leftSideOpen = useStore($leftSideOpen)
+  const rightSideOpen = useStore($rightSideOpen)
   const narrow = useStore($narrowViewport)
   const overlayPanes = useStore($narrowOverlayPaneIds)
   const browserHost = isBrowserHostedDesktop()
   const overlayChrome = narrow && browserHost
   const rightOverlayId = overlayPanes.has(REVIEW_PANE_ID) ? REVIEW_PANE_ID : FILE_BROWSER_PANE_ID
 
-  const edge = (id: string, dockedOpen: boolean, toggleDocked: () => void): SidebarEdge => {
+  const edge = (id: string, dockedOpen: boolean, toggleDocked: () => void, openDocked = toggleDocked): SidebarEdge => {
     const open = overlayChrome ? overlayPanes.has(id) : dockedOpen
     const revealMode = open ? 'close' : 'open'
 
@@ -173,13 +171,15 @@ function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
       expanded: browserHost ? open : undefined,
       toggle: overlayChrome
         ? () => window.dispatchEvent(new CustomEvent(PANE_TOGGLE_REVEAL_EVENT, { detail: { id, mode: revealMode } }))
-        : toggleDocked
+        : open
+          ? toggleDocked
+          : openDocked
     }
   }
 
   return {
     left: edge(CHAT_SIDEBAR_PANE_ID, leftSideOpen, toggleLeftSide),
-    right: edge(rightOverlayId, fileBrowserOpen, toggleRightSide)
+    right: edge(rightOverlayId, rightSideOpen, toggleRightSide, openRightSide)
   }
 }
 
@@ -226,18 +226,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
     onSelect: () => {
       triggerHaptic('tap')
       leftEdge.toggle()
-    }
-  }
-
-  const flipTool: TitlebarTool = {
-    ...TITLEBAR_FIXED_TOOLS['flip-panes'],
-    actionId: 'view.flipPanes',
-    icon: <TitlebarIcon name="arrow-swap" />,
-    id: 'flip-panes',
-    label: t.titlebar.swapSidebarSides,
-    onSelect: () => {
-      triggerHaptic('tap')
-      togglePanesFlipped()
     }
   }
 
@@ -291,22 +279,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
       },
       title: t.titlebar.layoutEditorTitle(formatModifierToken('mod'))
     },
-    {
-      ...TITLEBAR_FIXED_TOOLS.hud,
-      // No `title`: TitlebarToolButton passes `title` to TipKeybindLabel as a
-      // text OVERRIDE, so a long sentence there replaces the short label and
-      // crowds the ⌘⇧H hint off the tooltip. Label only — the hint is appended
-      // from the action registry, same as every other tool here.
-      actionId: 'view.toggleHud',
-      hidden: !canUseHud(),
-      icon: <TitlebarIcon name="comment-discussion" />,
-      id: 'hud',
-      label: t.titlebar.enterHud,
-      onSelect: () => {
-        triggerHaptic('open')
-        toggleHud(hudTargetSessionId())
-      }
-    }
   ]
 
   const view = appViewForPath(location.pathname)
@@ -362,7 +334,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const visibleSystemTools = appActionsSide === 'right' ? systemTools.filter(visibleTool) : []
   const visiblePaneTools = tools.filter(visibleTool)
-  const visibleRightFixedTools = [flipTool, rightSidebarTool].filter(visibleTool)
+  const visibleRightFixedTools = [rightSidebarTool].filter(visibleTool)
 
   return (
     <>

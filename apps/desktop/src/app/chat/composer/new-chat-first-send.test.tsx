@@ -134,6 +134,14 @@ it('a new chat first send keeps its creation-time draft, queues on the new chat 
   })
   expect(getQueuedPrompts('stored-new').map(entry => entry.text)).toEqual(['follow-up'])
 
+  // Sending a queued row is an explicit user action. It marks this message for
+  // delivery when the current turn settles; unrelated rows stay untouched.
+  const queued = getQueuedPrompts('stored-new')[0]!
+  await act(async () => {
+    expect(await latest.current!.sendQueuedNow(queued.id)).toBe(true)
+  })
+  expect(getQueuedPrompts('stored-new')[0]?.sendWhenIdle).toBe(true)
+
   // The turn settles: the follow-up drains into the new chat, nothing of A moves or sends.
   show({ busy: false, queueSessionKey: 'stored-new', sessionId: 'rt-new' })
   await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
@@ -181,6 +189,14 @@ it('a follow-up queued while session.create is in flight moves to the new chat a
   expect(latest.current?.scope).toBe('stored-new')
   expect(getQueuedPrompts('stored-new').map(entry => entry.text)).toEqual(['follow-up'])
   expect(getQueuedPrompts(freshDraftKey)).toEqual([])
+
+  // The user explicitly chooses this queued message while the first turn is
+  // still running; it must be the one that drains after the settle edge.
+  const queued = getQueuedPrompts('stored-new')[0]!
+  await act(async () => {
+    expect(await latest.current!.sendQueuedNow(queued.id)).toBe(true)
+  })
+  expect(getQueuedPrompts('stored-new')[0]?.sendWhenIdle).toBe(true)
 
   // The first turn settles: the follow-up drains into the new chat; A is untouched.
   show({ busy: false, queueSessionKey: 'stored-new', sessionId: 'rt-new' })

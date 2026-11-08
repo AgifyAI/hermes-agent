@@ -70,12 +70,24 @@ export function ConfigSettings({
   onMainModelChanged,
   importInputRef
 }: ConfigSettingsProps) {
+  const { t } = useI18n()
   // Shared "Applies to" scope (null → the app's active profile). Remount the
   // inner page per scope so every draft/seed/autosave ref resets wholesale
   // when the target profile changes — the same guarantee useOnProfileSwitch
   // provides for app-wide switches, without hand-clearing each piece.
   const scopeProfile = useStore($settingsRequestProfile)
   const connectionId = useStore($activeConnectionId)
+
+  // Voice settings remain part of the shared config schema for other clients,
+  // but are intentionally not an Electron Desktop surface anymore. This also
+  // closes old saved/deep links instead of rendering a hidden settings page.
+  if (activeSectionId === 'voice') {
+    return (
+      <SettingsContent>
+        <PanelEmpty description={t.settings.config.emptyDesc} title={t.settings.config.emptyTitle} />
+      </SettingsContent>
+    )
+  }
 
   return (
     <ConfigSettingsInner

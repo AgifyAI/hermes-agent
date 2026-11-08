@@ -86,14 +86,6 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // Open WebUI, and Cherry Studio all ship the same chord). Opens the pill's
   // live dropdown on the pane under the pointer, else the active composer.
   { id: 'composer.modelPicker', category: 'composer', defaults: ['mod+shift+m'] },
-  // Voice conversation toggle. On macOS that's literally ⌃B — distinct from
-  // the ⌘B sidebar toggle. Off macOS `ctrl` folds to `mod`, so ⌃B IS the
-  // sidebar chord. Ship ⌃⌥V there ("v" for voice) instead of stealing mod+b
-  // or leaving the action unbound.
-  { id: 'composer.voice', category: 'composer', defaults: isMacPlatform() ? ['ctrl+b'] : ['mod+alt+v'] },
-  // Dictation is intentionally unbound: it is available for users who prefer
-  // a keyboard trigger without claiming a chord from text entry by default.
-  { id: 'composer.dictate', category: 'composer', defaults: [] },
   // Reasoning level up/down — one notch through off → minimal → … → xhigh,
   // clamped at the ends (#71627). Unbound like dictate: the chords a user
   // picks (Alt+., Ctrl+Alt+↑, Numpad +/- …) are too personal to claim by
@@ -125,6 +117,11 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // (macOS reserves Cmd+Tab for app switching); see `ctrl` in combo.ts.
   { id: 'session.next', category: 'session', defaults: ['ctrl+tab', 'ctrl+pagedown'] },
   { id: 'session.prev', category: 'session', defaults: ['ctrl+shift+tab', 'ctrl+pageup'] },
+  // ⌘⌥↑/↓ walk the persisted conversations of the active profile in recent
+  // order. Unlike tab cycling, the list crosses day boundaries without making
+  // a date heading an extra step.
+  { id: 'session.nextConversation', category: 'session', defaults: ['mod+alt+down'] },
+  { id: 'session.prevConversation', category: 'session', defaults: ['mod+alt+up'] },
   ...SESSION_SLOT_ACTIONS,
   // ⌘P / Ctrl+P is the conventional "search this app's documents" chord: it
   // opens the sessions search bar. The older chord stays as a second binding.

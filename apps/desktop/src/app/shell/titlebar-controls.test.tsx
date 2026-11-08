@@ -234,7 +234,7 @@ describe('titlebar app-action cluster', () => {
       fireEvent.click(rightSidebar)
       expect(intents).toEqual([
         { id: CHAT_SIDEBAR_PANE_ID, mode: 'toggle' },
-        { id: FILE_BROWSER_PANE_ID, mode: 'toggle' }
+        { id: FILE_BROWSER_PANE_ID, mode: 'open' }
       ])
     } finally {
       window.removeEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
@@ -291,7 +291,7 @@ describe('titlebar app-action cluster', () => {
     }
   })
 
-  it('moves settings, layout, and HUD to the left when the appearance setting says left', () => {
+  it('moves settings and layout to the left when the appearance setting says left', () => {
     setTitlebarAppActionsSide('left')
     renderControls('/')
 
@@ -300,7 +300,7 @@ describe('titlebar app-action cluster', () => {
 
     expect(within(left).getByLabelText('Open settings')).toBeTruthy()
     expect(within(left).getByLabelText('Layout editor')).toBeTruthy()
-    expect(within(left).getByLabelText('HUD mode')).toBeTruthy()
+    expect(within(left).queryByLabelText('HUD mode')).toBeNull()
     expect(within(right).queryByLabelText('Open settings')).toBeNull()
   })
 

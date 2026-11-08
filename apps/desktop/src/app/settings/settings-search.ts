@@ -2,7 +2,7 @@ import type { IconComponent } from '@/lib/icons'
 import { normalize } from '@/lib/text'
 import type { ConfigFieldSchema, EnvVarInfo, HermesConfigRecord } from '@/types/hermes'
 
-import { FIELD_LABELS, SECTIONS } from './constants'
+import { DESKTOP_SECTIONS, FIELD_LABELS } from './constants'
 import { credentialRowLabel } from './credential-key-ui'
 import { fieldCopyForSchemaKey } from './field-copy'
 import { prettyName, sectionFieldEntries, voiceFieldVisible } from './helpers'
@@ -74,7 +74,7 @@ export function buildConfigSearchEntries(
   schema: Record<string, ConfigFieldSchema> | null | undefined,
   config: HermesConfigRecord | null | undefined,
   copy: ConfigSearchCopy,
-  sections: DesktopConfigSection[] = SECTIONS
+  sections: DesktopConfigSection[] = DESKTOP_SECTIONS
 ): SettingsSearchEntry[] {
   if (!schema || !config) {
     return []

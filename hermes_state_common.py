@@ -522,6 +522,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     pinned INTEGER NOT NULL DEFAULT 0,
     hidden INTEGER NOT NULL DEFAULT 0,
     last_read_at REAL,
+    scratchpad TEXT,
     tool_names TEXT,
     transcript_revision INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (parent_session_id) REFERENCES sessions(id),

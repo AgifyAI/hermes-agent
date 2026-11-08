@@ -83,6 +83,7 @@ _spawn_hermes_action = late("_spawn_hermes_action", "hermes_cli.web_server_gatew
 
 def _profile_to_dict(info) -> dict[str, Any]:
     attr = functools.partial(getattr, info)
+    profile_path = Path(attr("path", ""))
     return {
         "name": attr("name", ""), "path": str(attr("path", "")),
         "is_default": bool(attr("is_default", False)),
@@ -94,6 +95,7 @@ def _profile_to_dict(info) -> dict[str, Any]:
         "description_auto": bool(attr("description_auto", False)),
         "display_name": attr("display_name", "") or "",
         "bot_title": attr("bot_title", "") or "",
+        "has_avatar": any((profile_path / "assets" / f"avatar.{ext}").is_file() for ext in ("png", "jpg", "webp")),
         "distribution_name": attr("distribution_name", None),
         "distribution_version": attr("distribution_version", None),
         "distribution_source": attr("distribution_source", None),

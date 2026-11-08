@@ -42,11 +42,13 @@ vi.mock('@/store/notifications', () => ({
 }))
 
 vi.mock('@/store/gateway', () => ({
+  requestGatewayForProfile: vi.fn(async () => ({ found: false })),
   retireLocalProfileGateways: vi.fn()
 }))
 
 const {
   $activeGatewayProfile: activeGateway,
+  $profileNicknames,
   $profileColors,
   $showAllProfiles
 } = vi.hoisted(() => {
@@ -54,6 +56,7 @@ const {
 
   return {
     $activeGatewayProfile: atom<string>('default'),
+    $profileNicknames: atom<Record<string, string>>({}),
     $profileColors: atom<Record<string, string>>({}),
     $showAllProfiles: atom<boolean>(false)
   }
@@ -64,13 +67,16 @@ vi.mock('@/store/profile', () => ({
   $profileColors,
   // `session-states` -> `preview` -> `layout` reaches this mock now that the
   // right rail is scoped per profile; layout.ts derives its grouping from it.
+  $profileNicknames,
   $showAllProfiles,
   normalizeProfileKey: (name: null | string | undefined) => (name ?? '').trim() || 'default',
   profileLabel: (profile: { display_name?: string; name: string }) =>
     (profile.display_name ?? '').trim() || profile.name,
+  profileNickname: vi.fn(() => ''),
   refreshProfiles: vi.fn(async () => [] as ProfileInfo[]),
   selectProfile: vi.fn(),
-  setActiveProfile: vi.fn()
+  setActiveProfile: vi.fn(),
+  setProfileNickname: vi.fn()
 }))
 
 // The one non-default profile these tests act on. Its name doubles as the row's

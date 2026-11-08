@@ -531,7 +531,6 @@ class TestUpdateJob:
         fetched = get_job(job["id"])
         assert fetched["name"] == "New Name"
 
-
 class TestPauseResumeJob:
     def test_pause_sets_state(self, tmp_cron_dir):
         job = create_job(prompt="Pause me", schedule="every 1h")

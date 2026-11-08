@@ -155,6 +155,7 @@ describe('ChatSidebar navigation activity', () => {
 
     for (const [pathname, currentView, label] of [
       ['/capabilities', 'capabilities', 'Capabilities'],
+      ['/skills', 'skills', 'Skills'],
       ['/messaging', 'messaging', 'Messaging'],
       ['/artifacts', 'artifacts', 'Artifacts'],
       ['/cron', 'cron', 'Scheduled jobs']

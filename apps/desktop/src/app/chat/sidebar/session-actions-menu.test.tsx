@@ -2,7 +2,6 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { atom } from 'nanostores'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { refreshProjectTree } from '@/store/projects'
 import { $sessionRenameTarget } from '@/store/session-rename'
 
 import { SessionActionsMenu, SessionContextMenu } from './session-actions-menu'
@@ -391,11 +390,7 @@ describe('SessionActionsMenu', () => {
     unmount()
   })
 
-  // $projectTree is only populated by a grouped-view visit or the flat view's
-  // background warm timer (PROJECT_TREE_WARM_MS). Opening this submenu before
-  // either fires must not silently show "No other projects" forever — it must
-  // pull the authoritative tree itself.
-  it('refreshes the project tree when the "Move to project" submenu opens', async () => {
+  it('removes session appearance and project relocation actions', async () => {
     renderMenu()
 
     const trigger = screen.getByRole('button', { name: 'Session actions' })
@@ -404,10 +399,41 @@ describe('SessionActionsMenu', () => {
     fireEvent.click(trigger)
 
     await screen.findByRole('menu')
-    expect(refreshProjectTree).not.toHaveBeenCalled()
+    expect(screen.queryByRole('menuitem', { name: 'Appearance' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: 'Move to project' })).toBeNull()
+  })
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Move to project' }))
+  it('archives the row targeted by a context menu with A', async () => {
+    const onArchive = vi.fn()
+    render(
+      <SessionContextMenu onArchive={onArchive} sessionId="s1" title="My session">
+        <button aria-label="Session row" type="button">
+          Row
+        </button>
+      </SessionContextMenu>
+    )
 
-    await waitFor(() => expect(refreshProjectTree).toHaveBeenCalledTimes(1))
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Session row' }))
+    await screen.findByRole('menu')
+    fireEvent.keyDown(document, { key: 'a' })
+
+    expect(onArchive).toHaveBeenCalledTimes(1)
+  })
+
+  it('pins the row targeted by a context menu with P', async () => {
+    const onPin = vi.fn()
+    render(
+      <SessionContextMenu onPin={onPin} sessionId="s1" title="My session">
+        <button aria-label="Session row" type="button">
+          Row
+        </button>
+      </SessionContextMenu>
+    )
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Session row' }))
+    await screen.findByRole('menu')
+    fireEvent.keyDown(document, { key: 'p' })
+
+    expect(onPin).toHaveBeenCalledTimes(1)
   })
 })

@@ -536,6 +536,194 @@ export function deleteSelectionInEditor(editor: HTMLElement) {
   return true
 }
 
+function serializedNodeLength(node: Node): number {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent?.length ?? 0
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return 0
+  }
+
+  const element = node as HTMLElement
+
+  if (element.dataset.refText) {
+    return element.dataset.refText.length
+  }
+
+  if (element.tagName === 'BR') {
+    return 1
+  }
+
+  return Array.from(element.childNodes).reduce((total, child) => total + serializedNodeLength(child), 0)
+}
+
+/** Resolve a plain-text offset back to a DOM point in the rich editor. */
+function pointAtSerializedOffset(root: HTMLElement, target: number): { node: Node; offset: number } {
+  let remaining = Math.max(0, target)
+
+  const visit = (node: Node): { node: Node; offset: number } | null => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const length = node.textContent?.length ?? 0
+
+      if (remaining <= length) {
+        return { node, offset: remaining }
+      }
+
+      remaining -= length
+
+      return null
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return null
+    }
+
+    const element = node as HTMLElement
+
+    if (element.dataset.refText) {
+      if (remaining <= element.dataset.refText.length) {
+        const parent = element.parentNode ?? root
+        const index = Array.prototype.indexOf.call(parent.childNodes, element)
+
+        return { node: parent, offset: remaining === 0 ? index : index + 1 }
+      }
+
+      remaining -= element.dataset.refText.length
+
+      return null
+    }
+
+    if (element.tagName === 'BR') {
+      if (remaining <= 1) {
+        const parent = element.parentNode ?? root
+        const index = Array.prototype.indexOf.call(parent.childNodes, element)
+
+        return { node: parent, offset: remaining === 0 ? index : index + 1 }
+      }
+
+      remaining -= 1
+
+      return null
+    }
+
+    for (const child of Array.from(node.childNodes)) {
+      const point = visit(child)
+
+      if (point) {
+        return point
+      }
+    }
+
+    return null
+  }
+
+  return visit(root) ?? { node: root, offset: root.childNodes.length }
+}
+
+/** Toggle one Markdown fenced code block around the current selection. With no
+ * selection, the line containing the caret is selected first. */
+export function toggleCodeBlock(editor: HTMLElement): boolean {
+  const hit = composerSelectionRange(editor)
+
+  if (!hit) {
+    return false
+  }
+
+  const fullText = composerPlainText(editor)
+  const selectionStart = serializeTextBefore(editor, hit.range.startContainer, hit.range.startOffset).length
+  let start = selectionStart
+  let end = serializeTextBefore(editor, hit.range.endContainer, hit.range.endOffset).length
+
+  if (hit.range.collapsed) {
+    start = fullText.lastIndexOf('\n', selectionStart - 1) + 1
+    end = fullText.indexOf('\n', selectionStart)
+
+    if (end < 0) {
+      end = fullText.length
+    }
+
+    const lineRange = document.createRange()
+    const startPoint = pointAtSerializedOffset(editor, start)
+    const endPoint = pointAtSerializedOffset(editor, end)
+    lineRange.setStart(startPoint.node, startPoint.offset)
+    lineRange.setEnd(endPoint.node, endPoint.offset)
+    hit.selection.removeAllRanges()
+    hit.selection.addRange(lineRange)
+  }
+
+  if (end < start) {
+    const lower = end
+    end = start
+    start = lower
+  }
+
+  const selected = fullText.slice(start, end)
+
+  if (!selected) {
+    return false
+  }
+
+  const fenced = selected.match(/^```[^\n]*\n([\s\S]*?)\n```$/)
+  const replacement = fenced ? (fenced[1] ?? '') : ['```', selected, '```'].join('\n')
+
+  insertComposerContentsAtCaret(editor, replacement)
+
+  return true
+}
+
+/** The inline code mode Linear enters when ⌘E is pressed in an empty draft. */
+const INLINE_CODE_BLOCK = 'data-inline-code'
+
+/** True when this empty/typed composer is still in Linear's inline-code mode. */
+export function isInlineCodeMode(editor: HTMLElement): boolean {
+  return Boolean(editor.querySelector(`p[${INLINE_CODE_BLOCK}] > code.inline`))
+}
+
+/** Start typing inside an inline code node without submitting the draft. */
+export function beginInlineCodeMode(editor: HTMLElement): boolean {
+  const hit = composerSelectionRange(editor)
+
+  if (!hit?.range.collapsed || composerPlainText(editor).trim()) {
+    return false
+  }
+
+  const paragraph = document.createElement('p')
+  paragraph.setAttribute(INLINE_CODE_BLOCK, '')
+  const code = document.createElement('code')
+  code.className = 'inline'
+  paragraph.append(code)
+  editor.replaceChildren(paragraph)
+
+  const caret = document.createRange()
+  caret.selectNodeContents(code)
+  caret.collapse(true)
+  hit.selection.removeAllRanges()
+  hit.selection.addRange(caret)
+  delete editor.dataset.empty
+  revealCaret(editor)
+
+  return true
+}
+
+/** Leave inline-code mode while preserving the current text and caret. */
+export function endInlineCodeMode(editor: HTMLElement): boolean {
+  const paragraph = editor.querySelector(`p[${INLINE_CODE_BLOCK}]`)
+  const code = paragraph?.querySelector(':scope > code.inline')
+
+  if (!paragraph || !code || paragraph.parentElement !== editor) {
+    return false
+  }
+
+  const caretOffset = caretOffsetInEditor(editor)
+  const children = Array.from(code.childNodes)
+  editor.replaceChildren(...children)
+  placeCaretAtOffset(editor, caretOffset)
+  markEditorEmptiness(editor)
+
+  return true
+}
+
 /** Serialize a draft string into chip-HTML for the contenteditable surface. */
 export function composerHtml(text: string) {
   let cursor = 0
@@ -585,7 +773,9 @@ export function composerPlainText(node: Node): string {
   const text = Array.from(node.childNodes).map(composerPlainText).join('')
   const block = el.tagName === 'DIV' || el.tagName === 'P'
 
-  return block && text && el.dataset.slot !== RICH_INPUT_SLOT ? `${text}\n` : text
+  return block && text && el.dataset.slot !== RICH_INPUT_SLOT && !el.hasAttribute(INLINE_CODE_BLOCK)
+    ? `${text}\n`
+    : text
 }
 
 export function placeCaretEnd(element: HTMLElement) {
@@ -831,6 +1021,14 @@ function isBlankNode(node: ChildNode | null): boolean {
   return false
 }
 
+function isUnwrappableComposerBlock(node: HTMLElement): boolean {
+  return (
+    (node.tagName === 'DIV' || node.tagName === 'P') &&
+    node.dataset.slot !== RICH_INPUT_SLOT &&
+    !node.hasAttribute(INLINE_CODE_BLOCK)
+  )
+}
+
 /** Drop contenteditable junk that serializes as `\n` and falsely expands the
  *  composer. Editing around a contenteditable=false chip makes Chromium wrap the
  *  remainder in stray block <div>s / trailing <br>s — none of which our own
@@ -863,7 +1061,7 @@ export function normalizeComposerEditorDom(editor: HTMLElement) {
   if (editor.childNodes.length === 1 && editor.firstChild?.nodeType === Node.ELEMENT_NODE) {
     const wrapper = editor.firstChild as HTMLElement
 
-    if ((wrapper.tagName === 'DIV' || wrapper.tagName === 'P') && wrapper.dataset.slot !== RICH_INPUT_SLOT) {
+    if (isUnwrappableComposerBlock(wrapper)) {
       // Moving the text nodes out resets Chromium's selection to the editor's
       // start. Keep DOM endpoints (and direction), not serialized text offsets:
       // chips are atomic and the wrapper's trailing newline is being removed.

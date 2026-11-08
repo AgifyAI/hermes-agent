@@ -148,6 +148,23 @@ def test_idle_compaction_defers_to_held_compression_lock(tmp_path: Path) -> None
     assert ctx.messages[ctx.current_turn_user_idx]["content"] == "hello again"
 
 
+def test_idle_compaction_uses_pre_turn_timestamp_after_activity_reset(tmp_path: Path) -> None:
+    """A fresh turn clock must not hide the idle gap that triggered the turn."""
+    db = SessionDB(db_path=tmp_path / "state.db")
+    sid = "IDLE_REFERENCE"
+    db.create_session(sid, source="cli")
+    agent = _prep_idle_agent(db, sid, idle_after=60, idle_gap=3600.0)
+    # DurableTurnLease resets this liveness clock at turn entry. Its preserved reference is
+    # the timestamp that the idle gate must use for the resumed conversation.
+    agent._last_activity_ts = time.time()
+    agent._idle_compaction_reference_ts = time.time() - 3600.0
+    seam = _pin_compress_seam(agent)
+
+    _run_prologue(agent, _history())
+
+    seam.assert_called_once()
+
+
 def _prep_recompaction_agent(db: SessionDB, sid: str):
     """Idle-eligible agent with the #97239 threshold/floor numbers.
 

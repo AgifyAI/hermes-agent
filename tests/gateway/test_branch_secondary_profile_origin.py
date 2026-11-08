@@ -32,11 +32,16 @@ async def test_branch_restart_resume_keeps_source_and_route_for_default_and_seco
             with _profile_runtime_scope(home, {}):
                 ref = create_local_session(authority, actor, {'request_id': 'r', 'source': 'gui', 'cwd': str(tmp_path),
                                                               'model': 'frozen', 'toolsets': []})
+                note = await mutate_session(authority, actor, ref, dict(
+                    session_id=ref.session_id, request_id='scratchpad', expected_revision=0,
+                    expected_generation=0, operation='sidebar', payload={'scratchpad': 'private note'}))
+                assert note['scratchpad'] == 'private note'
                 result = await mutate_session(authority, actor, ref, dict(
-                    session_id=ref.session_id, request_id='branch', expected_revision=0,
+                    session_id=ref.session_id, request_id='branch', expected_revision=1,
                     expected_generation=0, operation='branch', payload={}))
             parent = local_receipt(authority.db, ref.session_id)
             child = local_receipt(authority.db, result['branched_session_id'])
+            assert authority.db.get_session(result['branched_session_id'])['scratchpad'] == 'private note'
             # Same owning profile on both halves of the identity: the stored origin and the route.
             assert child['entry']['origin'].get('profile') == parent['entry']['origin'].get('profile'), name
             assert child['route'].split(':')[:2] == parent['route'].split(':')[:2], name

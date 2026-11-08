@@ -215,7 +215,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_source ON sessions(source);
 CREATE INDEX IF NOT EXISTS idx_sessions_parent ON sessions(parent_session_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_started ON sessions(started_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_title_unique
-    ON sessions(title) WHERE title IS NOT NULL;
+    ON sessions(title) WHERE title = 'Bot Chat' AND hidden = 1;
 ```
 
 `user_id` is the principal on the other end of the session: messaging adapters
@@ -443,7 +443,7 @@ conversation = db.get_messages_as_conversation("sess_abc123")
 ### Session Titles
 
 ```python
-# Set a title (must be unique among non-NULL titles)
+# Set a display title. Ordinary conversations may share a title.
 db.set_session_title("sess_abc123", "Fix Docker Build")
 
 # Resolve by title (returns most recent in lineage)

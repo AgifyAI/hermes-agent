@@ -4,11 +4,14 @@ import { rememberDesktopCommandsCatalog } from '@/lib/desktop-slash-commands'
 
 import { insertInlineRefsIntoEditor } from './inline-refs'
 import {
+  beginInlineCodeMode,
   caretOffsetInEditor,
   caretRevealScrollTop,
   composerPlainText,
   deleteSelectionInEditor,
+  endInlineCodeMode,
   insertComposerContentsAtCaret,
+  isInlineCodeMode,
   normalizeComposerEditorDom,
   placeCaretAtOffset,
   placeCaretEnd,
@@ -78,6 +81,31 @@ describe('renderComposerContents', () => {
 
     expect(editor.querySelector('[data-slash-kind]')).toBeNull()
     expect(composerPlainText(editor)).toBe('/goal ship the redesign')
+  })
+})
+
+describe('inline code mode', () => {
+  it('lets an empty composer type inside Linear-style inline code without submitting', () => {
+    const editor = document.createElement('div')
+    editor.dataset.slot = RICH_INPUT_SLOT
+    editor.contentEditable = 'true'
+    document.body.append(editor)
+    placeCaretEnd(editor)
+
+    expect(beginInlineCodeMode(editor)).toBe(true)
+    expect(isInlineCodeMode(editor)).toBe(true)
+
+    const code = editor.querySelector('p[data-inline-code] > code.inline')!
+    code.append(document.createTextNode('abc'))
+
+    expect(editor.innerHTML).toBe('<p data-inline-code=""><code class="inline">abc</code></p>')
+    expect(composerPlainText(editor)).toBe('abc')
+
+    expect(endInlineCodeMode(editor)).toBe(true)
+    expect(isInlineCodeMode(editor)).toBe(false)
+    expect(composerPlainText(editor)).toBe('abc')
+
+    editor.remove()
   })
 })
 

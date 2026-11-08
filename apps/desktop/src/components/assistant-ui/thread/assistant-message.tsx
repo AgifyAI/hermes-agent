@@ -57,7 +57,6 @@ import {
 import { errorCardText } from '@/lib/error-surface-copy'
 import { triggerHaptic } from '@/lib/haptics'
 import {
-  AudioLines,
   GitForkIcon,
   KeyRound,
   Loader2Icon,
@@ -65,15 +64,12 @@ import {
   RefreshCwIcon,
   SmilePlusIcon,
   Upload,
-  VolumeXIcon,
   XIcon
 } from '@/lib/icons'
 import { extractPreviewTargets } from '@/lib/preview-targets'
-import { markAssistantIdSpoken } from '@/lib/spoken-reply'
 import { $touchPointer } from '@/lib/touch-interaction'
 import { useEnterAnimation } from '@/lib/use-enter-animation'
 import { cn } from '@/lib/utils'
-import { playSpeechText, stopVoicePlayback } from '@/lib/voice-playback'
 import { requestBillingSettings } from '@/store/billing-block'
 import { DESKTOP_BUTTON_ACTIONS, recordAction } from '@/store/desktop-metrics'
 import { openFreeTierSignIn } from '@/store/free-tier-sign-in'
@@ -85,7 +81,6 @@ import { requestSendDiagnostics } from '@/store/send-diagnostics'
 import { $connection, $currentModel, setModelPickerOpen } from '@/store/session'
 import { sessionTileDelegate } from '@/store/session-states'
 import { notifyThreadEditOpen } from '@/store/thread-scroll'
-import { $voicePlayback } from '@/store/voice-playback'
 
 // Stable empty identity for the settled-parts selector — a fresh [] per render
 // would re-derive the changed-files card on every message re-render.
@@ -1146,85 +1141,6 @@ const ErrorRecoveryActions: FC = () => {
   )
 }
 
-interface ReadAloudActionState {
-  disabled: boolean
-  isPreparing: boolean
-  isSpeaking: boolean
-  menuLabel: string
-  onActivate: (event?: { shiftKey?: boolean }) => void
-  tooltip: string
-}
-
-function useReadAloudAction({
-  fullResponseAvailable,
-  getFullText,
-  getText,
-  messageId
-}: {
-  fullResponseAvailable: boolean
-  getFullText: () => string
-  getText: () => string
-  messageId: string
-}): ReadAloudActionState {
-  const { t } = useI18n()
-  const copy = t.assistant.thread
-  const voicePlayback = useStore($voicePlayback)
-  const view = useSessionView()
-  const sessionId = useStore(view.$runtimeId)
-  // A Bot chat's session owns its own (connection, profile) → its own TTS voice.
-  const { connectionId, profile } = useComposerScope()
-
-  const readAloudStatus =
-    voicePlayback.source === 'read-aloud' && voicePlayback.messageId === messageId ? voicePlayback.status : 'idle'
-
-  const isPreparing = readAloudStatus === 'preparing'
-  const isSpeaking = readAloudStatus === 'speaking'
-  const anyPlaybackActive = voicePlayback.status !== 'idle'
-
-  // Default reads the current reply only; Shift-click reads the whole response
-  // group — the read-aloud mirror of the two copy scopes (#118864).
-  const read = useCallback(
-    async (full: boolean) => {
-      const text = full ? getFullText() : getText()
-
-      if (!text || $voicePlayback.get().status !== 'idle') {
-        return
-      }
-
-      try {
-        await playSpeechText(text, { connectionId, messageId, profile, source: 'read-aloud' })
-        markAssistantIdSpoken(sessionId, view.$messages.get(), messageId)
-      } catch (error) {
-        notifyError(error, copy.readAloudFailed)
-      }
-    },
-    [connectionId, copy.readAloudFailed, getFullText, getText, messageId, profile, sessionId, view.$messages]
-  )
-
-  const onActivate = useCallback(
-    (event?: { shiftKey?: boolean }) => {
-      triggerHaptic('selection')
-      void (isSpeaking ? stopVoicePlayback() : read(Boolean(event?.shiftKey)))
-    },
-    [isSpeaking, read]
-  )
-
-  return {
-    disabled: isPreparing || (!isSpeaking && anyPlaybackActive),
-    isPreparing,
-    isSpeaking,
-    menuLabel: isSpeaking ? copy.stopReading : copy.readAloud,
-    onActivate,
-    tooltip: isPreparing
-      ? copy.preparingAudio
-      : isSpeaking
-        ? copy.stopReading
-        : fullResponseAvailable
-          ? `${copy.readAloud} (${copy.readAloudFullResponseHint})`
-          : copy.readAloud
-  }
-}
-
 const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
   durationS,
   fullResponseAvailable,
@@ -1240,13 +1156,6 @@ const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const { enabled: reactionsEnabled, react, reactions: shownReactions } = useMessageReactions(messageId, 'assistant')
-
-  const readAloud = useReadAloudAction({
-    fullResponseAvailable,
-    getFullText: getFullResponseText,
-    getText: getMessageText,
-    messageId
-  })
 
   const reload = useCallback(() => {
     if (reloadDisabled) {
@@ -1318,7 +1227,6 @@ const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
           {fullResponseAvailable && (
             <CopyButton appearance="icon" buttonSize="icon" label={copy.copyFullResponse} text={getFullResponseText} />
           )}
-          <ReadAloudButton action={readAloud} />
           <TooltipIconButton disabled={reloadDisabled} onClick={reload} tooltip={copy.refresh}>
             <RefreshCwIcon className="size-3.5" />
           </TooltipIconButton>
@@ -1346,13 +1254,6 @@ const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
                       text={getFullResponseText}
                     />
                   )}
-                  {renderActionItem(kit, {
-                    iconNode: <AudioLines className="size-3.5" />,
-                    key: 'read-aloud',
-                    label: readAloud.menuLabel,
-                    onSelect: () => readAloud.onActivate(),
-                    disabled: readAloud.disabled
-                  })}
                   {renderActionItem(kit, {
                     iconNode: <RefreshCwIcon className="size-3.5" />,
                     key: 'refresh',
@@ -1407,16 +1308,6 @@ const AssistantActionBar: FC<MessageActionProps & { durationS?: number }> = ({
         </ReactionPicker>
       )}
     </div>
-  )
-}
-
-const ReadAloudButton: FC<{ action: ReadAloudActionState }> = ({ action }) => {
-  const Icon = action.isPreparing ? Loader2Icon : action.isSpeaking ? VolumeXIcon : AudioLines
-
-  return (
-    <TooltipIconButton disabled={action.disabled} onClick={action.onActivate} tooltip={action.tooltip}>
-      <Icon className={cn('size-3.5', action.isPreparing && 'animate-spin')} />
-    </TooltipIconButton>
   )
 }
 

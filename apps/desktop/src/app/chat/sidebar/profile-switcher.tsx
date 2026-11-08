@@ -73,6 +73,7 @@ import {
   $activeGatewayProfile,
   $profileColors,
   $profileCreateRequest,
+  $profileNicknames,
   $profileOrder,
   $profiles,
   $profileScope,
@@ -106,9 +107,10 @@ import { ConnectionGlyph } from './connection-glyph'
 import { FleetGatewayMenuGroup } from './fleet-gateway-menu-group'
 import { buildRestGroups, countRestAgents, type FleetAgent, type FleetGroup, fleetRouteKey } from './fleet-rail'
 import { useLocalDeviceSwitch } from './local-device-switch'
+import { ProfileAvatar, useProfileAvatar } from './profile-avatar'
 import { ProfileLaunchContextMenu, ProfileLaunchMenuSection } from './profile-launch-menu'
 import { ProfileRemoteOverrideDialog } from './profile-remote-override-dialog'
-import { ProfileRowGlyph, UnservedProfileNote, useUnservedProfiles } from './unserved-profiles'
+import { UnservedProfileNote, useUnservedProfiles } from './unserved-profiles'
 import { useFleetRoster } from './use-fleet-roster'
 import { useProfilePrewarm } from './use-profile-prewarm'
 import { useProfileRailRefreshOnActive } from './use-profile-rail-refresh-on-active'
@@ -183,6 +185,10 @@ function useProfileStatus(profile: null | string, connectionId: null | string | 
 const RAIL_TRANSITION = REORDER_RAIL_TRANSITION
 const DRAG_TRANSITION = REORDER_DRAG_TRANSITION_CSS
 
+function ProfileSquareFace({ avatar, label }: { avatar: null | string; label: string }) {
+  return avatar ? <img alt="" className="size-full rounded-[3px] object-cover" src={avatar} /> : profileShortLabel(label)
+}
+
 // The rail is a single horizontal strip of fixed cells. Pin drags to the x-axis
 // (no cross-axis scrollbar), snap to whole cells so a square steps slot-to-slot
 // instead of gliding, and clamp to the occupied strip so it can't float past the
@@ -217,6 +223,10 @@ export function ProfileRail() {
   const { t, locale } = useI18n()
   const p = t.profiles
   const profiles = useStore($profiles)
+  // Nicknames are Desktop-local preferences, so they do not arrive through a
+  // profile-list refresh. Subscribe directly to repaint every rail label as
+  // soon as the preference is saved.
+  useStore($profileNicknames)
   const scope = useStore($profileScope)
   const gatewayProfile = useStore($activeGatewayProfile)
   const order = useStore($profileOrder)
@@ -507,6 +517,7 @@ export function ProfileRail() {
                   active={!isAll && normalizeProfileKey(profile.name) === activeKey}
                   color={resolveProfileColor(profile.name, colors)}
                   connectionId={namedProfileConnectionId}
+                  hasAvatar={profile.has_avatar === true}
                   key={profile.name}
                   label={profileLabel(profile)}
                   name={profile.name}
@@ -566,6 +577,7 @@ export function ProfileRail() {
             active={isAll || onDefault}
             connectionId={activeConnectionId ?? undefined}
             glyph={isAll ? 'layers' : 'home'}
+            hasAvatar={homeProfile.has_avatar === true}
             label={onDefault ? p.showAllProfiles : p.switchToProfile(profileLabel(homeProfile))}
             onSelect={() => (onDefault ? setShowAllProfiles(true) : selectProfile(homeProfile.name))}
             profile={homeProfile.name}
@@ -580,6 +592,7 @@ export function ProfileRail() {
           active
           connectionId={activeConnectionId ?? undefined}
           glyph="home"
+          hasAvatar={defaultProfile.has_avatar === true}
           label={profileLabel(defaultProfile)}
           onSelect={() => selectProfile(defaultProfile.name)}
           profile={defaultProfile.name}
@@ -642,6 +655,7 @@ export function ProfileRail() {
                               active={onDefault}
                               connectionId={activeConnectionId ?? undefined}
                               glyph="home"
+                              hasAvatar={defaultProfile.has_avatar === true}
                               label={profileLabel(defaultProfile)}
                               onSelect={() => selectProfile(defaultProfile.name)}
                               profile={defaultProfile.name}
@@ -936,9 +950,10 @@ function ProfileDropdown({
           <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
             {activeProfile ? (
               <>
-                <ProfileGlyph
+                <ProfileAvatar
                   aria-hidden="true"
                   color={resolveProfileColor(activeProfile.name, colors)}
+                  hasAvatar={activeProfile.has_avatar === true}
                   isDefault={activeProfile.is_default}
                   name={activeProfile.name}
                 />
@@ -966,6 +981,7 @@ function ProfileDropdown({
             <ProfileDropdownItem
               color={resolveProfileColor(profile.name, colors)}
               connectionId={profile.is_default ? homeConnectionId : connectionId}
+              hasAvatar={profile.has_avatar === true}
               hideStatus={profile.name === value}
               isDefault={profile.is_default}
               key={profile.name}
@@ -1003,6 +1019,7 @@ function ProfileDropdown({
 function ProfileDropdownItem({
   color,
   connectionId,
+  hasAvatar,
   hideStatus,
   isDefault,
   label,
@@ -1011,6 +1028,7 @@ function ProfileDropdownItem({
 }: {
   color: null | string
   connectionId: null | string
+  hasAvatar: boolean
   /** The dropdown's own selected row: its sessions are on screen in the
    *  sidebar, so its rollup is suppressed like the active square (#91710). */
   hideStatus?: boolean
@@ -1036,7 +1054,15 @@ function ProfileDropdownItem({
         value={name}
       >
         <span className="flex min-w-0 items-center gap-1.5">
-          <ProfileRowGlyph color={color} isDefault={isDefault} name={name} unserved={unserved} />
+          <ProfileAvatar
+            aria-hidden="true"
+            className={cn(unserved && 'grayscale')}
+            color={color}
+            connectionId={connectionId}
+            hasAvatar={hasAvatar}
+            isDefault={isDefault}
+            name={name}
+          />
           <span className="truncate">{label}</span>
           {summary && !hideStatus && <ProfileStatusDot summary={summary} />}
         </span>
@@ -1100,12 +1126,14 @@ interface ProfilePillProps {
   slot?: string
   connectionId?: string
   profile?: string
+  hasAvatar?: boolean
 }
 
 function ProfilePill({
   active,
   connectionId,
   glyph,
+  hasAvatar = false,
   label,
   muted = false,
   onSelect,
@@ -1141,7 +1169,19 @@ function ProfilePill({
         type="button"
         variant="ghost"
       >
-        {pending ? <Loader2 className="animate-spin" /> : <Codicon name={glyph} size="0.875rem" />}
+        {pending ? (
+          <Loader2 className="animate-spin" />
+        ) : profile && glyph === 'home' ? (
+          <ProfileAvatar
+            color={null}
+            connectionId={connectionId}
+            hasAvatar={hasAvatar}
+            isDefault={glyph === 'home'}
+            name={profile}
+          />
+        ) : (
+          <Codicon name={glyph} size="0.875rem" />
+        )}
         {summary && !active && (
           <span className="absolute -right-0.5 -top-0.5">
             <ProfileStatusDot summary={summary} />
@@ -1412,6 +1452,7 @@ interface ProfileSquareProps {
   active: boolean
   color: null | string
   connectionId: null | string
+  hasAvatar: boolean
   label: string
   name: string
   onSelect: () => void
@@ -1442,6 +1483,7 @@ function ProfileSquare({
   active,
   color,
   connectionId,
+  hasAvatar,
   label,
   name,
   onConnectRemote,
@@ -1461,6 +1503,7 @@ function ProfileSquare({
   // Hovering a square telegraphs the switch — start that profile's backend
   // spawn now so a cold click doesn't pay the full boot.
   const { cancelPrewarm, notePointerMove, startPrewarm } = useProfilePrewarm(name, prewarmProfilePick)
+  const avatar = useProfileAvatar(name, connectionId, hasAvatar)
 
   // The square carries its profile's session rollup — but never when active:
   // the workspace is homed there and the sidebar below already shows that
@@ -1568,7 +1611,7 @@ function ProfileSquare({
                     onPointerMove={notePointerMove}
                     onPointerUp={clearPress}
                   >
-                    {profileShortLabel(label)}
+                    <ProfileSquareFace avatar={avatar} label={label} />
                     {/* The "remote" badge: a tiny globe pinned to the corner of an
                         overridden profile's square, so which profiles leave this
                         machine is visible at a glance (#91349). */}

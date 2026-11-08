@@ -51,7 +51,6 @@ import { responseMessageRole, ResponseMessages } from './response-group'
 import { holdSessionSwitching } from './session-switching'
 import { resolveShowEarlierAction, shouldAutoShowEarlier, useTranscriptWindow } from './transcript-window'
 import { useMessagesBelow } from './use-messages-below'
-import { useStickyPromptClip } from './use-sticky-prompt-clip'
 import { useTimelineReveal } from './use-timeline-reveal'
 
 type ThreadMessageComponents = ComponentProps<typeof ThreadPrimitive.MessageByIndex>['components']
@@ -505,7 +504,13 @@ const TurnRow = memo(function TurnRow({ components, group, resetKey, virtualized
 })
 
 const ShowEarlierButton: FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (
-  <Button className="mx-auto mb-(--conversation-turn-gap)" onClick={onClick} size="xs" type="button" variant="secondary">
+  <Button
+    className="mx-auto mb-(--conversation-turn-gap)"
+    onClick={onClick}
+    size="xs"
+    type="button"
+    variant="secondary"
+  >
     {label}
   </Button>
 )
@@ -1606,7 +1611,6 @@ const ThreadMessageListInner: FC<ThreadMessageListProps> = ({
   }, [visibleGroups, components, rowKeySignature, structuralSignature, tailStart])
 
   useMessagesBelow({ contentRef, scrollRef, isAtBottom, paneVisible, rows, sessionKey, sessionId: scrollSessionId })
-  useStickyPromptClip({ contentRef, scrollRef, paneVisible, rows })
 
   return (
     <div

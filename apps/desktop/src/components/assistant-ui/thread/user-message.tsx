@@ -54,7 +54,7 @@ export function StickyHumanMessageContainer({
     // while attachments below it scroll away.
     <>
       <div
-        className="group/user-message sticky z-40 -mx-4 flex w-[calc(100%+2rem)] min-w-0 max-w-none flex-col items-stretch gap-0 self-end overflow-visible px-4 pb-(--conversation-turn-gap) pt-1"
+        className="group/user-message -mx-4 flex w-[calc(100%+2rem)] min-w-0 max-w-none flex-col items-stretch gap-0 self-end overflow-visible px-4 pb-(--conversation-turn-gap) pt-1"
         data-message-id={messageId}
         data-role="user"
         data-slot="aui_user-message-root"
@@ -77,7 +77,7 @@ export function StickyHumanMessageContainer({
 // so without the carve-out, clicking a stuck bubble drags the window instead of
 // opening the edit composer.
 export const USER_BUBBLE_BASE_CLASS =
-  'composer-human-message relative flex w-full min-w-0 max-w-full flex-col gap-1.5 overflow-y-auto rounded-xl border-[0.5px] bg-(--dt-user-bubble) px-3 py-2 text-left [-webkit-app-region:no-drag]'
+  'composer-human-message relative flex w-[80%] min-w-0 max-w-none self-end flex-col gap-1.5 overflow-y-auto rounded-xl border-[0.5px] bg-(--dt-user-bubble) px-3 py-2 text-left [-webkit-app-region:no-drag]'
 
 export const USER_ACTION_ICON_BUTTON_CLASS =
   'grid place-items-center rounded-md bg-transparent text-(--linear-text-secondary) transition-colors hover:bg-(--linear-hover-control) hover:text-(--linear-text-primary) disabled:cursor-default disabled:text-(--linear-text-quaternary) disabled:opacity-70'
@@ -583,7 +583,7 @@ export const UserMessage: FC<{
           // where the sticky-prompt clip hides its top even at rest. Image refs
           // render as thumbnails, file refs as chips; no border.
           attachmentRefs.length > 0 && !chipOnlyTurn ? (
-            <div className="mb-2 flex flex-wrap gap-1">
+            <div className="mb-2 flex w-full max-w-none flex-wrap gap-1">
               <DirectiveContent text={attachmentRefs.join(' ')} />
             </div>
           ) : null

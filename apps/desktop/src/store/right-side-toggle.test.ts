@@ -1,13 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { findGroupOfPane, group, type LayoutNode, split } from '@/components/pane-shell/tree/model'
-import { $collapsedTreeSides, $hiddenTreePanes, $layoutTree } from '@/components/pane-shell/tree/store'
+import { $collapsedTreeSides, $hiddenTreePanes, $layoutTree, setTreePaneHidden } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 import {
   $fileBrowserOpen,
   $leftSideOpen,
   $panesFlipped,
+  $rightSideOpen,
   $sidebarOpen,
+  openRightSide,
   setFileBrowserOpen,
   setSidebarOpen,
   toggleLeftSide,
@@ -109,6 +111,23 @@ describe('positional right-side toggle', () => {
     expect($collapsedTreeSides.get().has('right')).toBe(false)
     expect(Boolean(groupOf('files')?.minimized)).toBe(false)
     expect($fileBrowserOpen.get()).toBe(true)
+  })
+
+  it('opens an empty right pane when the registered file view is hidden', () => {
+    $layoutTree.set(split('row', [group(['sessions']), group(['workspace']), group(['files'])]))
+    setTreePaneHidden('files', true)
+    setFileBrowserOpen(false)
+
+    expect($hiddenTreePanes.get().has('files')).toBe(true)
+    expect($fileBrowserOpen.get()).toBe(false)
+    expect($rightSideOpen.get()).toBe(false)
+
+    openRightSide()
+
+    expect($hiddenTreePanes.get().has('files')).toBe(false)
+    expect($fileBrowserOpen.get()).toBe(true)
+    expect($rightSideOpen.get()).toBe(true)
+    expect(Boolean(groupOf('files')?.minimized)).toBe(false)
   })
 })
 

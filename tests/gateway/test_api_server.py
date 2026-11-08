@@ -984,15 +984,13 @@ class TestSkillsEndpoint:
             {"name": "github", "description": "GitHub workflow skill", "category": "github"},
             {"name": "ascii-art", "description": "ASCII art generation", "category": "creative"},
         ]
-        with patch(
-            "tools.skills_tool.find_all_skills",
-            return_value=list(fake_skills),
-        ):
-            app = _create_app(adapter)
-            async with TestClient(TestServer(app)) as cli:
+        lookup = patch("tools.skills_tool.find_all_skills", autospec=True, return_value=fake_skills)
+        with lookup as find_all_skills:
+            async with TestClient(TestServer(_create_app(adapter))) as cli:
                 resp = await cli.get("/v1/skills")
                 assert resp.status == 200
                 data = await resp.json()
+                find_all_skills.assert_called_once_with(skip_disabled=False)
                 assert data["object"] == "list"
                 names = sorted(s["name"] for s in data["data"])
                 assert names == ["ascii-art", "github"]

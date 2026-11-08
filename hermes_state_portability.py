@@ -31,6 +31,7 @@ logger = logging.getLogger("hermes_state")
 _IMPORT_SESSION_TEXT_FIELDS = (
     "source", "user_id", "model", "system_prompt", "end_reason", "cwd", "git_branch", "git_repo_root",
     "billing_provider", "billing_base_url", "billing_mode", "cost_status", "cost_source", "pricing_version", "title",
+    "scratchpad",
 )
 # ``role`` is validated separately (non-empty string).
 _IMPORT_MESSAGE_TEXT_FIELDS = (
@@ -49,7 +50,7 @@ _IMPORT_SESSION_INSERT_SQL = """INSERT INTO sessions (
                            cwd, git_branch, git_repo_root,
                            billing_provider, billing_base_url, billing_mode,
                            estimated_cost_usd, actual_cost_usd, cost_status, cost_source,
-                           pricing_version, title, api_call_count, archived, auto_archived, pinned, hidden
+                           pricing_version, title, scratchpad, api_call_count, archived, auto_archived, pinned, hidden
                        )
                        VALUES (
                            :id, :source, :user_id, :model, :model_config,
@@ -59,13 +60,13 @@ _IMPORT_SESSION_INSERT_SQL = """INSERT INTO sessions (
                            :reasoning_tokens, :cwd, :git_branch, :git_repo_root,
                            :billing_provider, :billing_base_url, :billing_mode,
                            :estimated_cost_usd, :actual_cost_usd, :cost_status,
-                           :cost_source, :pricing_version, :title,
+                           :cost_source, :pricing_version, :title, :scratchpad,
                            :api_call_count, :archived, :auto_archived, :pinned, :hidden
                        )"""
 # Columns copied verbatim from the payload; typed columns are converted below.
 _IMPORT_PASSTHROUGH_COLS = (
     "user_id", "model", "model_config", "end_reason", "cwd", "git_branch", "git_repo_root", "billing_provider",
-    "billing_base_url", "billing_mode", "cost_status", "cost_source", "pricing_version", "title",
+    "billing_base_url", "billing_mode", "cost_status", "cost_source", "pricing_version", "title", "scratchpad",
 )
 _IMPORT_INT_COLS = (
     "input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens", "reasoning_tokens", "api_call_count",
@@ -196,11 +197,9 @@ class SessionPortabilityMixin:
             existing = self._find_foreign_import_on_conn(conn, origin)
             if existing:
                 return {"session_id": existing, "already_imported": True}
-            # Titles are globally unique within a profile. Preserve a readable
-            # title while giving unrelated conversations with the same text room.
+            # Session titles are display labels, so an imported conversation
+            # keeps the exact name even when another chat already uses it.
             item = normalized[0]
-            if conn.execute("SELECT 1 FROM sessions WHERE title = ?", (title,)).fetchone():
-                item["session"]["title"] = f"{title} ({session_id[-12:]})"
             self._import_session_row(conn, item["session"], item["messages"], session_id)
             conn.execute("UPDATE sessions SET origin_json = ?, profile_name = ? WHERE id = ?",
                          (json.dumps({"imported_from": origin}), profile, session_id))

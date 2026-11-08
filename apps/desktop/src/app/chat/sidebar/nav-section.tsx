@@ -31,7 +31,8 @@ import {
   CRON_ROUTE,
   MESSAGING_ROUTE,
   SIDEBAR_NAV_AREA,
-  type SidebarNavContribution
+  type SidebarNavContribution,
+  SKILLS_ROUTE
 } from '../../routes'
 import type { SidebarNavItem } from '../../types'
 import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
@@ -54,6 +55,12 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     icon: props => <Codicon name="symbol-misc" {...props} />,
     route: CAPABILITIES_ROUTE,
     keybindActionId: 'nav.capabilities'
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    icon: props => <Codicon name="book" {...props} />,
+    route: SKILLS_ROUTE
   },
   {
     id: 'messaging',
@@ -84,7 +91,7 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
 ]
 
 // Built-in rows whose id is the view they light up at.
-const VIEW_BACKED_ROWS: ReadonlySet<string> = new Set(['capabilities', 'messaging', 'artifacts', 'cron'])
+const VIEW_BACKED_ROWS: ReadonlySet<string> = new Set(['capabilities', 'skills', 'messaging', 'artifacts', 'cron'])
 
 function isNavRowActive(item: SidebarNavItem, currentView: AppView, pathname: string) {
   return (
@@ -112,7 +119,7 @@ function SidebarNavRow({ active, item, kbd, onNavigate, onNewSessionSplit }: Sid
   const s = t.sidebar
   const isInteractive = Boolean(item.action) || Boolean(item.route)
   const isNewSession = item.id === 'new-session'
-  const label = s.nav[item.id] ?? item.label
+  const label = item.id === 'skills' ? t.skills.tabSkills : (s.nav[item.id] ?? item.label)
 
   const button = (
     <SidebarMenuButton

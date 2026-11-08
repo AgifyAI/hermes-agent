@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, SecretStr, StrictBool, StrictInt, field_validator
+from pydantic import BaseModel, Field, SecretStr, StrictBool, StrictInt, StrictStr, field_validator
 
 
 class ConfigUpdate(BaseModel):
@@ -287,6 +287,8 @@ class SessionRename(BaseModel):
     pinned: Optional[StrictBool] = None  # durable "keep" (Desktop pins); exempt from auto_archive
     # Read-state watermark (sessions.last_read_at): True = unread, False = read now, None = leave.
     unread: Optional[StrictBool] = None
+    # Private Desktop note. ``null`` explicitly clears it, while omission leaves it unchanged.
+    scratchpad: Optional[StrictStr] = Field(None, max_length=100_000)
     profile: Optional[str] = None  # session owned by another profile (opens its state.db)
 
 class SessionOwnerBackfill(BaseModel):

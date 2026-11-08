@@ -153,7 +153,13 @@ def _idle_compaction(
     _idle_after = getattr(agent, "compression_idle_compact_after_seconds", 0)
     if not (agent.compression_enabled and _idle_after > 0 and messages):
         return
-    _idle_gap = time.time() - getattr(agent, "_last_activity_ts", time.time())
+    # DurableTurnLease stamps `_last_activity_ts` at turn entry for the liveness watchdog. The
+    # lease preserves the timestamp from the preceding turn separately so this gate can still
+    # measure how long the conversation was idle before the user resumed it.
+    _idle_reference_ts = getattr(agent, "_idle_compaction_reference_ts", None)
+    if not isinstance(_idle_reference_ts, (int, float)) or isinstance(_idle_reference_ts, bool):
+        _idle_reference_ts = getattr(agent, "_last_activity_ts", time.time())
+    _idle_gap = time.time() - _idle_reference_ts
     if _idle_gap < _idle_after:
         return
     _compressor = agent.context_compressor

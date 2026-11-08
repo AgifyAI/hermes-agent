@@ -19,11 +19,13 @@ import {
   CAPABILITIES_ROUTE,
   contributedRoutes,
   MESSAGING_ROUTE,
-  ROUTES_AREA
+  ROUTES_AREA,
+  SKILLS_ROUTE
 } from '../routes'
 
 import { paneMirror } from './pane-mirror'
 
+const PersonalSkillsView = lazy(async () => ({ default: (await import('../personal-skills')).PersonalSkillsView }))
 const CapabilitiesView = lazy(async () => ({ default: (await import('../capabilities')).CapabilitiesView }))
 const MessagingView = lazy(async () => ({ default: (await import('../messaging')).MessagingView }))
 const ArtifactsView = lazy(async () => ({ default: (await import('../artifacts')).ArtifactsView }))
@@ -32,6 +34,7 @@ const ArtifactsView = lazy(async () => ({ default: (await import('../artifacts')
 const BUILTIN_PAGES: Record<string, { render: () => ReactNode; title: string }> = {
   [ARTIFACTS_ROUTE]: { render: () => <ArtifactsView />, title: 'Artifacts' },
   [MESSAGING_ROUTE]: { render: () => <MessagingView />, title: 'Messaging' },
+  [SKILLS_ROUTE]: { render: () => <PersonalSkillsView />, title: 'Skills' },
   [CAPABILITIES_ROUTE]: { render: () => <CapabilitiesView />, title: 'Capabilities' }
 }
 

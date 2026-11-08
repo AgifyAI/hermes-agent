@@ -27,23 +27,28 @@ export function useStatusDrawer(sessionKey: string | null) {
   const key = sessionKey ? statusDrawerKey({ connectionId, profile, targetProfile, sessionId: sessionKey }) : null
   const saved = useStoreSelector($collapsedStatusDrawers, keys => key !== null && keys.includes(key))
   const draftKey = key ?? ownerKey
-  const [draft, setDraft] = useState({ key: draftKey, collapsed: false })
+  // New conversations and conversations without an explicit choice start
+  // folded. Keep the mounted conversation's manual choice local so opening
+  // still works immediately, while the existing store continues to remember
+  // deliberate collapses.
+  const [draft, setDraft] = useState({ key: draftKey, collapsed: true })
 
   // Unsaved drafts have no durable preference. Never carry their choice into
   // a stored conversation selected from the sidebar or a subsequent new chat.
   if (draft.key !== draftKey) {
-    setDraft({ key: draftKey, collapsed: false })
+    setDraft({ key: draftKey, collapsed: true })
   }
 
-  const collapsed = key ? saved : draft.key === draftKey && draft.collapsed
+  const collapsed = saved || draft.collapsed
 
   return {
     collapsed,
     toggle: () => {
+      const next = !collapsed
+      setDraft({ key: draftKey, collapsed: next })
+
       if (key) {
-        setStatusDrawerCollapsed(key, !collapsed)
-      } else {
-        setDraft({ key: draftKey, collapsed: !collapsed })
+        setStatusDrawerCollapsed(key, next)
       }
     }
   }

@@ -20,6 +20,7 @@ import { reconcilePendingSubmissions } from '@/store/pending-submissions'
 import { $connection, setSessionsLoading } from '@/store/session'
 
 import type { QueueEditState } from '../composer-utils'
+import { requestComposerQueueSend } from '../queue-send'
 import type { ChatBarProps } from '../types'
 
 import { useComposerQueue } from './use-composer-queue'
@@ -168,6 +169,9 @@ describe('useComposerQueue park integration', () => {
       const entry = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'recoverable' })!
       const { hook, onSubmit } = renderQueueHook({ busy: true })
       onSubmit.mockResolvedValue(false)
+      act(() => {
+        expect(hook.result.current.sendQueuedNow(entry.id)).toBe(true)
+      })
       hook.rerender({ busy: false })
       await act(async () => {
         await Promise.resolve()
@@ -207,6 +211,9 @@ describe('useComposerQueue park integration', () => {
       enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'keep on disconnect' })
       const { hook, onSubmit } = renderQueueHook({ busy: true })
       onSubmit.mockRejectedValue(new Error('unavailable'))
+      act(() => {
+        expect(hook.result.current.sendQueuedNow(getQueuedPrompts(SESSION_KEY)[0]!.id)).toBe(true)
+      })
       hook.rerender({ busy: false })
       await act(async () => {
         await Promise.resolve()
@@ -223,13 +230,40 @@ describe('useComposerQueue park integration', () => {
     }
   })
 
-  it('auto-drains an unparked queue once idle', async () => {
-    enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'flows' })
+  it('keeps an unparked queue until the user sends it', async () => {
+    const entry = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'flows' })!
 
-    const { onSubmit } = renderQueueHook()
+    const { hook, onSubmit } = renderQueueHook()
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(1)
+
+    await act(async () => {
+      await hook.result.current.sendQueuedNow(entry.id)
+    })
+    expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(0)
+  })
+
+  it('routes a sidebar send to one visible composer when a session has two mounted owners', async () => {
+    const entry = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'sidebar send' })
+    const first = renderQueueHook({ busy: true })
+    const second = renderQueueHook({ busy: true })
+
+    act(() => {
+      expect(requestComposerQueueSend(SESSION_KEY, entry!.id)).toBe(true)
+    })
+
+    expect(first.onSubmit).not.toHaveBeenCalled()
+    expect(second.onSubmit).not.toHaveBeenCalled()
+    expect(getQueuedPrompts(SESSION_KEY)[0]?.sendWhenIdle).toBe(true)
+
+    first.hook.rerender({ busy: false })
+    await waitFor(() => expect(first.onSubmit).toHaveBeenCalledTimes(1))
+    expect(second.onSubmit).not.toHaveBeenCalled()
   })
 
   it('holds a parked queue at the idle settle (the Stop edge)', async () => {
@@ -275,10 +309,11 @@ describe('useComposerQueue park integration', () => {
       hook.result.current.sendQueuedNow(target.id)
     })
 
-    // The interrupt fired and the park lifted — this interrupt exists to reach
-    // the queue, not to halt it.
-    expect(onCancel).toHaveBeenCalledTimes(1)
+    // Sending one row is a resume gesture, but it does not interrupt the
+    // current turn. The row is marked for the settle drain.
+    expect(onCancel).not.toHaveBeenCalled()
     expect(isQueueParked(SESSION_KEY)).toBe(false)
+    expect(getQueuedPrompts(SESSION_KEY).find(entry => entry.text === 'send me now')?.sendWhenIdle).toBe(true)
 
     // Turn settles → the promoted entry drains.
     hook.rerender({ busy: false })
@@ -314,9 +349,17 @@ describe('useComposerQueue park integration', () => {
 
     expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(1)
 
-    // Turn settles → the surviving entry drains normally.
+    // The rejected steer leaves the row prepared; the user must explicitly
+    // send it after the turn settles.
     hook.rerender({ busy: false })
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+    await act(async () => {
+      await hook.result.current.sendQueuedNow(entry!.id)
+    })
+    expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(onSubmit.mock.calls[0]?.[0]).toBe('kept on reject')
   })
 
@@ -367,7 +410,7 @@ describe('useComposerQueue park integration', () => {
     expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(1)
   })
 
-  it('auto-drains a restored queue once the session list finishes loading', async () => {
+  it('sends a restored queue after a manual click once the session list finishes loading', async () => {
     setSessionsLoading(true)
     enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'send after load' })
 
@@ -381,7 +424,14 @@ describe('useComposerQueue park integration', () => {
     setSessionsLoading(false)
     hook.rerender({ busy: false })
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+    await act(async () => {
+      await hook.result.current.sendQueuedNow(getQueuedPrompts(SESSION_KEY)[0]!.id)
+    })
+    expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(0)
   })
 
@@ -401,7 +451,7 @@ describe('useComposerQueue park integration', () => {
       expect(getQueuedPrompts(SESSION_KEY)).toHaveLength(0)
     })
 
-    it('falls back to send-now (interrupt) when the live turn refuses the steer', async () => {
+    it('falls back to scheduling a send when the live turn refuses the steer', async () => {
       const other = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'older' })!
       const entry = enqueueQueuedPrompt(SESSION_KEY, { attachments: [], text: 'refused' })!
       const onSteer = vi.fn(async () => false)
@@ -412,11 +462,12 @@ describe('useComposerQueue park integration', () => {
       })
 
       expect(onSteer).toHaveBeenCalledTimes(1)
-      expect(onCancel).toHaveBeenCalledTimes(1)
-      expect(getQueuedPrompts(SESSION_KEY).map(e => e.id)).toEqual([entry.id, other.id])
+      expect(onCancel).not.toHaveBeenCalled()
+      expect(getQueuedPrompts(SESSION_KEY).map(e => e.id)).toEqual([other.id, entry.id])
+      expect(getQueuedPrompts(SESSION_KEY).find(e => e.id === entry.id)?.sendWhenIdle).toBe(true)
     })
 
-    it('interrupts directly for a payload a steer cannot carry', async () => {
+    it('schedules a payload a steer cannot carry for the next idle turn', async () => {
       const entry = enqueueQueuedPrompt(SESSION_KEY, {
         attachments: [{ id: 'shot', kind: 'image', label: 'shot.png' }],
         text: 'look at this'
@@ -430,7 +481,8 @@ describe('useComposerQueue park integration', () => {
       })
 
       expect(onSteer).not.toHaveBeenCalled()
-      expect(onCancel).toHaveBeenCalledTimes(1)
+      expect(onCancel).not.toHaveBeenCalled()
+      expect(getQueuedPrompts(SESSION_KEY).find(e => e.id === entry.id)?.sendWhenIdle).toBe(true)
     })
 
     it('a repeat Enter while the steer is in flight never escalates to an interrupt', async () => {

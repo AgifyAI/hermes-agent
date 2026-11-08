@@ -18,6 +18,7 @@ const onboarding = atom({ manual: false })
 
 vi.mock('@/store/profile', () => ({
   $activeGatewayProfile: atom('alpha'),
+  $showAllProfiles: atom(false),
   $profiles: atom([]),
   refreshProfiles: async () => {},
   normalizeProfileKey: (p: string | null) => p || 'default',

@@ -50,6 +50,97 @@ load_config = late("load_config", "hermes_cli.config")
 save_config = late("save_config", "hermes_cli.config")
 
 
+def _pending_memory_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Return the review fields needed by Desktop without exposing the on-disk path."""
+    payload = record.get("payload")
+
+    return {
+        "id": record.get("id", ""),
+        "summary": record.get("summary", ""),
+        "origin": record.get("origin", "foreground"),
+        "created_at": record.get("created_at", 0),
+        "payload": payload if isinstance(payload, dict) else {},
+    }
+
+
+@router.get("/api/memory/pending")
+async def list_pending_memory(profile: Optional[str] = None):
+    """List staged memory writes for the profile shown by the Desktop panel."""
+    def _run():
+        from tools import write_approval as wa
+
+        return {
+            "approval_enabled": wa.write_approval_enabled(wa.MEMORY),
+            "pending": [_pending_memory_record(record) for record in wa.list_pending(wa.MEMORY)],
+        }
+
+    return await config_scoped_to_thread(profile, _run)
+
+
+@router.post("/api/memory/pending/{pending_id}/approve")
+async def approve_pending_memory(pending_id: str, profile: Optional[str] = None):
+    """Apply one staged memory write and remove it once the write succeeds."""
+    def _run():
+        from tools import write_approval as wa
+        from tools.memory_tool import apply_memory_pending, load_on_disk_store
+
+        record = wa.get_pending(wa.MEMORY, pending_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="Pending memory write not found")
+        result = apply_memory_pending(record.get("payload") or {}, load_on_disk_store())
+        if not result.get("success"):
+            raise HTTPException(status_code=409, detail=result.get("error", "Memory write was not applied"))
+        wa.discard_pending(wa.MEMORY, pending_id)
+
+        return {"ok": True, "id": pending_id, "result": result}
+
+    return await config_scoped_to_thread(profile, _run)
+
+
+@router.patch("/api/memory/pending/{pending_id}")
+async def edit_pending_memory(pending_id: str, body: dict[str, Any], profile: Optional[str] = None):
+    """Edit the proposed text while it is still waiting for a decision."""
+    content = body.get("content")
+    if not isinstance(content, str):
+        raise HTTPException(status_code=400, detail="content must be a string")
+
+    def _run():
+        from tools import write_approval as wa
+        from utils import atomic_json_write
+
+        record = wa.get_pending(wa.MEMORY, pending_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="Pending memory write not found")
+        payload = record.get("payload")
+        if not isinstance(payload, dict):
+            raise HTTPException(status_code=409, detail="Pending memory payload is invalid")
+        action = payload.get("action")
+        if action in {"add", "replace", "patch", "create", "append"}:
+            payload["content"] = content
+        else:
+            raise HTTPException(status_code=400, detail="This pending write cannot be edited")
+        record["payload"] = payload
+        atomic_json_write(wa._pending_path(wa.MEMORY, pending_id), record)
+
+        return {"ok": True, "id": pending_id}
+
+    return await config_scoped_to_thread(profile, _run)
+
+
+@router.post("/api/memory/pending/{pending_id}/reject")
+async def reject_pending_memory(pending_id: str, profile: Optional[str] = None):
+    """Reject one staged memory write."""
+    def _run():
+        from tools import write_approval as wa
+
+        if not wa.discard_pending(wa.MEMORY, pending_id):
+            raise HTTPException(status_code=404, detail="Pending memory write not found")
+
+        return {"ok": True, "id": pending_id}
+
+    return await config_scoped_to_thread(profile, _run)
+
+
 def _spawn_action(argv: list[str], name: str, *, log_msg: str, prefix: str,
                   profile: Optional[str] = None) -> dict:
     """Spawn a ``hermes -p <profile> <argv>`` action; spawn failure -> 500.

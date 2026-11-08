@@ -51,7 +51,7 @@ describe('SettingsProfileScope', () => {
     fireEvent.click(screen.getByRole('button', { name: 'coder' }))
     expect($settingsScopeOverride.get()).toBe('coder')
 
-    fireEvent.click(screen.getByRole('button', { name: 'default' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Eugène' }))
     expect($settingsScopeOverride.get()).toBeNull()
   })
 
@@ -88,7 +88,7 @@ describe('SettingsProfileScope', () => {
 
     render(<SettingsProfileScope />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'default' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Eugène' }))
     expect($settingsScopeOverride.get()).toBe('default')
 
     const note = document.querySelector('[role="status"]')

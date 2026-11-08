@@ -18,7 +18,7 @@ Every conversation — whether from the CLI, Telegram, Discord, Slack, WhatsApp,
 
 The SQLite database stores:
 - Session ID, source platform, user ID
-- **Session title** (unique, human-readable name)
+- **Session title** (a human-readable name)
 - Model name and configuration
 - System prompt snapshot
 - Full message history (role, content, tool calls, tool results)
@@ -329,7 +329,7 @@ hermes sessions rename 20250305_091523_a1b2c3d4 "refactoring auth module"
 
 ### Title Rules
 
-- **Unique** — no two sessions can share the same title
+- **Shared titles** — you can give several chats the same name, even in the same profile. Each keeps its own history. Select the chat in Desktop or use its session ID to resume a particular one from the command line.
 - **Max 100 characters** — keeps listing output clean
 - **Sanitized** — control characters, zero-width chars, and RTL overrides are stripped automatically
 - **Normal Unicode is fine** — emoji, CJK, accented characters all work
@@ -1141,7 +1141,7 @@ exists in state.db.
 
 Key tables in `state.db`:
 
-- **sessions** — session metadata (id, source, user_id, model, title, timestamps, token counts). Titles have a unique index (NULL titles allowed, only non-NULL must be unique).
+- **sessions** — session metadata (id, source, user_id, model, title, timestamps, token counts). Each session has its own ID, including sessions that share a title.
 - **messages** — full message history (role, content, tool_calls, tool_name, token_count)
 - **messages_fts** — FTS5 virtual table for full-text search across message content
 

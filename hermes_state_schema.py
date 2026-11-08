@@ -132,9 +132,15 @@ _SESSION_MODEL_USAGE_V20_SEED_SQL = """INSERT OR IGNORE INTO session_model_usage
                                  + COALESCE(cache_read_tokens, 0)
                                  + COALESCE(cache_write_tokens, 0)
                                  + COALESCE(reasoning_tokens, 0) > 0"""
+# User-facing session names are labels, so two conversations may share one.
+# Bot Mode still needs one durable registry row. Keep that narrow invariant in
+# the database by indexing only hidden canonical Bot Chats. Visible sessions
+# named "Bot Chat" remain ordinary user sessions and may be duplicated.
 _TITLE_UNIQUE_INDEX_SQL = (
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_title_unique ON sessions(title) WHERE title IS NOT NULL"
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_title_unique "
+    "ON sessions(title) WHERE title = 'Bot Chat' AND hidden = 1"
 )
+_TITLE_LOOKUP_INDEX_SQL = "CREATE INDEX IF NOT EXISTS idx_sessions_title ON sessions(title)"
 _STALE_KEY_UPSERT_SQL = (
     "INSERT INTO state_meta (key, value) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value = excluded.value"
 )
@@ -1201,41 +1207,60 @@ class SessionSchemaMixin:
             logger.debug("v22 session_model_usage rebuild skipped: %s", exc)
 
     def _ensure_unique_title_index(self, cursor: sqlite3.Cursor) -> None:
-        """Unique title index. Older DBs may hold duplicate titles from before the constraint.
-        Per title a user-owned (user/NULL) row beats llm > derived (``_title_rank``). User rows are
-        never dropped: the oldest keeps the title and newer ones become ``Title #k`` in started_at
-        order, so the "#N"-preferring lookup still opens the newest (#126764). Among auto titles
-        only, the newest highest-ranked keeps it; lower-ranked auto titles are cleared. Each change
-        is logged. Must never abort opening the DB, so the repair is guarded."""
+        """Keep only the Bot Mode registry constraint.
+
+        Older Hermes versions used a unique index over every non-empty title.
+        Drop that broad index during startup so existing sessions can acquire
+        the same display name. If a damaged store already contains several
+        hidden canonical Bot Chats, retain the oldest registry row and clear
+        the others before rebuilding the narrow index.
+        """
+        def index_sql(name: str) -> str | None:
+            row = cursor.execute(
+                "SELECT sql FROM sqlite_master WHERE type = 'index' AND name = ?", (name,)
+            ).fetchone()
+            return str(row[0]) if row and row[0] else None
+
+        def is_canonical_index(sql: str | None) -> bool:
+            if not sql:
+                return False
+            normalized = " ".join(sql.lower().replace('"', '').replace('`', '').split())
+
+            return (
+                "create unique index" in normalized
+                and "on sessions(title)" in normalized
+                and "where title = 'bot chat' and hidden = 1" in normalized
+            )
+
+        # The post-migration steady state is read-only. This matters because a
+        # DROP/CREATE pair takes the SQLite write lock even when it recreates
+        # the exact same index on every Desktop start.
+        unique_sql = index_sql("idx_sessions_title_unique")
+        lookup_sql = index_sql("idx_sessions_title")
+
+        if is_canonical_index(unique_sql):
+            if lookup_sql is None:
+                cursor.execute(_TITLE_LOOKUP_INDEX_SQL)
+            return
+
         try:
+            # Older stores used this name for a broad UNIQUE(title) index. Drop
+            # it only while converting that store to the Bot Chat-only rule.
+            cursor.execute("DROP INDEX IF EXISTS idx_sessions_title_unique")
             cursor.execute(_TITLE_UNIQUE_INDEX_SQL)
         except sqlite3.IntegrityError:
-            # Savepoint: a failure part-way must not leave a half-repaired store for
-            # _init_schema to commit without the index.
             cursor.execute("SAVEPOINT title_repair")
             try:
                 rows = cursor.execute(
-                    "SELECT rowid, title, title_source, started_at FROM sessions WHERE title IN "
-                    "(SELECT title FROM sessions WHERE title IS NOT NULL GROUP BY title HAVING COUNT(*) > 1)"
+                    "SELECT id FROM sessions WHERE title = 'Bot Chat' AND hidden = 1 "
+                    "ORDER BY started_at ASC, rowid ASC"
                 ).fetchall()
-                groups: dict[str, list] = {}
-                for row in sorted(rows, key=lambda r: (self._title_rank(r[2]), r[3], r[0]), reverse=True):
-                    groups.setdefault(row[1], []).append(row)
-                user_rank = self._TITLE_SOURCE_RANK[self.TITLE_SOURCE_USER]
-                for title, group in groups.items():
-                    # User titles: the OLDEST keeps the base and newer ones get "#k" in
-                    # chronological order, so resolve_session_by_title (which prefers the
-                    # latest "#N") still lands on the newest session.
-                    users = [r for r in reversed(group) if self._title_rank(r[2]) == user_rank]
-                    keep = users[0] if users else group[0]
-                    for rowid, *_ in users[1:]:
-                        renamed = next_title_in_lineage(cursor.connection, title)
-                        cursor.execute("UPDATE sessions SET title = ? WHERE rowid = ?", (renamed, rowid))
-                        logger.warning("Renamed duplicate user session title %r to %r", title, renamed)
-                    for rowid, _title, source, _started in group:
-                        if rowid != keep[0] and self._title_rank(source) != user_rank:
-                            cursor.execute("UPDATE sessions SET title = NULL WHERE rowid = ?", (rowid,))
-                            logger.warning("Cleared duplicate %s session title %r", source, title)
+                for row in rows[1:]:
+                    cursor.execute(
+                        "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
+                        (row[0],),
+                    )
+                    logger.warning("Cleared duplicate hidden canonical Bot Chat %s", row[0])
                 cursor.execute(_TITLE_UNIQUE_INDEX_SQL)
                 cursor.execute("RELEASE title_repair")
             except sqlite3.Error:
@@ -1244,6 +1269,11 @@ class SessionSchemaMixin:
                 logger.exception("Could not repair duplicate session titles; unique title index not created")
         except sqlite3.OperationalError:
             pass  # Index already exists
+
+        # Keep duplicate display names fast to resolve without making them
+        # unique. This is also created only during the one-time conversion.
+        if index_sql("idx_sessions_title") is None:
+            cursor.execute(_TITLE_LOOKUP_INDEX_SQL)
 
     def _init_fts(self, cursor: sqlite3.Cursor) -> None:
         """Create/repair the FTS objects on an FTS5-capable runtime. The DDL runs even when the

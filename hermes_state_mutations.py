@@ -2,7 +2,11 @@
 import time
 from hermes_state_runtime import RuntimeStoreError
 
-METADATA_FIELDS = {'title': str, 'archived': bool, 'hidden': bool, 'pinned': bool, 'unread': bool}
+METADATA_FIELDS = {
+    'title': str, 'archived': bool, 'hidden': bool, 'pinned': bool, 'unread': bool,
+    # A null scratchpad is the explicit clear operation sent by Desktop.
+    'scratchpad': (str, type(None)),
+}
 
 
 def validate_action(operation, payload):
@@ -51,7 +55,11 @@ def validate_action(operation, payload):
         valid = bool(payload) and not set(payload) - METADATA_FIELDS.keys()
     else:
         valid = operation in required and set(payload) == required[operation]
-    if not valid or any(type(value) is not METADATA_FIELDS[key] for key, value in payload.items()):
+    if not valid or any(
+        type(value) not in (expected if isinstance(expected, tuple) else (expected,))
+        for key, value in payload.items()
+        for expected in (METADATA_FIELDS[key],)
+    ):
         raise RuntimeStoreError('invalid_params')
 
 
@@ -107,6 +115,9 @@ def apply_action(db, conn, session_id, operation, payload, *, prepared=None):
             affected.update(db._set_session_title_in_transaction(
                 conn, session_id, value, source=db.TITLE_SOURCE_USER))
             result[key] = conn.execute('SELECT title FROM sessions WHERE id=?', (session_id,)).fetchone()[0]
+        elif key == 'scratchpad':
+            affected.update(db._set_lineage_column_in_transaction(conn, key, session_id, value))
+            result[key] = value
         else:
             column = 'last_read_at' if key == 'unread' else key
             stored = (0.0 if value else time.time()) if key == 'unread' else int(value)

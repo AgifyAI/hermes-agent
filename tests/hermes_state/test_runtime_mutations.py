@@ -79,11 +79,11 @@ def test_mutation_rules_and_receipt_failure_are_atomic(tmp_path, operation, payl
                 mutate(db, **{**args, 'session_id': 'bot'})
             db.create_session('collision', source='test')
             db.set_session_title('collision', 'New name')
-            with pytest.raises(ValueError, match='already in use'):
-                mutate(db, **args)
-            db.set_session_title('collision', '')
+            # User-facing names are labels, not identifiers: a second session
+            # may keep the same title without changing either history.
             mutate(db, **args)
             assert db.get_session_title('s') == 'New name'
+            assert db.get_session_title('collision') == 'New name'
             assert db.get_session_title_source('s') == db.TITLE_SOURCE_USER
             db.end_session('s', end_reason='compression')
             db.create_session('tip', source='test', parent_session_id='s')

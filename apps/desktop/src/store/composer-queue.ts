@@ -57,6 +57,9 @@ export interface QueuedPromptEntry {
    *  A user gesture — manual send, redirect, queueing a fresh prompt — clears
    *  it, exactly like the composer's in-process counter. */
   drainFailures?: number
+  /** The user explicitly asked for this row while the agent was busy. It is
+   * sent once the current turn settles, and never inferred for new rows. */
+  sendWhenIdle?: boolean
   /** The submission id a local entry drains under once its words or attachments were edited (else
    *  `id`). The first drain may already be admitted with its ack lost: under that id the edit would
    *  read as the original's retry and settle as delivered without ever running. */
@@ -304,8 +307,7 @@ const mutateSession = (sid: string, op: (queue: QueuedPromptEntry[]) => null | Q
 
 /** Replace one session's queue wholesale (canonical receipt reconciliation),
  *  through the same live-merge path as every other mutation. */
-export const writeSessionQueue = (sid: string, queue: QueuedPromptEntry[]): boolean =>
-  mutateSession(sid, () => queue)
+export const writeSessionQueue = (sid: string, queue: QueuedPromptEntry[]): boolean => mutateSession(sid, () => queue)
 
 if (typeof window !== 'undefined') {
   // Cross-window sync (#46732): every desktop window boots the queue atom from
@@ -520,6 +522,26 @@ export const promoteQueuedPrompt = (key: string | null | undefined, id: string):
     const index = queue.findIndex(e => e.id === id)
 
     return index <= 0 ? null : [queue[index]!, ...queue.slice(0, index), ...queue.slice(index + 1)]
+  })
+}
+
+/** Mark one queued row for delivery after the current turn settles. This is a
+ * deliberate user action, so an idle queue can stay prepared indefinitely. */
+export const scheduleQueuedPrompt = (key: string | null | undefined, id: string): boolean => {
+  const sid = sidOf(key)
+
+  if (!sid) {
+    return false
+  }
+
+  return mutateSession(sid, queue => {
+    const entry = queue.find(candidate => candidate.id === id && !candidate.serverStatus)
+
+    if (!entry || entry.sendWhenIdle) {
+      return null
+    }
+
+    return queue.map(candidate => (candidate.id === id ? { ...candidate, sendWhenIdle: true } : candidate))
   })
 }
 

@@ -256,8 +256,8 @@ describe('Settings ▸ Plugins ownership (review of #133182)', () => {
     await waitFor(() => expect(screen.queryByLabelText(/Destination/)).toBeNull())
     await waitFor(() => expect(screen.getByText('No plugin has settings yet.')).toBeTruthy())
 
-    expect(chip('default')).toBeTruthy()
-    fireEvent.click(chip('default')!)
+    expect(chip('Eugène')).toBeTruthy()
+    fireEvent.click(chip('Eugène')!)
     await waitFor(() => expect(document.querySelector('[data-tour$="review-notes"]')).toBeTruthy())
   })
 

@@ -20,7 +20,10 @@ async def branch_round(home, descriptor, previous=None):
         if previous is None:
             created = await rpc('session.create', request_id='branch-owner', source='gui', toolsets=[])
             sid = created['result']['session_id']
-            params = dict(session_id=sid, request_id='branch', expected_revision=0,
+            note = await rpc('session.mutate', session_id=sid, request_id='scratchpad', expected_revision=0,
+                             expected_generation=0, operation='sidebar', payload={'scratchpad': 'private note'})
+            assert note.get('result', {}).get('scratchpad') == 'private note', note
+            params = dict(session_id=sid, request_id='branch', expected_revision=1,
                           expected_generation=0, operation='branch', payload={})
         else:
             params, receipt = previous
@@ -59,6 +62,7 @@ def test_branch_route_and_frozen_policy_survive_owner_restart(tmp_path):
             assert policies[0]['principal_id'] == policies[1]['principal_id']
             assert policies[0]['route'] != policies[1]['route']
             assert db.execute('SELECT parent_session_id FROM sessions WHERE id=?', (child,)).fetchone()[0] == sid
+            assert db.execute('SELECT scratchpad FROM sessions WHERE id=?', (child,)).fetchone()[0] == 'private note'
             # An untitled branch is its own titled sidebar row (next name in the parent's lineage).
             assert db.execute('SELECT title FROM sessions WHERE id=?', (child,)).fetchone()[0]
     with daemon(tmp_path) as (home, descriptor):

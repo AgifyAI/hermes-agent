@@ -112,7 +112,7 @@ describe('A reviewed catalog pick', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Blender' })
     expect(within(dialog).getByText('Verified')).toBeTruthy()
     expect(within(dialog).getByText(BLENDER.summary)).toBeTruthy()
-    expect(within(dialog).getByText('Reviewed by Nous. Installs for default and turns on right away.')).toBeTruthy()
+    expect(within(dialog).getByText('Reviewed by Nous. Installs for Eugène and turns on right away.')).toBeTruthy()
     expect(within(dialog).queryByText(BLENDER.repo)).toBeNull()
     expect(within(dialog).queryByRole('combobox')).toBeNull()
     expect(within(dialog).queryByRole('checkbox')).toBeNull()

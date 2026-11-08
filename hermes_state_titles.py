@@ -91,6 +91,35 @@ class SessionTitlesMixin:
             lambda conn: self._set_session_title_in_transaction(conn, session_id, title, source=source)
         ))
 
+    def set_session_hidden(self, session_id: str, hidden: bool) -> bool:
+        """Hide/unhide a session; keep hidden canonical Bot Chat names unique."""
+        if not hidden:
+            return self._set_lineage_column("hidden", session_id, 0)
+
+        def _hide(conn):
+            row = conn.execute("SELECT title FROM sessions WHERE id = ?", (session_id,)).fetchone()
+            if row and row[0] == self.CANONICAL_BOT_CHAT_TITLE:
+                conflict = conn.execute(
+                    "SELECT id, archived FROM sessions "
+                    "WHERE id != ? AND title = ? AND hidden = 1 LIMIT 1",
+                    (session_id, self.CANONICAL_BOT_CHAT_TITLE),
+                ).fetchone()
+                if conflict:
+                    if conflict[1]:
+                        conn.execute(
+                            "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
+                            (conflict[0],),
+                        )
+                    else:
+                        raise ValueError(
+                            "A hidden canonical Bot Chat already exists for this profile "
+                            f"(session {conflict[0]})"
+                        )
+
+            return self._set_lineage_column_in_transaction(conn, "hidden", session_id, 1)
+
+        return bool(self._execute_write(_hide))
+
     def _set_session_title_in_transaction(self, conn, session_id: str, title: str, *, source: str):
         """Reuse title rules within an authority-owned transaction; never commit here."""
         title = self.sanitize_title(title)
@@ -116,7 +145,9 @@ class SessionTitlesMixin:
             return []
         if not is_user and current["title"] is not None and self._title_rank(current["title_source"]) >= new_rank:
             return []
-        if title:
+        # A visible user session may freely use the display label "Bot Chat".
+        # Only a hidden row participates in Bot Mode's name-based registry.
+        if title and not (title == self.CANONICAL_BOT_CHAT_TITLE and not bool(current["hidden"])):
             cleared = self._resolve_title_conflict(conn, session_id, title)
             if cleared:
                 affected.append(cleared)
@@ -129,14 +160,34 @@ class SessionTitlesMixin:
         return [*affected, session_id] if changed else affected
 
     def _resolve_title_conflict(self, conn, session_id: str, title: str) -> Optional[str]:
-        """Free ``title`` for ``session_id`` inside the caller's write transaction, or raise
-        ValueError when another session legitimately holds it. The one place the uniqueness
-        rule lives, shared by renames and the API server's create-with-title. Returns the id
-        whose title was cleared (an affected row for mutation receipts), else None."""
-        conflict = conn.execute(
+        """Keep the hidden Bot Mode registry unique.
+
+        Ordinary session titles are display labels and may be reused freely.
+        Hidden canonical Bot Chats are the one exception because their exact
+        name is how Bot Mode finds the persistent conversation. The schema's
+        partial index protects the same rule during concurrent writes, while
+        this check keeps the error readable and handles deliberate retirement.
+        """
+        conflicts = conn.execute(
             f"SELECT id, archived, hidden, {self._EMPTY_SESSION_WHERE} AS ghost "
-            "FROM sessions WHERE title = ? AND id != ?", (title, session_id),
-        ).fetchone()
+            "FROM sessions WHERE title = ? AND id != ? ORDER BY started_at ASC, rowid ASC",
+            (title, session_id),
+        ).fetchall()
+        if title != self.CANONICAL_BOT_CHAT_TITLE:
+            # Duplicate labels are valid across independent chats. A
+            # compression continuation is the one exception: transfer the
+            # label off its hidden ancestor so the projected conversation has
+            # one display title and the ancestor stays out of the picker.
+            for conflict in conflicts:
+                if self._is_compression_ancestor(conn, ancestor_id=conflict["id"], descendant_id=session_id):
+                    conn.execute(
+                        "UPDATE sessions SET title = NULL, title_source = NULL WHERE id = ?",
+                        (conflict["id"],),
+                    )
+                    return conflict["id"]
+            return None
+
+        conflict = next((row for row in conflicts if bool(row["hidden"])), None)
         if not conflict:
             return None
         conflict_id = conflict["id"]
@@ -194,10 +245,14 @@ class SessionTitlesMixin:
 
     def get_session_by_title(self, title: str) -> Optional[dict[str, Any]]:
         """Look up a session by exact title. Returns session dict or None."""
+        # Ordinary names may have several matches after the duplicate-title
+        # migration. Keep the historical single-row API by returning the most
+        # recently started row. Bot Mode resolves only its hidden registry row.
+        canonical_filter = " AND s.hidden = 1" if title == self.CANONICAL_BOT_CHAT_TITLE else ""
         row = self._read_one(
             "SELECT s.*, COALESCE(sp.prompt, s.system_prompt) AS _system_prompt_resolved "
             "FROM sessions s LEFT JOIN system_prompts sp ON sp.hash = s.system_prompt_hash "
-            "WHERE s.title = ?", (title,))
+            f"WHERE s.title = ?{canonical_filter} ORDER BY s.started_at DESC, s.rowid DESC LIMIT 1", (title,))
         return self._session_row_dict(row) if row else None
 
     def resolve_session_by_title(self, title: str) -> Optional[str]:

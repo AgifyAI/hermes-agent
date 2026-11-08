@@ -41,7 +41,6 @@ import { $gatewayState } from '@/store/session'
 import { $botChatSessionIds, $sessionStates, $sessionTiles, isBotChatSession } from '@/store/session-states'
 import { useForcedTextDirection } from '@/store/text-direction'
 import { $threadScrolledUpBySession } from '@/store/thread-scroll'
-import { $autoSpeakReplies } from '@/store/voice-prefs'
 
 import { AttachmentList } from './attachments'
 import { deriveBusySubmitState } from './busy-submit-state'
@@ -77,7 +76,6 @@ import { useComposerSubmit } from './hooks/use-composer-submit'
 import { triggerKeyUpHandler, useComposerTrigger } from './hooks/use-composer-trigger'
 import { useComposerUndo } from './hooks/use-composer-undo'
 import { useComposerUrlDialog } from './hooks/use-composer-url-dialog'
-import { useComposerVoice } from './hooks/use-composer-voice'
 import { useEmojiCompletions } from './hooks/use-emoji-completions'
 import { useComposerMicroActions } from './hooks/use-micro-actions'
 import { useMiddlewareSubmit } from './hooks/use-middleware-submit'
@@ -92,10 +90,14 @@ import { renderComposerQueueSlot, useComposerQueueScopeKey } from './queue-slot'
 import { RestoredDraftNotice } from './restored-draft-notice'
 import {
   beginComposerComposition,
+  beginInlineCodeMode,
   deleteChipBeforeCaret,
   deleteSelectionInEditor,
+  endInlineCodeMode,
   insertComposerContentsAtCaret,
-  RICH_INPUT_SLOT
+  isInlineCodeMode,
+  RICH_INPUT_SLOT,
+  toggleCodeBlock
 } from './rich-editor'
 import { useComposerScope, useComposerSurfaceId } from './scope'
 import { ComposerStatusStack } from './status-stack'
@@ -113,7 +115,6 @@ import {
   resolveExactLinkPaste,
   selectionLinkLabel
 } from './url-refs'
-import { VoiceActivity, VoicePlaybackActivity } from './voice-activity'
 
 /** Desktop keeps input above controls. HUD can use one compact row; narrow
  *  browser windows place each area on its own row so touch controls fit. */
@@ -127,6 +128,60 @@ function controlRowGridClass(singleColumn: boolean, stacked: boolean, hudMode: b
     : 'grid-cols-[auto_1fr_auto] items-center gap-(--composer-control-gap) [grid-template-areas:"menu_input_controls"]'
 }
 
+function handleCodeShortcut(
+  event: KeyboardEvent<HTMLDivElement>,
+  draftMirror: string,
+  withUndoPoint: (edit: () => boolean) => boolean,
+  flushEditorToDraft: (editor: HTMLDivElement) => void
+): boolean {
+  if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'e') {
+    const editor = event.currentTarget
+    const selection = window.getSelection()
+    const selectionInEditor = Boolean(selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode))
+    const collapsed = Boolean(selectionInEditor && selection?.isCollapsed)
+    const emptyDraft = !liveComposerDraft(editor, draftMirror).trim()
+    let edit = () => toggleCodeBlock(editor)
+
+    if (collapsed && isInlineCodeMode(editor)) {
+      edit = () => endInlineCodeMode(editor)
+    } else if (collapsed && emptyDraft) {
+      edit = () => beginInlineCodeMode(editor)
+    }
+
+    if (withUndoPoint(edit)) {
+      event.preventDefault()
+      flushEditorToDraft(editor)
+    }
+
+    return true
+  }
+
+  return false
+}
+
+/** Keep composition and page-navigation keys out of the submit decision tree. */
+function handleEditorKeyGuard(event: KeyboardEvent<HTMLDivElement>, composingRef: { current: boolean }): boolean {
+  if (composingRef.current && !event.nativeEvent.isComposing) {
+    composingRef.current = false
+  }
+
+  if (composingRef.current || event.nativeEvent.isComposing) {
+    return true
+  }
+
+  if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+
+    return true
+  }
+
+  if (event.key === 'Enter' && event.keyCode === 229) {
+    return true
+  }
+
+  return false
+}
+
 export function ChatBar({
   busy,
   cwd,
@@ -134,7 +189,6 @@ export function ChatBar({
   focusKey,
   freshDraftKey,
   gateway,
-  maxRecordingSeconds = 120,
   profile,
   queueSessionKey,
   sessionId,
@@ -151,8 +205,7 @@ export function ChatBar({
   onRemoveAttachment,
   onSteer,
   onSteerHidden,
-  onSubmit: onSubmitProp,
-  onTranscribeAudio
+  onSubmit: onSubmitProp
 }: ChatBarProps) {
   const hudMode = useStore($hudMode)
   const hudWindowing = window.hermesDesktop?.hud?.windowing
@@ -164,7 +217,7 @@ export function ChatBar({
   })
 
   // Voice-stop interception + contributed middleware wrap every send.
-  const { onSubmit, voiceStopRef } = useMiddlewareSubmit(onSubmitProp)
+  const { onSubmit } = useMiddlewareSubmit(onSubmitProp)
 
   // Which live composer this instance IS (main | tile) — its attachment set,
   // focus-bus key, and awaiting-input edge. Main scope = the legacy globals.
@@ -178,7 +231,6 @@ export function ChatBar({
     Boolean(scrollSessionId && map[scrollSessionId])
   )
 
-  const autoSpeak = useStore($autoSpeakReplies)
   const textDirection = useForcedTextDirection()
   // The turn is parked on the user (clarify / approval / sudo / secret). Esc must
   // not interrupt it — there's nothing actively running to stop, and stopping
@@ -659,46 +711,7 @@ export function ChatBar({
   }
 
   const handleEditorKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    // Self-heal a stale composition flag before the guard below reads it.
-    // compositionend can be missed (focus jumps, input-source switches, or a
-    // programmatic DOM swap mid-preedit abort the composition without the
-    // event reaching us), and a wedged composingRef silently swallows every
-    // Enter — and, via the form onSubmit guard, the Send button — until the
-    // component remounts (#44135). Chromium stamps isComposing on every
-    // keydown of a genuine composition, so when the native flag says we're
-    // not composing, trust it and recover.
-    if (composingRef.current && !event.nativeEvent.isComposing) {
-      composingRef.current = false
-    }
-
-    // IME composition: Enter confirms composed text, not a message submission.
-    // We check both composingRef (set by compositionstart/compositionend, robust
-    // across browsers) and nativeEvent.isComposing (Chromium fallback).  Without
-    // this guard, pressing Enter to finalise a Korean/Japanese/Chinese IME
-    // preedit fires submitDraft() and splits the message mid-word.
-    if (composingRef.current || event.nativeEvent.isComposing) {
-      return
-    }
-
-    // PageUp/PageDown: the composer is a single-line contentEditable — these
-    // keys have no text-editing purpose, and letting their default bubble to
-    // the browser's scroll-the-nearest-scrollable-ancestor behavior breaks the
-    // chat layout in the desktop pane tree (large blank area, sidebar pushed
-    // off-screen — #49978). Swallow the default here; the global
-    // conversation.scrollPageUp/Down keybind turns the intent into an
-    // explicit, focused-transcript page instead.
-    if (event.key === 'PageUp' || event.key === 'PageDown') {
-      event.preventDefault()
-
-      return
-    }
-
-    // macOS Chinese IME (and some 3rd-party IMEs on Windows) emit Enter with
-    // keyCode 229 (legacy VK_PROCESSKEY) while isComposing is already false.
-    // The compositionend has fired but the keydown still carries 229, signalling
-    // "this Enter is an IME commit, not a user send".  If we let it through,
-    // the message fires before the committed text is fully in the DOM.
-    if (event.key === 'Enter' && event.keyCode === 229) {
+    if (handleEditorKeyGuard(event, composingRef)) {
       return
     }
 
@@ -716,6 +729,10 @@ export function ChatBar({
       event.preventDefault()
       redo()
 
+      return
+    }
+
+    if (handleCodeShortcut(event, draftRef.current, withUndoPoint, flushEditorToDraft)) {
       return
     }
 
@@ -1076,35 +1093,6 @@ export function ChatBar({
   // Same explicit-halt semantics as the Stop button: park the queue.
   useComposerEscCancel({ awaitingInput, busy, onCancel: haltRun, target: scope.target })
 
-  const {
-    conversation,
-    dictate,
-    endConversation,
-    handleToggleAutoSpeak,
-    startConversation,
-    voiceActivityState,
-    voiceConversationActive,
-    voiceStatus
-  } = useComposerVoice({
-    busy,
-    clearDraft,
-    disabled,
-    focusInput,
-    insertText,
-    maxRecordingSeconds,
-    // Voice barge-in mid-generation halts the run like the Stop button.
-    onInterrupt: haltRun,
-    onSubmit,
-    onTranscribeAudio,
-    sessionId,
-    target: scope.target
-  })
-
-  // Keep the typed-stop interceptor (see onSubmit above) in sync with the
-  // live conversation state. Render-time ref assignment, same pattern as
-  // dispatchSubmitRef — no effect needed for a plain mirror.
-  voiceStopRef.current = { active: voiceConversationActive, end: endConversation }
-
   const contextMenu = (
     <ContextMenu
       onInsertText={insertText}
@@ -1119,37 +1107,22 @@ export function ChatBar({
 
   const controls = (
     <ComposerControls
-      autoSpeak={autoSpeak}
       busy={busy}
       busyAction={busyAction}
       canSubmit={canSubmit}
       cardWaiting={cardWaiting}
       compactModelPill={poppedOut || compactPill}
-      conversation={{
-        active: voiceConversationActive,
-        level: conversation.level,
-        muted: conversation.muted,
-        onEnd: endConversation,
-        onStart: startConversation,
-        onStopTurn: conversation.stopTurn,
-        onToggleMute: conversation.toggleMute,
-        status: conversation.status
-      }}
       disabled={disabled}
-      foldVoice={foldVoice}
       hasComposerPayload={hasComposerPayload}
       hideModelPill={guidedChat}
       minimal={minimal || chatOnboardingSolo}
-      onDictate={dictate}
       onQueue={() => {
         // Queueing clears the draft too, so the list over it closes with it.
         closeTrigger()
         queueDraft()
       }}
       onSteer={canSteer ? () => steerDraft('steer') : undefined}
-      onToggleAutoSpeak={handleToggleAutoSpeak}
       state={state}
-      voiceStatus={voiceStatus}
     />
   )
 
@@ -1489,8 +1462,6 @@ export function ChatBar({
                     onUndone={clearDraft}
                     readLiveText={syncDraftFromEditor}
                   />
-                  <VoiceActivity state={voiceActivityState} />
-                  <VoicePlaybackActivity />
                   {queueEdit && editingQueuedPrompt && <QueuedEditBanner onExit={exitQueuedEdit} />}
                   {attachments.length > 0 && <AttachmentList attachments={attachments} onRemove={onRemoveAttachment} />}
                   <div className={cn('grid w-full', controlRowGridClass(singleColumn, stacked, hudMode))}>

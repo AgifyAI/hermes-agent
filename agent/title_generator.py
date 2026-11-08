@@ -574,12 +574,9 @@ def _has_upgraded_title(session_db, session_id: str) -> bool:
 def _persist_session_title(session_db, session_id, title, *, source, dedupe=True):
     """Persist at *source* authority via ``set_auto_title`` (precedence check + write in one
     transaction, so a manual ``/title`` is never overwritten); None when a higher authority held the row.
-    ``ValueError`` = unique-title index collision → append ``#N`` via ``get_next_title_in_lineage``;
-    ``dedupe=False`` re-raises instead (the derived title is on the critical path, collides constantly
-    on "hi", and the model replaces it a second later anyway).
-
-    ``ValueError`` means the name is taken by an unrelated session (the unique-title index); rather than
-    leave the session untitled (#50537), append a ``#N`` suffix via ``get_next_title_in_lineage``.
+    User-facing labels may be shared by unrelated conversations. A remaining ``ValueError`` therefore
+    denotes a backend that still enforces the old unique-title rule (or a protected canonical Bot Chat);
+    keep the legacy ``#N`` retry only for that compatibility path.
     """
     auto_fn = getattr(session_db, "set_auto_title", None)
 

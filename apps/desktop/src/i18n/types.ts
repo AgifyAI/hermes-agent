@@ -1772,6 +1772,14 @@ catalog: CatalogTranslations
 
   skillDeepLink: SkillDeepLinkCopy
   skills: {
+    openSession: string
+    personal: string
+    metadata: string
+    instructions: string
+    clickToEdit: string
+    personalPageTitle: string
+    keyboardHint: string
+    personalEmpty: string
     tabSkills: string
     tabToolsets: string
     configuringProfile: string
@@ -2431,6 +2439,15 @@ catalog: CatalogTranslations
     displayNameTitle: string
     displayNameDesc: string
     displayNameLabel: string
+    nicknameLabel: string
+    nicknameHint: string
+    chooseAvatar: string
+    removeAvatar: string
+    avatarFormat: string
+    avatarFailedRead: string
+    identitySaved: string
+    identitySaveFailed: string
+    saveIdentity: string
     renameDescPrefix: string
     renameDescSuffix: string
     newNameLabel: string
@@ -2533,6 +2550,23 @@ catalog: CatalogTranslations
     customScheduleLabel: string
     customPlaceholder: string
     customHint: string
+    providerLabel: string
+    baseUrlLabel: string
+    repeatLabel: string
+    repeatPlaceholder: string
+    skillsLabel: string
+    skillsPlaceholder: string
+    contextFromLabel: string
+    enabledToolsetsLabel: string
+    workdirLabel: string
+    monitorScriptLabel: string
+    monitorUrlLabel: string
+    failureDeliveryLabel: string
+    interpreterLabel: string
+    reasoningEffortLabel: string
+    reasoningDefault: string
+    noAgentLabel: string
+    attachToSessionLabel: string
     optional: string
     promptRequired: string
     promptScheduleRequired: string

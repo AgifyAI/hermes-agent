@@ -33,8 +33,6 @@ import {
   SCAFFOLD_META_CLASS,
   ScaffoldRow
 } from '@/components/chat/scaffold-row'
-import { Button } from '@/components/ui/button'
-import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
 import { DisclosureCaret } from '@/components/ui/disclosure-caret'
 import { FadeText } from '@/components/ui/fade-text'
@@ -51,7 +49,7 @@ import { cn } from '@/lib/utils'
 import { recordPreviewArtifact } from '@/store/preview-status'
 import { sessionApprovalRequest } from '@/store/prompts'
 import { $showToolActivity } from '@/store/tool-activity'
-import { $toolRowDismissed, dismissToolRow } from '@/store/tool-dismiss'
+import { $toolRowDismissed } from '@/store/tool-dismiss'
 import { $toolProgressFor, formatToolProgress } from '@/store/tool-progress'
 import {
   $anyToolDisclosureOpen,
@@ -79,10 +77,13 @@ import {
   toolEntryDisclosureId,
   type ToolPart,
   type ToolStatus,
-  type ToolTitleAction
+  type ToolTitleAction,
+  type ToolView
 } from './fallback-model'
+import { isPendingMemoryProposal, PendingMemoryReviewButton } from './memory-review-action'
 import { isToolCallPart, summarizeToolRun } from './run-summary'
 import { ToolRunTicker } from './run-ticker'
+import { DismissToolButton } from './tool-row-actions'
 
 // `true` when a ToolEntry is rendered inside an embedding wrapper that owns
 // the per-row chrome (timer / preview). The flat ToolGroupSlot sets this
@@ -357,6 +358,46 @@ function ToolRunningMeta({ seconds, toolCallId = '' }: { seconds: number; toolCa
   )
 }
 
+function splitToolDetail(detail: string | undefined, status: ToolStatus): { body: string; summary: string } {
+  if (!detail) {
+    return { body: '', summary: '' }
+  }
+
+  if (status !== 'error') {
+    return { body: detail, summary: '' }
+  }
+
+  const chunks = detail
+    .split(/\n\s*\n+/)
+    .map(chunk => chunk.trim())
+    .filter(Boolean)
+
+  const [summary = '', ...rest] = chunks
+
+  return { body: rest.join('\n\n').trim(), summary }
+}
+
+function shouldShowToolDetail(
+  view: ToolView,
+  hideCodeDiffs: boolean,
+  detailSections: { body: string; summary: string },
+  detailMatchesTitle: boolean,
+  detailMatchesSubtitle: boolean
+): boolean {
+  if (view.inlineDiff && !(hideCodeDiffs && view.status === 'error')) {
+    return false
+  }
+
+  return Boolean(view.stdout || view.stderr) ||
+    (view.status === 'error' && Boolean(detailSections.summary || detailSections.body)) ||
+    (view.status === 'notice' && Boolean(view.detail)) ||
+    (view.status !== 'error' && Boolean(view.detail) && !detailMatchesTitle && !detailMatchesSubtitle)
+}
+
+function shouldRenderDetailAsCode(status: ToolStatus, toolName: string): boolean {
+  return status !== 'error' && ['terminal', 'execute_code', 'read_file'].includes(toolName)
+}
+
 function ToolEntry({ part }: ToolEntryProps) {
   const { t } = useI18n()
   const copy = t.assistant.tool
@@ -416,7 +457,8 @@ function ToolEntry({ part }: ToolEntryProps) {
   const disclosureId = toolEntryDisclosureId(messageId, stablePart)
   const dismissed = useStore($toolRowDismissed(disclosureId))
   const isPending = messageRunning && result === undefined && completedAt === undefined
-  const inlineDiff = inlineDiffFromResult(toolResultRecord(stablePart))
+  const resultRecord = toolResultRecord(stablePart)
+  const inlineDiff = inlineDiffFromResult(resultRecord)
   const isFileEdit = isFileEditTool(toolName)
   const defaultOpen = Boolean(inlineDiff) && !hideCodeDiffs
   const disclosureOpen = useDisclosureOpen(disclosureId, defaultOpen)
@@ -476,25 +518,8 @@ function ToolEntry({ part }: ToolEntryProps) {
     }
   }, [$sessionCwd, $sessionRuntimeId, $sessionStoredId, $sessionMessages, messageId, previewTarget, view.status])
 
-  const detailSections = useMemo(() => {
-    if (!view.detail) {
-      return { body: '', summary: '' }
-    }
-
-    if (view.status !== 'error') {
-      return { body: view.detail, summary: '' }
-    }
-
-    const chunks = view.detail
-      .split(/\n\s*\n+/)
-      .map(chunk => chunk.trim())
-      .filter(Boolean)
-
-    // The subtitle is not rendered in the header; keep its explanation here.
-    const [summary = '', ...rest] = chunks
-
-    return { body: rest.join('\n\n').trim(), summary }
-  }, [view.detail, view.status])
+  // The subtitle is not rendered in the header; keep its explanation in the expanded body.
+  const detailSections = useMemo(() => splitToolDetail(view.detail, view.status), [view.detail, view.status])
 
   // `looksRedundant` normalizes the FULL (uncapped) detail payload — a
   // read_file / terminal result can be huge. Memoize on the view fields so it
@@ -503,16 +528,8 @@ function ToolEntry({ part }: ToolEntryProps) {
   const detailMatchesSubtitle = useMemo(() => looksRedundant(view.subtitle, view.detail), [view.subtitle, view.detail])
   const detailMatchesTitle = useMemo(() => looksRedundant(view.title, view.detail), [view.title, view.detail])
 
-  const showDetail =
-    (!view.inlineDiff || (hideCodeDiffs && view.status === 'error')) &&
-    (Boolean(view.stdout || view.stderr) ||
-      (view.status === 'error' && Boolean(detailSections.summary || detailSections.body)) ||
-      (view.status === 'notice' && Boolean(view.detail)) ||
-      (view.status !== 'error' && Boolean(view.detail) && !detailMatchesTitle && !detailMatchesSubtitle))
-
-  const renderDetailAsCode =
-    view.status !== 'error' &&
-    (part.toolName === 'terminal' || part.toolName === 'execute_code' || part.toolName === 'read_file')
+  const showDetail = shouldShowToolDetail(view, hideCodeDiffs, detailSections, detailMatchesTitle, detailMatchesSubtitle)
+  const renderDetailAsCode = shouldRenderDetailAsCode(view.status, part.toolName)
 
   const hasSearchHits = Boolean(view.searchHits?.length)
   const searchResultsLabel = part.toolName === 'web_search' ? 'Search results' : view.detailLabel
@@ -562,25 +579,17 @@ function ToolEntry({ part }: ToolEntryProps) {
   // a completed/failed row that would otherwise sit at the tail of the chat.
   // It goes in the in-flow `action` slot (not `trailing`) so it can't overlap
   // the disclosure caret's hit-target — see the comment above `trailing`.
-  const dismissAction = canDismiss ? (
-    <Button
-      aria-label={statusCopy.dismiss}
-      className={cn(
-        'size-5 rounded-md text-(--linear-text-tertiary) transition-opacity hover:text-(--linear-text-primary) hover:opacity-100',
-        open
-          ? 'opacity-80'
-          : 'opacity-0 group-hover/disclosure-row:opacity-80 group-focus-within/disclosure-row:opacity-80'
-      )}
-      onClick={event => {
-        event.stopPropagation()
-        dismissToolRow(disclosureId)
-      }}
-      size="icon-xs"
-      type="button"
-      variant="ghost"
-    >
-      <Codicon name="close" size="0.75rem" />
-    </Button>
+  const dismissAction = canDismiss ? <DismissToolButton disclosureId={disclosureId} label={statusCopy.dismiss} open={open} /> : undefined
+
+  const reviewMemoryAction = isPendingMemoryProposal(toolName, isPending, resultRecord)
+    ? <PendingMemoryReviewButton />
+    : undefined
+
+  const rowAction = reviewMemoryAction || dismissAction ? (
+    <>
+      {reviewMemoryAction}
+      {dismissAction}
+    </>
   ) : undefined
 
   if (dismissed) {
@@ -611,7 +620,7 @@ function ToolEntry({ part }: ToolEntryProps) {
     >
       <div className={cn(open && 'border-b-[0.5px] border-(--linear-border-panel) px-2 py-1.5')}>
         <DisclosureRow
-          action={dismissAction}
+          action={rowAction}
           onToggle={
             hasExpandableContent
               ? () => {

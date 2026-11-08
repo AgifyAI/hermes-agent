@@ -929,6 +929,10 @@ async def rename_session_endpoint(session_id: str, body: SessionRename, request:
     from hermes_cli.web_server_sessions import _mutate_session_request
     payload = {key: getattr(body, key) for key in ('title', 'archived', 'hidden', 'pinned', 'unread')
                if getattr(body, key) is not None}
+    # Unlike sidebar flags, ``null`` is meaningful for the private note: it clears
+    # the value, so include it only when the caller explicitly supplied the field.
+    if 'scratchpad' in body.model_fields_set:
+        payload['scratchpad'] = body.scratchpad
     return await _mutate_session_request(request, body.profile, session_id,
         request_id=body.request_id, expected_revision=body.expected_revision,
         expected_generation=body.expected_generation, operation='sidebar', payload=payload)

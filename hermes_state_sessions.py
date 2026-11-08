@@ -305,6 +305,7 @@ _INHERIT_PARENT_META_SQL = (
     "UPDATE sessions\n                       SET "
     + _INHERIT_SEP.join((
         *(_inherit_col_sql(c) for c in ("cwd", "git_repo_root", "git_branch")),
+        _inherit_col_sql("scratchpad"),
         _inherit_col_sql("profile_name", "\n" + " " * 46 + f"AND ({_SAME_KEY_NAMESPACE_SQL})"),
     ))
     + "\n                     WHERE id = ? AND parent_session_id IS NOT NULL"
@@ -1056,15 +1057,6 @@ class SessionSessionsMixin:
             if not is_canonical_bot_chat:
                 self._set_lineage_column("hidden", session_id, 0)
         return result
-
-    def set_session_hidden(self, session_id: str, hidden: bool) -> bool:
-        """Hide/unhide a session and its compression lineage from the default listing; still resumable."""
-        return self._set_lineage_column("hidden", session_id, int(hidden))
-
-    def set_session_read(self, session_id: str, read: bool = True) -> bool:
-        """Mark read/unread across the compression lineage. ``last_read_at`` is a watermark: unread when
-        activity postdates it (no write on the message path). NULL = never tracked = read; 0 = unread."""
-        return self._set_lineage_column("last_read_at", session_id, time.time() if read else 0.0)
 
     @staticmethod
     def session_unread(session_row: dict[str, Any]) -> bool:

@@ -83,8 +83,10 @@ class DurableTurnLease:
     def start(self) -> None:
         with self._lock:
             self.turn_active = True
-        # Stamp the activity clock at turn entry: `_last_activity_ts` persists across turns, so
-        # without this the watchdog would measure idle from the PREVIOUS turn and abort a fresh one.
+        # Keep the previous turn's timestamp for the idle-compaction gate before stamping the
+        # activity clock for the liveness watchdog. The latter must start at this turn's entry,
+        # while idle compaction must measure the gap that led to this turn.
+        self.agent._idle_compaction_reference_ts = getattr(self.agent, "_last_activity_ts", None)
         self.agent._touch_activity("starting new turn")
         from hermes_cli.observability.shared_metrics_process import arm_turn
         arm_turn(self.agent)
@@ -120,6 +122,10 @@ class DurableTurnLease:
         if getattr(agent, "_active_session_turn_lease_holder", None) == self.holder:
             agent._active_session_turn_lease_holder = None
             agent._active_session_turn_lease_ttl_seconds = None
+        # The reference is valid only between this lease's start and the turn prologue. Do not let
+        # a later non-durable turn reuse an old idle timestamp.
+        if hasattr(agent, "_idle_compaction_reference_ts"):
+            agent._idle_compaction_reference_ts = None
 
     def is_turn_active(self) -> bool:
         with self._lock:

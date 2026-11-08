@@ -139,3 +139,13 @@ shadow (§4), 11px/450, may carry kbd keys.
 
 **Toast.** Bottom-right stack (Sonner), width 356, gap 8, radius 12, overlay surface, padding 12,
 gap 8, 16px icon, 13px/500 tertiary text.
+
+## Issue detail, 2026-11-08
+
+Measured in the signed-in Linear web app in an isolated background tab. The
+issue title is a textbox editable on click. While focused it retains Inter
+Variable at 24px and weight 600. The status property button measures 28px high
+with a 13px Inter Variable label, a 6px horizontal gap and a 9999px radius.
+
+In an empty Linear chat composer, pressing ⌘E and then typing inserts text
+inside an inline code span. This was checked in an unsent draft.
