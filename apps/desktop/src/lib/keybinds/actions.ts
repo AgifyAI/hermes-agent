@@ -161,8 +161,8 @@ export const KEYBIND_ACTIONS: readonly KeybindActionMeta[] = [
   // Expose the sidebar's mouse-only grouping control to keyboard-first users.
   // Ships unbound so it is opt-in and cannot claim another global chord.
   { id: 'view.cycleSidebarGrouping', category: 'view', defaults: [] },
-  { id: 'view.openRightSidebar', category: 'view', defaults: isMacPlatform() ? ['mod+shift+b'] : [] },
-  { id: 'view.toggleRightSidebar', category: 'view', defaults: isMacPlatform() ? [] : ['mod+j'] },
+  { id: 'view.openRightSidebar', category: 'view', defaults: [] },
+  { id: 'view.toggleRightSidebar', category: 'view', defaults: isMacPlatform() ? ['mod+shift+b'] : ['mod+j'] },
   // ⌘⇧S — "s" for status bar. VS Code ships
   // `workbench.action.toggleStatusbarVisibility` unbound (it's a chord-free
   // gap in their View family) and Hermes has no chord dispatcher, so this

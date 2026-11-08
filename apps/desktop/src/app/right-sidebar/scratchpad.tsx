@@ -85,6 +85,7 @@ export function ScratchpadSection() {
 
   return (
     <SessionScratchpad
+      className="flex-1"
       profile={profileScopeForSessionOwner(owner) ?? connection?.profile}
       sessionId={sessionId}
     />
@@ -270,7 +271,7 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
       ) : (
         <textarea
           aria-label={copy.title}
-          className="min-h-24 flex-1 resize-y border-0 bg-transparent px-2.5 pb-3 text-[0.8125rem] leading-5 text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary)"
+          className="min-h-0 w-full flex-1 resize-none border-0 bg-transparent px-2.5 pb-3 text-[0.8125rem] leading-5 text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary)"
           disabled={loading}
           onBlur={flushDraft}
           onChange={event => onChange(event.target.value)}

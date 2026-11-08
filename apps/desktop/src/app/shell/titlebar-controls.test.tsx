@@ -234,7 +234,7 @@ describe('titlebar app-action cluster', () => {
       fireEvent.click(rightSidebar)
       expect(intents).toEqual([
         { id: CHAT_SIDEBAR_PANE_ID, mode: 'toggle' },
-        { id: FILE_BROWSER_PANE_ID, mode: 'open' }
+        { id: FILE_BROWSER_PANE_ID, mode: 'toggle' }
       ])
     } finally {
       window.removeEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
