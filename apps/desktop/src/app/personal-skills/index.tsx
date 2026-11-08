@@ -1,5 +1,6 @@
 import './page.css'
 
+import { useStore } from '@nanostores/react'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
@@ -11,8 +12,9 @@ import { RowButton } from '@/components/ui/row-button'
 import { editLearningNode, getSkillContent, getSkills, type ProfileScope, profileScopeKey } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
+import { $activeConnectionId } from '@/store/connections'
 import { notify, notifyError } from '@/store/notifications'
-import { $activeGatewayProfile } from '@/store/profile'
+import { $activeGatewayProfile, $profileScope, ALL_PROFILES } from '@/store/profile'
 import type { SkillInfo } from '@/types/hermes'
 
 import { useCapabilityScope } from '../capabilities/scope-selector'
@@ -353,13 +355,23 @@ export function PersonalSkillsPage({
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const scope = useCapabilityScope({ fixedConnection, fixedProfile })
+  const sidebarProfile = useStore($profileScope)
+  const connectionId = useStore($activeConnectionId)
+  const profile = fixedProfile ?? (sidebarProfile === ALL_PROFILES ? undefined : sidebarProfile)
+  const scope = useCapabilityScope({
+    fixedConnection: fixedConnection ?? connectionId ?? undefined,
+    fixedProfile: profile
+  })
 
   const profileScopes = useMemo(() => {
+    if (profile) {
+      return [scope.profile]
+    }
+
     const options = scope.options.map(option => scopeFromOption(option.value))
 
     return options.length > 0 ? options : [scope.profile]
-  }, [scope.options, scope.profile])
+  }, [profile, scope.options, scope.profile])
 
   const profileQueries = useQueries({
     queries: profileScopes.map(profile => ({
