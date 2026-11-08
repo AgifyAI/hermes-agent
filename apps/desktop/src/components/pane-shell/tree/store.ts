@@ -1131,19 +1131,20 @@ export function restoreMinimizedTreeSide(side: TreeSide): boolean {
     }
 
     for (const id of groupLeafIds(child)) {
-      if (findGroup(next, id)?.minimized) {
+      const group = findGroup(next, id)
+      // Tool panes have their own open state. Opening the enclosing sidebar
+      // must leave a folded terminal folded until its own shortcut is pressed.
+      if (group?.minimized && !group.panes.every(isCollapsePane)) {
         next = setGroupMinimized(next, id, false)
       }
     }
   }
 
-  if (next === tree) {
-    return false
+  if (next !== tree) {
+    commit(next)
   }
 
-  commit(next)
-
-  return true
+  return next !== tree
 }
 
 /**

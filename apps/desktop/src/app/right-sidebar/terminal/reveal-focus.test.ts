@@ -25,7 +25,7 @@ import {
 } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 import { $showsAdvancedChrome } from '@/store/interface-mode'
-import { $fileBrowserOpen, setFileBrowserOpen } from '@/store/layout'
+import { $fileBrowserOpen, openRightSide, setFileBrowserOpen } from '@/store/layout'
 
 // Ctrl+`, the ⌘K row, and the statusbar pill reveal the terminal. That reveal
 // must make the on-screen xterm the keyboard target, and the claim has to
@@ -279,6 +279,20 @@ it('opens the closed right rail with the terminal, then hides only the terminal 
 
   expect(isPaneVisible('terminal')).toBe(true)
   expect($terminalTakeover.get()).toBe(true)
+})
+
+it('shows the shell on the first terminal shortcut after opening an empty right sidebar', () => {
+  $layoutTree.set(nestedDefaultTree())
+  hideTerminal()
+  setFileBrowserOpen(false)
+  openRightSide()
+  openRightSide()
+  expect(isPaneVisible('terminal')).toBe(false)
+
+  toggleTerminalPane(true)
+
+  expect($terminalTakeover.get()).toBe(true)
+  expect(isPaneVisible('terminal')).toBe(true)
 })
 
 it('opens a terminal nested below the right file rail in one press', () => {
