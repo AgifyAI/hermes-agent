@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { type ComponentProps, useCallback, useEffect } from 'react'
+import { type ComponentProps, useCallback, useEffect, useState } from 'react'
 
 import { TreeSkeleton } from '@/components/chat/skeletons'
 import { ErrorBoundary } from '@/components/error-boundary'
@@ -11,7 +11,7 @@ import { useI18n } from '@/i18n'
 import { normalizeOrLocalPreviewTarget } from '@/lib/local-preview'
 import { cn } from '@/lib/utils'
 import { refreshRepoStatus, registerRepoStatusCwd } from '@/store/coding-status'
-import { $panesFlipped } from '@/store/layout'
+import { $panesFlipped, $revealInTreeRequest } from '@/store/layout'
 import { notifyError } from '@/store/notifications'
 import { openPreview } from '@/store/preview'
 import { openFolderAsProject } from '@/store/projects'
@@ -33,6 +33,16 @@ interface RightSidebarPaneProps {
 export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSidebarPaneProps) {
   const { t } = useI18n()
   const r = t.rightSidebar
+  const [filesOpen, setFilesOpen] = useState(false)
+  useEffect(
+    () =>
+      $revealInTreeRequest.subscribe(path => {
+        if (path) {
+          setFilesOpen(true)
+        }
+      }),
+    []
+  )
   const panesFlipped = useStore($panesFlipped)
   const targetCwd = useStore($focusedWorkspaceCwd)
   const hasWorkspace = Boolean(targetCwd)
@@ -103,27 +113,51 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
     >
       <MemorySection />
       <QueueSection />
+      <section
+        className={cn(
+          'flex min-h-0 shrink-0 flex-col overflow-hidden border-b border-(--linear-border-panel)',
+          filesOpen && 'h-1/2'
+        )}
+      >
+        <RightSidebarSectionHeader>
+          <button
+            aria-expanded={filesOpen}
+            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-medium text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
+            onClick={() => setFilesOpen(open => !open)}
+            type="button"
+          >
+            <span aria-hidden className={filesOpen ? 'rotate-90 text-[0.65rem]' : 'text-[0.65rem]'}>
+              ›
+            </span>
+            {t.sidebar.files}
+          </button>
+        </RightSidebarSectionHeader>
+        {filesOpen && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <FilesystemTab
+              canCollapse={canCollapse}
+              collapseNonce={collapseNonce}
+              cwd={effectiveCwd}
+              cwdName={cwdName}
+              data={data}
+              error={rootError}
+              hasWorkspace={hasWorkspace}
+              loading={rootLoading}
+              onActivateFile={onActivateFile}
+              onActivateFolder={onActivateFolder}
+              onCollapseAll={collapseAll}
+              onLoadChildren={loadChildren}
+              onNodeOpenChange={setNodeOpen}
+              onPreviewFile={previewFile}
+              onRefresh={handleRefresh}
+              onToggleShowIgnored={() => setShowIgnored(!showIgnored)}
+              openState={openState}
+              showIgnored={showIgnored}
+            />
+          </div>
+        )}
+      </section>
       <ScratchpadSection />
-      <FilesystemTab
-        canCollapse={canCollapse}
-        collapseNonce={collapseNonce}
-        cwd={effectiveCwd}
-        cwdName={cwdName}
-        data={data}
-        error={rootError}
-        hasWorkspace={hasWorkspace}
-        loading={rootLoading}
-        onActivateFile={onActivateFile}
-        onActivateFolder={onActivateFolder}
-        onCollapseAll={collapseAll}
-        onLoadChildren={loadChildren}
-        onNodeOpenChange={setNodeOpen}
-        onPreviewFile={previewFile}
-        onRefresh={handleRefresh}
-        onToggleShowIgnored={() => setShowIgnored(!showIgnored)}
-        openState={openState}
-        showIgnored={showIgnored}
-      />
     </aside>
   )
 }
@@ -372,9 +406,7 @@ export function PaneEmptyState({ label }: { label: string }) {
 export function EmptyState({ body, title }: { body: string; title?: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
-      {title && (
-        <div className="text-[0.8125rem] font-medium text-(--linear-text-secondary)">{title}</div>
-      )}
+      {title && <div className="text-[0.8125rem] font-medium text-(--linear-text-secondary)">{title}</div>}
       <div className="text-xs leading-relaxed text-(--linear-text-tertiary)">{body}</div>
     </div>
   )

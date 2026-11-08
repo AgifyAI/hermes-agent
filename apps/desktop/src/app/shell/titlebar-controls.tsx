@@ -16,7 +16,7 @@ import { useContributions } from '@/contrib/react/use-contributions'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { formatModifierToken } from '@/lib/keybinds/combo'
-import { isBrowserHostedDesktop, isMacPlatform } from '@/lib/platform'
+import { isBrowserHostedDesktop } from '@/lib/platform'
 import { cn } from '@/lib/utils'
 import { recordAction } from '@/store/desktop-metrics'
 import { $interfaceMode, shownInMode, type Tiered } from '@/store/interface-mode'
@@ -26,9 +26,8 @@ import {
   $rightSideOpen,
   CHAT_SIDEBAR_PANE_ID,
   FILE_BROWSER_PANE_ID,
-  openRightSide,
   toggleLeftSide,
-  toggleRightSide
+  toggleRightSidebarPane
 } from '@/store/layout'
 import { REVIEW_PANE_ID } from '@/store/review'
 import { $unreadSessionCount } from '@/store/session-dot-state'
@@ -179,7 +178,7 @@ function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
 
   return {
     left: edge(CHAT_SIDEBAR_PANE_ID, leftSideOpen, toggleLeftSide),
-    right: edge(rightOverlayId, rightSideOpen, toggleRightSide, openRightSide)
+    right: edge(rightOverlayId, rightSideOpen, toggleRightSidebarPane)
   }
 }
 
@@ -231,7 +230,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const rightSidebarTool: TitlebarTool = {
     ...TITLEBAR_FIXED_TOOLS['right-sidebar'],
-    actionId: isMacPlatform() && !rightEdge.open ? 'view.openRightSidebar' : 'view.toggleRightSidebar',
+    actionId: 'view.toggleRightSidebar',
     badge: panesFlipped ? unreadBadge : undefined,
     icon: <TitlebarIcon name="layout-sidebar-right" />,
     id: 'right-sidebar',

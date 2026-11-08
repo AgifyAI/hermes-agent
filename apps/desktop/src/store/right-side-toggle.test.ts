@@ -18,7 +18,8 @@ import {
   setFileBrowserOpen,
   setSidebarOpen,
   toggleLeftSide,
-  toggleRightSide
+  toggleRightSide,
+  toggleRightSidebarPane
 } from '@/store/layout'
 
 // The right-side toggle must be POSITIONAL: it acts on whatever column is
@@ -134,6 +135,24 @@ describe('positional right-side toggle', () => {
     expect($rightSideOpen.get()).toBe(true)
     expect(groupOf(BROWSER)?.minimized).toBe(false)
     expect(groupOf('files')?.panes).toContain('sessions')
+  })
+
+  it('opens notes on the right from a saved left stack, closes them and opens them again', () => {
+    const right = group(['review'], { minimized: true })
+    $layoutTree.set(split('row', [group(['sessions', 'files']), group(['workspace']), right, group(['inactive:slot'])]))
+    registry.register({
+      id: 'review',
+      area: 'panes',
+      title: 'Review',
+      data: { placement: 'right' },
+      render: () => null
+    })
+    setFileBrowserOpen(false)
+    for (const open of [true, false, true]) {
+      toggleRightSidebarPane()
+      expect($rightSideOpen.get()).toBe(open)
+      expect(groupOf('files')?.id).toBe(right.id)
+    }
   })
 
   it('opens an empty right pane when the registered file view is hidden', () => {

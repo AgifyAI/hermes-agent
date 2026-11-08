@@ -2,12 +2,13 @@ import { atom, computed, type ReadableAtom, type WritableAtom } from 'nanostores
 
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '@/app/layout-constants'
 import { PANE_TOGGLE_REVEAL_EVENT } from '@/components/pane-shell'
-import { allPaneIds, type GroupNode } from '@/components/pane-shell/tree/model'
+import { allPaneIds, findGroupOfPane, type GroupNode } from '@/components/pane-shell/tree/model'
 import {
   $collapsedTreeSides,
   $hiddenTreePanes,
   $layoutTree,
   layoutHasRootSide,
+  moveTreePane,
   paneRootSide,
   restoreHiddenTreeSideTabs,
   restoreMinimizedTreeSide,
@@ -702,6 +703,41 @@ export function toggleRightSide() {
   }
 
   restoreTreePane(pane)
+}
+
+/** Toggle the whole right rail. A saved layout may still have its notes
+ * and file pane tabbed with Sessions on the left. Reveal it in the right
+ * rail on the user's next open, keeping the other tabs in place. */
+export function toggleRightSidebarPane() {
+  if (revealNarrowPane(FILE_BROWSER_PANE_ID, 'toggle')) {
+    return
+  }
+
+  const group = rightSideGroup()
+  if ($rightSideOpen.get()) {
+    if (group && !paneRootSide(group.active ?? group.panes[0])) {
+      toggleRightSide()
+    } else {
+      const closeSide = sidebarSide() === 'right' ? setSidebarOpen : setFileBrowserOpen
+      closeSide(false)
+    }
+    return
+  }
+
+  if (group?.panes.includes(FILES_PANE_ID)) {
+    restoreTreePane(FILES_PANE_ID)
+    return
+  }
+  const tree = $layoutTree.get()
+  if (tree && paneRootSide(FILES_PANE_ID) !== 'right' && findGroupOfPane(tree, FILES_PANE_ID)) {
+    const anchor = group ?? findGroupOfPane(tree, 'workspace')
+    if (anchor) {
+      moveTreePane(FILES_PANE_ID, { groupId: anchor.id, pos: group ? 'center' : 'right' })
+      restoreTreePane(FILES_PANE_ID)
+      return
+    }
+  }
+  openRightSide()
 }
 
 /** Open the physical right side without depending on the file pane's flag.

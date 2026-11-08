@@ -50,6 +50,9 @@ describe('RightSidebarPane', () => {
 
     render(<RightSidebarPane onActivateFile={vi.fn()} onActivateFolder={vi.fn()} />)
 
+    const files = screen.getByRole('button', { name: 'Files', expanded: false })
+    expect(screen.queryByRole('button', { name: 'Refresh tree' })).toBeNull()
+    fireEvent.click(files)
     const refresh = await screen.findByRole('button', { name: 'Refresh tree' })
 
     readDir.mockClear()
@@ -97,6 +100,9 @@ describe('RightSidebarPane', () => {
 
     render(<RightSidebarPane onActivateFile={vi.fn()} onActivateFolder={vi.fn()} />)
 
+    const files = screen.getByRole('button', { name: 'Files', expanded: false })
+    expect(screen.queryByRole('button', { name: 'Refresh tree' })).toBeNull()
+    fireEvent.click(files)
     const refresh = await screen.findByRole('button', { name: 'Refresh tree' })
     readDir.mockClear()
     repoStatus.mockClear()
@@ -125,6 +131,9 @@ describe('RightSidebarPane', () => {
 
     render(<RightSidebarPane onActivateFile={vi.fn()} onActivateFolder={vi.fn()} />)
 
+    const files = screen.getByRole('button', { name: 'Files', expanded: false })
+    expect(screen.queryByRole('button', { name: 'Refresh tree' })).toBeNull()
+    fireEvent.click(files)
     const refresh = await screen.findByRole('button', { name: 'Refresh tree' })
     readDir.mockClear()
     repoStatus.mockClear()

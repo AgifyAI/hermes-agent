@@ -72,14 +72,14 @@ function press(key: string, target: EventTarget = window, shiftKey = false) {
 }
 
 describe('Mac right sidebar shortcuts', () => {
-  it('opens the right column and keeps it open on the second press', () => {
+  it('opens, closes and reopens the right column on consecutive presses', () => {
     $layoutTree.set(split('row', [group(['workspace']), { ...group([BROWSER]), minimized: true }]))
 
-    for (let pressCount = 0; pressCount < 2; pressCount++) {
+    for (const minimized of [false, true, false]) {
       press('b', window, true)
       const rightGroup = findGroupOfPane($layoutTree.get() as LayoutNode, BROWSER)
       expect(rightGroup?.id).toBeDefined()
-      expect(rightGroup?.minimized).toBeFalsy()
+      expect(Boolean(rightGroup?.minimized)).toBe(minimized)
     }
     expect(toggleTerminalPane).not.toHaveBeenCalled()
   })

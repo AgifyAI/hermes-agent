@@ -50,7 +50,7 @@ import {
   requestSessionSearchFocus,
   setFileBrowserOpen,
   togglePanesFlipped,
-  toggleRightSide,
+  toggleRightSidebarPane,
   toggleSidebarOpen
 } from '@/store/layout'
 import { notifyError } from '@/store/notifications'
@@ -468,7 +468,7 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'view.toggleSidebar': toggleSidebarOpen,
     'view.cycleSidebarGrouping': cycleSidebarGrouping,
     'view.openRightSidebar': openRightSide,
-    'view.toggleRightSidebar': () => (layoutHasRightSide() ? toggleRightSide() : toggleTerminalPane()),
+    'view.toggleRightSidebar': () => (IS_MAC || layoutHasRightSide() ? toggleRightSidebarPane() : toggleTerminalPane()),
     'view.toggleReview': toggleReview,
     'view.toggleStatusbar': toggleStatusbarVisible,
     // ⇧⌘R. macOS consumes this through the View menu's forceReload role; this
