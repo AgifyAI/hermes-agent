@@ -18,6 +18,7 @@ import {
   shownPanesInGroup,
   type TreeSide
 } from '@/components/pane-shell/tree/store'
+import { registry } from '@/contrib/registry'
 import { matchesQuery } from '@/hooks/use-media-query'
 import { connectionScopedAtom } from '@/lib/connection-scoped'
 import { LAYOUT_KEYS } from '@/lib/layout-persistence'
@@ -753,7 +754,10 @@ export function layoutHasRightSide(): boolean {
 // callers fall back to the semantic side collapse there.
 function rightSideGroup(): GroupNode | null {
   const row = rootRow()
-  const edge = row?.children.at(-1)
+  // Inactive plugins leave their saved slot in the tree. Their columns have
+  // no renderer until the plugin returns, so the physical edge is before them.
+  const registered = new Set(registry.getArea('panes').map(pane => pane.id))
+  const edge = row?.children.findLast(child => allPaneIds(child).some(id => registered.has(id)))
 
   if (!row || edge?.type !== 'group' || edge.panes.some(isMainSurface)) {
     return null

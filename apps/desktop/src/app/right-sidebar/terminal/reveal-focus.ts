@@ -12,7 +12,7 @@ import {
 import { Terminal } from '@/lib/icons'
 import { isFocusWithin } from '@/lib/keybinds/combo'
 import { trackArea } from '@/store/desktop-metrics'
-import { setFileBrowserOpen, setSidebarOpen, sidebarSide } from '@/store/layout'
+import { $rightSideOpen, openRightSide, setFileBrowserOpen, setSidebarOpen, sidebarSide } from '@/store/layout'
 
 const TERMINAL_FOCUS_SCOPE = '[data-terminal]'
 
@@ -80,6 +80,9 @@ export function toggleTerminalPane(inRightSidebar = false): void {
 
   if (revealed) {
     if (inRightSidebar) {
+      if (!$rightSideOpen.get()) {
+        openRightSide()
+      }
       dockTerminalOnRight()
     }
     const side = paneRootSide('terminal')

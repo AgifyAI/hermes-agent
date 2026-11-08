@@ -231,7 +231,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const rightSidebarTool: TitlebarTool = {
     ...TITLEBAR_FIXED_TOOLS['right-sidebar'],
-    actionId: isMacPlatform() && !rightEdge.expanded ? 'view.openRightSidebar' : 'view.toggleRightSidebar',
+    actionId: isMacPlatform() && !rightEdge.open ? 'view.openRightSidebar' : 'view.toggleRightSidebar',
     badge: panesFlipped ? unreadBadge : undefined,
     icon: <TitlebarIcon name="layout-sidebar-right" />,
     id: 'right-sidebar',
