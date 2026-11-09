@@ -202,7 +202,7 @@ function useRouteRequestNavigation(navigate: ReturnType<typeof useNavigate>): vo
     }
 
     routeRequestSeenRef.current = routeRequest.seq
-    navigate(routeRequest.path)
+    navigateToWorkspacePage(navigate, routeRequest.path)
   }, [navigate, routeRequest])
 }
 

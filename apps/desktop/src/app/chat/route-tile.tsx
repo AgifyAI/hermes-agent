@@ -19,23 +19,29 @@ import {
   CAPABILITIES_ROUTE,
   contributedRoutes,
   MESSAGING_ROUTE,
+  REVIEW_ROUTE,
   ROUTES_AREA,
-  SKILLS_ROUTE
+  SKILLS_ROUTE,
+  TOOLS_ROUTE
 } from '../routes'
 
 import { paneMirror } from './pane-mirror'
 
 const PersonalSkillsView = lazy(async () => ({ default: (await import('../personal-skills')).PersonalSkillsView }))
 const CapabilitiesView = lazy(async () => ({ default: (await import('../capabilities')).CapabilitiesView }))
+const ToolsView = lazy(async () => ({ default: (await import('../tools')).ToolsView }))
 const MessagingView = lazy(async () => ({ default: (await import('../messaging')).MessagingView }))
 const ArtifactsView = lazy(async () => ({ default: (await import('../artifacts')).ArtifactsView }))
+const ReviewView = lazy(async () => ({ default: (await import('../review')).ReviewView }))
 
 // Built-in page views + their pane titles, keyed by route.
 const BUILTIN_PAGES: Record<string, { render: () => ReactNode; title: string }> = {
   [ARTIFACTS_ROUTE]: { render: () => <ArtifactsView />, title: 'Artifacts' },
   [MESSAGING_ROUTE]: { render: () => <MessagingView />, title: 'Messaging' },
   [SKILLS_ROUTE]: { render: () => <PersonalSkillsView />, title: 'Skills' },
-  [CAPABILITIES_ROUTE]: { render: () => <CapabilitiesView />, title: 'Capabilities' }
+  [CAPABILITIES_ROUTE]: { render: () => <CapabilitiesView />, title: 'Capabilities' },
+  [TOOLS_ROUTE]: { render: () => <ToolsView />, title: 'Tools' },
+  [REVIEW_ROUTE]: { render: () => <ReviewView />, title: 'Review' }
 }
 
 /** Humanize a route path into a tab title: `/my-atlas` → `My Atlas`. */

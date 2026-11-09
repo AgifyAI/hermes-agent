@@ -20,14 +20,31 @@
  * only stops them arriving from a stored snapshot.
  */
 
-import { allPaneIds, type LayoutNode, normalize } from './model'
+import { allPaneIds, type LayoutNode, normalize, removePane } from './model'
 
 /** Panes that must never ride along in a named layout preset. */
 export const PRESET_EXCLUDED_PANE_PREFIXES = ['session-tile:', 'preview-tile:', 'route-tile:'] as const
 
+/** Pane ids retired from the layout tree. Review is a full page now, so a
+ * persisted custom layout must lose only that old pane while keeping the
+ * user's remaining geometry. */
+export const RETIRED_PANE_IDS = ['review'] as const
+
 /** Is `paneId` a live/ephemeral tile that a preset must not carry? */
 export const isPresetExcludedPaneId = (paneId: string): boolean =>
   PRESET_EXCLUDED_PANE_PREFIXES.some(prefix => paneId.startsWith(prefix))
+
+export function stripRetiredPanes(tree: LayoutNode): LayoutNode | null {
+  let next: LayoutNode | null = tree
+
+  for (const paneId of RETIRED_PANE_IDS) {
+    if (next && allPaneIds(next).includes(paneId)) {
+      next = removePane(next, paneId)
+    }
+  }
+
+  return next ? normalize(next) : null
+}
 
 /**
  * A copy of `tree` without live/ephemeral tile panes. Zones left empty collapse

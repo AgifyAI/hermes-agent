@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { type ComponentProps, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { TreeSkeleton } from '@/components/chat/skeletons'
 import { ErrorBoundary } from '@/components/error-boundary'
@@ -24,13 +24,17 @@ import { useProjectTree } from './files/use-project-tree'
 import { MemorySection } from './memory-section'
 import { QueueSection } from './queue-section'
 import { ScratchpadSection } from './scratchpad'
+import { SIDEBAR_CARD_CLASS, SidebarSectionContent, SidebarSectionHeader, SidebarSectionToggle } from './section-header'
+
+export { SidebarSectionHeader as RightSidebarSectionHeader } from './section-header'
 
 interface RightSidebarPaneProps {
+  fitContent?: boolean
   onActivateFile: (path: string) => void
   onActivateFolder: (path: string) => void
 }
 
-export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSidebarPaneProps) {
+export function RightSidebarPane({ fitContent = false, onActivateFile, onActivateFolder }: RightSidebarPaneProps) {
   const { t } = useI18n()
   const r = t.rightSidebar
   const [filesOpen, setFilesOpen] = useState(false)
@@ -107,33 +111,22 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
     <aside
       aria-label={r.aria}
       className={cn(
-        'before:pointer-events-none relative flex h-full w-full min-w-0 flex-col overflow-hidden border-(--linear-border-panel) bg-(--linear-bg-panel) pt-(--titlebar-height) text-(--linear-text-tertiary)',
+        'before:pointer-events-none relative flex w-full min-w-0 flex-col gap-2 overflow-y-auto overflow-x-hidden border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 pb-2 pt-(--titlebar-height) text-(--linear-text-tertiary)',
+        fitContent ? 'h-auto' : 'h-full',
         panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >
+      <ScratchpadSection />
       <MemorySection />
       <QueueSection />
-      <section
-        className={cn(
-          'flex min-h-0 shrink-0 flex-col overflow-hidden border-b border-(--linear-border-panel)',
-          filesOpen && 'h-1/2'
-        )}
-      >
-        <RightSidebarSectionHeader>
-          <button
-            aria-expanded={filesOpen}
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-medium text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
-            onClick={() => setFilesOpen(open => !open)}
-            type="button"
-          >
-            <span aria-hidden className={filesOpen ? 'rotate-90 text-[0.65rem]' : 'text-[0.65rem]'}>
-              ›
-            </span>
+      <section className={cn(SIDEBAR_CARD_CLASS, 'flex min-h-0 shrink-0 flex-col', filesOpen && 'h-1/2')}>
+        <SidebarSectionHeader>
+          <SidebarSectionToggle onClick={() => setFilesOpen(open => !open)} open={filesOpen}>
             {t.sidebar.files}
-          </button>
-        </RightSidebarSectionHeader>
-        {filesOpen && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          </SidebarSectionToggle>
+        </SidebarSectionHeader>
+        <SidebarSectionContent className={cn('min-h-0', filesOpen && 'flex-1')} open={filesOpen}>
+          <div className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto">
             <FilesystemTab
               canCollapse={canCollapse}
               collapseNonce={collapseNonce}
@@ -155,9 +148,8 @@ export function RightSidebarPane({ onActivateFile, onActivateFolder }: RightSide
               showIgnored={showIgnored}
             />
           </div>
-        )}
+        </SidebarSectionContent>
       </section>
-      <ScratchpadSection />
     </aside>
   )
 }
@@ -222,7 +214,7 @@ function FilesystemTab({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <RightSidebarSectionHeader>
+      <SidebarSectionHeader>
         <div className="flex min-w-0 flex-1">
           <SidebarPanelLabel>{cwdName}</SidebarPanelLabel>
         </div>
@@ -264,7 +256,7 @@ function FilesystemTab({
             <Codicon name="collapse-all" size="0.875rem" />
           </Button>
         </Tip>
-      </RightSidebarSectionHeader>
+      </SidebarSectionHeader>
       <FileTreeBody
         collapseNonce={collapseNonce}
         cwd={cwd}
@@ -279,14 +271,6 @@ function FilesystemTab({
         onRetry={onRefresh}
         openState={openState}
       />
-    </div>
-  )
-}
-
-export function RightSidebarSectionHeader({ children, className, ...props }: ComponentProps<'div'>) {
-  return (
-    <div className={cn('group/project-header flex h-7 shrink-0 items-center px-2.5', className)} {...props}>
-      {children}
     </div>
   )
 }

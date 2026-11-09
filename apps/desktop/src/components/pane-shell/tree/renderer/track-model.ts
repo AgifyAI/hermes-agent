@@ -191,8 +191,8 @@ export const cssMax = (values: (string | null | undefined)[]): string | undefine
  *    children just stretch to the container); flex only when none are fixed.
  *
  * This is how "two right sidebars over a terminal row" sizes itself from its
- * content (237px, or 474px when review is visible) instead of taking a
- * fraction of the window.
+ * content (the declared rail width, or the sum of stacked rails) instead of
+ * taking a fraction of the window.
  */
 /** A minimized zone IS its strip: the vertical rail (row) / header (column)
  *  are both 28px thick. */
@@ -201,8 +201,8 @@ export const MINIMIZED_TRACK = '1.75rem'
 /**
  * In an all-fixed split, the last uncapped track may absorb leftover space
  * (terminal/logs stacked at 38vh with nothing else to fill the column). A
- * CAPPED track must never be the absorber: review/files declare maxWidth
- * 20rem, and promoting them to grow-1 + dropping the clamp made ⌘G / ⌘J open
+ * CAPPED track must never be the absorber: review/files declare a maxWidth,
+ * and promoting them to grow-1 + dropping the clamp made ⌘G / ⌘J open
  * a half-window rail and ignore sash-remembered sizes (flex-basis alone
  * can't hold against grow).
  *
@@ -262,7 +262,7 @@ export function fixedTrackSize(node: LayoutNode, axis: 'row' | 'column', ctx: Tr
     //    must NOT snap the whole zone to sidebar width;
     //  - any other zone stays fixed as long as SOME tenant declares a size —
     //    dropping a size-less pane (the terminal has height but no width)
-    //    into the 237px files sidebar must not balloon it to a flex track.
+    //    into the fixed files sidebar must not balloon it to a flex track.
     const ids = shownPaneIds(node, ctx)
     const sizes = ids.map(declared)
     const declaredSizes = sizes.filter((size): size is string => size !== null)

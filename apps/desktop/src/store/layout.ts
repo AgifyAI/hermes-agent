@@ -35,12 +35,14 @@ import type { SessionStatusBucket } from './session-dot-state'
 
 export const SIDEBAR_DEFAULT_WIDTH = 237
 export const SIDEBAR_MAX_WIDTH = 360
-// Open at the same width as the sessions sidebar so the two rails match, but
-// allow shrinking well below that (~30% under the old 14rem floor) for users who
-// want a narrow tree.
-export const FILE_BROWSER_DEFAULT_WIDTH = `${SIDEBAR_DEFAULT_WIDTH}px`
+// The right rail has 8px of pane inset and 8px of horizontal padding on both
+// sides. A 336px card therefore needs a 361px layout track on first use: the
+// content panel's two 0.5px borders consume the last CSS pixel.
+// Existing sash overrides remain authoritative for users who already resized
+// the rail.
+export const FILE_BROWSER_DEFAULT_WIDTH = '361px'
 export const FILE_BROWSER_MIN_WIDTH = '10rem'
-export const FILE_BROWSER_MAX_WIDTH = '20rem'
+export const FILE_BROWSER_MAX_WIDTH = '24rem'
 
 export const SIDEBAR_SESSIONS_PAGE_SIZE = 50
 // How deep the list reaches once a filter is on. A filter that only searches

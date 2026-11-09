@@ -41,6 +41,8 @@ const CronView = lazy(async () => ({ default: (await import('../cron')).CronView
 const MessagingView = lazy(async () => ({ default: (await import('../messaging')).MessagingView }))
 const PersonalSkillsView = lazy(async () => ({ default: (await import('../personal-skills')).PersonalSkillsView }))
 const CapabilitiesView = lazy(async () => ({ default: (await import('../capabilities')).CapabilitiesView }))
+const ReviewView = lazy(async () => ({ default: (await import('../review')).ReviewView }))
+const ToolsView = lazy(async () => ({ default: (await import('../tools')).ToolsView }))
 
 export function LegacySessionRedirect() {
   const { sessionId } = useParams()
@@ -191,9 +193,11 @@ export const ChatRoutesSurface = memo(function ChatRoutesSurface({
       <Route element={chatView} index />
       <Route element={chatView} path=":sessionId" />
       <Route element={page(<CapabilitiesView setStatusbarItemGroup={setStatusbarItemGroup} />)} path="capabilities" />
+      <Route element={page(<ToolsView />)} path="tools" />
       <Route element={page(<PersonalSkillsView />)} path="skills" />
       <Route element={page(<MessagingView setStatusbarItemGroup={setStatusbarItemGroup} />)} path="messaging" />
       <Route element={page(<ArtifactsView setStatusbarItemGroup={setStatusbarItemGroup} />)} path="artifacts" />
+      <Route element={page(<ReviewView />)} path="review" />
       <Route element={page(<CronView onOpenSession={actions.onResumeSession} />)} path="cron" />
       <Route element={null} path="agents" />
       <Route element={null} path="command-center" />

@@ -14,6 +14,7 @@ export const SETTINGS_ROUTE = '/settings'
 export const COMMAND_CENTER_ROUTE = '/command-center'
 export const SESSION_IMPORT_ROUTE = '/session-import'
 export const CAPABILITIES_ROUTE = '/capabilities'
+export const TOOLS_ROUTE = '/tools'
 export const SKILLS_ROUTE = '/skills'
 export const MESSAGING_ROUTE = '/messaging'
 export const WEBHOOKS_ROUTE = '/webhooks'
@@ -22,12 +23,14 @@ export const CRON_ROUTE = '/cron'
 export const PROFILES_ROUTE = '/profiles'
 export const AGENTS_ROUTE = '/agents'
 export const STARMAP_ROUTE = '/starmap'
+export const REVIEW_ROUTE = '/review'
 
 export type AppView =
   | 'session-import'
   | 'agents'
   | 'artifacts'
   | 'capabilities'
+  | 'tools'
   | 'skills'
   | 'chat'
   | 'command-center'
@@ -39,6 +42,7 @@ export type AppView =
   | 'extension'
   | 'messaging'
   | 'profiles'
+  | 'review'
   | 'settings'
   | 'starmap'
   | 'webhooks'
@@ -48,12 +52,14 @@ export type AppRouteId =
   | 'agents'
   | 'artifacts'
   | 'capabilities'
+  | 'tools'
   | 'skills'
   | 'command-center'
   | 'cron'
   | 'messaging'
   | 'new'
   | 'profiles'
+  | 'review'
   | 'settings'
   | 'starmap'
   | 'webhooks'
@@ -70,12 +76,14 @@ export const APP_ROUTES = [
   { id: 'settings', path: SETTINGS_ROUTE, view: 'settings' },
   { id: 'command-center', path: COMMAND_CENTER_ROUTE, view: 'command-center' },
   { id: 'capabilities', path: CAPABILITIES_ROUTE, view: 'capabilities' },
+  { id: 'tools', path: TOOLS_ROUTE, view: 'tools' },
   { id: 'skills', path: SKILLS_ROUTE, view: 'skills' },
   { id: 'messaging', path: MESSAGING_ROUTE, view: 'messaging' },
   { id: 'webhooks', path: WEBHOOKS_ROUTE, view: 'webhooks' },
   { id: 'artifacts', path: ARTIFACTS_ROUTE, view: 'artifacts' },
   { id: 'cron', path: CRON_ROUTE, view: 'cron' },
   { id: 'profiles', path: PROFILES_ROUTE, view: 'profiles' },
+  { id: 'review', path: REVIEW_ROUTE, view: 'review' },
   { id: 'agents', path: AGENTS_ROUTE, view: 'agents' },
   { id: 'starmap', path: STARMAP_ROUTE, view: 'starmap' }
 ] as const satisfies readonly AppRoute[]
@@ -183,7 +191,7 @@ export function isOverlayView(view: AppView): boolean {
  *  Contributed full pages (`extension`) hide the app clusters only while the
  *  page actually mounts `titleBar.*` chrome — those slots are mount-scoped, so
  *  a plugin page with no titlebar contribution keeps the app controls.
- *  First-party workspace pages (capabilities/messaging/artifacts) keep the clusters. */
+ *  First-party workspace pages (capabilities/tools/skills/messaging/artifacts/review) keep the clusters. */
 export function hidesFixedTitlebarClusters(view: AppView): boolean {
   return isOverlayView(view) || view === 'extension'
 }
@@ -252,7 +260,7 @@ export function appViewForPath(pathname: string): AppView {
 }
 
 /** Does `to` land on a full page rendered INSIDE the workspace pane
- *  (skills/messaging/artifacts/contributed routes)? Overlays don't count —
+ *  (capabilities/tools/skills/messaging/artifacts/review/contributed routes)? Overlays don't count —
  *  they float over whatever the workspace is already showing. */
 export function isWorkspacePageRoute(to: string): boolean {
   const view = appViewForPath(to)
@@ -260,8 +268,8 @@ export function isWorkspacePageRoute(to: string): boolean {
   return view !== 'chat' && !isOverlayView(view)
 }
 
-/** True while the workspace pane shows a FULL PAGE (skills/messaging/
- *  artifacts/plugin routes) instead of the chat. Published by the wiring
+/** True while the workspace pane shows a FULL PAGE (capabilities/tools/skills/
+ *  messaging/artifacts/review/plugin routes) instead of the chat. Published by the wiring
  *  (which owns the router location); the workspace pane contribution mirrors
  *  it as `headerVeto` so the zone tab bar stands down on pages. Overlays
  *  (settings/…) don't count — the chat stays beneath them. */

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { allPaneIds, group, split } from './model'
-import { isPresetExcludedPaneId, PRESET_EXCLUDED_PANE_PREFIXES, stripPresetLivePanes } from './preset-tree'
+import {
+  isPresetExcludedPaneId,
+  PRESET_EXCLUDED_PANE_PREFIXES,
+  stripPresetLivePanes,
+  stripRetiredPanes
+} from './preset-tree'
 
 describe('stripPresetLivePanes', () => {
   it('drops session tiles and keeps the structural rails', () => {
@@ -78,5 +83,19 @@ describe('stripPresetLivePanes', () => {
     expect(isPresetExcludedPaneId('workspace')).toBe(false)
     expect(isPresetExcludedPaneId('hermes-bots:pane')).toBe(false)
     expect(isPresetExcludedPaneId('terminal')).toBe(false)
+  })
+})
+
+describe('stripRetiredPanes', () => {
+  it('removes the old Review pane while keeping the custom layout around it', () => {
+    const tree = split('row', [group(['workspace']), group(['review', 'files'])])
+
+    const next = stripRetiredPanes(tree)
+
+    expect(allPaneIds(next!)).toEqual(['workspace', 'files'])
+  })
+
+  it('returns null when a saved layout only contained the retired pane', () => {
+    expect(stripRetiredPanes(group(['review'], { active: 'review', id: 'review-only' }))).toBeNull()
   })
 })

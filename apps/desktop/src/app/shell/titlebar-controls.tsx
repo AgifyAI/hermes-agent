@@ -29,7 +29,6 @@ import {
   toggleLeftSide,
   toggleRightSidebarPane
 } from '@/store/layout'
-import { REVIEW_PANE_ID } from '@/store/review'
 import { $unreadSessionCount } from '@/store/session-dot-state'
 import { $titlebarAppActionsSide, TITLEBAR_FIXED_TOOLS } from '@/store/titlebar-app-actions'
 
@@ -159,7 +158,7 @@ function useSidebarEdges(): { left: SidebarEdge; right: SidebarEdge } {
   const overlayPanes = useStore($narrowOverlayPaneIds)
   const browserHost = isBrowserHostedDesktop()
   const overlayChrome = narrow && browserHost
-  const rightOverlayId = overlayPanes.has(REVIEW_PANE_ID) ? REVIEW_PANE_ID : FILE_BROWSER_PANE_ID
+  const rightOverlayId = FILE_BROWSER_PANE_ID
 
   const edge = (id: string, dockedOpen: boolean, toggleDocked: () => void, openDocked = toggleDocked): SidebarEdge => {
     const open = overlayChrome ? overlayPanes.has(id) : dockedOpen
@@ -277,7 +276,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
         toggleLayoutEditMode()
       },
       title: t.titlebar.layoutEditorTitle(formatModifierToken('mod'))
-    },
+    }
   ]
 
   const view = appViewForPath(location.pathname)

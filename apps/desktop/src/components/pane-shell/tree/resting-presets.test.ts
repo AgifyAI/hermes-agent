@@ -22,7 +22,7 @@ import { $dismissedPanes, $hiddenTreePanes, $layoutTree, bindPaneVisibility, bin
 const ARRANGEMENT = split('row', [
   group(['sessions']),
   group(['workspace']),
-  split('column', [group(['review', 'files']), group(['terminal'])])
+  split('column', [group(['files']), group(['terminal'])])
 ])
 
 const disposers: (() => void)[] = []
@@ -36,7 +36,6 @@ beforeEach(() => {
     ['sessions', { placement: 'left' }],
     ['workspace', { placement: 'main', uncloseable: true }],
     ['files', { placement: 'right' }],
-    ['review', { placement: 'right' }],
     ['terminal', { placement: 'bottom', revealOnPreset: true }]
   ] as const) {
     disposers.push(registry.register({ area: 'panes', data, id, render: () => null, title: id }))
@@ -51,7 +50,6 @@ describe('resting presets', () => {
   it('keeps the arrangement and closes the resting panes through their stores', () => {
     const $terminal = atom(true)
     const $files = atom(true)
-    const $review = atom(true)
 
     bindToolPaneCollapse(
       'terminal',
@@ -65,31 +63,24 @@ describe('resting presets', () => {
       () => $files.set(false),
       () => $files.set(true)
     )
-    bindPaneVisibility(
-      'review',
-      $review,
-      () => $review.set(false),
-      () => $review.set(true)
-    )
-
     disposers.push(
       registerBundledPresets([
         { id: 'shows', title: 'Shows', order: 0, tree: ARRANGEMENT, tier: 'advanced' },
-        { id: 'rests', title: 'Rests', order: 1, tree: ARRANGEMENT, resting: ['terminal', 'files', 'review'] }
+        { id: 'rests', title: 'Rests', order: 1, tree: ARRANGEMENT, resting: ['terminal', 'files'] }
       ])
     )
 
     applyLayoutPreset('rests', ARRANGEMENT)
 
     expect(allPaneIds($layoutTree.get()!).sort()).toEqual(allPaneIds(ARRANGEMENT).sort())
-    expect([$terminal.get(), $files.get(), $review.get()]).toEqual([false, false, false])
-    expect([...$hiddenTreePanes.get()].sort()).toEqual(['files', 'review'])
+    expect([$terminal.get(), $files.get()]).toEqual([false, false])
+    expect([...$hiddenTreePanes.get()].sort()).toEqual(['files'])
     expect(findGroupOfPane($layoutTree.get()!, 'terminal')?.minimized).toBe(true)
 
     // The deck that shows the tooling opens EVERYTHING it places.
     applyLayoutPreset('shows', ARRANGEMENT)
 
-    expect([$terminal.get(), $files.get(), $review.get()]).toEqual([true, true, true])
+    expect([$terminal.get(), $files.get()]).toEqual([true, true])
     expect(allPaneIds($layoutTree.get()!).sort()).toEqual(allPaneIds(ARRANGEMENT).sort())
 
     // Resting again with the store ALREADY closed still collapses the rail:
@@ -146,7 +137,7 @@ describe('resting presets', () => {
 
     // Focus: the terminal is a tab BEHIND the chat, and opening it on apply
     // used to front it over the chat.
-    const focus = split('row', [group(['sessions']), group(['workspace', 'files', 'review', 'terminal'])])
+    const focus = split('row', [group(['sessions']), group(['workspace', 'files', 'terminal'])])
 
     disposers.push(registerBundledPresets([{ id: 'focus', title: 'Focus', order: 0, tree: focus }]))
     applyLayoutPreset('focus', focus)

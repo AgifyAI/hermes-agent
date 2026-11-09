@@ -1715,6 +1715,12 @@ export interface HermesReviewPr {
   url: string
   state: string
   number: number
+  // Optional so Desktop can still read ship-info from an older gateway while
+  // newer gateways provide the review heading's real metadata.
+  title?: null | string
+  author?: null | string
+  baseRefName?: null | string
+  headRefName?: null | string
 }
 
 // One repo's PRs as reported by `gh pr list`, each tied to the branch it was

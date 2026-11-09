@@ -12,6 +12,7 @@ import {
 import { $rightSidebarSectionRequest } from '@/app/right-sidebar/section-request'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
+import { cn } from '@/lib/utils'
 import {
   $connection,
   $cronSessions,
@@ -21,6 +22,13 @@ import {
   knownSessionOwner
 } from '@/store/session'
 import { profileScopeForSessionOwner } from '@/store/session-request-router'
+
+import {
+  SIDEBAR_CARD_CLASS,
+  SidebarSectionContent,
+  SidebarSectionHeader,
+  SidebarSectionToggle
+} from './section-header'
 
 interface MemoryOperationView {
   action: string
@@ -186,6 +194,7 @@ function PendingMemoryRow({ labels, onChanged, record, scope }: { labels: Return
 }
 
 interface PendingMemoryListProps {
+  enabled: boolean
   labels: ReturnType<typeof useI18n>['t']['rightSidebar']
   onCountChange: (count: number) => void
   scope?: ProfileScope
@@ -194,7 +203,7 @@ interface PendingMemoryListProps {
 /** Keep one request lifecycle per owner. The parent keys this component by the
  * profile/connection scope, so an old response can only update its unmounted
  * owner instance and never repaint the newly selected profile. */
-function PendingMemoryList({ labels, onCountChange, scope }: PendingMemoryListProps) {
+function PendingMemoryList({ enabled, labels, onCountChange, scope }: PendingMemoryListProps) {
   const [entries, setEntries] = useState<PendingMemoryWrite[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -220,8 +229,10 @@ function PendingMemoryList({ labels, onCountChange, scope }: PendingMemoryListPr
   }, [entries.length, onCountChange])
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    if (enabled) {
+      refresh()
+    }
+  }, [enabled, refresh])
 
   return loading ? (
     <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{labels.pendingMemoryLoading}</p>
@@ -286,26 +297,18 @@ export function MemorySection() {
   }, [sectionRequest])
 
   return (
-    <section className="shrink-0 border-b border-(--linear-border-panel)" data-slot="pending-memory-section">
-      <div className="group/project-header flex h-7 shrink-0 items-center px-2.5">
-        <button
-          aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-medium text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
-          onClick={() => setOpen(current => !current)}
-          type="button"
-        >
-          <span aria-hidden className={open ? 'rotate-90 text-[0.65rem]' : 'text-[0.65rem]'}>
-            ›
-          </span>
-          <span>{labels.pendingMemoryTitle}</span>
+    <section className={cn(SIDEBAR_CARD_CLASS, 'shrink-0')} data-slot="pending-memory-section">
+      <SidebarSectionHeader>
+        <SidebarSectionToggle onClick={() => setOpen(current => !current)} open={open}>
+          {labels.pendingMemoryTitle}
           {entryCount > 0 && <span className="text-[0.6875rem] text-(--linear-text-tertiary)">{entryCount}</span>}
-        </button>
-      </div>
-      {open && (
+        </SidebarSectionToggle>
+      </SidebarSectionHeader>
+      <SidebarSectionContent open={open}>
         <div className="max-h-64 overflow-y-auto">
-          <PendingMemoryList key={scopeKey} labels={labels} onCountChange={setEntryCount} scope={requestScope} />
+          <PendingMemoryList enabled={open} key={scopeKey} labels={labels} onCountChange={setEntryCount} scope={requestScope} />
         </div>
-      )}
+      </SidebarSectionContent>
     </section>
   )
 }

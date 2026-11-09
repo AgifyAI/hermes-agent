@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react'
 
+import { LinearDisclosure } from '@/components/ui/linear-disclosure'
 import { cn } from '@/lib/utils'
 
 /** The surface used by the project-side sections. Keep the elevation in one
@@ -7,27 +8,8 @@ import { cn } from '@/lib/utils'
 export const SIDEBAR_CARD_CLASS =
   'overflow-hidden rounded-(--linear-radius-card) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-card) shadow-(--linear-shadow-card) transition-[border-color] duration-(--linear-speed-quick) hover:border-(--linear-border-secondary) hover:transition-none'
 
-/** Linear's 16px disclosure glyph. A text `›` looks heavier and shifts as the
- * font changes, which is especially visible when sections open and close. */
-export function SidebarDisclosure({ className, open }: { className?: string; open: boolean }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={cn(
-        'size-4 shrink-0 text-(--linear-text-tertiary) transition-transform duration-[150ms] ease-[ease] motion-reduce:transition-none',
-        open && 'rotate-90',
-        className
-      )}
-      focusable="false"
-      viewBox="0 0 16 16"
-    >
-      <path
-        d="M6.75194 10.6239C6.41861 10.8183 6 10.5779 6 10.192V5.80802C6 5.42212 6.41861 5.18169 6.75194 5.37613L10.5096 7.56811C10.8404 7.76105 10.8404 8.23895 10.5096 8.43189L6.75194 10.6239Z"
-        fill="currentColor"
-      />
-    </svg>
-  )
-}
+/** Linear's disclosure glyph. */
+export const SidebarDisclosure = LinearDisclosure
 
 export function SidebarSectionHeader({ children, className, ...props }: ComponentProps<'div'>) {
   return (

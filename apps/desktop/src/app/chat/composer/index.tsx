@@ -14,6 +14,7 @@ import {
 import { useTourMarker } from '@/app/chat/tour-marker'
 import type { GatewayRequester } from '@/app/contrib/types'
 import { useHudComposerDrag } from '@/app/hud/composer-drag'
+import { REVIEW_ROUTE } from '@/app/routes'
 import { useBusyInputMode } from '@/app/session/hooks/use-busy-input-mode'
 import { composerFloatingStrip, composerInputBacking } from '@/components/chat/composer-dock'
 import { useSetupChatView } from '@/components/onboarding/first-run/assembly'
@@ -36,7 +37,8 @@ import { $hudMode } from '@/store/hud'
 import { $showsAdvancedChrome } from '@/store/interface-mode'
 import { $chatOnboardingSolo } from '@/store/onboarding-intro'
 import { sessionBlockingPrompt } from '@/store/prompts'
-import { toggleReview } from '@/store/review'
+import { requestRoute } from '@/store/recovery-requests'
+import { prepareReviewPage } from '@/store/review'
 import { $gatewayState } from '@/store/session'
 import { $botChatSessionIds, $sessionStates, $sessionTiles, isBotChatSession } from '@/store/session-states'
 import { useForcedTextDirection } from '@/store/text-direction'
@@ -1434,7 +1436,10 @@ export function ChatBar({
                       // A tile's rail reviews ITS worktree: pin the pane's scope to
                       // this surface's cwd. Main keeps the classic follow-the-
                       // active-session scope (null).
-                      onOpen={() => toggleReview(scope.target === 'main' ? null : (cwd ?? null), scope.target)}
+                      onOpen={() => {
+                        prepareReviewPage(scope.target === 'main' ? null : (cwd ?? null), scope.target)
+                        requestRoute(REVIEW_ROUTE)
+                      }}
                       onOpenWorktree={openInWorktree}
                       onSwitchBranch={handleSwitchBranch}
                       // Blank in a bot chat: the row hides itself without a repo,

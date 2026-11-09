@@ -155,10 +155,12 @@ describe('ChatSidebar navigation activity', () => {
 
     for (const [pathname, currentView, label] of [
       ['/capabilities', 'capabilities', 'Capabilities'],
+      ['/tools', 'tools', 'Tools'],
       ['/skills', 'skills', 'Skills'],
       ['/messaging', 'messaging', 'Messaging'],
       ['/artifacts', 'artifacts', 'Artifacts'],
-      ['/cron', 'cron', 'Scheduled jobs']
+      ['/cron', 'cron', 'Scheduled jobs'],
+      ['/review', 'review', 'Review']
     ] as const) {
       cleanup()
       focus('workspace-group')
@@ -539,8 +541,12 @@ describe('ChatSidebar merged list ordering and owners', () => {
     expect(screen.getByText('default-1')).toBeTruthy()
     // Every row carries its profile mark, including the default profile, so the
     // owner reads at a glance without opening anything.
-    expect(within(screen.getByText('work-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: work' })).toBeTruthy()
-    expect(within(screen.getByText('default-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: default' })).toBeTruthy()
+    expect(
+      within(screen.getByText('work-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: work' })
+    ).toBeTruthy()
+    expect(
+      within(screen.getByText('default-1').closest('.group.row-hover')!).getByRole('img', { name: 'Profile: default' })
+    ).toBeTruthy()
     // No per-platform headings or owner groups in the flat view.
     expect(screen.queryByText('Telegram')).toBeNull()
 

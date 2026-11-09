@@ -480,9 +480,21 @@ def review_ship_info(cwd: str) -> dict:
     """gh availability/auth + this branch's PR. ghReady false when gh missing/unauthed."""
     if not _is_dir(cwd) or not _gh(cwd, ["auth", "status"])[0]:
         return {"ghReady": False, "pr": None}
-    pr = _gh_json(cwd, ["pr", "view", "--json", "url,state,number"])
+    pr = _gh_json(cwd, ["pr", "view", "--json", "url,state,number,title,author,baseRefName,headRefName"])
     if pr and pr.get("url"):
-        return {"ghReady": True, "pr": {"url": pr["url"], "state": pr.get("state"), "number": pr.get("number")}}
+        author = pr.get("author")
+        return {
+            "ghReady": True,
+            "pr": {
+                "url": pr["url"],
+                "state": pr.get("state"),
+                "number": pr.get("number"),
+                "title": pr.get("title"),
+                "author": author.get("login") if isinstance(author, dict) else None,
+                "baseRefName": pr.get("baseRefName"),
+                "headRefName": pr.get("headRefName"),
+            },
+        }
     return {"ghReady": True, "pr": None}
 
 

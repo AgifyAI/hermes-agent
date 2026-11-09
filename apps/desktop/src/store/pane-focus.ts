@@ -1,20 +1,21 @@
 import { setTerminalTakeover } from '@/app/right-sidebar/store'
+import { REVIEW_ROUTE } from '@/app/routes'
 import { isLayoutNode, type LayoutNode } from '@/components/pane-shell/tree/model'
 import { applyLayoutPreset, LAYOUTS_AREA } from '@/components/pane-shell/tree/presets'
 import { revealTreePane } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 
 import { setFileBrowserOpen, setSidebarOpen } from './layout'
-import { openReview } from './review'
+import { requestRoute } from './recovery-requests'
 
 // Explicit-request pane reveals, keyed to the backend `focus_pane` tool. Each
 // entry drives the pane's own reveal path (some are toggle-bound) so a revealed
-// pane matches a user-driven open. files/review are workspace-gated — a no-op
-// without a project cwd, which is the honest behavior.
+// pane matches a user-driven open. files is workspace-gated — a no-op without
+// a project cwd, which is the honest behavior. Review is a full page now.
 const PANE_REVEALERS: Record<string, () => void> = {
   chat: () => revealTreePane('workspace'),
   files: () => setFileBrowserOpen(true),
-  review: () => openReview(),
+  review: () => requestRoute(REVIEW_ROUTE),
   sessions: () => setSidebarOpen(true),
   terminal: () => setTerminalTakeover(true)
 }
@@ -25,7 +26,6 @@ const PANE_REVEALERS: Record<string, () => void> = {
 // (#106009). An explicit reveal also un-minimizes and fronts the tree pane.
 const TREE_PANE_OF: Record<string, string> = {
   files: 'files',
-  review: 'review',
   sessions: 'sessions',
   terminal: 'terminal'
 }

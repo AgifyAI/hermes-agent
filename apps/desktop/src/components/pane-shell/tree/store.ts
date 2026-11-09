@@ -18,6 +18,7 @@ import { notify } from '@/store/notifications'
 import { clearAllPaneSizeOverrides } from '@/store/panes'
 import { isBrowserWindow, isSecondaryWindow } from '@/store/windows'
 
+import { decodePersistedLayoutTree } from './layout-migration'
 import {
   allPaneIds,
   anchorsFirst,
@@ -31,11 +32,9 @@ import {
   isLayoutNode,
   type LayoutNode,
   mergeZonesWithPane as mergeZonesWithPaneOp,
-  migratePersistedTree,
   mirrorTreeHorizontal,
   movePane as movePaneOp,
   movePanes as movePanesOp,
-  normalize,
   removePane,
   reorderPanesInGroup as reorderPanesInGroupOp,
   setActivePane as setActivePaneOp,
@@ -72,9 +71,7 @@ function persist(tree: LayoutNode | null) {
 export const $layoutTree = modeLayout.atom<LayoutNode | null>(
   LAYOUT_KEYS.tree,
   () => defaultTrees[modeLayout.mode],
-  Codecs.json(parsed =>
-    isLayoutNode(parsed) ? normalize(migratePersistedTree(parsed)) : defaultTrees[modeLayout.mode]
-  ),
+  Codecs.json(parsed => decodePersistedLayoutTree(parsed, defaultTrees)),
   true
 )
 
@@ -1132,6 +1129,7 @@ export function restoreMinimizedTreeSide(side: TreeSide): boolean {
 
     for (const id of groupLeafIds(child)) {
       const group = findGroup(next, id)
+
       if (group?.minimized && !group.panes.every(isCollapsePane)) {
         next = setGroupMinimized(next, id, false)
       }

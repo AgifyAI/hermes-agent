@@ -257,6 +257,48 @@ describe('TreeGroup', () => {
     expect(strip.style).toHaveProperty('WebkitAppRegion', '')
   })
 
+  it('renders a minimized terminal as an inline disclosure card in a column', () => {
+    disposePane = registry.register({
+      area: 'panes',
+      data: { placement: 'bottom' },
+      id: 'terminal',
+      render: () => <div data-terminal-content>Terminal</div>,
+      title: 'Terminal'
+    })
+    vi.stubGlobal('CSS', { escape: (value: string) => value })
+    stubResizeObserver()
+
+    render(<TreeGroup node={terminalGroup(true)} parentAxis="column" />)
+
+    const card = container!.querySelector<HTMLElement>('[data-terminal-card]')
+    const strip = card?.querySelector<HTMLElement>('[data-zone-tabstrip]')
+    const tablist = strip?.querySelector<HTMLElement>('[role="tablist"]')
+    const restore = card?.querySelector<HTMLButtonElement>('button[aria-expanded="false"]')
+
+    expect(card).not.toBeNull()
+    expect(card?.textContent).toContain('Terminal')
+    expect(strip?.style.height).toBe('36px')
+    expect(tablist?.className).toContain('flex-none')
+    expect(restore).not.toBeNull()
+    expect(restore?.querySelector('svg path')?.getAttribute('d')).toContain('M6.75194')
+  })
+
+  it('keeps row-collapsed terminal groups as rails', () => {
+    disposePane = registry.register({
+      area: 'panes',
+      data: { placement: 'bottom' },
+      id: 'terminal',
+      render: () => <div>Terminal</div>,
+      title: 'Terminal'
+    })
+    vi.stubGlobal('CSS', { escape: (value: string) => value })
+
+    render(<TreeGroup node={terminalGroup(true)} parentAxis="row" />)
+
+    expect(container!.querySelector('[data-terminal-card]')).toBeNull()
+    expect(container!.querySelector('[data-vertical="true"]')).not.toBeNull()
+  })
+
   // The invariant behind the shared eligibility predicate
   // (hostsSessionDropTarget): a session or new-session drag must paint the
   // SAME zones either drag resolver would accept, and stay dark everywhere

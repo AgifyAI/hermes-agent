@@ -100,8 +100,10 @@ import {
   navigateToWorkspacePage,
   NEW_CHAT_ROUTE,
   PROFILES_ROUTE,
+  REVIEW_ROUTE,
   SETTINGS_ROUTE,
-  STARMAP_ROUTE
+  STARMAP_ROUTE,
+  TOOLS_ROUTE
 } from '../routes'
 import { SECTIONS } from '../settings/constants'
 import { type SettingsSearchEntry, settingsSearchTargetQuery } from '../settings/settings-search'
@@ -353,8 +355,12 @@ const PaletteRow = memo(function PaletteRow({
         <span className={cn(HUD_NOTE, HUD_NOTE_VARIANT[item.detailVariant ?? 'muted'])}>{item.detail}</span>
       )}
       {combo && <KbdCombo className="ml-auto gap-[3px]" combo={combo} />}
-      {item.to && <ChevronRight className={cn('size-3.5 shrink-0 text-(--linear-text-quaternary)', !combo && 'ml-auto')} />}
-      {item.active && <Check className={cn('size-3.5 shrink-0 text-(--linear-accent)', !combo && !item.to && 'ml-auto')} />}
+      {item.to && (
+        <ChevronRight className={cn('size-3.5 shrink-0 text-(--linear-text-quaternary)', !combo && 'ml-auto')} />
+      )}
+      {item.active && (
+        <Check className={cn('size-3.5 shrink-0 text-(--linear-accent)', !combo && !item.to && 'ml-auto')} />
+      )}
     </CommandItem>
   )
 })
@@ -362,8 +368,7 @@ const PaletteRow = memo(function PaletteRow({
 // Linear's palette (docs/linear-design-reference.md § Command palette): 720×450,
 // 80px from the top at every width, so it clears the titlebar without HUD_POSITION's
 // narrow-window drop. Short windows shrink it instead of pushing it off screen.
-const PALETTE_FRAME =
-  'top-20 h-[min(450px,calc(100vh-6rem))] w-[min(720px,calc(100vw-2rem))] max-[44rem]:top-20'
+const PALETTE_FRAME = 'top-20 h-[min(450px,calc(100vh-6rem))] w-[min(720px,calc(100vw-2rem))] max-[44rem]:top-20'
 
 // Hermes session ids: <YYYYMMDD>_<HHMMSS>_<6 hex>. Used to offer a direct
 // "Go to session ‹id›" jump for ids that aren't in the recent-200 list.
@@ -866,6 +871,13 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
             label: t.shell.statusbar.cron,
             run: go(CRON_ROUTE)
           },
+          {
+            icon: GitBranch,
+            id: 'nav-review',
+            keywords: ['review', 'diff', 'changes', 'git'],
+            label: t.statusStack.coding.review,
+            run: go(REVIEW_ROUTE)
+          },
           { action: 'nav.profiles', icon: Users, id: 'nav-profiles', label: t.profiles.title, run: go(PROFILES_ROUTE) },
           { action: 'nav.agents', icon: Cpu, id: 'nav-agents', label: t.agents.title, run: go(AGENTS_ROUTE) },
           {
@@ -1078,9 +1090,8 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
       })
     }
 
-    // Deep-link straight to a Capabilities sub-tab. The root "Go to" entry only
-    // lands on the top-level Skills view; typing "mcp"/"tools"/"skills" should
-    // jump to the exact tab (matches the "not just the top lvl" ask).
+    // Deep-link to the capability pages. Tools has its own page so its actions
+    // and profile scope are not hidden behind the broader Capabilities tabs.
     const capLabel = t.commandCenter.nav.capabilities.title
 
     result.push({
@@ -1097,8 +1108,8 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
           icon: SlidersHorizontal,
           id: 'cap-toolsets',
           keywords: ['tools', 'toolsets', 'capabilities'],
-          label: `${capLabel}: ${t.skills.tabToolsets}`,
-          run: go(`${CAPABILITIES_ROUTE}?tab=toolsets`)
+          label: t.skills.tabToolsets,
+          run: go(TOOLS_ROUTE)
         },
         {
           icon: Layers3,
@@ -1330,7 +1341,6 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
   const unrankedGroups = activePage ? activePage.groups : groups
   const visibleGroups = useMemo(() => rankGroups(unrankedGroups, search), [unrankedGroups, search])
   const placeholder = activePage ? activePage.placeholder : t.commandCenter.searchPlaceholder
-
 
   const handleSelect = (item: PaletteItem) => {
     if (item.to) {
