@@ -18,15 +18,93 @@ export function getSkills(profile?: ProfileScope): Promise<SkillInfo[]> {
   })
 }
 
+export type SkillRepository = string | { name?: string; relative_path?: null | string; root?: string }
+
+export interface SkillLocationSource {
+  display_path?: string | null
+  cwd?: string | null
+  editable?: boolean
+  exists?: boolean
+  known?: boolean
+  matches_runtime?: boolean
+  path?: null | string
+  repo?: SkillRepository
+  write_reason?: string
+}
+
+export interface SkillLocation {
+  cwd?: string
+  installation?: {
+    path?: string
+    runtime_version?: null | string
+    source_path?: null | string
+    source_version?: null | string
+    status?: 'different' | 'identical' | 'unknown' | string
+    runtime_editable?: boolean
+  }
+  machine?: string
+  path?: string
+  repo?: SkillRepository
+  runtime?: { cwd?: string; display_path?: string | null; editable?: boolean; path?: string }
+  source?: SkillLocationSource
+}
+
+export interface SkillContentResponse {
+  content: string
+  location?: SkillLocation
+  name: string
+  path: string
+  source_content?: null | string
+}
+
 /** Raw SKILL.md text (frontmatter included) for ANY skill — bundled, hub, or
  *  learned — backing the Capabilities detail pane's full-skill view. */
 export function getSkillContent(
   name: string,
   profile?: ProfileScope
-): Promise<{ content: string; name: string; path: string }> {
-  return window.hermesDesktop.api<{ content: string; name: string; path: string }>({
+): Promise<SkillContentResponse> {
+  return window.hermesDesktop.api<SkillContentResponse>({
     ...capabilityScoped(profile),
     path: `/api/skills/content?name=${encodeURIComponent(name)}`
+  })
+}
+
+export type SkillSourceDirection = 'edit_source' | 'installed_to_source' | 'source_to_installed'
+
+export type SkillCopyDirection = Exclude<SkillSourceDirection, 'edit_source'>
+
+export interface SkillSourceSyncOptions {
+  content?: string
+  expectedRuntimeVersion?: string
+  expectedSourceVersion?: string
+  profile?: ProfileScope
+}
+
+export interface SkillSourceSyncResult {
+  direction?: SkillSourceDirection
+  error?: string
+  location?: SkillLocation
+  name?: string
+  success: boolean
+  version?: null | string
+}
+
+export function syncSkillSource(
+  name: string,
+  direction: SkillSourceDirection,
+  options: SkillSourceSyncOptions
+): Promise<SkillSourceSyncResult> {
+  return window.hermesDesktop.api<SkillSourceSyncResult>({
+    ...capabilityScoped(options.profile),
+    body: {
+      content: options.content,
+      direction,
+      expected_runtime_version: options.expectedRuntimeVersion,
+      expected_source_version: options.expectedSourceVersion,
+      name
+    },
+    method: 'PUT',
+    path: '/api/skills/source'
   })
 }
 

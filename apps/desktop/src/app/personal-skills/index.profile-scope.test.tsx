@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -8,11 +8,17 @@ import { I18nProvider } from '@/i18n'
 import { $activeGatewayProfile, $showAllProfiles } from '@/store/profile'
 import type { ProfileInfo, SkillInfo } from '@/types/hermes'
 
-import { PersonalSkillsPage } from './index'
+import { PersonalSkillsPage, type PersonalSkillsPageProps } from './index'
 
 interface ApiRequest {
   path: string
   profile?: null | string
+}
+
+interface SkillContentFixture {
+  content: string
+  name: string
+  path: string
 }
 
 const profiles = ['Brent', 'other', 'empty']
@@ -58,14 +64,14 @@ function contentRequests(): ApiRequest[] {
     .filter(request => request.path.startsWith('/api/skills/content'))
 }
 
-function renderSkillsPage(): QueryClient {
+function renderSkillsPage(onOpenSession?: PersonalSkillsPageProps['onOpenSession']): QueryClient {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   render(
     <MemoryRouter>
       <I18nProvider configClient={null} initialLocale="en">
         <QueryClientProvider client={client}>
-          <PersonalSkillsPage />
+          <PersonalSkillsPage onOpenSession={onOpenSession} />
         </QueryClientProvider>
       </I18nProvider>
     </MemoryRouter>
@@ -126,6 +132,36 @@ afterEach(() => {
 })
 
 describe('PersonalSkillsPage profile scope', () => {
+  it.each([true, false])('opens the owning file in a chat when a repository is available: %s', async hasSource => {
+    const installedPath = '/profiles/Brent/skills/shared-skill/SKILL.md'
+    const sourcePath = '/repo/profiles/Brent/skills/shared-skill/SKILL.md'
+    const base = api.getMockImplementation() as ((request: ApiRequest) => Promise<unknown>)
+    api.mockImplementation(async (request: ApiRequest) => {
+      const data = await base(request) as SkillContentFixture
+
+      if (!request.path.startsWith('/api/skills/content')) {return data}
+
+      return {
+        ...data,
+        location: {
+          runtime: { cwd: '/workspace', path: installedPath },
+          source: hasSource ? { cwd: '/repo', exists: true, path: sourcePath } : { exists: false }
+        },
+        source_content: hasSource ? data.content : null
+      }
+    })
+    const open = vi.fn()
+    renderSkillsPage(open)
+    await screen.findByText('Brent instructions')
+    fireEvent.click(screen.getByRole('button', { name: 'Open chat' }))
+
+    expect(open).toHaveBeenCalledWith(expect.objectContaining({
+      cwd: hasSource ? '/repo' : '/workspace',
+      prompt: expect.stringContaining(hasSource ? sourcePath : installedPath)
+    }))
+    expect(open.mock.calls[0][0].prompt.startsWith('/shared-skill')).toBe(false)
+  })
+
   it('keeps list and detail requests on Brent, another profile, all profiles, then an empty profile', async () => {
     renderSkillsPage()
 
