@@ -117,7 +117,18 @@ async function spawnFixture(launcher: 'setsid' | 'nohup', owned: boolean): Promi
 
   // Restrict capability discovery, not the reported host OS. The fallback runs
   // real nohup with no setsid executable anywhere on the child's PATH.
+  // Resolve the interpreter before replacing PATH: pyenv's `python3` shim is
+  // a shell launcher, not a self-contained executable for the child fixture.
+  const pythonExecutable: string = (
+    await exec('python3 -c "import sys;print(sys.executable)"', { shell })
+  ).stdout.trim()
+
+  assert.ok(pythonExecutable)
+
   for (const tool of [
+    // A pyenv `python3` shim is a small `#!/usr/bin/env bash` launcher. Keep
+    // that interpreter available after replacing PATH with the fixture bin.
+    'bash',
     'sh',
     'python3',
     'mkdir',
@@ -132,7 +143,9 @@ async function spawnFixture(launcher: 'setsid' | 'nohup', owned: boolean): Promi
     'ps',
     launcher
   ]) {
-    const executable: string = (await exec(`command -v ${tool}`, { shell })).stdout.trim()
+    const executable: string =
+      tool === 'python3' ? pythonExecutable : (await exec(`command -v ${tool}`, { shell })).stdout.trim()
+
     await symlink(executable, path.join(bin, tool))
   }
 
