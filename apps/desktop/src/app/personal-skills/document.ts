@@ -17,7 +17,7 @@ interface FrontmatterParts {
   newline: string
 }
 
-const FRONTMATTER_RE = /^(---[ \t]*\r?\n)([\s\S]*?)(?<=\n)(---[ \t]*(?:\r?\n|$))/
+const FRONTMATTER_RE = /^(\uFEFF?---[ \t]*\r?\n)([\s\S]*?)(?<=\n)(---[ \t]*(?:\r?\n|$))/
 
 function frontmatterParts(content: string): FrontmatterParts | null {
   const header = FRONTMATTER_RE.exec(content)
@@ -86,6 +86,62 @@ export function parseSkillDocument(content: string): ParsedSkillDocument {
   return { body: parts.body, metadata: metadataFrom(parts) }
 }
 
+function replaceYamlValue(
+  yaml: string,
+  pair: Pair<Node, Node | null>,
+  value: string,
+  inFlow: boolean,
+  newline: string
+): string {
+  const token = pair.value?.srcToken
+
+  if (token) {
+    const start = token.offset
+    const end = start + CST.stringify(token).length
+    // A plain scalar such as "true" must stay a string when YAML is read again.
+    const needsQuotes = token.type === 'scalar' && /^["']/.test(stringify(value))
+    CST.setScalarValue(token, value, {
+      afterKey: true,
+      inFlow,
+      type: needsQuotes ? 'QUOTE_DOUBLE' : undefined
+    })
+
+    return yaml.slice(0, start) + CST.stringify(token).replace(/\r?\n/g, newline) + yaml.slice(end)
+  } else {
+    // Empty values have no token. Insert immediately after the key's colon,
+    // keeping any following whitespace and comments in their original place.
+    const colon = pair.srcToken?.sep?.find(token => token.type === 'map-value-ind')
+
+    if (!colon) {
+      throw new Error('Invalid skill metadata')
+    }
+
+    const offset = colon.offset + colon.source.length
+
+    return yaml.slice(0, offset) + ' ' + JSON.stringify(value) + yaml.slice(offset)
+  }
+}
+
+function addMissingFields(parts: FrontmatterParts, yaml: string, missing: Record<string, string>): string {
+  const map = parts.document.contents
+
+  if (Object.keys(missing).length) {
+    if (parts.document.errors.length || (map && !isMap(map))) {
+      throw new Error('Invalid skill metadata')
+    }
+
+    if (isMap(map) && map.flow && map.range) {
+      const offset = map.range[0] + 1
+      const pairs = Object.entries(missing).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`)
+      yaml = yaml.slice(0, offset) + pairs.join(', ') + (map.items.length ? ', ' : '') + yaml.slice(offset)
+    } else {
+      yaml += stringify(missing).replace(/\n/g, parts.newline)
+    }
+  }
+
+  return yaml
+}
+
 /** Edit the original YAML tokens so other fields, spacing and comments survive a save. */
 export function updateSkillDocument(content: string, updates: Record<string, string>, body?: string): string {
   const parts = frontmatterParts(content)
@@ -120,46 +176,10 @@ export function updateSkillDocument(content: string, updates: Record<string, str
       continue
     }
 
-    const token = pair.value?.srcToken
-
-    if (token) {
-      const start = token.offset
-      const end = start + CST.stringify(token).length
-      // A plain scalar such as "true" must stay a string when YAML is read again.
-      const needsQuotes = token.type === 'scalar' && /^["']/.test(stringify(value))
-      CST.setScalarValue(token, value, {
-        afterKey: true,
-        inFlow: isMap(map) && map.flow,
-        type: needsQuotes ? 'QUOTE_DOUBLE' : undefined
-      })
-      yaml = yaml.slice(0, start) + CST.stringify(token).replace(/\r?\n/g, newline) + yaml.slice(end)
-    } else {
-      // Empty values have no token. Insert immediately after the key's colon,
-      // keeping any following whitespace and comments in their original place.
-      const colon = pair.srcToken?.sep?.find(token => token.type === 'map-value-ind')
-
-      if (!colon) {
-        throw new Error('Invalid skill metadata')
-      }
-
-      const offset = colon.offset + colon.source.length
-      yaml = yaml.slice(0, offset) + ' ' + JSON.stringify(value) + yaml.slice(offset)
-    }
+    yaml = replaceYamlValue(yaml, pair, value, Boolean(isMap(map) && map.flow), newline)
   }
 
-  if (Object.keys(missing).length) {
-    if (parts.document.errors.length || (map && !isMap(map))) {
-      throw new Error('Invalid skill metadata')
-    }
-
-    if (isMap(map) && map.flow && map.range) {
-      const offset = map.range[0] + 1
-      const pairs = Object.entries(missing).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`)
-      yaml = yaml.slice(0, offset) + pairs.join(', ') + (map.items.length ? ', ' : '') + yaml.slice(offset)
-    } else {
-      yaml += stringify(missing).replace(/\n/g, newline)
-    }
-  }
+  yaml = addMissingFields(parts, yaml, missing)
 
   return parts.header[1] + yaml + parts.header[3] + (body ?? parts.body)
 }

@@ -79,6 +79,13 @@ describe('personal skill documents', () => {
     expect(updateSkillDocument(header + 'Body', { description: 'new' })).toBe(header.replace("'old'", "'new'") + 'Body')
   })
 
+  it('edits metadata behind a UTF-8 byte order mark while keeping the document intact', () => {
+    const original = "\uFEFF---\r\nname:   Sample # id\r\ndescription: 'First'\r\n---\r\n\r\nBody"
+
+    expect(parseSkillDocument(original).body).toBe('\r\nBody')
+    expect(updateSkillDocument(original, { description: 'Updated' })).toBe(original.replace("'First'", "'Updated'"))
+  })
+
   it('can add a missing description without reformatting existing metadata', () => {
     const source = '---\nname:   sample # id\n---\n\nBody'
     const next = updateSkillDocument(source, { description: 'true' })
