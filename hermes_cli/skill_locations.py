@@ -50,8 +50,12 @@ def _display_path(path: Optional[Path]) -> Optional[str]:
         return None
     actual = str(path)
     try:
-        absolute = Path(os.path.abspath(path))
-        home = Path(os.path.abspath(Path.home()))
+        # ``HOME`` and a resolved file can use different spellings of the same
+        # directory (for example ``/var`` versus ``/private/var`` on macOS).
+        # Resolve only for this display comparison; ``path`` remains the exact
+        # absolute path returned to the editor for file operations.
+        absolute = Path(path).resolve(strict=False)
+        home = Path.home().resolve(strict=False)
         relative = absolute.relative_to(home)
     except (OSError, RuntimeError, ValueError, TypeError):
         return actual

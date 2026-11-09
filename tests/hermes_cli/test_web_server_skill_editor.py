@@ -160,10 +160,16 @@ class TestSkillContent:
         assert location["source"]["editable"] is False
         assert location["source"]["write_reason"] == "source_not_separate"
 
-    def test_display_paths_shorten_only_the_service_home(self, tmp_path):
+    def test_display_paths_shorten_only_the_service_home(self, tmp_path, monkeypatch):
         from hermes_cli.skill_locations import _display_path
 
-        local = Path.home() / "hermes" / "profiles" / "default" / "skills" / "demo" / "SKILL.md"
+        canonical_home = tmp_path / "private" / "home"
+        canonical_home.mkdir(parents=True)
+        home_alias = tmp_path / "alias-home"
+        home_alias.symlink_to(canonical_home, target_is_directory=True)
+        monkeypatch.setenv("HOME", str(home_alias))
+
+        local = canonical_home / "hermes" / "profiles" / "default" / "skills" / "demo" / "SKILL.md"
         outside = tmp_path / "demo" / "SKILL.md"
 
         assert _display_path(local) == "~/hermes/profiles/default/skills/demo/SKILL.md"
