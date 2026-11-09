@@ -340,6 +340,16 @@ function skillSourceAvailable(sourceContent: null | string | undefined, location
     : Boolean(location?.source?.exists || location?.installation?.source_version)
 }
 
+function skillDocumentName(content: null | string | undefined): string | undefined {
+  if (!content) {
+    return undefined
+  }
+
+  const name = parseSkillDocument(content).metadata.find(field => field.key === 'name')?.value.trim()
+
+  return name || undefined
+}
+
 function skillVisibleFields(
   version: 'installed' | 'source',
   draft: SkillDraft | undefined,
@@ -956,6 +966,7 @@ export function PersonalSkillsPage({
             sourceVersion: result.version ?? result.location?.installation?.source_version ?? expectedVersion
           })
         }
+
         clearSkillDraft(selected.key)
         void queryClient.invalidateQueries({ queryKey: skillsQueryKey(selected.profile), exact: true })
         notify({
@@ -1060,8 +1071,10 @@ export function PersonalSkillsPage({
   }, [query, skillDrafts, skills])
 
   const selectedSavedName = selected ? savedSkillNames[selected.key] : undefined
+  const sourceContentName = skillDocumentName(contentQuery.data?.source_content)
+
   const selectedDisplayName = selected
-    ? skillDrafts[selected.key]?.name ?? selectedSavedName?.name
+    ? skillDrafts[selected.key]?.name ?? selectedSavedName?.name ?? sourceContentName
     : undefined
 
   return (

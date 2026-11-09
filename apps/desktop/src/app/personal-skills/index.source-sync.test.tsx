@@ -104,7 +104,6 @@ beforeEach(() => {
   syncResponse = 'success'
   sourceVersionResponse = 'source-v1'
   api = vi.fn(async (request: ApiRequest): Promise<unknown> => {
-    console.log('roundtrip api', request.path)
     if (request.path === '/api/profiles') {
       return { profiles: [{ has_env: false, is_default: true, model: null, name: 'Brent', path: '/profiles/Brent', provider: null, skill_count: 1 }] }
     }
@@ -330,11 +329,9 @@ describe('PersonalSkillsPage source/runtime comparison', () => {
   })
 
   it('keeps a draft attached to its skill while visiting another skill', async () => {
-    console.log('roundtrip start')
     renderPage()
 
     const editor = await screen.findByRole('textbox', { name: 'Skill instructions' })
-    console.log('roundtrip initial loaded')
     const nameEditor = screen.getByRole('textbox', { name: 'Name' })
     nameEditor.textContent = 'Review draft title'
     editor.textContent = 'Review draft instructions'
@@ -343,18 +340,13 @@ describe('PersonalSkillsPage source/runtime comparison', () => {
 
     expect(screen.getByRole('button', { name: /Review draft title/ })).toBeTruthy()
     expect(screen.getAllByText('Review draft title').length).toBeGreaterThan(0)
-    console.log('roundtrip draft set')
 
     fireEvent.click(screen.getByRole('button', { name: 'planning' }))
-    console.log('roundtrip clicked planning')
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Skill instructions' }).textContent).toContain('Source planning instructions'))
-    console.log('roundtrip planning loaded')
     expect(screen.getByRole('textbox', { name: 'Name' }).textContent).toBe('planning')
 
     fireEvent.click(screen.getByRole('button', { name: 'Review draft title' }))
-    console.log('roundtrip clicked review')
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Skill instructions' }).textContent).toContain('Review draft instructions'))
-    console.log('roundtrip review loaded')
     expect(screen.getByRole('textbox', { name: 'Name' }).textContent).toBe('Review draft title')
     expect(screen.getAllByText('Review draft title').length).toBeGreaterThan(0)
   })
