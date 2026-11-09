@@ -8,6 +8,7 @@ seam so ``monkeypatch.setattr(<owning module>, ...)`` keeps working.
 """
 
 import asyncio
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -15,8 +16,8 @@ from fastapi import APIRouter, HTTPException
 from hermes_cli.web_deps import late
 from hermes_cli.web_server_profiles import _hub_action_name, _installed_hub_identifiers
 from hermes_cli.web_models import (
-    SkillContentUpdate, SkillCreate, SkillInstallRequest, SkillToggle, SkillUninstallRequest,
-    SkillsUpdateRequest)
+    SkillContentUpdate, SkillCreate, SkillInstallRequest, SkillSourceSync, SkillToggle,
+    SkillUninstallRequest, SkillsUpdateRequest)
 from hermes_cli.web_routers._common import (
     _profile_scope, config_write_scope, http_failure, log as _log, require, scoped_to_thread,
     spawn_profile_action)
@@ -92,6 +93,234 @@ def _clear_skills_prompt_cache() -> None:
         clear_skills_system_prompt_cache(clear_snapshot=True)
     except Exception:
         pass
+
+
+def _skill_location(name: str) -> dict:
+    """Return the resolved file's runtime/source contract, or an empty object."""
+    from tools.skill_manager_tool import _find_skill
+    from hermes_cli.skill_locations import describe_skill_location
+
+    found = _find_skill(name)
+    if not found:
+        return {}
+    return describe_skill_location(name, found["path"] / "SKILL.md")
+
+
+def _preserve_source_bom(content: str, original: str) -> str:
+    """Keep the source file's BOM while accepting editor text without one."""
+    clean = content.removeprefix("\ufeff")
+    return ("\ufeff" if original.startswith("\ufeff") else "") + clean
+
+
+def _write_synced_target(
+    name: str,
+    target_path: Path,
+    target_dir: Path,
+    original_content: str,
+    next_content: str,
+    editable: bool,
+    not_editable_code: str,
+    not_editable_message: str,
+) -> Optional[dict]:
+    from tools.skill_manager_tool import (
+        _background_review_read_before_write_guard,
+        _description_budget_error,
+        _security_scan_skill,
+        _validate_content_size,
+        _validate_frontmatter,
+    )
+    from utils import atomic_write_text
+
+    if not editable:
+        return {
+            "success": False,
+            "error_code": not_editable_code,
+            "error": not_editable_message,
+        }
+    if err := _validate_frontmatter(next_content) or _validate_content_size(next_content):
+        return {"success": False, "error_code": "invalid_content", "error": err}
+    if err := _description_budget_error(next_content, before=original_content):
+        return {"success": False, "error_code": "invalid_content", "error": err}
+    if guard := _background_review_read_before_write_guard(name, target_path, "edit", "SKILL.md"):
+        return {"success": False, "error_code": "write_failed", "error": guard.get("error", "Write refused.")}
+    try:
+        atomic_write_text(target_path, next_content, preserve_mode=True, create_mode=0o644)
+        try:
+            scan_error = _security_scan_skill(target_dir)
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
+            scan_error = f"Security scan failed: {exc}"
+        if not scan_error:
+            return None
+        try:
+            atomic_write_text(target_path, original_content, preserve_mode=True)
+        except OSError as rollback_error:
+            return {
+                "success": False,
+                "error_code": "write_failed",
+                "error": f"{scan_error}; rollback failed: {rollback_error}",
+            }
+        return {"success": False, "error_code": "write_failed", "error": scan_error}
+    except OSError as exc:
+        return {"success": False, "error_code": "write_failed", "error": str(exc)}
+
+
+def _sync_skill_source(
+    name: str,
+    direction: str,
+    expected_runtime_version: Optional[str],
+    expected_source_version: Optional[str],
+    legacy_expected_version: Optional[str] = None,
+    content: Optional[str] = None,
+) -> dict:
+    """Copy one profile skill side only after an explicit version check.
+
+    The source path is reconstructed from the configured repository root and
+    the runtime skill's relative directory. No client path is accepted here;
+    this keeps an immutable release or another profile outside the write scope.
+    """
+    from hermes_cli.skill_locations import (
+        configured_repository_root,
+        configured_source_for_skill,
+        content_version,
+        describe_skill_location,
+        read_skill_text,
+        _runtime_is_editable,
+        _runtime_path_is_safe,
+        _path_is_within_non_symlink_root,
+        _source_is_editable,
+    )
+    from hermes_cli.profiles import current_profile_name
+    from tools.skill_manager_tool import _find_skill
+
+    found = _find_skill(name)
+    if not found:
+        return {"success": False, "error_code": "not_found", "error": f"Skill '{name}' not found."}
+    skill_md = found["path"] / "SKILL.md"
+    if not _runtime_path_is_safe(skill_md):
+        return {
+            "success": False,
+            "error_code": "runtime_not_editable",
+            "error": "The installed skill is not in the active profile; open its repository chat.",
+        }
+
+    profile = current_profile_name("default") or "default"
+    repository_root = configured_repository_root()
+    source_path = configured_source_for_skill(name, skill_md, profile)
+    if repository_root is None or source_path is None:
+        return {
+            "success": False,
+            "error_code": "source_unavailable",
+            "error": "No writable repository source is configured for this profile.",
+        }
+    expected_source = repository_root / "profiles" / profile / "skills"
+    try:
+        source_path.relative_to(expected_source)
+    except (OSError, RuntimeError, ValueError):
+        return {
+            "success": False,
+            "error_code": "source_not_allowed",
+            "error": "The configured source is outside the active profile repository.",
+        }
+    if not (
+        _path_is_within_non_symlink_root(source_path, expected_source)
+        and _path_is_within_non_symlink_root(source_path, expected_source.parent)
+    ):
+        return {
+            "success": False,
+            "error_code": "source_not_editable",
+            "error": "The repository source follows a profile link and is read-only.",
+        }
+    if source_path.resolve(strict=False) == skill_md.resolve(strict=False):
+        return {
+            "success": False,
+            "error_code": "source_not_separate",
+            "error": "This skill has no separate installed and repository copy to synchronise.",
+        }
+    if direction == "edit_source":
+        expected_source_version = expected_source_version or legacy_expected_version
+        if expected_source_version is None:
+            return {
+                "success": False,
+                "error_code": "missing_version",
+                "error": "expected_source_version is required when editing the repository skill.",
+            }
+    elif expected_runtime_version is None or expected_source_version is None:
+        return {
+            "success": False,
+            "error_code": "missing_version",
+            "error": "Both expected_runtime_version and expected_source_version are required for a copy.",
+        }
+    from tools.skill_manager_tool import _skill_lock_path
+    from tools.skill_usage import skill_file_lock
+
+    with skill_file_lock(_skill_lock_path(name)):
+        try:
+            # Re-read after acquiring the lock: the version check and write must
+            # observe one coherent pair of runtime/source files.
+            runtime_content = read_skill_text(skill_md)
+            source_content = read_skill_text(source_path)
+            if runtime_content is None or source_content is None:
+                return {
+                    "success": False,
+                    "error_code": "read_failed",
+                    "error": "Skill source or installed content is not readable UTF-8.",
+                }
+        except (OSError, UnicodeDecodeError) as exc:
+            return {"success": False, "error_code": "read_failed", "error": str(exc)}
+
+        if direction == "edit_source" and content is None:
+            return {
+                "success": False,
+                "error_code": "missing_content",
+                "error": "Source content is required when editing the repository skill.",
+            }
+        runtime_version = content_version(runtime_content)
+        source_version = content_version(source_content)
+        versions_match = (
+            runtime_version == expected_runtime_version if expected_runtime_version is not None else True
+        ) and source_version == expected_source_version
+        if not versions_match:
+            location = describe_skill_location(name, skill_md)
+            return {
+                "success": False,
+                "error_code": "version_conflict",
+                "error": "The skill changed since it was loaded; refresh it before synchronising.",
+                "location": location,
+            }
+
+        next_content = source_content if direction == "source_to_installed" else (
+            runtime_content if direction == "installed_to_source" else content
+        )
+        if direction == "edit_source":
+            next_content = _preserve_source_bom(next_content, source_content)
+        target_path = skill_md if direction == "source_to_installed" else source_path
+        target_dir = found["path"] if direction == "source_to_installed" else source_path.parent
+        original_content = runtime_content if direction == "source_to_installed" else source_content
+        write_error = _write_synced_target(
+            name,
+            target_path,
+            target_dir,
+            original_content,
+            next_content,
+            _runtime_is_editable(skill_md) if direction == "source_to_installed" else _source_is_editable(source_path),
+            "runtime_not_editable" if direction == "source_to_installed" else "source_not_editable",
+            "The installed skill is read-only; edit the repository source instead."
+            if direction == "source_to_installed"
+            else "The repository source is known but is not writable.",
+        )
+        if write_error:
+            return write_error
+
+    location = describe_skill_location(name, skill_md)
+    return {
+        "success": True,
+        "name": name,
+        "direction": direction,
+        "version": location.get("installation", {}).get(
+            "runtime_version" if direction == "source_to_installed" else "source_version"
+        ),
+        "location": location,
+    }
 
 
 @hub_router.post("/api/skills/hub/install")
@@ -363,14 +592,14 @@ async def get_skills(profile: Optional[str] = None):
             bundled_names = _read_bundled_names()
             hub_names = _read_hub_installed_names()
             external_names = _external_skill_names() - bundled_names - hub_names
-        for s in skills:
-            s["enabled"] = s["name"] not in disabled
-            s["usage"] = activity_count(usage.get(s["name"], {}))
-            s["provenance"] = (
-                "hub" if s["name"] in hub_names
-                else "bundled" if s["name"] in bundled_names
-                else "external" if s["name"] in external_names
-                else "agent")
+            for s in skills:
+                s["enabled"] = s["name"] not in disabled
+                s["usage"] = activity_count(usage.get(s["name"], {}))
+                s["provenance"] = (
+                    "hub" if s["name"] in hub_names
+                    else "bundled" if s["name"] in bundled_names
+                    else "external" if s["name"] in external_names
+                    else "agent")
         return skills
 
     return await asyncio.to_thread(_run)
@@ -398,6 +627,7 @@ async def toggle_skill(body: SkillToggle, profile: Optional[str] = None):
 async def get_skill_content(name: str, profile: Optional[str] = None):
     """Raw SKILL.md text for the dashboard editor."""
     from tools.skill_manager_tool import _find_skill
+    from hermes_cli.skill_locations import display_skill_text, read_skill_text
 
     def _read():
         found = _find_skill(name)
@@ -406,13 +636,38 @@ async def get_skill_content(name: str, profile: Optional[str] = None):
         skill_md = found["path"] / "SKILL.md"
         if not skill_md.exists():
             raise HTTPException(status_code=404, detail=f"Skill '{name}' has no SKILL.md.")
-        try:
-            content = skill_md.read_text(encoding="utf-8-sig")
-        except OSError as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
-        return {"name": name, "content": content, "path": str(skill_md)}
+        content = display_skill_text(read_skill_text(skill_md))
+        if content is None:
+            raise HTTPException(status_code=500, detail=f"Unable to read {skill_md} as UTF-8.")
+        location = _skill_location(name)
+        payload = {"name": name, "content": content, "path": str(skill_md), "location": location}
+        source_path = ((location.get("source") or {}).get("path") if location else None)
+        if source_path and Path(source_path) != skill_md:
+            payload["source_content"] = display_skill_text(read_skill_text(Path(source_path)))
+        return payload
 
     return await scoped_to_thread(profile, _read)
+
+
+@router.put("/api/skills/source")
+async def sync_skill_source(body: SkillSourceSync, profile: Optional[str] = None):
+    """Synchronise a profile's repository source and installed copy explicitly."""
+    result = await scoped_to_thread(
+        body.profile or profile,
+        lambda: _sync_skill_source(
+            body.name,
+            body.direction,
+            body.expected_runtime_version,
+            body.expected_source_version,
+            body.expected_version,
+            body.content,
+        ),
+    )
+    if not result.get("success"):
+        status = 409 if result.get("error_code") == "version_conflict" else 404 if result.get("error_code") == "not_found" else 400
+        raise HTTPException(status_code=status, detail=result.get("error", "Skill synchronisation failed."))
+    _clear_skills_prompt_cache()
+    return result
 
 
 @router.post("/api/skills")
@@ -423,7 +678,8 @@ async def create_skill(body: SkillCreate, profile: Optional[str] = None):
     from tools.skill_manager_tool import _create_skill
 
     result = await scoped_to_thread(
-        body.profile or profile, lambda: _create_skill(body.name, body.content, body.category or None))
+        body.profile or profile,
+        lambda: _create_skill(body.name, body.content, body.category or None))
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to create skill."))
     _clear_skills_prompt_cache()
@@ -435,7 +691,9 @@ async def update_skill_content(body: SkillContentUpdate, profile: Optional[str] 
     """Replace the SKILL.md of an existing skill (full rewrite) from the editor."""
     from tools.skill_manager_tool import _edit_skill
 
-    result = await scoped_to_thread(body.profile or profile, lambda: _edit_skill(body.name, body.content))
+    result = await scoped_to_thread(
+        body.profile or profile,
+        lambda: _edit_skill(body.name, body.content))
     if not result.get("success"):
         err = result.get("error", "Failed to update skill.")
         status = 404 if "not found" in str(err).lower() else 400
