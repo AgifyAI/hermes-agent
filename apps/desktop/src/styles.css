@@ -2033,6 +2033,15 @@ body.guest-pointer-lock :is(webview, iframe) {
 /* Themed at the renderer root so every `aui-md` consumer (assistant turns,
    system-message reports, session-import previews) inherits it; the room
    selector covers the plugin's raw-Streamdown fallback, which has no `.aui-md`. */
+[data-slot='composer-rich-input'] code {
+  font-family: var(--font-mono);
+  background: var(--ui-inline-code-background);
+  color: var(--ui-inline-code-foreground);
+  border: 1px solid var(--linear-border-panel);
+  border-radius: 3px;
+  padding-inline: 0.15em;
+}
+
 .aui-md :not(pre) > code,
 [data-slot='group-chat-message-content'] :not(pre) > code {
   background: var(--ui-inline-code-background);

@@ -17,6 +17,7 @@ import {
 } from '@/components/assistant-ui/directive-text'
 import { referenceKind, referenceRe, unwrapReferenceValue } from '@/components/assistant-ui/reference-kinds'
 
+import { completedInlineCodeRanges } from './markdown-code-ranges'
 import { slashCommandMatches, type SlashCommandScanOptions } from './slash-refs'
 
 export const RICH_INPUT_SLOT = 'composer-rich-input'
@@ -182,6 +183,20 @@ function appendTextWithBreaks(target: DocumentFragment | HTMLElement, text: stri
   })
 }
 
+/** Keep Markdown delimiters in the draft while only the formatted word is visible. */
+function codeSpan(value: string, marker: string) {
+  const wrap = document.createElement('span')
+  wrap.dataset.composerCode = ''
+  const fence = document.createElement('span')
+  fence.hidden = true
+  fence.textContent = marker
+  const code = document.createElement('code')
+  code.textContent = value
+  wrap.append(fence, code, fence.cloneNode(true))
+
+  return wrap
+}
+
 /** Every span of `text` that renders as a chip, in source order. */
 function chipSpans(text: string, options: SlashCommandScanOptions) {
   REF_RE.lastIndex = 0
@@ -198,7 +213,14 @@ function chipSpans(text: string, options: SlashCommandScanOptions) {
     start: match.start
   }))
 
-  return [...refs, ...commands].sort((a, b) => a.start - b.start)
+  const code = completedInlineCodeRanges(text).map(({ start, end }) => {
+    const marker = text.slice(start, end).match(/^`+/)![0]
+    const value = text.slice(start + marker.length, end - marker.length)
+
+    return { end, node: () => codeSpan(value, marker), start }
+  })
+
+  return [...refs, ...commands, ...code].sort((a, b) => a.start - b.start)
 }
 
 /** Build the chip/text DOM for `text`. Directives hydrate back to their pills —
@@ -621,8 +643,39 @@ function pointAtSerializedOffset(root: HTMLElement, target: number): { node: Nod
   return visit(root) ?? { node: root, offset: root.childNodes.length }
 }
 
-/** Toggle one Markdown fenced code block around the current selection. With no
- * selection, the line containing the caret is selected first. */
+/** With just a caret in a populated draft, keep the existing current-line shortcut. */
+function selectCurrentLine(editor: HTMLElement, range: Range) {
+  const text = composerPlainText(editor)
+  const caret = caretOffsetInEditor(editor)
+  const nextBreak = text.indexOf('\n', caret)
+  const start = pointAtSerializedOffset(editor, text.slice(0, caret).lastIndexOf('\n') + 1)
+  const end = pointAtSerializedOffset(editor, nextBreak < 0 ? text.length : nextBreak)
+
+  range.setStart(start.node, start.offset)
+  range.setEnd(end.node, end.offset)
+}
+
+function toggleSelectedInlineCode(range: Range, selection: Selection, value: string) {
+  const wrapper = range.startContainer.parentElement?.closest('[data-composer-code]')
+  const code = wrapper?.querySelector('code')
+
+  if (wrapper && code && code.contains(range.endContainer) && value === code.textContent) {
+    const plain = document.createTextNode(value)
+    wrapper.replaceWith(plain)
+    selection.setBaseAndExtent(plain, 0, plain, plain.length)
+
+    return
+  }
+
+  const longestMarker = Math.max(0, ...Array.from(value.matchAll(/`+/g), match => match[0].length))
+  const span = codeSpan(value, '`'.repeat(longestMarker + 1))
+  range.deleteContents()
+  range.insertNode(span)
+  const content = span.querySelector('code')!.firstChild!
+  selection.setBaseAndExtent(content, 0, content, value.length)
+}
+
+/** One selected line uses inline code. Several selected lines share a fence. */
 export function toggleCodeBlock(editor: HTMLElement): boolean {
   const hit = composerSelectionRange(editor)
 
@@ -630,43 +683,29 @@ export function toggleCodeBlock(editor: HTMLElement): boolean {
     return false
   }
 
-  const fullText = composerPlainText(editor)
-  const selectionStart = serializeTextBefore(editor, hit.range.startContainer, hit.range.startOffset).length
-  let start = selectionStart
-  let end = serializeTextBefore(editor, hit.range.endContainer, hit.range.endOffset).length
+  const { range, selection } = hit
+  const useLine = range.collapsed
 
-  if (hit.range.collapsed) {
-    start = fullText.lastIndexOf('\n', selectionStart - 1) + 1
-    end = fullText.indexOf('\n', selectionStart)
-
-    if (end < 0) {
-      end = fullText.length
-    }
-
-    const lineRange = document.createRange()
-    const startPoint = pointAtSerializedOffset(editor, start)
-    const endPoint = pointAtSerializedOffset(editor, end)
-    lineRange.setStart(startPoint.node, startPoint.offset)
-    lineRange.setEnd(endPoint.node, endPoint.offset)
-    hit.selection.removeAllRanges()
-    hit.selection.addRange(lineRange)
+  if (useLine) {
+    selectCurrentLine(editor, range)
   }
 
-  if (end < start) {
-    const lower = end
-    end = start
-    start = lower
-  }
-
-  const selected = fullText.slice(start, end)
+  const scratch = document.createElement('span')
+  scratch.append(range.cloneContents())
+  const selected = composerPlainText(scratch)
 
   if (!selected) {
     return false
   }
 
+  if (!useLine && !selected.includes('\n')) {
+    toggleSelectedInlineCode(range, selection, selected)
+
+    return true
+  }
+
   const fenced = selected.match(/^```[^\n]*\n([\s\S]*?)\n```$/)
   const replacement = fenced ? (fenced[1] ?? '') : ['```', selected, '```'].join('\n')
-
   insertComposerContentsAtCaret(editor, replacement)
 
   return true
@@ -692,6 +731,8 @@ export function beginInlineCodeMode(editor: HTMLElement): boolean {
   paragraph.setAttribute(INLINE_CODE_BLOCK, '')
   const code = document.createElement('code')
   code.className = 'inline'
+  // Chromium needs a line box to keep the first keystroke inside the empty mark.
+  code.append(document.createElement('br'))
   paragraph.append(code)
   editor.replaceChildren(paragraph)
 
@@ -762,7 +803,10 @@ export function composerPlainText(node: Node): string {
   // its height — not a line the user typed. Reading it as "\n" is how a
   // just-cleared composer stayed non-empty: the newline got stashed as the
   // session's draft and painted back on return.
-  if (el.dataset.slot === RICH_INPUT_SLOT && el.childNodes.length === 1 && el.firstChild?.nodeName === 'BR') {
+  if (
+    (el.dataset.slot === RICH_INPUT_SLOT || el.matches('code.inline')) &&
+    el.childNodes.length === 1 && el.firstChild?.nodeName === 'BR'
+  ) {
     return ''
   }
 
@@ -1051,7 +1095,7 @@ export function normalizeComposerEditorDom(editor: HTMLElement) {
 
   if (
     tailBlock?.nodeType === Node.ELEMENT_NODE &&
-    (tailBlock.tagName === 'DIV' || tailBlock.tagName === 'P') &&
+    isUnwrappableComposerBlock(tailBlock) &&
     isBlankNode(tailBlock)
   ) {
     removeComposerJunk(editor, tailBlock)

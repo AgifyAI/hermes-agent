@@ -18,7 +18,8 @@ import {
   refChipElement,
   renderComposerContents,
   replaceBeforeCaret,
-  RICH_INPUT_SLOT
+  RICH_INPUT_SLOT,
+  toggleCodeBlock
 } from './rich-editor'
 import { placeCaretAtEnd } from './test-utils'
 
@@ -85,6 +86,28 @@ describe('renderComposerContents', () => {
 })
 
 describe('inline code mode', () => {
+  it('toggles the selected word in place and restores its formatting from the draft', () => {
+    const editor = document.createElement('div')
+    editor.dataset.slot = RICH_INPUT_SLOT
+    document.body.append(editor)
+    try {
+      editor.textContent = 'avant exemple après'
+      const selection = window.getSelection()!
+      selection.setBaseAndExtent(editor.firstChild!, 6, editor.firstChild!, 13)
+      expect(toggleCodeBlock(editor)).toBe(true)
+      expect(editor.querySelector('code')?.textContent).toBe('exemple')
+      expect(selection.toString()).toBe('exemple')
+      const draft = composerPlainText(editor)
+      expect(draft).toBe('avant `exemple` après')
+      expect(toggleCodeBlock(editor)).toBe(true)
+      expect(composerPlainText(editor)).toBe('avant exemple après')
+      renderComposerContents(editor, draft)
+      expect(editor.querySelector('code')?.textContent).toBe('exemple')
+    } finally {
+      editor.remove()
+    }
+  })
+
   it('lets an empty composer type inside Linear-style inline code without submitting', () => {
     const editor = document.createElement('div')
     editor.dataset.slot = RICH_INPUT_SLOT
@@ -96,7 +119,10 @@ describe('inline code mode', () => {
     expect(isInlineCodeMode(editor)).toBe(true)
 
     const code = editor.querySelector('p[data-inline-code] > code.inline')!
-    code.append(document.createTextNode('abc'))
+    normalizeComposerEditorDom(editor)
+    expect(code.isConnected).toBe(true)
+    expect(composerPlainText(editor)).toBe('')
+    code.replaceChildren(document.createTextNode('abc'))
 
     expect(editor.innerHTML).toBe('<p data-inline-code=""><code class="inline">abc</code></p>')
     expect(composerPlainText(editor)).toBe('abc')
