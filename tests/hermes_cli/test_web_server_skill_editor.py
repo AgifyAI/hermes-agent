@@ -160,6 +160,7 @@ class TestSkillContent:
         assert location["source"]["editable"] is False
         assert location["source"]["write_reason"] == "source_not_separate"
 
+    @pytest.mark.require_symlinks
     def test_display_paths_shorten_only_the_service_home(self, tmp_path, monkeypatch):
         from hermes_cli.skill_locations import _display_path
 
@@ -168,6 +169,7 @@ class TestSkillContent:
         home_alias = tmp_path / "alias-home"
         home_alias.symlink_to(canonical_home, target_is_directory=True)
         monkeypatch.setenv("HOME", str(home_alias))
+        monkeypatch.setenv("USERPROFILE", str(home_alias))
 
         local = canonical_home / "hermes" / "profiles" / "default" / "skills" / "demo" / "SKILL.md"
         outside = tmp_path / "demo" / "SKILL.md"
@@ -261,6 +263,7 @@ class TestSkillSourceSync:
         assert source.read_text() == before_source
         assert runtime.read_text() != source.read_text()
 
+    @pytest.mark.require_symlinks
     def test_runtime_profile_skills_link_is_read_only(
         self, client, isolated_profiles, tmp_path, monkeypatch
     ):
@@ -292,6 +295,7 @@ class TestSkillSourceSync:
         assert response.json()["detail"]
         assert (foreign_root / "dashboard-skill" / "SKILL.md").read_text() != source.read_text()
 
+    @pytest.mark.require_symlinks
     def test_runtime_profile_parent_link_is_read_only(
         self, client, isolated_profiles, tmp_path, monkeypatch
     ):
@@ -325,6 +329,7 @@ class TestSkillSourceSync:
         assert response.status_code == 400, response.text
         assert (foreign_root / "skills" / "worker-skill" / "SKILL.md").read_text() != source.read_text()
 
+    @pytest.mark.require_symlinks
     def test_repository_profile_skills_link_is_read_only(
         self, client, isolated_profiles, tmp_path, monkeypatch
     ):
@@ -355,6 +360,7 @@ class TestSkillSourceSync:
         assert response.status_code == 400, response.text
         assert source.read_bytes() == before_source
 
+    @pytest.mark.require_symlinks
     def test_repository_profile_parent_link_is_read_only(
         self, client, isolated_profiles, tmp_path, monkeypatch
     ):
