@@ -328,6 +328,25 @@ auxiliary:
 | `in_place` | `true` | bool | Compact on the same session id instead of rotating to a new one (see below) |
 | `prepare_ahead` | `false` | bool | Opt-in: near the trigger, write the next summary in the background and splice it at the next automatic compaction when it still covers the same messages (see below) |
 
+### Cost of compacting an idle session
+
+Hermes leaves an idle conversation alone. The optional idle check runs on the next turn. The summarizer builds a separate request from the middle of the transcript. Timing that request just before the main conversation cache expires does not make its different prompt a cache hit.
+
+Claude Code also supports background compaction. Its documented default targets interactive sessions with automatic compaction enabled, a one-hour cache and at least 200,000 tokens. The machine must stay awake for about an hour after the last request. [Claude Code settings](https://code.claude.com/docs/en/settings-reference#idlecompaction)
+
+For a worked example, assume 200,000 tokens, of which 160,000 are summarized into 4,000. The next request sends 44,000 tokens. At the Sonnet 5.5 API rates consulted on 9 November 2026, a million tokens cost $2 for input, $10 for output, $4 for a one-hour cache write and $0.10 for a cache read. These are example volumes and rates, independent of any user's subscription. [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing)
+
+Let *p* be the fraction of eligible idle chats reopened after expiration. Count one cold request on return, excluding new user text and the reply, which all options share.
+
+| Action | Expected cost per eligible chat |
+| --- | --- |
+| Keep history until return | $0.800 × p |
+| Summarize on return, then send the shorter history | ($0.360 + $0.176) × p |
+| Summarize every idle chat with the separate request | $0.360 + $0.176 × p |
+| Hypothetical advance summary with the whole summary input cached | $0.056 + $0.176 × p |
+
+The separate advance summary beats sending the full history above 57.7% returns, but waiting to make the same summary saves $0.360 for every abandoned chat and ties at 100% returns. A genuinely warm summary would beat the cheaper on-return option above 15.6% (0.056 / 0.360). For other routes, divide the advance cost by the difference between the cheaper on-return cost and the compacted prompt cost. Partial cache hits, preserved history, subsequent turns and provider-specific billing change the inputs. The current separate-request design gives no cost reason to add a timer. Keep the default and honor the existing on-return setting.
+
 ### In-place compaction (single stable session id)
 
 With `compression.in_place: true` (the default), a compaction **rewrites the live message list on the same session id**: the system prompt is rebuilt, the summarized middle is swapped in, and the pre-compaction turns are soft-archived under the same id (`active=0, compacted=1` in the session store) — still searchable via `session_search` and recoverable, never deleted. There is no `parent_session_id` chain and no `name #N` renumbering; one conversation keeps one durable id for its whole life. This eliminated the session-rotation bug cluster (lost `/goal` state, orphaned sessions, search gaps across boundaries).

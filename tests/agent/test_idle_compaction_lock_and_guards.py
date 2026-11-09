@@ -115,6 +115,23 @@ def test_idle_compaction_status_emitted_by_default(tmp_path: Path) -> None:
     ), f"expected idle status line, got: {events}"
 
 
+def test_only_resumed_chat_pays_for_optional_idle_summary(tmp_path: Path) -> None:
+    db = SessionDB(db_path=tmp_path / "state.db")
+    for sid in ("resumed", "left-alone"):
+        db.create_session(sid, source="desktop")
+        db.append_message(sid, role="user", content="First message")
+    resumed = _prep_idle_agent(db, "resumed")
+    left_alone = _prep_idle_agent(db, "left-alone")
+    previous = db.get_messages_as_conversation("left-alone")
+
+    _run_prologue(resumed, _history())
+
+    resumed.context_compressor.compress.assert_called_once()
+    left_alone.context_compressor.compress.assert_not_called()
+    assert db.get_messages_as_conversation("left-alone") == previous
+    db.close()
+
+
 def test_idle_compaction_defers_to_held_compression_lock(tmp_path: Path) -> None:
     """An idle-triggered compress racing another path must sit the round out.
 
