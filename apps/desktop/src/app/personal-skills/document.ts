@@ -1,4 +1,4 @@
-import { type Document, isMap, isNode, isScalar, type Node, type Pair, parseDocument } from 'yaml'
+import { CST, type Document, isMap, isScalar, type Node, type Pair, parseDocument, stringify } from 'yaml'
 
 export interface SkillMetadataField {
   key: string
@@ -17,7 +17,7 @@ interface FrontmatterParts {
   newline: string
 }
 
-const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
+const FRONTMATTER_RE = /^(---[ \t]*\r?\n)([\s\S]*?)(?<=\n)(---[ \t]*(?:\r?\n|$))/
 
 function frontmatterParts(content: string): FrontmatterParts | null {
   const header = FRONTMATTER_RE.exec(content)
@@ -28,7 +28,7 @@ function frontmatterParts(content: string): FrontmatterParts | null {
 
   return {
     body: content.slice(header[0].length),
-    document: parseDocument(header[1], { keepSourceTokens: true }),
+    document: parseDocument(header[2], { keepSourceTokens: true }),
     header,
     newline: header[0].includes('\r\n') ? '\r\n' : '\n'
   }
@@ -72,7 +72,7 @@ function metadataFrom(parts: FrontmatterParts): SkillMetadataField[] {
   return topLevelPairs(parts.document).flatMap(pair => {
     const key = pairKey(pair)
 
-    return key ? [{ key, value: pairValue(pair, parts.header[1]) }] : []
+    return key ? [{ key, value: pairValue(pair, parts.header[2]) }] : []
   })
 }
 
@@ -86,52 +86,80 @@ export function parseSkillDocument(content: string): ParsedSkillDocument {
   return { body: parts.body, metadata: metadataFrom(parts) }
 }
 
-function preserveComments(previous: Node | null, next: Node): void {
-  if (!previous) {
-    return
-  }
-
-  next.comment = previous.comment
-  next.commentBefore = previous.commentBefore
-  next.spaceBefore = previous.spaceBefore
-
-  if (isScalar(previous) && isScalar(next) && (previous.type === 'QUOTE_DOUBLE' || previous.type === 'QUOTE_SINGLE')) {
-    next.type = previous.type
-  }
-}
-
-/**
- * Rebuilds only the requested top-level fields and the instruction body. The
- * YAML document owns parsing and serialization, so special characters and
- * multiline values stay valid while comments and unknown fields remain intact.
- * The caller keeps the original skill name as the storage id when sending this
- * new document.
- */
+/** Edit the original YAML tokens so other fields, spacing and comments survive a save. */
 export function updateSkillDocument(content: string, updates: Record<string, string>, body?: string): string {
   const parts = frontmatterParts(content)
+  const newline = parts?.newline ?? (content.includes('\r\n') ? '\r\n' : '\n')
+  const missing = { ...updates }
 
-  if (!parts || !isMap<Node, Node | null>(parts.document.contents)) {
-    return body ?? content
+  if (!parts) {
+    if (!Object.keys(missing).length) {
+      return body ?? content
+    }
+
+    const yaml = stringify(missing).replace(/\n/g, newline)
+
+    return `---${newline}${yaml}---${newline}${body ?? content}`
   }
 
-  for (const pair of parts.document.contents.items) {
-    const key = pairKey(pair)
-    const nextValue = key === null ? undefined : updates[key]
+  let yaml = parts.header[2]
+  const map = parts.document.contents
 
-    if (nextValue === undefined) {
+  // Walk backwards to keep parser offsets valid when replacements change length.
+  for (const pair of [...topLevelPairs(parts.document)].reverse()) {
+    const key = pairKey(pair)
+
+    if (key === null || !Object.hasOwn(missing, key)) {
       continue
     }
 
-    const previous = isNode(pair.value) ? pair.value : null
-    const next = parts.document.createNode(nextValue)
-    preserveComments(previous, next)
-    pair.value = next as NonNullable<typeof pair.value>
+    const value = missing[key]
+    delete missing[key]
+
+    if (value === pairValue(pair, parts.header[2])) {
+      continue
+    }
+
+    const token = pair.value?.srcToken
+
+    if (token) {
+      const start = token.offset
+      const end = start + CST.stringify(token).length
+      // A plain scalar such as "true" must stay a string when YAML is read again.
+      const needsQuotes = token.type === 'scalar' && /^["']/.test(stringify(value))
+      CST.setScalarValue(token, value, {
+        afterKey: true,
+        inFlow: isMap(map) && map.flow,
+        type: needsQuotes ? 'QUOTE_DOUBLE' : undefined
+      })
+      yaml = yaml.slice(0, start) + CST.stringify(token).replace(/\r?\n/g, newline) + yaml.slice(end)
+    } else {
+      // Empty values have no token. Insert immediately after the key's colon,
+      // keeping any following whitespace and comments in their original place.
+      const colon = pair.srcToken?.sep?.find(token => token.type === 'map-value-ind')
+
+      if (!colon) {
+        throw new Error('Invalid skill metadata')
+      }
+
+      const offset = colon.offset + colon.source.length
+      yaml = yaml.slice(0, offset) + ' ' + JSON.stringify(value) + yaml.slice(offset)
+    }
   }
 
-  const serialized = parts.document.toString({ lineWidth: 0 }).replace(/\r?\n$/, '')
-  const normalized = serialized.replace(/\r?\n/g, parts.newline)
-  const closingEnding = /\r?\n---(\r?\n?)$/.exec(parts.header[0])?.[1] ?? ''
-  const nextHeader = `---${parts.newline}${normalized}${parts.newline}---${closingEnding}`
+  if (Object.keys(missing).length) {
+    if (parts.document.errors.length || (map && !isMap(map))) {
+      throw new Error('Invalid skill metadata')
+    }
 
-  return `${nextHeader}${body ?? parts.body}`
+    if (isMap(map) && map.flow && map.range) {
+      const offset = map.range[0] + 1
+      const pairs = Object.entries(missing).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`)
+      yaml = yaml.slice(0, offset) + pairs.join(', ') + (map.items.length ? ', ' : '') + yaml.slice(offset)
+    } else {
+      yaml += stringify(missing).replace(/\n/g, newline)
+    }
+  }
+
+  return parts.header[1] + yaml + parts.header[3] + (body ?? parts.body)
 }
