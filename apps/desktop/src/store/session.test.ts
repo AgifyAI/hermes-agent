@@ -33,6 +33,7 @@ import {
   _resetLegacyDiscardForTests,
   _resetSessionOwnerHintsForTests,
   applyConfiguredDefaultProjectDir,
+  applySessionScratchpad,
   applySessionTitle,
   carryForwardFailedProfileSessions,
   commitWorkspaceCwdForSelectedSession,
@@ -909,6 +910,31 @@ describe('applySessionTitle', () => {
 
     applySessionTitle('mine', 'Same')
     expect($sessions.get()).toBe(before)
+  })
+})
+
+describe('applySessionScratchpad', () => {
+  beforeEach(() => {
+    setSessions([])
+    setCronSessions([])
+    setMessagingSessions([])
+  })
+
+  afterEach(() => {
+    setSessions([])
+    setCronSessions([])
+    setMessagingSessions([])
+  })
+
+  it('keeps the same session id in another profile unchanged when profile A settles later', () => {
+    setSessions([
+      session({ id: 'same-id', profile: 'profile-a', scratchpad: 'old A' }),
+      session({ id: 'same-id', profile: 'profile-b', scratchpad: 'old B' })
+    ])
+
+    applySessionScratchpad('same-id', 'new A', 'profile-a')
+
+    expect($sessions.get().map(row => row.scratchpad)).toEqual(['new A', 'old B'])
   })
 })
 

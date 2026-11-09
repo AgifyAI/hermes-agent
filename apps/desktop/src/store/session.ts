@@ -1,7 +1,7 @@
 import type { ConnectionState } from '@hermes/shared'
 import { atom, computed } from 'nanostores'
 
-import { setApiRequestLocalMode } from '@/api/client'
+import { type ProfileScope, setApiRequestLocalMode } from '@/api/client'
 import { lastVisibleMessageIsUser } from '@/app/chat/thread-loading'
 import type { ContextSuggestion } from '@/app/types'
 import type { HermesConnection } from '@/global'
@@ -956,10 +956,38 @@ export function applySessionTitle(storedSessionId: string | null | undefined, ti
   setUnlistedSessionOwnerRows(patch)
 }
 
-/** Patch the private note on every sidebar row carrying this conversation.
+/** Patch the private note on sidebar rows carrying this conversation.
  * Compression tips and session slices can each expose a different id, so use
- * the same lineage matcher as title/archive mutations. */
-export function applySessionScratchpad(storedSessionId: string | null | undefined, scratchpad: null | string): void {
+ * the same lineage matcher as title/archive mutations. When an owner is given,
+ * only that profile/connection is patched; omitted owners keep the legacy
+ * all-slices behavior for existing callers. */
+function sessionMatchesScratchpadOwner(session: SessionInfo, owner?: ProfileScope): boolean {
+  if (owner == null) {
+    return true
+  }
+
+  const ownerProfile = typeof owner === 'string' ? owner : owner.profile
+  const sessionProfile = session.profile?.trim() || 'default'
+
+  if (sessionProfile !== (ownerProfile?.trim() || 'default')) {
+    return false
+  }
+
+  if (typeof owner === 'string' || !owner.connectionId?.trim()) {
+    return true
+  }
+
+  const ownerConnection = owner.connectionId.trim()
+  const sessionConnection = session.connection_id?.trim() || (ownerConnection === 'local' ? 'local' : '')
+
+  return sessionConnection === ownerConnection
+}
+
+export function applySessionScratchpad(
+  storedSessionId: string | null | undefined,
+  scratchpad: null | string,
+  owner?: ProfileScope
+): void {
   const id = storedSessionId?.trim()
 
   if (!id) {
@@ -968,8 +996,13 @@ export function applySessionScratchpad(storedSessionId: string | null | undefine
 
   const patch = (rows: SessionInfo[]): SessionInfo[] => {
     let changed = false
+
     const mapped = rows.map(session => {
-      if (!sessionMatchesStoredId(session, id) || session.scratchpad === scratchpad) {
+      if (
+        !sessionMatchesStoredId(session, id) ||
+        !sessionMatchesScratchpadOwner(session, owner) ||
+        session.scratchpad === scratchpad
+      ) {
         return session
       }
 
