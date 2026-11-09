@@ -696,6 +696,7 @@ function defaultSeparator(body: string): string {
 
 function serializeStructure(editor: HTMLElement, body: string): string {
   const children = Array.from(editor.children)
+  const seenBlockIndices = new Set<number>()
 
   if (!children.length) {
     return Array.from(editor.childNodes, serializeInlineDom).join('')
@@ -705,8 +706,19 @@ function serializeStructure(editor: HTMLElement, body: string): string {
     const element = child as HTMLElement
     const range = blockRange(element)
     const index = integerAttribute(element, 'mdBlockIndex')
-    const intact = range !== null && index !== null && intactBlock(element)
-    const edits = range ? sourceEdits(editor).filter(edit => edit.start >= range.start && edit.end <= range.end) : []
+    // Chromium clones the source block's data attributes when Enter splits a
+    // contentEditable paragraph. The clone has the old block index and source
+    // range, so it must be serialized as a new visible block instead of being
+    // treated as an intact copy of the original Markdown.
+    const duplicateBlock = index !== null && seenBlockIndices.has(index)
+
+    if (index !== null) {
+      seenBlockIndices.add(index)
+    }
+
+    const intact = !duplicateBlock && range !== null && index !== null && intactBlock(element)
+
+    const edits = range ? sourceEdits(element).filter(edit => edit.start >= range.start && edit.end <= range.end) : []
 
     const value =
       intact && range

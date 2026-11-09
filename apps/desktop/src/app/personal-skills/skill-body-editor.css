@@ -2,7 +2,7 @@
   min-height: 1.7em;
   --skill-body-text: #444449;
   color: var(--skill-body-text);
-  font: 450 13px/1.7 var(--font-regular, Inter, system-ui, sans-serif);
+  font: 450 13px/1.7 var(--linear-font-sans);
   outline: none;
   overflow-wrap: anywhere;
   padding: 20px 20px 24px;
@@ -50,7 +50,7 @@
 .skill-body-editor h6 {
   margin: 20px 0 4px;
   color: var(--skill-body-text);
-  font: 550 15px/23px var(--font-regular, Inter, system-ui, sans-serif);
+  font: 550 15px/23px var(--linear-font-sans);
   letter-spacing: 0;
 }
 

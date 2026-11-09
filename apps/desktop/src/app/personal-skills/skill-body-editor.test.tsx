@@ -125,6 +125,31 @@ describe('SkillBodyEditor', () => {
     expect(onChange).toHaveBeenLastCalledWith('Only paragraph remains')
   })
 
+  it('keeps a structured document and paragraph formatting after Enter creates a duplicated block', () => {
+    const body = '## Lire le document\nIdentifier sa thèse.\n\n## Étape suivante\nComparer les sources.'
+    const onChange = vi.fn()
+    const { container, unmount } = render(<SkillBodyEditor body={body} onChange={onChange} />)
+    const editor = container.querySelector('[data-md-editor="skill-body"]') as HTMLElement
+    const paragraph = editor.querySelectorAll('p')[0]
+    const inserted = paragraph.cloneNode(true) as HTMLElement
+    inserted.querySelector('[data-md-leaf="true"]')!.textContent = 'Texte ajouté'
+    paragraph.after(inserted)
+
+    fireEvent.input(editor)
+
+    const next = onChange.mock.lastCall?.[0] as string
+    expect(next).toBe(
+      '## Lire le document\nIdentifier sa thèse.\n\nTexte ajouté\n\n## Étape suivante\nComparer les sources.'
+    )
+
+    unmount()
+    const reopened = render(<SkillBodyEditor body={next} onChange={onChange} />)
+    const reopenedEditor = reopened.container.querySelector('[data-md-editor="skill-body"]') as HTMLElement
+    expect(Array.from(reopenedEditor.children).map(element => element.tagName)).toEqual(['H2', 'P', 'P', 'H2', 'P'])
+    expect(reopenedEditor.textContent).toContain('Texte ajouté')
+    expect(serializeSkillBody(reopenedEditor, next)).toBe(next)
+  })
+
   it('keeps untouched CRLF blocks, task markers, ordered starts and four-backtick metadata after an insertion', () => {
     const body =
       '# Stable\r\n\r\nBefore  **unchanged**\r\n\r\n````python {#example}\r\n    keep_indentation()\r\n````\r\n\r\n- [ ] todo\r\n- [x] done\r\n\r\n7. seven\r\n8. eight\r\n\r\n![preview](data:image/png;base64,AAAA)\r\n\r\nAfter'
