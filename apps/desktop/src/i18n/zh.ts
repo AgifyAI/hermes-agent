@@ -1993,6 +1993,34 @@ export const zhOverrides = {
     archive: '归档',
     skillArchivedTitle: '技能已归档',
     skillArchivedMessage: '可通过 hermes curator restore 恢复。',
+    personalPage: {
+      appName: 'Hermès',
+      repository: '仓库',
+      externalRepository: '外部文件夹',
+      defaultRepository: '未识别仓库',
+      installation: '安装',
+      sameAsSource: '与源相同',
+      source: '源',
+      installed: '已安装',
+      unsavedChanges: '未保存的更改',
+      save: '保存',
+      nameLabel: '名称',
+      descriptionLabel: '描述',
+      bodyLabel: '技能说明',
+      imageMarkdown: '图片 Markdown',
+      completedItem: '已完成项目',
+      compareVersions: '比较版本',
+      keepSource: '保留源版本',
+      keepInstalled: '保留已安装版本',
+      sourceReadOnly: '源版本为只读。',
+      runtimeReadOnly: '已安装副本为只读。',
+      syncing: '正在同步…',
+      syncConflict: '此技能已更改。请刷新后再同步。',
+      syncFailed: '无法同步此技能。',
+      differentFromSource: '与源不同',
+      unknownInstallation: '安装状态未知',
+      sourceUnavailable: '源不可用'
+    },
     tabPlugins: '插件',
     plugins: {
       ...zhPluginPreviewAccess,
@@ -3453,7 +3481,43 @@ export const zhOverrides = {
       branchOffFrom: base => `从 ${base} 新建分支`,
       switchTo: branch => `切换到 ${branch}`,
       switchFailed: branch => `无法切换到 ${branch}`,
-      worktrees: '工作树'
+      worktrees: '工作树',
+      reviewPage: {
+        tabsLabel: '审查视图',
+        overview: '概览',
+        guide: '指南',
+        diff: '差异',
+        diffHeading: scope => `差异 · ${scope}`,
+        diffSummary: (added, removed) => `此仓库的实际文件中有 ${added} 处新增和 ${removed} 处删除。`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${scope}中有 ${count} 处更改 · 新增 ${added}，删除 ${removed}。`,
+        selectFile: '选择文件以查看差异。',
+        reviewed: '已审查',
+        reviewedFile: path => `已审查 ${path}`,
+        guideTitle: '审查指南',
+        guideIntro:
+          '此审查说明活动仓库中检测到的文件和行更改。使用概览查看清单，使用差异查看卡片，完成审查后使用下方操作。',
+        filesInReview: '此审查中的文件',
+        moreFiles: count => `+ Diff 中还有 ${count} 个文件`,
+        guideSteps: {
+          chooseScopeTitle: '选择范围',
+          chooseScopeBody: scope => `${scope} 是当前来源。下面的文件列表直接来自标题栏中显示的仓库。`,
+          readChangesTitle: '查看实际更改',
+          readChangesBody: (count, added, removed) =>
+            `有 ${count} 个文件发生更改：新增 ${added}，删除 ${removed}。在差异中打开每张卡片，完成后标记为已审查。`,
+          shipTitle: '准备好后交付',
+          shipBody: '提交、推送、拉取请求和交给 agent 的操作保留在审查下方，无需离开此页面即可完成最后一步。'
+        },
+        fileStatus: {
+          untracked: '未跟踪',
+          added: '已添加',
+          deleted: '已删除',
+          renamed: '已重命名',
+          copied: '已复制',
+          unmerged: '未合并',
+          modified: '已修改'
+        }
+      }
     }
   },
 

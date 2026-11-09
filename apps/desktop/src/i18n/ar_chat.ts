@@ -340,7 +340,45 @@ export const arChat = {
       branchOffFrom: base => `فرع جديد من ${base}`,
       switchTo: branch => `التبديل إلى ${branch}`,
       switchFailed: branch => `تعذّر التبديل إلى ${branch}`,
-      worktrees: 'أشجار العمل'
+      worktrees: 'أشجار العمل',
+      reviewPage: {
+        tabsLabel: 'طرق عرض المراجعة',
+        overview: 'نظرة عامة',
+        guide: 'الدليل',
+        diff: 'الفروقات',
+        diffHeading: scope => `الفروقات · ${scope}`,
+        diffSummary: (added, removed) => `${added} إضافة و${removed} حذفًا عبر الملفات الفعلية في هذا المستودع.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} تغيير في ${scope.toLowerCase()} · ${added} إضافة، ${removed} حذف.`,
+        selectFile: 'اختر ملفًا لعرض الفروقات.',
+        reviewed: 'تمت المراجعة',
+        reviewedFile: path => `تمت مراجعة ${path}`,
+        guideTitle: 'دليل المراجعة',
+        guideIntro:
+          'تصف هذه المراجعة الملفات وتغييرات الأسطر المكتشفة في المستودع النشط. استخدم النظرة العامة للمخزون، والفروقات للبطاقات، والإجراءات أدناه عند اكتمال المراجعة.',
+        filesInReview: 'ملفات هذه المراجعة',
+        moreFiles: count => `+ ${count} ملفات أخرى في الفروقات`,
+        guideSteps: {
+          chooseScopeTitle: 'اختيار نطاق',
+          chooseScopeBody: scope =>
+            `${scope} هو المصدر النشط. قائمة الملفات أدناه تأتي مباشرة من المستودع المعروض حاليًا في شريط العنوان.`,
+          readChangesTitle: 'قراءة التغييرات الفعلية',
+          readChangesBody: (count, added, removed) =>
+            `${count} ملفات متغيرة: ${added} إضافة و${removed} حذفًا. افتح كل بطاقة في الفروقات وضع علامة تمت المراجعة عند الانتهاء.`,
+          shipTitle: 'التسليم عند الجاهزية',
+          shipBody:
+            'تبقى إجراءات الإيداع والدفع وطلب السحب وتسليم الوكيل أسفل المراجعة، حتى تتوفر الخطوة الأخيرة دون مغادرة هذه الصفحة.'
+        },
+        fileStatus: {
+          untracked: 'غير متعقب',
+          added: 'مضاف',
+          deleted: 'محذوف',
+          renamed: 'معاد تسميته',
+          copied: 'منسوخ',
+          unmerged: 'غير مدمج',
+          modified: 'معدّل'
+        }
+      }
     }
   },
   prompts: {

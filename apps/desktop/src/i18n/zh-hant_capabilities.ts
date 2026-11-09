@@ -91,7 +91,35 @@ export const zhHantCapabilities = {
     skillArchivedTitle: '技能已封存',
     skillArchivedMessage: '可透過 hermes curator restore 還原。',
     officialCatalog: '可安裝',
-    officialPill: '官方'
+    officialPill: '官方',
+    personalPage: {
+      appName: 'Hermès',
+      repository: '儲存庫',
+      externalRepository: '外部資料夾',
+      defaultRepository: '無法識別儲存庫',
+      installation: '安裝',
+      sameAsSource: '與來源相同',
+      source: '來源',
+      installed: '已安裝',
+      unsavedChanges: '未儲存的變更',
+      save: '儲存',
+      nameLabel: '名稱',
+      descriptionLabel: '說明',
+      bodyLabel: '技能指示',
+      imageMarkdown: '圖片 Markdown',
+      completedItem: '已完成項目',
+      compareVersions: '比較版本',
+      keepSource: '保留來源',
+      keepInstalled: '保留已安裝版本',
+      sourceReadOnly: '來源為唯讀。',
+      runtimeReadOnly: '已安裝副本為唯讀。',
+      syncing: '正在同步…',
+      syncConflict: '此技能已變更。同步前請先重新整理。',
+      syncFailed: '無法同步此技能。',
+      differentFromSource: '與來源不同',
+      unknownInstallation: '安裝狀態未知',
+      sourceUnavailable: '來源無法使用'
+    }
   },
 
   starmap: {
