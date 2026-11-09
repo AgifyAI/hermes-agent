@@ -1,0 +1,130 @@
+.skill-body-editor {
+  min-height: 1.7em;
+  --skill-body-text: #444449;
+  color: var(--skill-body-text);
+  font: 450 13px/1.7 var(--linear-font-sans);
+  outline: none;
+  overflow-wrap: anywhere;
+  padding: 20px 20px 24px;
+  white-space: pre-wrap;
+}
+
+:root.dark .skill-body-editor {
+  --skill-body-text: var(--linear-text-primary);
+}
+
+.skill-body-editor:focus-visible {
+  outline: 1px solid var(--linear-focus, #6d78d5);
+  outline-offset: 3px;
+}
+
+.skill-body-editor > :first-child {
+  margin-top: 0;
+}
+
+.skill-body-editor > :last-child {
+  margin-bottom: 0;
+}
+
+.skill-body-editor blockquote,
+.skill-body-editor hr,
+.skill-body-editor ol,
+.skill-body-editor pre,
+.skill-body-editor table,
+.skill-body-editor ul {
+  margin-block: 0.75rem;
+}
+
+.skill-body-editor p {
+  margin: 0;
+  color: var(--skill-body-text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.skill-body-editor h1,
+.skill-body-editor h2,
+.skill-body-editor h3,
+.skill-body-editor h4,
+.skill-body-editor h5,
+.skill-body-editor h6 {
+  margin: 20px 0 4px;
+  color: var(--skill-body-text);
+  font: 550 15px/23px var(--linear-font-sans);
+  letter-spacing: 0;
+}
+
+.skill-body-editor blockquote {
+  border-left: 2px solid var(--linear-border-secondary);
+  color: var(--linear-text-secondary);
+  padding-left: 0.75rem;
+}
+
+.skill-body-editor blockquote > div {
+  min-height: 1.7em;
+}
+
+.skill-body-editor pre {
+  background: var(--linear-bg-secondary);
+  border: 0.5px solid var(--linear-border-panel);
+  border-radius: var(--linear-radius-control, 8px);
+  font: 400 0.75rem/1.6 var(--font-monospace, ui-monospace, monospace);
+  overflow-x: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.skill-body-editor code {
+  background: var(--linear-segment-selected);
+  border-radius: var(--linear-radius-kbd, 4px);
+  font-family: var(--font-monospace, ui-monospace, monospace);
+  font-size: 0.9em;
+  padding: 0.05rem 0.25rem;
+}
+
+.skill-body-editor pre code {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+}
+
+.skill-body-editor ul,
+.skill-body-editor ol {
+  padding-left: 1.5rem;
+}
+
+.skill-body-editor li + li {
+  margin-top: 0.25rem;
+}
+
+.skill-body-editor a {
+  color: var(--linear-accent, #5e6ad2);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.skill-body-editor table {
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  max-width: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
+.skill-body-editor th,
+.skill-body-editor td {
+  border: 0.5px solid var(--linear-border-panel);
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.skill-body-editor th {
+  background: var(--linear-bg-quaternary);
+  font-weight: 500;
+}
+
+.skill-body-editor hr {
+  border: 0;
+  border-top: 0.5px solid var(--linear-border-secondary);
+}

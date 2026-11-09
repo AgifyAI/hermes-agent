@@ -30,9 +30,11 @@ import {
   CAPABILITIES_ROUTE,
   CRON_ROUTE,
   MESSAGING_ROUTE,
+  REVIEW_ROUTE,
   SIDEBAR_NAV_AREA,
   type SidebarNavContribution,
-  SKILLS_ROUTE
+  SKILLS_ROUTE,
+  TOOLS_ROUTE
 } from '../../routes'
 import type { SidebarNavItem } from '../../types'
 import { type NewSessionSplitHandler, startNewSessionDrag } from '../new-session-drag'
@@ -55,6 +57,12 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     icon: props => <Codicon name="symbol-misc" {...props} />,
     route: CAPABILITIES_ROUTE,
     keybindActionId: 'nav.capabilities'
+  },
+  {
+    id: 'tools',
+    label: 'Tools',
+    icon: props => <Codicon name="tools" {...props} />,
+    route: TOOLS_ROUTE
   },
   {
     id: 'skills',
@@ -87,11 +95,25 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     icon: props => <Codicon name="watch" {...props} />,
     route: CRON_ROUTE,
     keybindActionId: 'nav.cron'
+  },
+  {
+    id: 'review',
+    label: '',
+    icon: props => <Codicon name="git-pull-request" {...props} />,
+    route: REVIEW_ROUTE
   }
 ]
 
 // Built-in rows whose id is the view they light up at.
-const VIEW_BACKED_ROWS: ReadonlySet<string> = new Set(['capabilities', 'skills', 'messaging', 'artifacts', 'cron'])
+const VIEW_BACKED_ROWS: ReadonlySet<string> = new Set([
+  'capabilities',
+  'skills',
+  'messaging',
+  'artifacts',
+  'cron',
+  'review',
+  'tools'
+])
 
 function isNavRowActive(item: SidebarNavItem, currentView: AppView, pathname: string) {
   return (
@@ -119,7 +141,15 @@ function SidebarNavRow({ active, item, kbd, onNavigate, onNewSessionSplit }: Sid
   const s = t.sidebar
   const isInteractive = Boolean(item.action) || Boolean(item.route)
   const isNewSession = item.id === 'new-session'
-  const label = item.id === 'skills' ? t.skills.tabSkills : (s.nav[item.id] ?? item.label)
+
+  const label =
+    item.id === 'skills'
+      ? t.skills.tabSkills
+      : item.id === 'tools'
+        ? t.skills.tabToolsets
+        : item.id === 'review'
+          ? t.statusStack.coding.review
+          : (s.nav[item.id] ?? item.label)
 
   const button = (
     <SidebarMenuButton
@@ -172,9 +202,7 @@ function SidebarNavRow({ active, item, kbd, onNavigate, onNewSessionSplit }: Sid
         }, event)
       }}
       tooltip={
-        item.keybindActionId
-          ? { children: <TipKeybindLabel actionId={item.keybindActionId} text={label} /> }
-          : label
+        item.keybindActionId ? { children: <TipKeybindLabel actionId={item.keybindActionId} text={label} /> } : label
       }
       type="button"
     >
@@ -192,9 +220,7 @@ function SidebarNavRow({ active, item, kbd, onNavigate, onNewSessionSplit }: Sid
       <span className="min-w-0 truncate" data-tip-arrow-only="" data-tour={`sidebar-nav-${item.id}`}>
         {label}
       </span>
-      {kbd && (
-        <KbdGroup className={cn('ml-auto opacity-55', kbd.flash && 'opacity-100!')} keys={kbd.keys} size="sm" />
-      )}
+      {kbd && <KbdGroup className={cn('ml-auto opacity-55', kbd.flash && 'opacity-100!')} keys={kbd.keys} size="sm" />}
     </SidebarMenuButton>
   )
 

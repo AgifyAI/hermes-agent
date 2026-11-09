@@ -1322,6 +1322,34 @@ export const jaOverrides = {
     archive: 'アーカイブ',
     skillArchivedTitle: 'スキルをアーカイブしました',
     skillArchivedMessage: 'hermes curator restore で復元できます。',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'リポジトリ',
+      externalRepository: '外部フォルダー',
+      defaultRepository: 'リポジトリを特定できません',
+      installation: 'インストール',
+      sameAsSource: 'ソースと同じ',
+      source: 'ソース',
+      installed: 'インストール済み',
+      unsavedChanges: '未保存の変更',
+      save: '保存',
+      nameLabel: '名前',
+      descriptionLabel: '説明',
+      bodyLabel: 'スキルの指示',
+      imageMarkdown: '画像 Markdown',
+      completedItem: '完了した項目',
+      compareVersions: 'バージョンを比較',
+      keepSource: 'ソースを保持',
+      keepInstalled: 'インストール済みを保持',
+      sourceReadOnly: 'ソースは読み取り専用です。',
+      runtimeReadOnly: 'インストール済みのコピーは読み取り専用です。',
+      syncing: '同期中…',
+      syncConflict: 'このスキルは変更されています。同期する前に更新してください。',
+      syncFailed: 'このスキルを同期できませんでした。',
+      differentFromSource: 'ソースと異なる',
+      unknownInstallation: 'インストール状態不明',
+      sourceUnavailable: 'ソースを利用できません'
+    },
     officialCatalog: 'インストール可能',
     officialPill: '公式'
   },
@@ -2534,7 +2562,45 @@ export const jaOverrides = {
       branchOffFrom: base => `${base} から新しいブランチ`,
       switchTo: branch => `${branch} に切り替え`,
       switchFailed: branch => `${branch} に切り替えできませんでした`,
-      worktrees: 'ワークツリー'
+      worktrees: 'ワークツリー',
+      reviewPage: {
+        tabsLabel: 'レビュー表示',
+        overview: '概要',
+        guide: 'ガイド',
+        diff: '差分',
+        diffHeading: scope => `差分 · ${scope}`,
+        diffSummary: (added, removed) => `このリポジトリの実ファイル全体で、追加 ${added} 件、削除 ${removed} 件です。`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${scope}で${count}件の変更 · 追加 ${added} 件、削除 ${removed} 件。`,
+        selectFile: '差分を確認するファイルを選択してください。',
+        reviewed: '確認済み',
+        reviewedFile: path => `確認済み: ${path}`,
+        guideTitle: 'レビューガイド',
+        guideIntro:
+          'このレビューでは、アクティブなリポジトリで検出されたファイルと行の変更を説明します。概要で一覧を確認し、差分でカードを確認し、レビューが完了したら下の操作を使ってください。',
+        filesInReview: 'このレビューのファイル',
+        moreFiles: count => `+ 差分にさらに ${count} 件のファイル`,
+        guideSteps: {
+          chooseScopeTitle: '範囲を選択',
+          chooseScopeBody: scope =>
+            `${scope} がアクティブなソースです。下のファイル一覧はタイトルバーに表示されているリポジトリから直接取得されています。`,
+          readChangesTitle: '実際の変更を読む',
+          readChangesBody: (count, added, removed) =>
+            `${count} 件のファイルが変更されています。追加 ${added} 件、削除 ${removed} 件です。Diff で各カードを開き、終わったら確認済みにしてください。`,
+          shipTitle: '準備ができたら公開',
+          shipBody:
+            'コミット、プッシュ、プルリクエスト、エージェントへの引き渡し操作はレビューの下に残るため、このページを離れずに最後の手順を実行できます。'
+        },
+        fileStatus: {
+          untracked: '未追跡',
+          added: '追加',
+          deleted: '削除',
+          renamed: '名前変更',
+          copied: 'コピー',
+          unmerged: '未マージ',
+          modified: '変更'
+        }
+      }
     }
   },
 

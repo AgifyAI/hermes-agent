@@ -10,7 +10,6 @@ import { $narrowViewport } from '@/components/pane-shell/tree/store'
 import { registry } from '@/contrib/registry'
 import { I18nProvider } from '@/i18n'
 import { $fileBrowserOpen, $leftSideOpen, CHAT_SIDEBAR_PANE_ID, FILE_BROWSER_PANE_ID } from '@/store/layout'
-import { REVIEW_PANE_ID } from '@/store/review'
 import { setTitlebarAppActionsSide } from '@/store/titlebar-app-actions'
 
 import { ROUTES_AREA } from '../routes'
@@ -215,7 +214,7 @@ describe('titlebar app-action cluster', () => {
       vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })
     )
     $narrowViewport.set(true)
-    $narrowOverlayPaneIds.set(new Set([CHAT_SIDEBAR_PANE_ID, REVIEW_PANE_ID]))
+    $narrowOverlayPaneIds.set(new Set([CHAT_SIDEBAR_PANE_ID, FILE_BROWSER_PANE_ID]))
     const intents: unknown[] = []
     const listener = (event: Event) => intents.push((event as CustomEvent).detail)
     window.addEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
@@ -269,23 +268,6 @@ describe('titlebar app-action cluster', () => {
       renderControls('/')
       fireEvent.click(screen.getByRole('button', { name: 'Hide sidebar' }))
       expect(intents).toEqual([{ id: CHAT_SIDEBAR_PANE_ID, mode: 'close' }])
-    } finally {
-      window.removeEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
-    }
-  })
-
-  it('hides a review-only right sidebar instead of opening files', () => {
-    window.document.documentElement.dataset.hermesDesktopHost = 'browser'
-    $narrowViewport.set(true)
-    $narrowOverlayPaneIds.set(new Set([REVIEW_PANE_ID]))
-    const intents: unknown[] = []
-    const listener = (event: Event) => intents.push((event as CustomEvent).detail)
-    window.addEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
-
-    try {
-      renderControls('/')
-      fireEvent.click(screen.getByRole('button', { name: 'Hide right sidebar' }))
-      expect(intents).toEqual([{ id: 'review', mode: 'close' }])
     } finally {
       window.removeEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
     }

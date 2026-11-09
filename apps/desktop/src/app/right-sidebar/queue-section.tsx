@@ -5,10 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Tip } from '@/components/ui/tooltip'
 import { useI18n } from '@/i18n'
 import { CornerDownLeft, iconSize } from '@/lib/icons'
+import { cn } from '@/lib/utils'
 import { $queuedPromptsBySession, getQueuedPrompts } from '@/store/composer-queue'
 import { $selectedStoredSessionId } from '@/store/session'
 
 import { requestComposerQueueSend } from '../chat/composer/queue-send'
+
+import { SIDEBAR_CARD_CLASS, SidebarSectionContent, SidebarSectionHeader, SidebarSectionToggle } from './section-header'
 
 export function QueueSection() {
   const { t } = useI18n()
@@ -19,24 +22,16 @@ export function QueueSection() {
   const entries = getQueuedPrompts(sessionId)
 
   return (
-    <section className="shrink-0 border-b border-(--linear-border-panel)" data-slot="queued-prompts-section">
-      <div className="group/project-header flex h-7 shrink-0 items-center px-2.5">
-        <button
-          aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-medium text-(--linear-text-secondary) hover:text-(--linear-text-primary)"
-          onClick={() => setOpen(current => !current)}
-          type="button"
-        >
-          <span aria-hidden className={open ? 'rotate-90 text-[0.65rem]' : 'text-[0.65rem]'}>
-            ›
-          </span>
-          <span>{labels.queuedMessagesTitle}</span>
+    <section className={cn(SIDEBAR_CARD_CLASS, 'shrink-0')} data-slot="queued-prompts-section">
+      <SidebarSectionHeader>
+        <SidebarSectionToggle onClick={() => setOpen(current => !current)} open={open}>
+          {labels.queuedMessagesTitle}
           {entries.length > 0 && (
             <span className="text-[0.6875rem] text-(--linear-text-tertiary)">{entries.length}</span>
           )}
-        </button>
-      </div>
-      {open && (
+        </SidebarSectionToggle>
+      </SidebarSectionHeader>
+      <SidebarSectionContent open={open}>
         <div className="max-h-64 overflow-y-auto px-2.5 pb-2">
           {entries.length === 0 ? (
             <p className="text-xs text-(--linear-text-quaternary)">{labels.queuedMessagesEmpty}</p>
@@ -67,7 +62,7 @@ export function QueueSection() {
             ))
           )}
         </div>
-      )}
+      </SidebarSectionContent>
     </section>
   )
 }

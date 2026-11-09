@@ -13,6 +13,7 @@ import {
   REVIEW_FILE_CAP,
   reviewCreatePr,
   reviewList,
+  reviewShipInfo,
   simpleGitHostEnv
 } from './git-review-ops'
 import type * as NoConsoleGit from './no-console-git'
@@ -329,4 +330,56 @@ test('reviewCreatePr falls back to the generic message when gh reports no stderr
   failGh('')
 
   await assert.rejects(reviewCreatePr(dir, 'git', 'gh'), /is gh installed and authenticated\?/)
+})
+
+test('reviewShipInfo keeps PR identity metadata optional for older callers', async () => {
+  const dir = makeRepo()
+
+  const gh = mockExecFile as unknown as {
+    mockImplementation: (
+      impl: (file: string, args: string[], options: object, callback: ExecFileCallback) => void
+    ) => unknown
+    mockReset: () => unknown
+  }
+
+  const responses = [
+    { stdout: '', stderr: '' },
+    {
+      stdout: JSON.stringify({
+        author: { login: 'octocat' },
+        baseRefName: 'main',
+        headRefName: 'feature/review-heading',
+        number: 42,
+        state: 'OPEN',
+        title: 'Show the review identity',
+        url: 'https://github.com/example/demo/pull/42'
+      }),
+      stderr: ''
+    }
+  ]
+
+  gh.mockReset()
+  gh.mockImplementation((_bin, args, _options, callback) => {
+    const response = responses.shift()
+
+    assert.ok(response, `unexpected gh call: ${args.join(' ')}`)
+    callback(null, response.stdout, response.stderr)
+  })
+
+  try {
+    assert.deepEqual(await reviewShipInfo(dir, 'gh'), {
+      ghReady: true,
+      pr: {
+        author: 'octocat',
+        baseRefName: 'main',
+        headRefName: 'feature/review-heading',
+        number: 42,
+        state: 'OPEN',
+        title: 'Show the review identity',
+        url: 'https://github.com/example/demo/pull/42'
+      }
+    })
+  } finally {
+    gh.mockReset()
+  }
 })

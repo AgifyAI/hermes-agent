@@ -511,6 +511,19 @@ class SkillContentUpdate(BaseModel):
     content: str
     profile: Optional[str] = None
 
+class SkillSourceSync(BaseModel):
+    """Explicit, optimistic source/runtime synchronisation for one skill."""
+    name: str
+    direction: Literal["source_to_installed", "installed_to_source", "edit_source"]
+    # Both versions are required for copy directions: they are the two files
+    # the user compared before choosing a direction. `expected_version` remains
+    # accepted for old edit_source clients as the source version.
+    expected_runtime_version: Optional[StrictStr] = None
+    expected_source_version: Optional[StrictStr] = None
+    expected_version: Optional[StrictStr] = None
+    content: Optional[str] = None
+    profile: Optional[str] = None
+
 class ToolsetToggle(BaseModel):
     enabled: bool
     profile: Optional[str] = None

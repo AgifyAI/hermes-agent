@@ -14,6 +14,7 @@ import {
   $reviewMaxChurn,
   $reviewOpen,
   $reviewRevertTarget,
+  $reviewRevision,
   $reviewScope,
   $reviewScopeCwd,
   $reviewScopeTarget,
@@ -26,6 +27,7 @@ import {
   commitChanges,
   confirmRevert,
   createOrOpenPr,
+  fetchReviewFileDiff,
   generateCommitMessage,
   openReview,
   openReviewForPath,
@@ -104,6 +106,7 @@ beforeEach(() => {
   $reviewOpen.set(false)
   $reviewFiles.set([])
   $reviewLoading.set(false)
+  $reviewRevision.set(0)
   $reviewIsRepo.set(true)
   $reviewDiff.set(null)
   $reviewDiffLoading.set(false)
@@ -138,6 +141,16 @@ describe('refreshReview', () => {
     expect(review.list).not.toHaveBeenCalled()
     expect($reviewFiles.get()).toEqual([])
     expect($reviewLoading.get()).toBe(false)
+  })
+
+  it('can load the full-page review while the sidebar pane stays closed', async () => {
+    const review = stubReview({ list: vi.fn(async () => ({ files: [file('page.ts')] })) })
+    $reviewOpen.set(false)
+
+    await refreshReview({ force: true })
+
+    expect(review.list).toHaveBeenCalledWith('/repo', 'uncommitted', null)
+    expect($reviewFiles.get().map(entry => entry.path)).toEqual(['page.ts'])
   })
 
   it('flags not-a-repo (and clears loading) when there is no bridge/cwd', async () => {
@@ -355,6 +368,29 @@ describe('selectReviewFile', () => {
     expect($reviewSelectedPath.get()).toBeNull()
     expect($reviewDiff.get()).toBeNull()
     expect($reviewDiffLoading.get()).toBe(false)
+  })
+})
+
+describe('fetchReviewFileDiff', () => {
+  it('fetches a Guide diff without changing the selected Diff card', async () => {
+    const review = stubReview({ diff: vi.fn(async () => 'guide diff') })
+
+    const result = await fetchReviewFileDiff(file('a.ts'))
+
+    expect(result).toBe('guide diff')
+    expect($reviewSelectedPath.get()).toBeNull()
+    expect($reviewDiff.get()).toBeNull()
+    expect(review.diff).toHaveBeenCalledWith('/repo', 'a.ts', 'uncommitted', null, false)
+  })
+
+  it('returns an empty excerpt when the Guide diff cannot be fetched', async () => {
+    stubReview({
+      diff: vi.fn(async () => {
+        throw new Error('git failed')
+      })
+    })
+
+    await expect(fetchReviewFileDiff(file('a.ts'))).resolves.toBe('')
   })
 })
 

@@ -675,7 +675,7 @@ async function pidIsOurDashboard(
   }
 
   const script =
-    'import os,shlex,subprocess,sys\n' +
+    'import ctypes,os,sys\n' +
     `pid=${Number(pid)}\n` +
     `expected=os.path.expanduser(${shq(hermesPath)})\n` +
     // The installer-facing launcher is intentionally preserved for invocation
@@ -689,16 +689,42 @@ async function pidIsOurDashboard(
     `expected_token=os.path.expanduser(${shq(ownershipId ? spawnTokenPath(ownershipId, spawnNonce) : '')})\n` +
     `expected_profile=${shq(profile)}\n` +
     `nonce=${shq(spawnNonce)}\n` +
-    'try:\n' +
-    ' raw=open(f"/proc/{pid}/cmdline","rb").read()\n' +
-    ' args=[x.decode("utf-8","surrogateescape") for x in raw.split(b"\\0") if x]\n' +
-    'except OSError:\n' +
+    'def darwin_args():\n' +
     ' try:\n' +
-    '  line=subprocess.check_output(["ps","-ww","-o","command=","-p",str(pid)],text=True).strip()\n' +
-    ' except subprocess.CalledProcessError:\n' +
-    '  # pid already gone — a dead process is FOREIGN, not a transport error\n' +
-    '  print("FOREIGN");sys.exit(0)\n' +
-    ' args=shlex.split(line)\n' +
+    '  # Darwin CTL_KERN=1/KERN_PROCARGS2=49 returns argc plus NUL-delimited argv.\n' +
+    '  libc=ctypes.CDLL(None,use_errno=True)\n' +
+    '  sysctl=libc.sysctl\n' +
+    '  sysctl.argtypes=[ctypes.POINTER(ctypes.c_int),ctypes.c_uint,ctypes.c_void_p,ctypes.POINTER(ctypes.c_size_t),ctypes.c_void_p,ctypes.c_size_t]\n' +
+    '  sysctl.restype=ctypes.c_int\n' +
+    '  mib=(ctypes.c_int*3)(1,49,pid)\n' +
+    '  size=ctypes.c_size_t(0)\n' +
+    '  if sysctl(mib,3,None,ctypes.byref(size),None,0)!=0 or size.value<ctypes.sizeof(ctypes.c_int):return []\n' +
+    '  buffer=ctypes.create_string_buffer(size.value)\n' +
+    '  if sysctl(mib,3,buffer,ctypes.byref(size),None,0)!=0:return []\n' +
+    '  raw=buffer.raw[:size.value]\n' +
+    '  argc=int.from_bytes(raw[:4],byteorder=sys.byteorder,signed=True)\n' +
+    '  if argc<0:return []\n' +
+    '  executable_end=raw.find(b"\\0",4)\n' +
+    '  if executable_end<0:return []\n' +
+    '  payload=raw[executable_end+1:]\n' +
+    '  while payload.startswith(b"\\0"):payload=payload[1:]\n' +
+    '  args=[]\n' +
+    '  start=0\n' +
+    '  for _ in range(argc):\n' +
+    '   end=payload.find(b"\\0",start)\n' +
+    '   if end<0:return []\n' +
+    '   args.append(payload[start:end].decode("utf-8","surrogateescape"))\n' +
+    '   start=end+1\n' +
+    '  return args\n' +
+    ' except (OSError,TypeError,ValueError,OverflowError):return []\n' +
+    'if sys.platform=="darwin":\n' +
+    ' args=darwin_args()\n' +
+    'else:\n' +
+    ' try:\n' +
+    '  raw=open(f"/proc/{pid}/cmdline","rb").read()\n' +
+    '  args=[x.decode("utf-8","surrogateescape") for x in raw.split(b"\\0") if x]\n' +
+    ' except OSError:\n' +
+    '  args=[]\n' +
     'ok=False\n' +
     'try:\n' +
     // A profile literally named "serve" puts the value token before the

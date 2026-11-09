@@ -13,7 +13,7 @@ import { readJson, writeJson, writeKey } from '@/lib/storage'
 import { asLayoutIntent, type Tiered } from '@/store/interface-mode'
 
 import { allPaneIds, findGroupOfPane, isLayoutNode, type LayoutNode } from './model'
-import { stripPresetLivePanes, stripPresetResting } from './preset-tree'
+import { stripPresetLivePanes, stripPresetResting, stripRetiredPanes } from './preset-tree'
 import { $dismissedPanes, $hiddenTreePanes, $layoutTree, applyTree, markActivePreset } from './store'
 
 export const LAYOUTS_AREA = 'layouts'
@@ -96,7 +96,8 @@ function loadUserPresets(): Record<string, StoredPreset> {
     // baked in `session-tile:` / `preview-tile:` / `route-tile:` pane ids
     // (#94260). A preset that was ONLY such a snapshot has no geometry left
     // and is dropped.
-    const tree = stripPresetLivePanes(preset.tree)
+    const liveTree = stripPresetLivePanes(preset.tree)
+    const tree = liveTree ? stripRetiredPanes(liveTree) : null
 
     if (!tree) {
       healed = true
@@ -156,7 +157,8 @@ export function saveLayoutPresetTree(name: string, tree: LayoutNode, resting: re
   // Presets are GEOMETRY. Strip the live tiles before the tree is ever written
   // to `hermes.desktop.layoutPresets.v2`; `applyTree` adopts the tiles that are
   // actually open into this geometry, so no open tab is lost.
-  const geometry = stripPresetLivePanes(tree)
+  const liveTree = stripPresetLivePanes(tree)
+  const geometry = liveTree ? stripRetiredPanes(liveTree) : null
 
   if (!geometry) {
     return null
@@ -217,7 +219,8 @@ export const isUserPreset = (id: string) => id in userPresets
  *  not be able to remount a baked-in session (#94260). `applyTree` adopts the
  *  tiles open right now, so the user's tabs stay where they are. */
 export function applyLayoutPreset(id: string, tree: LayoutNode) {
-  const geometry = stripPresetLivePanes(structuredClone(tree))
+  const liveTree = stripPresetLivePanes(structuredClone(tree))
+  const geometry = liveTree ? stripRetiredPanes(liveTree) : null
 
   if (!geometry) {
     return

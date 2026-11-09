@@ -187,7 +187,10 @@ test('shouldRemoveAppBundle requires packaged AND a resolved path', () => {
 test.skipIf(process.platform === 'win32').each(['gui', 'lite', 'full'] as const)(
   'POSIX cleanup executes %s in its sandbox and preserves its sibling',
   async (mode: string): Promise<void> => {
-    const root: string = fs.mkdtempSync(path.join(os.tmpdir(), "uninstall-o'brien-"))
+    // macOS exposes the temp directory as /var, while child processes resolve
+    // that symlink to /private/var before reporting process.cwd(). Compare the
+    // same canonical path the cleanup process observes on every POSIX host.
+    const root: string = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "uninstall-o'brien-")))
     const app: string = path.join(root, 'App with spaces')
     const sibling: string = path.join(root, 'App with spaces-other')
     const recorder: string = path.join(root, "recorder's.cjs")

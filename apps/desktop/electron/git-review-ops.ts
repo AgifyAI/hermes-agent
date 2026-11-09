@@ -631,7 +631,11 @@ async function reviewShipInfo(repoPath, ghBin) {
     return { ghReady: false, pr: null }
   }
 
-  const view = await runGh(['pr', 'view', '--json', 'url,state,number'], cwd, ghBin)
+  const view = await runGh(
+    ['pr', 'view', '--json', 'url,state,number,title,author,baseRefName,headRefName'],
+    cwd,
+    ghBin
+  )
 
   if (!view.ok) {
     // gh exits non-zero when no PR exists for the branch — that's not an error.
@@ -641,7 +645,21 @@ async function reviewShipInfo(repoPath, ghBin) {
   try {
     const pr = JSON.parse(view.stdout)
 
-    return { ghReady: true, pr: pr && pr.url ? { url: pr.url, state: pr.state, number: pr.number } : null }
+    return {
+      ghReady: true,
+      pr:
+        pr && pr.url
+          ? {
+              url: pr.url,
+              state: pr.state,
+              number: pr.number,
+              title: typeof pr.title === 'string' ? pr.title : null,
+              author: pr.author && typeof pr.author.login === 'string' ? pr.author.login : null,
+              baseRefName: typeof pr.baseRefName === 'string' ? pr.baseRefName : null,
+              headRefName: typeof pr.headRefName === 'string' ? pr.headRefName : null
+            }
+          : null
+    }
   } catch {
     return { ghReady: true, pr: null }
   }

@@ -34,7 +34,11 @@ def main() -> None:
     assert uv, "real uv must be prepared on PATH"
     sites = [p for p in sys.path if p.endswith("site-packages")]
     assert sites, "run with the prepared Hermes Python dependency environment"
-    wheels = temp / "wheels"
+    # Keep the wheel inside the project snapshot. uv records local wheels in
+    # uv.lock relative to the project; PM later copies that project into a
+    # fresh generation before syncing it. A wheel beside the source project
+    # would therefore resolve against the generation's parent and disappear.
+    wheels = root / "wheels"
     wheels.mkdir()
     dist = "desktop_backend_deps-1.dist-info"
     entries = {
@@ -52,7 +56,7 @@ def main() -> None:
         'dependencies=["desktop-backend-deps==1"]\n'
         '[project.optional-dependencies]\nall=[]\n'
         '[tool.uv]\npackage=false\nno-index=true\n'
-        f'find-links=[{json.dumps(wheels.as_posix())}]\n', encoding="utf-8")
+        'find-links=["wheels"]\n', encoding="utf-8")
     subprocess.run([uv, "lock", "--project", str(root), "--python", sys.executable],
                    check=True, stdout=sys.stderr, timeout=30)
     import pm

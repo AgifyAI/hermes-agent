@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { approvePairing, getMessagingPlatforms } from './api/messaging'
 import { getAuxiliaryModels, getGlobalModelInfo } from './api/models'
 import { getOfficialSkills, getSkillHubSources } from './api/skills'
-import { getTerminalBackends, getToolsetConfig, selectTerminalBackend } from './api/toolsets'
+import {
+  getComputerUseStatus,
+  getTerminalBackends,
+  getToolsetConfig,
+  grantComputerUsePermissions,
+  selectTerminalBackend
+} from './api/toolsets'
 import {
   getHermesConfigRecord,
   getMcpCatalog,
@@ -100,6 +106,25 @@ describe('capability helpers are connection-scoped', () => {
         profile
       })
     }
+  })
+
+  it('routes Computer Use status and permission actions through the rendered capability scope', () => {
+    const scope = { connectionId: 'homelab', profile: 'inbox-bot' }
+
+    void getComputerUseStatus(scope)
+    void grantComputerUsePermissions(scope)
+
+    expect(api.mock.calls[0]?.[0]).toMatchObject({
+      connectionId: 'homelab',
+      path: '/api/tools/computer-use/status',
+      profile: 'inbox-bot'
+    })
+    expect(api.mock.calls[1]?.[0]).toMatchObject({
+      connectionId: 'homelab',
+      method: 'POST',
+      path: '/api/tools/computer-use/permissions/grant',
+      profile: 'inbox-bot'
+    })
   })
 
   it('marks an explicitly scoped Settings / Capabilities read as foreground (#111651)', () => {

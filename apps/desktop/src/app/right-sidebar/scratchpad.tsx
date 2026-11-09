@@ -16,12 +16,15 @@ import {
 } from '@/store/session'
 import { profileScopeForSessionOwner } from '@/store/session-request-router'
 
+import { SIDEBAR_CARD_CLASS, SidebarSectionContent, SidebarSectionHeader, SidebarSectionToggle } from './section-header'
+
 export interface ScratchpadLabels {
   title?: string
   placeholder?: string
   emptySession?: string
   saving?: string
   error?: string
+  retry?: string
 }
 
 interface SessionScratchpadProps {
@@ -36,6 +39,13 @@ interface SessionScratchpadProps {
 /** Writes for one conversation are serialized even when the sidebar remounts
  * or the user changes chats while a delayed save is still in flight. */
 const writeQueues = new Map<string, Promise<void>>()
+type PendingDraft = { content: string; failed: boolean }
+
+/** Keep a failed or in-flight draft outside the component lifetime. A session
+ * switch unmounts the editor, but must not discard text that the backend has
+ * not acknowledged yet. The profile is part of the key because equal session
+ * ids can exist in separate gateway profiles. */
+const pendingDrafts = new Map<string, PendingDraft>()
 
 function scopeKey(scope?: ProfileScope): string {
   if (!scope) {
@@ -49,6 +59,35 @@ function scopeKey(scope?: ProfileScope): string {
   return `connection:${scope.connectionId ?? ''}:profile:${scope.profile ?? ''}`
 }
 
+function draftKey(id: string, owner?: ProfileScope): string {
+  return `${scopeKey(owner)}:${id}`
+}
+
+function pendingDraft(id: string, owner?: ProfileScope): PendingDraft | undefined {
+  return pendingDrafts.get(draftKey(id, owner))
+}
+
+function rememberDraft(id: string, owner: ProfileScope | undefined, content: string, failed = false): void {
+  pendingDrafts.set(draftKey(id, owner), { content, failed })
+}
+
+function settleDraft(id: string, owner: ProfileScope | undefined, content: string, failed: boolean): void {
+  const key = draftKey(id, owner)
+  const current = pendingDrafts.get(key)
+
+  // A newer keystroke owns the entry. An older request resolving must never
+  // erase or mark that newer content as failed.
+  if (!current || current.content !== content) {
+    return
+  }
+
+  if (failed) {
+    pendingDrafts.set(key, { content, failed: true })
+  } else {
+    pendingDrafts.delete(key)
+  }
+}
+
 function enqueueWrite(id: string, content: string, owner?: ProfileScope): Promise<void> {
   const key = `${scopeKey(owner)}:${id}`
   const previous = writeQueues.get(key) ?? Promise.resolve()
@@ -57,7 +96,7 @@ function enqueueWrite(id: string, content: string, owner?: ProfileScope): Promis
     .catch(() => undefined)
     .then(async () => {
       await setSessionScratchpadRemote(id, content || null, owner)
-      applySessionScratchpad(id, content || null)
+      applySessionScratchpad(id, content || null, owner)
     })
 
   writeQueues.set(key, write)
@@ -83,13 +122,7 @@ export function ScratchpadSection() {
   const connection = useStore($connection)
   const owner = knownSessionOwner([...sessions, ...cronSessions, ...messagingSessions], sessionId)
 
-  return (
-    <SessionScratchpad
-      className="flex-1"
-      profile={profileScopeForSessionOwner(owner) ?? connection?.profile}
-      sessionId={sessionId}
-    />
-  )
+  return <SessionScratchpad profile={profileScopeForSessionOwner(owner) ?? connection?.profile} sessionId={sessionId} />
 }
 
 /** A private, session-scoped note editor.
@@ -107,6 +140,7 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
     emptySession: sidebar.scratchpadEmptySession,
     saving: sidebar.scratchpadSaving,
     error: sidebar.scratchpadError,
+    retry: sidebar.tryAgain,
     ...labels
   }
 
@@ -114,9 +148,12 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [open, setOpen] = useState(true)
   const valueRef = useRef('')
   const dirtyRef = useRef(false)
   const generationRef = useRef(0)
+  const mountedRef = useRef(false)
 
   const targetRef = useRef<{ id: null | string; profile?: ProfileScope; generation: number }>({
     id: sessionId,
@@ -141,27 +178,47 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
     return { connectionId: profileConnectionId, profile: profileName }
   }, [profileConnectionId, profileIsObject, profileName])
 
-  const persist = useCallback(async (
-    target: { id: string; profile?: ProfileScope; generation: number },
-    content: string
-  ) => {
-    const token = ++writeTokenRef.current
-    setSaving(true)
-    setFailed(false)
+  const persist = useCallback(
+    async (target: { id: string; profile?: ProfileScope; generation: number }, content: string) => {
+      const token = ++writeTokenRef.current
+      setSaving(true)
+      setFailed(false)
 
-    try {
-      await enqueueWrite(target.id, content, target.profile)
+      try {
+        await enqueueWrite(target.id, content, target.profile)
+        settleDraft(target.id, target.profile, content, false)
 
-      if (target.generation === generationRef.current && token === writeTokenRef.current) {
-        setSaving(false)
+        const current = targetRef.current
+
+        const ownsCurrentContent =
+          mountedRef.current &&
+          current.id === target.id &&
+          scopeKey(current.profile) === scopeKey(target.profile) &&
+          valueRef.current === content
+
+        if (ownsCurrentContent || (target.generation === generationRef.current && token === writeTokenRef.current)) {
+          setSaving(false)
+          setFailed(false)
+        }
+      } catch {
+        settleDraft(target.id, target.profile, content, true)
+
+        const current = targetRef.current
+
+        const ownsCurrentContent =
+          mountedRef.current &&
+          current.id === target.id &&
+          scopeKey(current.profile) === scopeKey(target.profile) &&
+          valueRef.current === content
+
+        if (ownsCurrentContent || (target.generation === generationRef.current && token === writeTokenRef.current)) {
+          setSaving(false)
+          setFailed(true)
+        }
       }
-    } catch {
-      if (target.generation === generationRef.current && token === writeTokenRef.current) {
-        setSaving(false)
-        setFailed(true)
-      }
-    }
-  }, [])
+    },
+    []
+  )
 
   const flushDraft = useCallback(() => {
     const target = targetRef.current
@@ -188,10 +245,13 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
     const generation = generationRef.current + 1
     generationRef.current = generation
     targetRef.current = { id: sessionId, profile: stableProfile, generation }
-    valueRef.current = ''
-    dirtyRef.current = false
-    setValue('')
-    setFailed(false)
+    setSaving(false)
+    const draft = sessionId ? pendingDraft(sessionId, stableProfile) : undefined
+    valueRef.current = draft?.content ?? ''
+    dirtyRef.current = Boolean(draft?.failed)
+    setValue(draft?.content ?? '')
+    setFailed(Boolean(draft?.failed))
+    setLoadFailed(false)
 
     if (!sessionId || typeof window.hermesDesktop?.api !== 'function') {
       setLoading(false)
@@ -203,7 +263,22 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
     setLoading(true)
     void getSession(sessionId, stableProfile)
       .then(session => {
-        if (!current || generation !== generationRef.current || dirtyRef.current) {
+        if (!current || generation !== generationRef.current) {
+          return
+        }
+
+        const latestDraft = pendingDraft(sessionId, stableProfile)
+
+        if (latestDraft) {
+          valueRef.current = latestDraft.content
+          dirtyRef.current = latestDraft.failed
+          setValue(latestDraft.content)
+          setFailed(latestDraft.failed)
+
+          return
+        }
+
+        if (dirtyRef.current) {
           return
         }
 
@@ -213,7 +288,7 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
       })
       .catch(() => {
         if (current && generation === generationRef.current) {
-          setFailed(true)
+          setLoadFailed(true)
         }
       })
       .finally(() => {
@@ -229,6 +304,15 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
       flushDraft()
     }
   }, [flushDraft, sessionId, stableProfile])
+
+  // eslint-disable-next-line no-restricted-syntax -- this effect tracks component lifetime for delayed writes
+  useEffect(() => {
+    mountedRef.current = true
+
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   const scheduleSave = (next: string) => {
     const target = targetRef.current
@@ -256,31 +340,112 @@ export function SessionScratchpad({ className, labels, profile, sessionId }: Ses
   const onChange = (next: string) => {
     valueRef.current = next
     dirtyRef.current = true
+    const target = targetRef.current
+
+    if (target.id) {
+      rememberDraft(target.id, target.profile, next)
+    }
+
     setValue(next)
     scheduleSave(next)
   }
 
+  const retry = () => {
+    const target = targetRef.current
+    const id = target.id
+
+    if (!id || saving) {
+      return
+    }
+
+    if (loadFailed && !pendingDraft(id, target.profile)) {
+      setLoading(true)
+      setLoadFailed(false)
+      void getSession(id, target.profile)
+        .then(session => {
+          if (target.generation !== generationRef.current) {
+            return
+          }
+
+          const latestDraft = pendingDraft(id, target.profile)
+
+          if (latestDraft) {
+            valueRef.current = latestDraft.content
+            dirtyRef.current = latestDraft.failed
+            setValue(latestDraft.content)
+            setFailed(latestDraft.failed)
+
+            return
+          }
+
+          const next = session.scratchpad ?? ''
+          valueRef.current = next
+          dirtyRef.current = false
+          setValue(next)
+        })
+        .catch(() => {
+          if (target.generation === generationRef.current) {
+            setLoadFailed(true)
+          }
+        })
+        .finally(() => {
+          if (target.generation === generationRef.current) {
+            setLoading(false)
+          }
+        })
+
+      return
+    }
+
+    const content = valueRef.current
+    dirtyRef.current = false
+    rememberDraft(id, target.profile, content)
+    void persist({ id, profile: target.profile, generation: target.generation }, content)
+  }
+
+  const currentDraft = sessionId ? pendingDraft(sessionId, stableProfile) : undefined
+
   return (
-    <section className={cn('flex min-h-0 flex-col border-t border-(--linear-border-panel)', className)}>
-      <div className="flex h-7 shrink-0 items-center px-2.5 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-(--linear-text-tertiary)">
-        {copy.title}
-        {saving && <span className="ml-auto normal-case tracking-normal text-[0.625rem]">{copy.saving}</span>}
-      </div>
-      {!sessionId ? (
-        <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{copy.emptySession}</p>
-      ) : (
-        <textarea
-          aria-label={copy.title}
-          className="min-h-0 w-full flex-1 resize-none border-0 bg-transparent px-2.5 pb-3 text-[0.8125rem] leading-5 text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary)"
-          disabled={loading}
-          onBlur={flushDraft}
-          onChange={event => onChange(event.target.value)}
-          placeholder={copy.placeholder}
-          value={value}
-        />
-      )}
-      {failed && <p className="px-2.5 pb-2 text-xs text-(--linear-red)">{copy.error}</p>}
+    <section
+      className={cn(SIDEBAR_CARD_CLASS, 'flex min-h-0 shrink-0 flex-col', className)}
+      data-slot="scratchpad-section"
+    >
+      <SidebarSectionHeader>
+        <SidebarSectionToggle onClick={() => setOpen(current => !current)} open={open}>
+          <span>{copy.title}</span>
+          {saving && <span className="ml-auto normal-case tracking-normal text-[0.625rem]">{copy.saving}</span>}
+        </SidebarSectionToggle>
+      </SidebarSectionHeader>
+      <SidebarSectionContent open={open}>
+        <>
+          {!sessionId ? (
+            <p className="px-2.5 pb-2 text-xs text-(--linear-text-quaternary)">{copy.emptySession}</p>
+          ) : (
+            <textarea
+              aria-label={copy.title}
+              className="field-sizing-content block min-h-5 w-full resize-none overflow-hidden border-0 bg-transparent px-3 pb-2 pt-[3px] text-[0.8125rem] leading-5 text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary)"
+              disabled={loading && !currentDraft}
+              onBlur={flushDraft}
+              onChange={event => onChange(event.target.value)}
+              placeholder={copy.placeholder}
+              rows={1}
+              value={value}
+            />
+          )}
+          {(failed || loadFailed) && (
+            <div className="flex items-center gap-2 px-2.5 pb-2 text-xs text-(--linear-red)">
+              <p className="min-w-0 flex-1">{copy.error}</p>
+              <button
+                className="shrink-0 text-(--linear-text-secondary) underline decoration-(--linear-focus) underline-offset-2 hover:text-(--linear-text-primary)"
+                onClick={retry}
+                type="button"
+              >
+                {copy.retry}
+              </button>
+            </div>
+          )}
+        </>
+      </SidebarSectionContent>
     </section>
   )
 }
-

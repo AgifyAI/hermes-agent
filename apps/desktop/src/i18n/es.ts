@@ -2374,6 +2374,34 @@ export const esOverrides = {
     archive: 'Archivar',
     skillArchivedTitle: 'Skill archivado',
     skillArchivedMessage: 'Puedes restaurarlo con hermes curator restore.',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'Repositorio',
+      externalRepository: 'Carpeta externa',
+      defaultRepository: 'Repositorio no identificado',
+      installation: 'Instalación',
+      sameAsSource: 'Igual que el origen',
+      source: 'Origen',
+      installed: 'Instalada',
+      unsavedChanges: 'Cambios sin guardar',
+      save: 'Guardar',
+      nameLabel: 'Nombre',
+      descriptionLabel: 'Descripción',
+      bodyLabel: 'Instrucciones del skill',
+      imageMarkdown: 'Markdown de imagen',
+      completedItem: 'Elemento completado',
+      compareVersions: 'Comparar versiones',
+      keepSource: 'Conservar el origen',
+      keepInstalled: 'Conservar la instalación',
+      sourceReadOnly: 'El origen es de solo lectura.',
+      runtimeReadOnly: 'La copia instalada es de solo lectura.',
+      syncing: 'Sincronizando…',
+      syncConflict: 'Este skill ha cambiado. Actualízalo antes de sincronizar.',
+      syncFailed: 'No se pudo sincronizar este skill.',
+      differentFromSource: 'Diferente del origen',
+      unknownInstallation: 'Estado de instalación desconocido',
+      sourceUnavailable: 'Origen no disponible'
+    },
     tabPlugins: 'Plugins',
     plugins: {
       agentTitle: 'Plugins del agente',
@@ -3984,7 +4012,46 @@ export const esOverrides = {
       branchOffFrom: base => `Nueva rama desde ${base}`,
       switchTo: branch => `Cambiar a ${branch}`,
       switchFailed: branch => `No se pudo cambiar a ${branch}`,
-      worktrees: 'Worktrees'
+      worktrees: 'Worktrees',
+      reviewPage: {
+        tabsLabel: 'Vistas de la revisión',
+        overview: 'Resumen',
+        guide: 'Guía',
+        diff: 'Diff',
+        diffHeading: scope => `Diff · ${scope}`,
+        diffSummary: (added, removed) =>
+          `${added} adiciones y ${removed} eliminaciones en los archivos reales de este repositorio.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} cambios en ${scope.toLowerCase()} · ${added} adiciones, ${removed} eliminaciones.`,
+        selectFile: 'Selecciona un archivo para ver sus diferencias.',
+        reviewed: 'Revisado',
+        reviewedFile: path => `Revisado: ${path}`,
+        guideTitle: 'Guía de revisión',
+        guideIntro:
+          'Esta revisión describe los archivos y cambios de línea detectados en el repositorio activo. Usa Resumen para el inventario, Diff para las tarjetas y las acciones de abajo al terminar la revisión.',
+        filesInReview: 'Archivos de esta revisión',
+        moreFiles: count => `+ ${count} archivos más en Diff`,
+        guideSteps: {
+          chooseScopeTitle: 'Elegir un alcance',
+          chooseScopeBody: scope =>
+            `${scope} es el origen activo. La lista de archivos procede directamente del repositorio que aparece en la barra de título.`,
+          readChangesTitle: 'Leer los cambios reales',
+          readChangesBody: (count, added, removed) =>
+            `Han cambiado ${count} archivos: ${added} adiciones y ${removed} eliminaciones. Abre cada tarjeta en Diff y márcala como Revisado al terminar.`,
+          shipTitle: 'Publicar cuando esté listo',
+          shipBody:
+            'Las acciones de commit, push, pull request y entrega al agente permanecen debajo de la revisión para completar el último paso sin salir de esta página.'
+        },
+        fileStatus: {
+          untracked: 'Sin seguimiento',
+          added: 'Añadido',
+          deleted: 'Eliminado',
+          renamed: 'Renombrado',
+          copied: 'Copiado',
+          unmerged: 'Sin fusionar',
+          modified: 'Modificado'
+        }
+      }
     }
   },
   updates: {

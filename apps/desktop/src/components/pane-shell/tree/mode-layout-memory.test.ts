@@ -23,7 +23,6 @@ async function boot() {
     ['sessions', 'left'],
     ['workspace', 'main'],
     ['files', 'right'],
-    ['review', 'right'],
     ['terminal', 'bottom']
   ] as const) {
     registry.register({ id, area: 'panes', data: { placement }, render: () => null })
@@ -120,7 +119,6 @@ it('restores independently customized modes through real pane bindings and reloa
     groupId: model.findGroupOfPane(tree.$layoutTree.get()!, 'workspace')!.id,
     pos: 'center'
   })
-  tree.dismissTreePane('review')
   const root = tree.$layoutTree.get()!
 
   if (root.type !== 'split') {
@@ -151,6 +149,7 @@ it.each(['advanced', 'simple'] as const)(
   'keeps legacy %s data and never re-inherits it after migration',
   async initialMode => {
     const { group, split, normalize } = await import('./model')
+    const { stripRetiredPanes } = await import('./preset-tree')
 
     const legacyTree = split(
       'row',
@@ -192,7 +191,8 @@ it.each(['advanced', 'simple'] as const)(
     reloaded.mode.setInterfaceMode('advanced')
     expect(reloaded.panes.$paneStates.get()).toEqual(legacyPanes)
     const restoredTree = reloaded.tree.$layoutTree.get()
-    const expectedTree = normalize(legacyTree)
+    const normalizedLegacyTree = normalize(legacyTree)
+    const expectedTree = normalizedLegacyTree ? stripRetiredPanes(normalizedLegacyTree) : null
     assert(restoredTree && expectedTree)
     expect(reloaded.model.allPaneIds(restoredTree)).toEqual(reloaded.model.allPaneIds(expectedTree))
   }

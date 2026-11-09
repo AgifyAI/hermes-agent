@@ -17,7 +17,6 @@ async function boot() {
     ['sessions', 'left'],
     ['workspace', 'main'],
     ['files', 'right'],
-    ['review', 'right'],
     ['terminal', 'bottom']
   ]) {
     registry.register({ id, area: 'panes', title: id, data: { placement }, render: () => null })
@@ -84,12 +83,10 @@ describe('side visibility survives a page refresh independently of Files', () =>
     expect(state.tree.$collapsedTreeSides.get().has('right')).toBe(false)
 
     state.tree.restoreTreePane('terminal')
-    state.tree.moveTreePane('review', { groupId: 'grp-terminal', pos: 'center' })
-    state.tree.activateTreePane('grp-terminal', 'review')
+    state.tree.activateTreePane('grp-terminal', 'terminal')
     await refresh()
     expect(state.terminal.$terminalTakeover.get()).toBe(true)
-    expect(state.tree.isPaneVisible('review')).toBe(true)
-    expect(state.tree.isPaneVisible('terminal')).toBe(false)
+    expect(state.tree.isPaneVisible('terminal')).toBe(true)
 
     // Explicit side hide wins even while an open terminal owns the active tab.
     state.tree.restoreTreePane('terminal')
@@ -176,7 +173,7 @@ describe('side visibility survives a page refresh independently of Files', () =>
       // A terminal below the root row is not owned by either sidebar.
       tree.applyTree(
         model.split('column', [
-          model.split('row', [model.group(['sessions']), model.group(['workspace']), model.group(['files', 'review'])]),
+          model.split('row', [model.group(['sessions']), model.group(['workspace']), model.group(['files'])]),
           model.group(['terminal'])
         ]),
         'terminal-deck'

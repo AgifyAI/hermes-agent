@@ -1829,6 +1829,34 @@ catalog: CatalogTranslations
     archive: string
     skillArchivedTitle: string
     skillArchivedMessage: string
+    personalPage: {
+      appName: string
+      repository: string
+      externalRepository: string
+      defaultRepository: string
+      installation: string
+      sameAsSource: string
+      source: string
+      installed: string
+      unsavedChanges: string
+      save: string
+      nameLabel: string
+      descriptionLabel: string
+      bodyLabel: string
+      imageMarkdown: string
+      completedItem: string
+      compareVersions: string
+      keepSource: string
+      keepInstalled: string
+      sourceReadOnly: string
+      runtimeReadOnly: string
+      syncing: string
+      syncConflict: string
+      syncFailed: string
+      differentFromSource: string
+      unknownInstallation: string
+      sourceUnavailable: string
+    }
     tabPlugins: string
     plugins: PluginUpdateTranslations &
       PluginPreviewAccessTranslations & {
@@ -3061,6 +3089,39 @@ catalog: CatalogTranslations
       switchTo: (branch: string) => string
       switchFailed: (branch: string) => string
       worktrees: string
+      reviewPage: {
+        tabsLabel: string
+        overview: string
+        guide: string
+        diff: string
+        diffHeading: (scope: string) => string
+        diffSummary: (added: number, removed: number) => string
+        overviewSummary: (count: number, scope: string, added: number, removed: number) => string
+        selectFile: string
+        reviewed: string
+        reviewedFile: (path: string) => string
+        guideTitle: string
+        guideIntro: string
+        filesInReview: string
+        moreFiles: (count: number) => string
+        guideSteps: {
+          chooseScopeTitle: string
+          chooseScopeBody: (scope: string) => string
+          readChangesTitle: string
+          readChangesBody: (count: number, added: number, removed: number) => string
+          shipTitle: string
+          shipBody: string
+        }
+        fileStatus: {
+          untracked: string
+          added: string
+          deleted: string
+          renamed: string
+          copied: string
+          unmerged: string
+          modified: string
+        }
+      }
     }
   }
 

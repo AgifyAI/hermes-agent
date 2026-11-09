@@ -48,6 +48,7 @@ beforeEach(() => {
 afterEach(() => {
   deleteUserPreset('user-jrl')
   deleteUserPreset('user-rest')
+  deleteUserPreset('user-review')
   vi.resetModules()
 })
 
@@ -119,5 +120,12 @@ describe('user layout presets stay geometry-only (#94260)', () => {
     await import('./presets')
 
     expect(window.localStorage.getItem(USER_KEY)).toBe('{}')
+  })
+
+  it('removes the retired Review pane from saved geometry', () => {
+    const id = saveLayoutPresetTree('Review', split('row', [group(['workspace']), group(['review', 'files'])]))
+
+    expect(id).toBe('user-review')
+    expect(allPaneIds(storedPresets()[id!].tree)).toEqual(['workspace', 'files'])
   })
 })

@@ -2388,6 +2388,34 @@ export const frOverrides = {
     archive: 'Archiver',
     skillArchivedTitle: 'Skill archivé',
     skillArchivedMessage: 'Restaurable via hermes curator restore.',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'Dépôt',
+      externalRepository: 'Dossier externe',
+      defaultRepository: 'Dépôt non identifié',
+      installation: 'Installation',
+      sameAsSource: 'Identique à la source',
+      source: 'Source',
+      installed: 'Installée',
+      unsavedChanges: 'Modifications non enregistrées',
+      save: 'Save',
+      nameLabel: 'Nom',
+      descriptionLabel: 'Description',
+      bodyLabel: 'Instructions du skill',
+      imageMarkdown: 'Markdown de l’image',
+      completedItem: 'Élément terminé',
+      compareVersions: 'Comparer les versions',
+      keepSource: 'Conserver la source',
+      keepInstalled: 'Conserver l’installation',
+      sourceReadOnly: 'La source est en lecture seule.',
+      runtimeReadOnly: 'La copie installée est en lecture seule.',
+      syncing: 'Synchronisation…',
+      syncConflict: 'Ce skill a changé. Actualisez-le avant de synchroniser.',
+      syncFailed: 'Impossible de synchroniser ce skill.',
+      differentFromSource: 'Différente de la source',
+      unknownInstallation: 'État de l’installation inconnu',
+      sourceUnavailable: 'Source non disponible'
+    },
     tabPlugins: 'Plugins',
     plugins: {
       agentTitle: "Plugins de l'agent",
@@ -4002,7 +4030,46 @@ export const frOverrides = {
       branchOffFrom: base => `Nouvelle branche à partir de ${base}`,
       switchTo: branch => `Basculer vers ${branch}`,
       switchFailed: branch => `Impossible de basculer vers ${branch}`,
-      worktrees: 'Worktrees'
+      worktrees: 'Worktrees',
+      reviewPage: {
+        tabsLabel: 'Vues de la revue',
+        overview: 'Vue d’ensemble',
+        guide: 'Guide',
+        diff: 'Différence',
+        diffHeading: scope => `Différence · ${scope}`,
+        diffSummary: (added, removed) =>
+          `${added} ajouts et ${removed} suppressions dans les vrais fichiers de ce dépôt.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} ${count === 1 ? 'modification' : 'modifications'} dans ${scope.toLowerCase()} · ${added} ajouts, ${removed} suppressions.`,
+        selectFile: 'Sélectionnez un fichier pour afficher ses différences.',
+        reviewed: 'Relu',
+        reviewedFile: path => `Relu : ${path}`,
+        guideTitle: 'Guide de revue',
+        guideIntro:
+          'Cette revue décrit les fichiers et les lignes modifiées dans le dépôt actif. Utilisez Vue d’ensemble pour l’inventaire, Différence pour les cartes, puis les actions ci-dessous une fois la revue terminée.',
+        filesInReview: 'Fichiers de cette revue',
+        moreFiles: count => `+ ${count} autres fichiers dans Différence`,
+        guideSteps: {
+          chooseScopeTitle: 'Choisir une portée',
+          chooseScopeBody: scope =>
+            `${scope} est la source active. La liste des fichiers ci-dessous vient directement du dépôt affiché dans la barre de titre.`,
+          readChangesTitle: 'Lire les vraies modifications',
+          readChangesBody: (count, added, removed) =>
+            `${count} fichiers sont modifiés : ${added} ajouts et ${removed} suppressions. Ouvrez chaque carte dans Différence et marquez-la comme relue quand vous avez terminé.`,
+          shipTitle: 'Livrer quand tout est prêt',
+          shipBody:
+            'Les actions de validation, de push, de pull request et de transmission à l’agent restent sous la revue pour terminer sans quitter cette page.'
+        },
+        fileStatus: {
+          untracked: 'Non suivi',
+          added: 'Ajouté',
+          deleted: 'Supprimé',
+          renamed: 'Renommé',
+          copied: 'Copié',
+          unmerged: 'Non fusionné',
+          modified: 'Modifié'
+        }
+      }
     }
   },
   updates: {
@@ -4547,9 +4614,9 @@ export const frOverrides = {
     pendingMemoryApprove: 'Approuver',
     queuedMessagesTitle: 'Messages en attente',
     queuedMessagesEmpty: 'Aucun message en attente',
-    scratchpadTitle: 'Bloc-notes',
+    scratchpadTitle: 'Scratchpad',
     scratchpadPlaceholder: 'Écrivez une note privée…',
-    scratchpadEmptySession: 'Ouvrez un chat pour utiliser son bloc-notes.',
+    scratchpadEmptySession: 'Ouvrez un chat pour utiliser Scratchpad.',
     scratchpadSaving: 'Enregistrement…',
     scratchpadError: "Impossible d'enregistrer cette note.",
     terminalDropUnquotable: (shell, paths) => `Impossible de saisir ces noms en toute sécurité dans ${shell} : ${paths}`,

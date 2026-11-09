@@ -2023,6 +2023,34 @@ export const en: Translations = {
     archive: 'Archive',
     skillArchivedTitle: 'Skill archived',
     skillArchivedMessage: 'Restorable via hermes curator restore.',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'Repository',
+      externalRepository: 'External folder',
+      defaultRepository: 'Repository not identified',
+      installation: 'Installation',
+      sameAsSource: 'Same as source',
+      source: 'Source',
+      installed: 'Installed',
+      unsavedChanges: 'Unsaved changes',
+      save: 'Save',
+      nameLabel: 'Name',
+      descriptionLabel: 'Description',
+      bodyLabel: 'Skill instructions',
+      imageMarkdown: 'Image Markdown',
+      completedItem: 'Completed item',
+      compareVersions: 'Compare versions',
+      keepSource: 'Keep source',
+      keepInstalled: 'Keep installed',
+      sourceReadOnly: 'The source is read-only.',
+      runtimeReadOnly: 'The installed copy is read-only.',
+      syncing: 'Synchronizing…',
+      syncConflict: 'This skill changed. Refresh it before synchronizing.',
+      syncFailed: 'Could not synchronize this skill.',
+      differentFromSource: 'Different from source',
+      unknownInstallation: 'Installation state unknown',
+      sourceUnavailable: 'Source unavailable'
+    },
     tabPlugins: 'Plugins',
     plugins: {
       agentTitle: 'Agent plugins',
@@ -3560,7 +3588,46 @@ export const en: Translations = {
       branchOffFrom: base => `New branch from ${base}`,
       switchTo: branch => `Switch to ${branch}`,
       switchFailed: branch => `Could not switch to ${branch}`,
-      worktrees: 'Worktrees'
+      worktrees: 'Worktrees',
+      reviewPage: {
+        tabsLabel: 'Review views',
+        overview: 'Overview',
+        guide: 'Guide',
+        diff: 'Diff',
+        diffHeading: scope => `Diff · ${scope}`,
+        diffSummary: (added, removed) =>
+          `${added} additions and ${removed} deletions across the real files in this repository.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} changed in ${scope.toLowerCase()} · ${added} additions, ${removed} deletions.`,
+        selectFile: 'Select a file to inspect its diff.',
+        reviewed: 'Reviewed',
+        reviewedFile: path => `Reviewed ${path}`,
+        guideTitle: 'Review guide',
+        guideIntro:
+          'This review describes the files and line changes detected in the active repository. Use Overview for the inventory, Diff for the cards, and the actions below when the review is complete.',
+        filesInReview: 'Files in this review',
+        moreFiles: count => `+ ${count} more files in Diff`,
+        guideSteps: {
+          chooseScopeTitle: 'Choose a scope',
+          chooseScopeBody: scope =>
+            `${scope} is the active source. The file list below comes directly from the repository currently shown in the title bar.`,
+          readChangesTitle: 'Read the real changes',
+          readChangesBody: (count, added, removed) =>
+            `${count} files are changed: ${added} additions and ${removed} deletions. Open each card in Diff and mark it Reviewed when you are done.`,
+          shipTitle: 'Ship when ready',
+          shipBody:
+            'The commit, push, pull-request and agent hand-off actions remain below the review so the final step is available without leaving this page.'
+        },
+        fileStatus: {
+          untracked: 'Untracked',
+          added: 'Added',
+          deleted: 'Deleted',
+          renamed: 'Renamed',
+          copied: 'Copied',
+          unmerged: 'Unmerged',
+          modified: 'Modified'
+        }
+      }
     }
   },
 

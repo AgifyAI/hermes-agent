@@ -235,6 +235,8 @@ interface PaneTabStripProps extends React.ComponentProps<'div'> {
   listRef?: React.Ref<HTMLDivElement>
   /** Non-scrolling trailing chrome pinned to the right (the minimize chevron). */
   trailing?: React.ReactNode
+  /** Keep trailing chrome next to a compact label instead of pinning it right. */
+  trailingInline?: boolean
   /** Top-edge panel header shares the native window-control band. */
   titlebar?: boolean
 }
@@ -249,7 +251,7 @@ interface PaneTabStripProps extends React.ComponentProps<'div'> {
  * `data-zone-tabstrip`, drop carets) ride on the usual div props.
  */
 export const PaneTabStrip = React.forwardRef<HTMLDivElement, PaneTabStripProps>(function PaneTabStrip(
-  { children, className, listRef, trailing, titlebar = false, ...props },
+  { children, className, listRef, trailing, trailingInline = false, titlebar = false, ...props },
   ref
 ) {
   return (
@@ -265,7 +267,10 @@ export const PaneTabStrip = React.forwardRef<HTMLDivElement, PaneTabStripProps>(
       {...props}
     >
       <div
-        className="flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={cn(
+          'flex min-w-0 gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          trailingInline ? 'flex-none px-0.5' : 'flex-1 px-1'
+        )}
         ref={listRef}
         role="tablist"
       >

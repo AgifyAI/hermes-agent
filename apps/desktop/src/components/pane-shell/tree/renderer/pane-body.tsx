@@ -9,6 +9,8 @@ interface PaneBodyProps {
    *  triggers attach to it directly. */
   wrap?: (body: ReactNode) => ReactNode
   hidden: boolean
+  /** Let a single static pane contribute its natural height to a packed rail. */
+  fitContent?: boolean
   /** Linear's content panel: the body becomes the inset card (radius 12,
    *  hairline, low shadow, 8px off the right and bottom) on the window surface.
    *  Off for navigation columns, which sit flush on the window like Linear's
@@ -20,7 +22,7 @@ interface PaneBodyProps {
 /** Collapse the zone, not its guests. Retaining the last visible viewport lets
  * background browser input use the same page coordinates while the restore
  * rail occupies only a sliver of the layout. Never detach/reparent a webview. */
-export function PaneBody({ wrap, hidden, panel = false, children }: PaneBodyProps) {
+export function PaneBody({ wrap, hidden, fitContent = false, panel = false, children }: PaneBodyProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<{ width: number; height: number }>()
 
@@ -46,9 +48,13 @@ export function PaneBody({ wrap, hidden, panel = false, children }: PaneBodyProp
   const body = (
     <div
       className={cn(
-        'relative min-h-0 min-w-0 flex-1 overflow-hidden',
+        'relative min-h-0 min-w-0 overflow-hidden',
+        fitContent ? 'flex-none' : 'flex-1',
         panel &&
-          'mr-2 mb-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) shadow-(--linear-shadow-low)'
+          cn(
+            'mr-2 rounded-(--linear-radius-overlay) border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) shadow-(--linear-shadow-low)',
+            !fitContent && 'mb-2'
+          )
       )}
       ref={ref}
       style={hidden ? { position: 'absolute', visibility: 'hidden', pointerEvents: 'none', ...size } : undefined}

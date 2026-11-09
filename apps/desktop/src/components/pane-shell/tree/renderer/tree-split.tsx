@@ -7,7 +7,14 @@
  */
 
 import { useStore } from '@nanostores/react'
-import { type PointerEvent as ReactPointerEvent, useCallback, useMemo, useRef, useSyncExternalStore } from 'react'
+import {
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
+  useMemo,
+  useRef,
+  useSyncExternalStore
+} from 'react'
 
 import { beginSashDrag, endSashDrag } from '@/components/pane-shell/geometry'
 import { useContributions } from '@/contrib/react/use-contributions'
@@ -59,6 +66,49 @@ function groupIdOf(node: LayoutNode): null | string {
   const ids = new Set(node.children.map(groupIdOf))
 
   return ids.size === 1 ? [...ids][0] : null
+}
+
+interface TreeTrackStyleArgs {
+  absorbs: boolean
+  collapsed: boolean
+  fitContent: boolean
+  grow: number
+  horizontal: boolean
+  minimized: boolean
+  sizing: PaneSizing | null
+  track: string | null
+}
+
+/** Resolve one split child’s flex track without inflating TreeSplit’s render. */
+function treeTrackStyle({
+  absorbs,
+  collapsed,
+  fitContent,
+  grow,
+  horizontal,
+  minimized,
+  sizing,
+  track
+}: TreeTrackStyleArgs): CSSProperties {
+  if (collapsed) {
+    return { display: 'none' }
+  }
+
+  if (minimized) {
+    return { flex: `0 0 ${horizontal ? MINIMIZED_TRACK : 'auto'}` }
+  }
+
+  if (fitContent) {
+    return { flex: '0 0 auto', minHeight: 0, minWidth: 0 }
+  }
+
+  return {
+    flex: track ? `${absorbs ? 1 : 0} 1 ${track}` : `${grow} ${grow} 0px`,
+    minWidth: (horizontal && sizing?.minWidth) || 0,
+    maxWidth: horizontal && !absorbs ? sizing?.maxWidth : undefined,
+    minHeight: (!horizontal && sizing?.minHeight) || 0,
+    maxHeight: horizontal || absorbs ? undefined : sizing?.maxHeight
+  }
 }
 
 /**
@@ -678,6 +728,14 @@ export function TreeSplit({
     return { child, collapsed, minimized, narrowCollapsed, sizing, track }
   })
 
+  // The right-hand terminal deck follows the Files card stack, both while its
+  // header is collapsed and while its live session is open. The terminal keeps
+  // its authored height; only the Files track stops absorbing empty space.
+  const packsTerminalCard =
+    node.id === 'spl-right' &&
+    !horizontal &&
+    tracks.some(track => !track.collapsed && allPaneIds(track.child).includes('terminal'))
+
   const growable = tracks.map((_, i) => i).filter(i => !tracks[i].collapsed && !tracks[i].minimized)
   const allFixed = growable.length > 0 && growable.every(i => tracks[i].track !== null)
 
@@ -741,34 +799,25 @@ export function TreeSplit({
       {tracks.map(({ child, collapsed, minimized, narrowCollapsed, sizing, track }, i) => {
         const partner = collapsed ? -1 : seamPartner(i)
         const absorbs = i === absorberIndex
+        const fitContent = packsTerminalCard && child.type === 'group' && child.panes.length === 1 && child.panes[0] === 'files'
+
+        const terminalRailCard =
+          packsTerminalCard && child.type === 'group' && child.panes.length === 1 && child.panes[0] === 'terminal'
 
         return (
           <div
             className="relative flex min-h-0 min-w-0"
             key={child.id}
-            style={
-              collapsed
-                ? { display: 'none' }
-                : minimized
-                  ? { flex: `0 0 ${horizontal ? MINIMIZED_TRACK : 'auto'}` }
-                  : {
-                      // One flexbox formula for everything: a sized zone is
-                      // grow-0 shrink-1 from its preferred basis (it yields
-                      // gracefully on tight windows, floored by min-width);
-                      // everything else splits the leftover by weight. In an
-                      // all-fixed run an UNCAPPED last track grows into the
-                      // leftover; capped sidebars stay at their declared size.
-                      flex: track ? `${absorbs ? 1 : 0} 1 ${track}` : `${grow(i)} ${grow(i)} 0px`,
-                      // Pane-declared clamps apply along THIS split's axis only
-                      // (a rail's width clamp shouldn't constrain its height).
-                      // The absorber is uncapped by selection, so dropping its
-                      // max is a no-op; capped tracks always keep theirs.
-                      minWidth: (horizontal && sizing?.minWidth) || 0,
-                      maxWidth: horizontal && !absorbs ? sizing?.maxWidth : undefined,
-                      minHeight: (!horizontal && sizing?.minHeight) || 0,
-                      maxHeight: horizontal || absorbs ? undefined : sizing?.maxHeight
-                    }
-            }
+            style={treeTrackStyle({
+              absorbs,
+              collapsed,
+              fitContent,
+              grow: grow(i),
+              horizontal,
+              minimized,
+              sizing,
+              track
+            })}
           >
             {partner >= 0 && (
               <Sash
@@ -780,12 +829,14 @@ export function TreeSplit({
             )}
             {!narrowCollapsed && (
               <TreeNode
+                fitContent={fitContent}
                 leftEdge={leftEdge && (!horizontal || i === visibleOrder[0])}
                 node={child}
                 parentAxis={axis}
                 railSide={horizontal ? railSideFor(i) : undefined}
                 rightEdge={rightEdge && (!horizontal || i === visibleOrder[visibleOrder.length - 1])}
                 rootRow={rootRow || childRootRow(child)}
+                terminalRailCard={terminalRailCard}
                 topEdge={topEdge && (horizontal || i === visibleOrder[0])}
               />
             )}

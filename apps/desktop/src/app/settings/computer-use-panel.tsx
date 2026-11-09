@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { getActionStatus, getComputerUseStatus, grantComputerUsePermissions } from '@/hermes'
+import {
+  getActionStatus,
+  getComputerUseStatus,
+  grantComputerUsePermissions,
+  type ProfileScope,
+  profileScopeKey
+} from '@/hermes'
 import { useI18n } from '@/i18n'
 import { AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, X } from '@/lib/icons'
 import { upsertDesktopActionTask } from '@/store/activity'
@@ -11,6 +17,8 @@ import type { ComputerUseStatus } from '@/types/hermes'
 import { Pill } from './primitives'
 
 interface ComputerUsePanelProps {
+  /** Capabilities profile-scope override: driver actions target this gateway/profile. */
+  profile?: ProfileScope
   /** Re-read the parent toolset list after a permission/install change so the
    *  "Configured / Needs keys" pill stays in sync. */
   onConfiguredChange?: () => void
@@ -61,22 +69,40 @@ function PermissionRow({ granted, label, hint }: { granted: boolean | null; labe
  * Binary install/upgrade stays in the cua-driver provider's post-setup runner
  * below this card (the generic ToolsetConfigPanel).
  */
-export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) {
+export function ComputerUsePanel(props: ComputerUsePanelProps) {
+  // A status request and a permission flow belong to one connection/profile
+  // pair. Remounting the scoped child on a real scope change prevents a late
+  // response from the previous gateway from painting the newly selected one.
+  return <ScopedComputerUsePanel key={profileScopeKey(props.profile)} {...props} />
+}
+
+function ScopedComputerUsePanel({ onConfiguredChange, profile }: ComputerUsePanelProps) {
   const { t } = useI18n()
   const [status, setStatus] = useState<ComputerUseStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [granting, setGranting] = useState(false)
   const activeRef = useRef(false)
+  const refreshGenerationRef = useRef(0)
 
   const refresh = useCallback(async () => {
+    const generation = ++refreshGenerationRef.current
+
     try {
-      setStatus(await getComputerUseStatus())
+      const next = await getComputerUseStatus(profile)
+
+      if (activeRef.current && generation === refreshGenerationRef.current) {
+        setStatus(next)
+      }
     } catch (err) {
-      notifyError(err, 'Could not read Computer Use status')
+      if (activeRef.current && generation === refreshGenerationRef.current) {
+        notifyError(err, 'Could not read Computer Use status')
+      }
     } finally {
-      setLoading(false)
+      if (activeRef.current && generation === refreshGenerationRef.current) {
+        setLoading(false)
+      }
     }
-  }, [])
+  }, [profile])
 
   // eslint-disable-next-line no-restricted-syntax -- legitimate non-atom ref write (see eslint rule comment)
   useEffect(() => {
@@ -90,11 +116,17 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
     setGranting(true)
 
     try {
-      const started = await grantComputerUsePermissions()
+      const started = await grantComputerUsePermissions(profile)
 
       if (!started.ok) {
-        notifyError(new Error('spawn failed'), 'Could not request permissions')
+        if (activeRef.current) {
+          notifyError(new Error('spawn failed'), 'Could not request permissions')
+        }
 
+        return
+      }
+
+      if (!activeRef.current) {
         return
       }
 
@@ -112,7 +144,12 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
           break
         }
 
-        const polled = await getActionStatus(started.name, 200)
+        const polled = await getActionStatus(started.name, 200, profile)
+
+        if (!activeRef.current) {
+          break
+        }
+
         upsertDesktopActionTask(polled)
 
         if (!polled.running) {
@@ -122,6 +159,11 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
 
       if (activeRef.current) {
         await refresh()
+
+        if (!activeRef.current) {
+          return
+        }
+
         onConfiguredChange?.()
       }
     } catch (err) {
@@ -133,7 +175,7 @@ export function ComputerUsePanel({ onConfiguredChange }: ComputerUsePanelProps) 
         setGranting(false)
       }
     }
-  }, [onConfiguredChange, refresh])
+  }, [onConfiguredChange, profile, refresh])
 
   if (loading) {
     return (

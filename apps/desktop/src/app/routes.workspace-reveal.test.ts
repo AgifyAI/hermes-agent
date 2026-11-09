@@ -22,12 +22,14 @@ import {
   MESSAGING_ROUTE,
   navigateToWorkspacePage,
   NEW_CHAT_ROUTE,
+  REVIEW_ROUTE,
   routePathname,
   ROUTES_AREA,
   routeSessionId,
   sessionRoute,
   SETTINGS_ROUTE,
-  syncWorkspaceRoute
+  syncWorkspaceRoute,
+  TOOLS_ROUTE
 } from './routes'
 
 vi.mock('@/components/pane-shell/tree/store', async importOriginal => ({
@@ -99,6 +101,22 @@ describe('syncWorkspaceRoute', () => {
   it('publishes and fronts on a page route', () => {
     syncWorkspaceRoute(CAPABILITIES_ROUTE)
 
+    expect($workspaceIsPage.get()).toBe(true)
+    expect(fronted()).toBe(true)
+  })
+
+  it('publishes and fronts the standalone Tools page', () => {
+    syncWorkspaceRoute(TOOLS_ROUTE)
+
+    expect(appViewForPath(TOOLS_ROUTE)).toBe('tools')
+    expect($workspaceIsPage.get()).toBe(true)
+    expect(fronted()).toBe(true)
+  })
+
+  it('publishes and fronts the standalone Review page', () => {
+    syncWorkspaceRoute(REVIEW_ROUTE)
+
+    expect(appViewForPath(REVIEW_ROUTE)).toBe('review')
     expect($workspaceIsPage.get()).toBe(true)
     expect(fronted()).toBe(true)
   })

@@ -66,7 +66,6 @@ import {
 } from '@/store/profile'
 import { toggleProfileRailVisible } from '@/store/profile-rail-prefs'
 import { openFolderAsProject } from '@/store/projects'
-import { toggleReview } from '@/store/review'
 import {
   $activeSessionId,
   $currentReasoningEffort,
@@ -112,6 +111,7 @@ import {
   navigateToWorkspacePage,
   NEW_CHAT_ROUTE,
   PROFILES_ROUTE,
+  REVIEW_ROUTE,
   sessionRoute,
   SETTINGS_ROUTE
 } from '../routes'
@@ -469,7 +469,7 @@ export function useKeybinds(deps: KeybindRuntimeDeps): void {
     'view.cycleSidebarGrouping': cycleSidebarGrouping,
     'view.openRightSidebar': openRightSide,
     'view.toggleRightSidebar': () => (IS_MAC || layoutHasRightSide() ? toggleRightSidebarPane() : toggleTerminalPane()),
-    'view.toggleReview': toggleReview,
+    'view.toggleReview': () => navigateToWorkspacePage(navigate, REVIEW_ROUTE),
     'view.toggleStatusbar': toggleStatusbarVisible,
     // ⇧⌘R. macOS consumes this through the View menu's forceReload role; this
     // handler is the Windows/Linux path, where the application menu is null.

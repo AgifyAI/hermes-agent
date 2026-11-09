@@ -14,7 +14,7 @@ const skill: SkillInfo = {
 }
 
 describe('createPersonalSkillSessionLauncher', () => {
-  it('routes a remote owner and stashes the prompt under the returned session id', async () => {
+  it('opens the source repository on its owning gateway and puts the prompt in that new chat', async () => {
     const openNewSessionTile = vi.fn()
     const setWorkspaceScope = vi.fn()
     const existingSessionId = 'personal-skills-existing-session'
@@ -34,6 +34,7 @@ describe('createPersonalSkillSessionLauncher', () => {
     try {
       openNewSessionTile.mockResolvedValue(createdSessionId)
       await launcher({
+        cwd: '/srv/demo/skill-sources',
         profile: { connectionId: 'homelab', profile: 'calvin' },
         prompt: '/follow-up\n\n',
         skill
@@ -41,6 +42,7 @@ describe('createPersonalSkillSessionLauncher', () => {
 
       expect(setWorkspaceScope).toHaveBeenCalledOnce()
       expect(openNewSessionTile).toHaveBeenCalledWith('center', {
+        cwd: '/srv/demo/skill-sources',
         listed: false,
         profile: 'calvin',
         route: { connectionId: 'homelab', profile: 'calvin' }

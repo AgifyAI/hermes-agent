@@ -13,6 +13,8 @@ import { TreeSplit } from './tree-split'
  *  column → horizontal header). `railSide` is which half of that row the
  *  child sits in — the rail's divider stroke faces the content side. */
 export function TreeNode({
+  fitContent = false,
+  terminalRailCard = false,
   node,
   parentAxis,
   railSide,
@@ -22,6 +24,8 @@ export function TreeNode({
   leftEdge = false,
   rightEdge = false
 }: {
+  fitContent?: boolean
+  terminalRailCard?: boolean
   node: LayoutNode
   parentAxis?: 'column' | 'row'
   railSide?: 'left' | 'right'
@@ -35,11 +39,13 @@ export function TreeNode({
     <TreeSplit leftEdge={leftEdge} node={node} rightEdge={rightEdge} root={root} rootRow={rootRow} topEdge={topEdge} />
   ) : (
     <TreeGroup
+      fitContent={fitContent}
       leftEdge={leftEdge}
       node={node}
       parentAxis={parentAxis}
       railSide={railSide}
       rightEdge={rightEdge}
+      terminalRailCard={terminalRailCard}
       topEdge={topEdge}
     />
   )

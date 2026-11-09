@@ -363,7 +363,43 @@ export const zhHantChat = {
       branchOffFrom: base => `從 ${base} 建立新分支`,
       switchTo: branch => `切換到 ${branch}`,
       switchFailed: branch => `無法切換到 ${branch}`,
-      worktrees: '工作樹'
+      worktrees: '工作樹',
+      reviewPage: {
+        tabsLabel: '審查檢視',
+        overview: '總覽',
+        guide: '指南',
+        diff: '差異',
+        diffHeading: scope => `差異 · ${scope}`,
+        diffSummary: (added, removed) => `此儲存庫的實際檔案中有 ${added} 處新增和 ${removed} 處刪除。`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${scope}中有 ${count} 處變更 · 新增 ${added}，刪除 ${removed}。`,
+        selectFile: '選取檔案以檢視差異。',
+        reviewed: '已審查',
+        reviewedFile: path => `已審查 ${path}`,
+        guideTitle: '審查指南',
+        guideIntro:
+          '此審查說明作用中儲存庫偵測到的檔案和行變更。使用總覽查看清單、差異查看卡片，完成審查後使用下方操作。',
+        filesInReview: '此審查中的檔案',
+        moreFiles: count => `+ 差異中還有 ${count} 個檔案`,
+        guideSteps: {
+          chooseScopeTitle: '選擇範圍',
+          chooseScopeBody: scope => `${scope} 是作用中的來源。下方檔案清單直接來自標題列中顯示的儲存庫。`,
+          readChangesTitle: '閱讀實際變更',
+          readChangesBody: (count, added, removed) =>
+            `有 ${count} 個檔案變更：新增 ${added}，刪除 ${removed}。在差異中開啟每張卡片，完成後標記為已審查。`,
+          shipTitle: '準備好後交付',
+          shipBody: '提交、推送、拉取要求和交給代理的操作保留在審查下方，不必離開此頁面即可完成最後一步。'
+        },
+        fileStatus: {
+          untracked: '未追蹤',
+          added: '已新增',
+          deleted: '已刪除',
+          renamed: '已重新命名',
+          copied: '已複製',
+          unmerged: '未合併',
+          modified: '已修改'
+        }
+      }
     }
   },
 

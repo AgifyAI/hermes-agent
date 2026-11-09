@@ -3,20 +3,16 @@ import { useEffect, useMemo } from 'react'
 import { setWorkspaceScope } from '@/components/pane-shell/workspace-scope'
 import { stashSessionDraft } from '@/store/composer'
 
-import { createPersonalSkillSessionLauncher, setPersonalSkillSessionLauncher } from './session-launcher'
+import {
+  createPersonalSkillSessionLauncher,
+  type PersonalSkillSessionLauncherDependencies,
+  setPersonalSkillSessionLauncher
+} from './session-launcher'
 
-interface OpenNewSessionTile {
-  (
-    dir: 'center',
-    options: {
-      listed: false
-      profile: string
-      route?: { connectionId: string; profile: string }
-    }
-  ): Promise<string | undefined>
-}
-
-export function usePersonalSkillSessionLauncher(activeProfile: string, openNewSessionTile: OpenNewSessionTile) {
+export function usePersonalSkillSessionLauncher(
+  activeProfile: string,
+  openNewSessionTile: PersonalSkillSessionLauncherDependencies['openNewSessionTile']
+) {
   const launcher = useMemo(
     () =>
       createPersonalSkillSessionLauncher({

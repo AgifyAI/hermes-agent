@@ -1413,6 +1413,34 @@ export const ruOverrides = {
     archive: 'В архив',
     skillArchivedTitle: 'Навык в архиве',
     skillArchivedMessage: 'Восстановить через hermes curator restore.',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'Репозиторий',
+      externalRepository: 'Внешняя папка',
+      defaultRepository: 'Репозиторий не определён',
+      installation: 'Установка',
+      sameAsSource: 'Как в источнике',
+      source: 'Источник',
+      installed: 'Установлено',
+      unsavedChanges: 'Несохранённые изменения',
+      save: 'Сохранить',
+      nameLabel: 'Название',
+      descriptionLabel: 'Описание',
+      bodyLabel: 'Инструкции навыка',
+      imageMarkdown: 'Markdown изображения',
+      completedItem: 'Завершённый элемент',
+      compareVersions: 'Сравнить версии',
+      keepSource: 'Оставить источник',
+      keepInstalled: 'Оставить установленную копию',
+      sourceReadOnly: 'Источник доступен только для чтения.',
+      runtimeReadOnly: 'Установленная копия доступна только для чтения.',
+      syncing: 'Синхронизация…',
+      syncConflict: 'Этот навык изменился. Обновите его перед синхронизацией.',
+      syncFailed: 'Не удалось синхронизировать этот навык.',
+      differentFromSource: 'Отличается от источника',
+      unknownInstallation: 'Состояние установки неизвестно',
+      sourceUnavailable: 'Источник недоступен'
+    },
     hub: {
       searchPlaceholder: 'Поиск в хабе навыков',
       search: 'Поиск',
@@ -2783,7 +2811,46 @@ export const ruOverrides = {
       branchOffFrom: base => `Новая ветка от ${base}`,
       switchTo: branch => `Переключиться на ${branch}`,
       switchFailed: branch => `Не удалось переключиться на ${branch}`,
-      worktrees: 'Worktrees'
+      worktrees: 'Worktrees',
+      reviewPage: {
+        tabsLabel: 'Виды проверки',
+        overview: 'Обзор',
+        guide: 'Руководство',
+        diff: 'Diff',
+        diffHeading: scope => `Diff · ${scope}`,
+        diffSummary: (added, removed) =>
+          `${added} добавлений и ${removed} удалений в реальных файлах этого репозитория.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} изменений в ${scope.toLowerCase()} · добавлений: ${added}, удалений: ${removed}.`,
+        selectFile: 'Выберите файл, чтобы просмотреть его diff.',
+        reviewed: 'Проверено',
+        reviewedFile: path => `Проверено: ${path}`,
+        guideTitle: 'Руководство по проверке',
+        guideIntro:
+          'В этой проверке перечислены файлы и изменения строк, найденные в активном репозитории. Используйте обзор для списка, Diff для карточек, а после проверки — действия ниже.',
+        filesInReview: 'Файлы в этой проверке',
+        moreFiles: count => `+ ещё ${count} файлов в Diff`,
+        guideSteps: {
+          chooseScopeTitle: 'Выбрать область',
+          chooseScopeBody: scope =>
+            `${scope} — активный источник. Список файлов ниже напрямую получен из репозитория, указанного в заголовке.`,
+          readChangesTitle: 'Прочитать реальные изменения',
+          readChangesBody: (count, added, removed) =>
+            `Изменено файлов: ${count}; добавлений: ${added}, удалений: ${removed}. Откройте каждую карточку в Diff и после чтения отметьте её как проверенную.`,
+          shipTitle: 'Отправить, когда готово',
+          shipBody:
+            'Действия коммита, push, pull request и передачи агенту остаются под проверкой, чтобы завершить последний шаг, не покидая страницу.'
+        },
+        fileStatus: {
+          untracked: 'Неотслеживаемый',
+          added: 'Добавлено',
+          deleted: 'Удалено',
+          renamed: 'Переименовано',
+          copied: 'Скопировано',
+          unmerged: 'Не объединено',
+          modified: 'Изменено'
+        }
+      }
     }
   },
   updates: {

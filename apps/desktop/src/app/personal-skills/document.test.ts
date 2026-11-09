@@ -70,4 +70,28 @@ describe('personal skill documents', () => {
     expect(next).toContain('# next field comment')
     expect(next).toContain('custom:\n  note: test')
   })
+
+  it('preserves the original spacing, quotes and line endings outside the edited text', () => {
+    const header = "---\r\nname:   sample  # id\r\ndescription: 'old'\r\ncustom: { keep: yes, version: 01 }\r\n---\r\n"
+    expect(updateSkillDocument(header + 'Before', { name: 'sample', description: 'old' }, 'After')).toBe(
+      header + 'After'
+    )
+    expect(updateSkillDocument(header + 'Body', { description: 'new' })).toBe(header.replace("'old'", "'new'") + 'Body')
+  })
+
+  it('edits metadata behind a UTF-8 byte order mark while keeping the document intact', () => {
+    const original = "\uFEFF---\r\nname:   Sample # id\r\ndescription: 'First'\r\n---\r\n\r\nBody"
+
+    expect(parseSkillDocument(original).body).toBe('\r\nBody')
+    expect(updateSkillDocument(original, { description: 'Updated' })).toBe(original.replace("'First'", "'Updated'"))
+  })
+
+  it('can add a missing description without reformatting existing metadata', () => {
+    const source = '---\nname:   sample # id\n---\n\nBody'
+    const next = updateSkillDocument(source, { description: 'true' })
+    expect(next).toContain('name:   sample # id\n')
+    expect(parseSkillDocument(next).metadata).toContainEqual({ key: 'description', value: 'true' })
+    expect(parseDocument(next.split('---')[1]).get('description')).toBe('true')
+    expect(parseSkillDocument(next).body).toBe('\nBody')
+  })
 })

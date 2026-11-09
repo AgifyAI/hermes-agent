@@ -19,22 +19,117 @@ interface Fixture {
   selected: string
 }
 
-async function stop(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null || child.signalCode !== null) {
+function signalChildTree(child: ChildProcess, signal: 'SIGKILL' | 'SIGTERM'): void {
+  if (process.platform !== 'win32' && child.pid !== undefined) {
+    try {
+      process.kill(-child.pid, signal)
+
+      return
+    } catch (error: unknown) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ESRCH')) {
+        throw error
+      }
+    }
+  }
+
+  child.kill(signal)
+}
+
+async function waitForChildTree(child: ChildProcess): Promise<void> {
+  if (process.platform === 'win32' || child.pid === undefined) {
     return
   }
 
-  await new Promise<void>((resolve: () => void): void => {
-    const timer: NodeJS.Timeout = setTimeout((): void => {
-      child.kill('SIGKILL')
-    }, 5_000)
+  const deadline: number = Date.now() + 5_000
 
-    child.once('exit', (): void => {
-      clearTimeout(timer)
-      resolve()
+  while (Date.now() < deadline) {
+    try {
+      process.kill(-child.pid, 0)
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'ESRCH') {
+        return
+      }
+
+      throw error
+    }
+
+    await new Promise<void>((resolve: () => void): void => setTimeout(resolve, 25))
+  }
+
+  throw new Error(`Child process group ${child.pid} did not exit`)
+}
+
+function preserveFailure(primary: unknown, cleanup: unknown): unknown {
+  if (primary === undefined) {
+    return cleanup
+  }
+
+  if (primary instanceof Error) {
+    Object.defineProperty(primary, 'cause', { configurable: true, value: cleanup })
+
+    return primary
+  }
+
+  return new AggregateError([primary, cleanup], 'The test failed during cleanup')
+}
+
+async function stop(child: ChildProcess): Promise<void> {
+  if (child.exitCode === null && child.signalCode === null) {
+    await new Promise<void>((resolve: () => void, reject: (error: unknown) => void): void => {
+      let hardTimer: NodeJS.Timeout | undefined
+
+      const timer: NodeJS.Timeout = setTimeout((): void => {
+        try {
+          signalChildTree(child, 'SIGKILL')
+
+          hardTimer = setTimeout((): void => reject(new Error(`Child process ${child.pid} did not exit`)), 5_000)
+        } catch (error: unknown) {
+          reject(error)
+        }
+      }, 5_000)
+
+      const onExit = (): void => {
+        clearTimeout(timer)
+
+        if (hardTimer) {
+          clearTimeout(hardTimer)
+        }
+
+        resolve()
+      }
+
+      child.once('exit', onExit)
+
+      try {
+        if (child.exitCode === null && child.signalCode === null) {
+          signalChildTree(child, 'SIGTERM')
+        } else {
+          onExit()
+        }
+      } catch (error: unknown) {
+        clearTimeout(timer)
+
+        if (hardTimer) {
+          clearTimeout(hardTimer)
+        }
+
+        child.off('exit', onExit)
+        reject(error)
+      }
     })
-    child.kill()
-  })
+  }
+
+  if (process.platform !== 'win32' && child.pid !== undefined) {
+    try {
+      process.kill(-child.pid, 'SIGKILL')
+    } catch (error: unknown) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ESRCH')) {
+        throw error
+      }
+    }
+  }
+
+  await waitForChildTree(child)
 }
 
 async function ping(port: number, token: string): Promise<unknown> {
@@ -97,6 +192,8 @@ test.skipIf(process.platform === 'win32')(
     env.HERMES_DASHBOARD_SESSION_TOKEN = token
     vi.stubEnv('HOME', home)
 
+    let failure: unknown
+
     try {
       const fixture: Fixture = JSON.parse(
         execFileSync(python, ['-I', fixtureScript, temp], {
@@ -147,6 +244,7 @@ test.skipIf(process.platform === 'win32')(
           cwd: temp,
           env: { ...env, ...backend.env },
           shell: backend.shell,
+          detached: process.platform !== 'win32',
           stdio: ['ignore', 'pipe', 'pipe']
         })
 
@@ -158,8 +256,10 @@ test.skipIf(process.platform === 'win32')(
           output += data.toString()
         })
 
+        let backendFailure: unknown
+
         try {
-          const port: number = (await waitForDashboardPort(child, 45_000)) as number
+          const port: number = (await waitForDashboardPort(child)) as number
 
           const response: Response = await fetch(`http://127.0.0.1:${port}/api/health`, {
             headers: { 'X-Hermes-Session-Token': token }
@@ -170,9 +270,17 @@ test.skipIf(process.platform === 'win32')(
           assert.equal(fs.existsSync(poison), false, 'the stale checkout interpreter must never execute')
           console.info('PM backend verified', { poisoned, port, health: response.status, origin })
         } catch (error: unknown) {
-          throw new Error(`${String(error)}\n${output}`)
+          backendFailure = new Error(`${String(error)}\n${output}`)
         } finally {
-          await stop(child)
+          try {
+            await stop(child)
+          } catch (cleanupError: unknown) {
+            backendFailure = preserveFailure(backendFailure, cleanupError)
+          }
+        }
+
+        if (backendFailure !== undefined) {
+          throw backendFailure
         }
 
         if (poisoned) {
@@ -203,9 +311,20 @@ test.skipIf(process.platform === 'win32')(
         null,
         'a missing PM command must not fall back to the stale venv'
       )
+    } catch (error: unknown) {
+      failure = error
     } finally {
-      fs.rmSync(temp, { recursive: true, force: true })
+      try {
+        fs.rmSync(temp, { recursive: true, force: true })
+      } catch (cleanupError: unknown) {
+        failure = preserveFailure(failure, cleanupError)
+      }
+
       vi.unstubAllEnvs()
+    }
+
+    if (failure !== undefined) {
+      throw failure
     }
   },
   150_000

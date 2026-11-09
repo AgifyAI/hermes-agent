@@ -2381,6 +2381,34 @@ export const deOverrides = {
     archive: 'Archivieren',
     skillArchivedTitle: 'Skill archiviert',
     skillArchivedMessage: 'Wiederherstellbar über „hermes curator restore“.',
+    personalPage: {
+      appName: 'Hermès',
+      repository: 'Repository',
+      externalRepository: 'Externer Ordner',
+      defaultRepository: 'Repository nicht ermittelt',
+      installation: 'Installation',
+      sameAsSource: 'Wie die Quelle',
+      source: 'Quelle',
+      installed: 'Installiert',
+      unsavedChanges: 'Ungespeicherte Änderungen',
+      save: 'Speichern',
+      nameLabel: 'Name',
+      descriptionLabel: 'Beschreibung',
+      bodyLabel: 'Skill-Anweisungen',
+      imageMarkdown: 'Bild-Markdown',
+      completedItem: 'Erledigtes Element',
+      compareVersions: 'Versionen vergleichen',
+      keepSource: 'Quelle behalten',
+      keepInstalled: 'Installierte Version behalten',
+      sourceReadOnly: 'Die Quelle ist schreibgeschützt.',
+      runtimeReadOnly: 'Die installierte Kopie ist schreibgeschützt.',
+      syncing: 'Synchronisierung…',
+      syncConflict: 'Dieser Skill wurde geändert. Aktualisieren Sie ihn vor der Synchronisierung.',
+      syncFailed: 'Dieser Skill konnte nicht synchronisiert werden.',
+      differentFromSource: 'Anders als die Quelle',
+      unknownInstallation: 'Installationsstatus unbekannt',
+      sourceUnavailable: 'Quelle nicht verfügbar'
+    },
     tabPlugins: 'Plugins',
     plugins: {
       agentTitle: 'Agent-Plugins',
@@ -3992,7 +4020,46 @@ export const deOverrides = {
       branchOffFrom: base => `Neuer Branch von ${base}`,
       switchTo: branch => `Zu ${branch} wechseln`,
       switchFailed: branch => `Zu ${branch} konnte nicht gewechselt werden`,
-      worktrees: 'Worktrees'
+      worktrees: 'Worktrees',
+      reviewPage: {
+        tabsLabel: 'Review-Ansichten',
+        overview: 'Übersicht',
+        guide: 'Anleitung',
+        diff: 'Diff',
+        diffHeading: scope => `Diff · ${scope}`,
+        diffSummary: (added, removed) =>
+          `${added} Ergänzungen und ${removed} Löschungen in den echten Dateien dieses Repositorys.`,
+        overviewSummary: (count, scope, added, removed) =>
+          `${count} Änderungen in ${scope.toLowerCase()} · ${added} Ergänzungen, ${removed} Löschungen.`,
+        selectFile: 'Datei auswählen, um den Diff anzuzeigen.',
+        reviewed: 'Überprüft',
+        reviewedFile: path => `Überprüft: ${path}`,
+        guideTitle: 'Review-Anleitung',
+        guideIntro:
+          'Diese Review beschreibt die im aktiven Repository erkannten Dateien und Zeilenänderungen. Nutzen Sie die Übersicht für das Inventar, Diff für die Karten und die Aktionen unten, wenn die Review abgeschlossen ist.',
+        filesInReview: 'Dateien in dieser Review',
+        moreFiles: count => `+ ${count} weitere Dateien in Diff`,
+        guideSteps: {
+          chooseScopeTitle: 'Bereich auswählen',
+          chooseScopeBody: scope =>
+            `${scope} ist die aktive Quelle. Die Dateiliste unten kommt direkt aus dem Repository in der Titelleiste.`,
+          readChangesTitle: 'Die echten Änderungen lesen',
+          readChangesBody: (count, added, removed) =>
+            `${count} Dateien wurden geändert: ${added} Ergänzungen und ${removed} Löschungen. Öffnen Sie jede Karte in Diff und markieren Sie sie nach dem Lesen als überprüft.`,
+          shipTitle: 'Bereit zum Liefern',
+          shipBody:
+            'Die Aktionen für Commit, Push, Pull Request und die Übergabe an den Agenten bleiben unter der Review, damit der letzte Schritt ohne Verlassen dieser Seite möglich ist.'
+        },
+        fileStatus: {
+          untracked: 'Nicht verfolgt',
+          added: 'Hinzugefügt',
+          deleted: 'Gelöscht',
+          renamed: 'Umbenannt',
+          copied: 'Kopiert',
+          unmerged: 'Nicht zusammengeführt',
+          modified: 'Geändert'
+        }
+      }
     }
   },
   updates: {
