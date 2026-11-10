@@ -240,6 +240,115 @@ describe('GoalSection', () => {
     expect(mockRunSessionControlAction).not.toHaveBeenCalled()
   })
 
+  it('lists quality gates with their status and controls', () => {
+    $sessionControlBySession.set({
+      [SID]: entry(
+        sampleSnapshot({
+          goal: sampleGoal({
+            gates: [
+              { attempts: 1, command: 'npm run test:ui', last_exit_code: 0, max_retries: 3, timeout_seconds: 300 },
+              { attempts: 2, command: 'npm run lint', last_exit_code: 1, max_retries: 2, timeout_seconds: 60 }
+            ]
+          })
+        })
+      )
+    })
+    renderSection()
+    expect(screen.getByText('$ npm run test:ui')).toBeTruthy()
+    expect(screen.getByText('$ npm run lint')).toBeTruthy()
+    expect(screen.getByText(/1\/3 attempts · 300s/)).toBeTruthy()
+    expect(screen.getByText(/2\/2 attempts · 60s · exit 1/)).toBeTruthy()
+  })
+
+  it('adds a gate only after a confirmation that shows the exact command', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Add gate' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Gate command' }), {
+      target: { value: 'npm run test:ui' }
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Timeout (s)' }), { target: { value: '120' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Retries' }), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/ }))
+
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalledWith(expect.objectContaining({
+      description: expect.stringContaining('$ npm run test:ui')
+    })))
+    await waitFor(() =>
+      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'gate.add', {
+        command: 'npm run test:ui',
+        max_retries: 2,
+        timeout_seconds: 120
+      })
+    )
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Gate command' })).toBeNull())
+  })
+
+  it('does not add a gate when the confirmation is refused', async () => {
+    mockConfirm.mockResolvedValue(false)
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Add gate' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Gate command' }), { target: { value: 'true' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/ }))
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalled())
+    expect(mockRunSessionControlAction).not.toHaveBeenCalledWith(SID, 'gate.add', expect.anything())
+  })
+
+  it('validates a gate command, timeout and retries inline', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Add gate' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/ }))
+    expect(await screen.findByText('Write the command this gate must run.')).toBeTruthy()
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Gate command' }), { target: { value: 'true' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Timeout (s)' }), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/ }))
+    expect(await screen.findByText(/Timeout must be/)).toBeTruthy()
+    expect(mockConfirm).not.toHaveBeenCalled()
+  })
+
+  it('removes a gate only after a confirmation showing its command', async () => {
+    $sessionControlBySession.set({
+      [SID]: entry(
+        sampleSnapshot({
+          goal: sampleGoal({
+            gates: [
+              { attempts: 0, command: 'npm run lint', last_exit_code: null, max_retries: 3, timeout_seconds: 300 }
+            ]
+          })
+        })
+      )
+    })
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove gate' }))
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalledWith(expect.objectContaining({
+      description: expect.stringContaining('$ npm run lint')
+    })))
+    await waitFor(() => expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'gate.remove', { index: 1 }))
+  })
+
+  it('sets a bounded wait from the card', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Wait' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Value' }), { target: { value: '600' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), { target: { value: 'rate limited' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Start wait$/ }))
+    await waitFor(() =>
+      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'wait.set', {
+        reason: 'rate limited',
+        seconds: 600
+      })
+    )
+  })
+
+  it('validates a wait value inline', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Wait' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Value' }), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Start wait$/ }))
+    expect(await screen.findByText(/Duration must be/)).toBeTruthy()
+    expect(mockRunSessionControlAction).not.toHaveBeenCalledWith(SID, 'wait.set', expect.anything())
+  })
+
   it('clears the goal only after the confirmation', async () => {
     renderSection()
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
