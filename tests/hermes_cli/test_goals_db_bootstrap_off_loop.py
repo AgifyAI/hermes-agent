@@ -8,7 +8,7 @@ double-instance startup race, the v25 schema migration inside
 the process with exit 75; the supervisor restarted into the same state —
 an unbounded crash loop.
 
-Contract fixed here, at the shared boundary (goals.py ``_get_session_db``,
+Contract fixed here, at the shared boundary (``goal_store._get_session_db``, re-exported by goals.py,
 which the heartbeat module reuses):
 
 - Called on a thread with a RUNNING event loop and no cached DB, it must
@@ -25,7 +25,7 @@ import time
 
 import pytest
 
-from hermes_cli import goals
+from hermes_cli import goal_store, goals
 
 
 class _RecordingDB:
@@ -43,7 +43,7 @@ class _RecordingDB:
 @pytest.fixture(autouse=True)
 def _clean_cache(monkeypatch):
     _RecordingDB.constructed_on = []
-    monkeypatch.setattr(goals, "_DB_CACHE", {})
+    monkeypatch.setattr(goal_store, "_DB_CACHE", {})
     yield
 
 
@@ -75,9 +75,9 @@ def test_loop_thread_cache_miss_constructs_off_loop(monkeypatch):
     assert isinstance(inline_result, _RecordingDB)
     # Cache populated for subsequent calls.
     deadline = time.monotonic() + 5
-    while time.monotonic() < deadline and not goals._DB_CACHE:
+    while time.monotonic() < deadline and not goal_store._DB_CACHE:
         time.sleep(0.02)
-    assert goals._DB_CACHE, "background bootstrap never populated the cache"
+    assert goal_store._DB_CACHE, "background bootstrap never populated the cache"
     assert _RecordingDB.constructed_on, "SessionDB never constructed"
     assert all(t != loop_thread_id for t in _RecordingDB.constructed_on), (
         "SessionDB was constructed on the event-loop thread"
@@ -90,7 +90,7 @@ def test_loop_thread_cache_hit_returns_cached_instance(monkeypatch):
     sentinel = _RecordingDB()
     from hermes_constants import get_hermes_home
 
-    goals._DB_CACHE[str(get_hermes_home())] = sentinel
+    goal_store._DB_CACHE[str(get_hermes_home())] = sentinel
     result = "UNSET"
 
     async def main():
@@ -122,8 +122,8 @@ def test_slow_construction_does_not_block_the_loop(monkeypatch):
     test, not the production constants.
     """
 
-    monkeypatch.setattr(goals, "_DB_BOOTSTRAP_INIT_WAIT_S", 0.3)
-    monkeypatch.setattr(goals, "_DB_BOOTSTRAP_LOOP_WAIT_S", 0.05)
+    monkeypatch.setattr(goal_store, "_DB_BOOTSTRAP_INIT_WAIT_S", 0.3)
+    monkeypatch.setattr(goal_store, "_DB_BOOTSTRAP_LOOP_WAIT_S", 0.05)
 
     class _BlockingDB:
         def __init__(self, db_path=None):

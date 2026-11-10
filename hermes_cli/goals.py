@@ -370,13 +370,13 @@ def last_user_message_from_db(session_id: Optional[str]) -> Any:
 
 
 def gather_background_processes(task_id: Optional[str] = None, *, owner_task_id: Optional[str] = None) -> list[dict[str, Any]]:
-    """Fail-safe snapshot of RUNNING ``process_registry`` sessions for the judge; ``[]`` on any error
-    so the loop degrades to its pre-wait-barrier behavior.
+    """Fail-safe snapshot of RUNNING ``process_registry`` sessions for the deferral policy; ``[]`` on any
+    error so the loop degrades to its pre-deferral behavior.
 
     ``owner_task_id`` restricts the snapshot to processes the goal's OWN session spawned. The registry's
     ``task_id`` is the container key, which collapses to one value for every agent in the process, so
-    without this filter a fan-out parent's judge saw every subagent's pollers and parked the goal on a
-    grandchild's ``proc_*`` session (one run: 7 of 7 root verdicts were WAIT on child-owned processes;
+    without this filter a fan-out parent's deferral policy saw every subagent's pollers and parked the goal
+    on a grandchild's ``proc_*`` session (one run: 7 of 7 root verdicts were WAIT on child-owned processes;
     parked 3 h 22 min at the end while nothing of its own was running)."""
     try:
         from tools.process_registry import process_registry
@@ -472,18 +472,13 @@ def _goals_setting(key: str, default, cast):
     return default
 
 
-_JUDGE_CONFIG_HINT = (
-    "~/.hermes/config.yaml:\n  auxiliary:\n    goal_judge:\n      provider: {provider}\n      model: {model}\n"
-    "Then /goal resume to continue."
-)
-
-
 class GoalManager:
     """Per-session goal state + continuation decisions.
 
-    The CLI and gateway each hold one per live session. ``evaluate_after_turn`` calls the judge and
-    returns the decision dict that drives the next turn; ``next_continuation_prompt`` is the
-    canonical user-role message to feed back into ``run_conversation``.
+    The CLI and gateway each hold one per live session. ``evaluate_after_turn`` runs the quality
+    gates and the deferral policy and returns the decision dict that drives the next turn;
+    ``next_continuation_prompt`` is the canonical user-role message to feed back into
+    ``run_conversation``.
     """
 
     def __init__(self, session_id: str, *, default_max_turns: int = DEFAULT_MAX_TURNS,
@@ -744,6 +739,12 @@ class GoalManager:
         self._state.reserved_round = None
         if reset_budget:
             self._state.rounds_started = 0
+            # A human resume is the fix-it path after a red gate paused the goal: give every gate a
+            # fresh retry budget and clear the stale result, or the first boundary would re-pause
+            # immediately on an attempt counter the human could not reset.
+            for gate in self._state.gates:
+                gate.attempts = 0
+                gate.last_exit_code = None
         if self._state.token_budget:
             # The budget was the reason for the stop: a human resume grants one more closing reserve
             # plus an equal working allowance, computed from what was actually spent.
@@ -1313,7 +1314,7 @@ class GoalManager:
 # Fed to a kanban goal-mode worker that hasn't completed/blocked its task yet: short, and points it
 # back at the lifecycle contract (it already has the full task body).
 KANBAN_GOAL_CONTINUATION_TEMPLATE = (
-    "[Continuing toward this kanban task — judge says it is not done yet]\n"
+    "[Continuing toward this kanban task — the board still shows it open]\n"
     "Reason: {reason}\n\n"
     "Take the next concrete step toward completing the task. When the work "
     "is genuinely finished, call kanban_complete with a summary. If it is a "
@@ -1323,7 +1324,7 @@ KANBAN_GOAL_CONTINUATION_TEMPLATE = (
     "calling one of them."
 )
 
-# Judge says done but the worker never made a terminal board call
+# The work looks done but the worker never made a terminal board call
 # (kanban_complete/kanban_request_review/kanban_block): one explicit nudge.
 KANBAN_GOAL_FINALIZE_TEMPLATE = (
     "[The work looks complete, but the task is still open]\n"

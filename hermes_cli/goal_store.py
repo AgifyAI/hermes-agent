@@ -5,7 +5,7 @@ and *how it survives* a process restart: phases, rounds, token accounting, the c
 quality gates, wait barriers, the append-only event journal, and the optimistic-concurrency write
 that refuses a stale revision instead of silently overwriting another surface's edit.
 
-The engine (judge prompts, round decisions, driver) stays in :mod:`hermes_cli.goals`, which
+The engine (round decisions, gates, deferral, driver) stays in :mod:`hermes_cli.goals`, which
 re-exports every name here so surfaces keep importing ``hermes_cli.goals``.
 """
 
@@ -314,11 +314,10 @@ class GoalState:
     last_reason: Optional[str] = None
     paused_reason: Optional[str] = None       # why the goal is paused (budget, wait, user)
     blocked_reason: Optional[dict] = None     # {"code", "message"} when phase == "blocked"
-    # Judge reliability trackers (kept in the durable row so an auto-pause survives a restart).
-    consecutive_parse_failures: int = 0       # unparseable judge replies in a row
-    # Tracked separately from parse failures: a broken API key returns 401 every call and must
-    # auto-pause instead of burning the budget on an unreachable judge.
-    consecutive_transport_failures: int = 0   # judge API/transport errors in a row
+    # Legacy reliability trackers from the removed judge path: kept in the durable row so old
+    # state_meta rows still load, never read by the current decision path.
+    consecutive_parse_failures: int = 0
+    consecutive_transport_failures: int = 0
     subgoals: list[str] = field(default_factory=list)
     # Wait barrier: parks the loop instead of re-poking the agent into busy-work. pid → until exit;
     # session → until that process_registry session's OWN trigger fires (exit OR watch_patterns

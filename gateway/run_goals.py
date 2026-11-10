@@ -231,7 +231,7 @@ class GatewayGoalsMixin:
         return adapter
 
     async def _send_goal_status_notice(self, source: Any, message: str) -> None:
-        """Send a /goal judge status line back to the originating chat/thread."""
+        """Send a /goal status line back to the originating chat/thread."""
         if getattr(source, "platform", None) == Platform.LOCAL:
             # The local adapter's send is a no-op (viewers read the event stream): main's TUI
             # painted the verdict from ``status.update {kind: goal}``.
@@ -366,9 +366,9 @@ class GatewayGoalsMixin:
 
         from hermes_cli import goal_driver
 
-        # judge_goal() is a synchronous aux-LLM HTTP call (10-40 s; would block Discord heartbeats).
-        # _run_in_executor_with_context carries the profile secret scope / aux runtime contextvars
-        # without which aux credential resolution fails under multiplexing.
+        # Gate commands are synchronous shell runs (and can take minutes); the plan runs off the
+        # event loop. _run_in_executor_with_context carries the profile secret scope / aux runtime
+        # contextvars without which credential resolution fails under multiplexing.
         decision = await self._run_in_executor_with_context(
             lambda: goal_driver.plan_after_turn(
                 mgr, final_response or "", surface="gateway",
@@ -423,7 +423,7 @@ class GatewayGoalsMixin:
         from gateway.session_authorities import active_authority
         from gateway.session_viewer_automation import viewer_driven
         if viewer_driven(active_authority(self), getattr(source, "chat_id", None)):
-            return  # the classic CLI viewer judges and continues through ``session.automation``
+            return  # the classic CLI viewer drives goal/loop bookkeeping through ``session.automation``
         final_text = self._final_text_for_post_turn_hooks(agent_result, event)
         try:
             session_entry = await self.async_session_store.get_or_create_session(
