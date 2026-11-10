@@ -48,6 +48,40 @@ export interface RightSidebarTranslations {
   goalConfirmNewTitle: string
   goalConfirmNewBody: string
   goalConfirmNew: string
+  goalGatesTitle: string
+  goalGatesEmpty: string
+  goalGateAdd: string
+  goalGateAddSave: string
+  goalGateCommand: string
+  goalGateCommandPlaceholder: string
+  goalGateTimeout: string
+  goalGateTimeoutPlaceholder: string
+  goalGateRetries: string
+  goalGateRetriesPlaceholder: string
+  goalGateMeta: (attempts: number, maxRetries: number, timeoutSeconds: number) => string
+  goalGateRemove: string
+  goalGateCommandRequired: string
+  goalGateTimeoutInvalid: string
+  goalGateRetriesInvalid: string
+  goalGateConfirmTitle: string
+  goalGateConfirmBody: (command: string) => string
+  goalGateConfirm: string
+  goalGateRemoveConfirmTitle: string
+  goalGateRemoveConfirmBody: (command: string) => string
+  goalGateRemoveConfirm: string
+  goalWaitAdd: string
+  goalWaitMode: string
+  goalWaitModeSeconds: string
+  goalWaitModePid: string
+  goalWaitModeSession: string
+  goalWaitValue: string
+  goalWaitReason: string
+  goalWaitReasonPlaceholder: string
+  goalWaitSave: string
+  goalWaitCancel: string
+  goalWaitValueRequired: string
+  goalWaitSecondsInvalid: string
+  goalWaitPidInvalid: string
   pendingMemoryTitle: string
   pendingMemoryTextAria: string
   pendingMemoryLoading: string

@@ -130,6 +130,11 @@ export type SessionControlAction =
   | 'goal.edit'
   | 'goal.set'
   | 'contract.set'
+  | 'gate.add'
+  | 'gate.clear'
+  | 'gate.remove'
+  | 'wait.clear'
+  | 'wait.set'
 
 export interface SessionControlContractArgs {
   boundaries?: string
@@ -139,9 +144,24 @@ export interface SessionControlContractArgs {
   verification?: string
 }
 
+export interface SessionControlGateArgs {
+  command: string
+  max_retries?: number
+  timeout_seconds?: number
+}
+
+export interface SessionControlWaitArgs {
+  pid?: number
+  reason?: string
+  seconds?: number
+  session_id?: string
+}
+
 export type SessionControlActionArgs =
   | { contract: SessionControlContractArgs; revision?: number; text: string }
   | { contract: SessionControlContractArgs; revision?: number }
+  | SessionControlGateArgs
+  | SessionControlWaitArgs
   | { index: number }
   | { text: string }
 

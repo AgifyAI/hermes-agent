@@ -14,6 +14,7 @@ import {
   type SessionControlAction,
   type SessionControlActionArgs,
   type SessionControlContractArgs,
+  type SessionControlGate,
   type SessionControlGoal,
   type SessionControlWaitBarrier
 } from '@/store/session-control'
@@ -117,6 +118,7 @@ interface Feedback {
 
 /** The Goal card of the Automations panel: state, objective, progress, wait and the
  * controls the backend already exposes (pause/resume/clear/unwait/criteria). */
+// health: allow CC -- one card owns the goal state machine (phases, edit/create, gates, wait); splitting it would scatter that state across siblings
 export function GoalSection() {
   const { t } = useI18n()
   const labels = t.rightSidebar
@@ -134,6 +136,16 @@ export function GoalSection() {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<GoalDraft>(BLANK_DRAFT)
   const [formError, setFormError] = useState<string | null>(null)
+  const [gateFormOpen, setGateFormOpen] = useState(false)
+  const [gateCommand, setGateCommand] = useState('')
+  const [gateTimeout, setGateTimeout] = useState('')
+  const [gateRetries, setGateRetries] = useState('')
+  const [gateError, setGateError] = useState<string | null>(null)
+  const [waitFormOpen, setWaitFormOpen] = useState(false)
+  const [waitMode, setWaitMode] = useState<'pid' | 'seconds' | 'session'>('seconds')
+  const [waitValue, setWaitValue] = useState('600')
+  const [waitReason, setWaitReason] = useState('')
+  const [waitError, setWaitError] = useState<string | null>(null)
 
   // "Open the goal card" from elsewhere (indicator, deep link) re-opens it.
   useEffect(() => {
@@ -287,6 +299,116 @@ export function GoalSection() {
     }
   }, [act, draft, goal, labels])
 
+  const addGate = useCallback(async () => {
+    const command = gateCommand.trim()
+
+    if (!command) {
+      setGateError(labels.goalGateCommandRequired)
+
+      return
+    }
+
+    const timeout = gateTimeout.trim() ? Number(gateTimeout) : undefined
+    const retries = gateRetries.trim() ? Number(gateRetries) : undefined
+
+    if (timeout !== undefined && (!Number.isInteger(timeout) || timeout < 1 || timeout > 3600)) {
+      setGateError(labels.goalGateTimeoutInvalid)
+
+      return
+    }
+
+    if (retries !== undefined && (!Number.isInteger(retries) || retries < 0 || retries > 10)) {
+      setGateError(labels.goalGateRetriesInvalid)
+
+      return
+    }
+
+    const ok = await confirm({
+      confirmLabel: labels.goalGateConfirm,
+      description: labels.goalGateConfirmBody(command),
+      title: labels.goalGateConfirmTitle
+    })
+
+    if (!ok) {
+      return
+    }
+
+    const saved = await act('gate.add', {
+      command,
+      ...(retries !== undefined ? { max_retries: retries } : {}),
+      ...(timeout !== undefined ? { timeout_seconds: timeout } : {})
+    })
+
+    if (saved) {
+      setGateFormOpen(false)
+      setGateCommand('')
+      setGateTimeout('')
+      setGateRetries('')
+      setGateError(null)
+    }
+  }, [act, gateCommand, gateRetries, gateTimeout, labels])
+
+  const removeGate = useCallback(
+    async (gate: SessionControlGate, index: number) => {
+      const ok = await confirm({
+        confirmLabel: labels.goalGateRemoveConfirm,
+        description: labels.goalGateRemoveConfirmBody(gate.command),
+        destructive: true,
+        title: labels.goalGateRemoveConfirmTitle
+      })
+
+      if (ok) {
+        await act('gate.remove', { index })
+      }
+    },
+    [act, labels]
+  )
+
+  const addWait = useCallback(async () => {
+    const raw = waitValue.trim()
+
+    if (!raw) {
+      setWaitError(labels.goalWaitValueRequired)
+
+      return
+    }
+
+    const reason = waitReason.trim()
+    let args: SessionControlActionArgs
+
+    if (waitMode === 'seconds') {
+      const seconds = Number(raw)
+
+      if (!Number.isInteger(seconds) || seconds < 1) {
+        setWaitError(labels.goalWaitSecondsInvalid)
+
+        return
+      }
+
+      args = { reason, seconds }
+    } else if (waitMode === 'pid') {
+      const pid = Number(raw)
+
+      if (!Number.isInteger(pid) || pid < 1) {
+        setWaitError(labels.goalWaitPidInvalid)
+
+        return
+      }
+
+      args = { pid, reason }
+    } else {
+      args = { reason, session_id: raw }
+    }
+
+    const saved = await act('wait.set', args)
+
+    if (saved) {
+      setWaitFormOpen(false)
+      setWaitReason('')
+      setWaitError(null)
+    }
+  }, [act, labels, waitMode, waitReason, waitValue])
+
   const phase = goal ? phaseOf(goal) : null
   const pending = Boolean(entry?.pendingAction) || busy
   const waitBarrier = goal?.wait_barrier
@@ -434,6 +556,46 @@ export function GoalSection() {
                   </button>
                 </form>
               ) : null}
+              <GatesSection
+                gateCommand={gateCommand}
+                gateError={gateError}
+                gateFormOpen={gateFormOpen}
+                gateRetries={gateRetries}
+                gates={goal.gates}
+                gateTimeout={gateTimeout}
+                labels={labels}
+                onCommandChange={setGateCommand}
+                onRemove={gate => void removeGate(gate.gate, gate.index)}
+                onRetriesChange={setGateRetries}
+                onSubmit={() => void addGate()}
+                onTimeoutChange={setGateTimeout}
+                onToggleForm={() => {
+                  setGateFormOpen(open => !open)
+                  setGateError(null)
+                }}
+                pending={pending}
+              />
+              {waitFormOpen && (
+                <WaitForm
+                  error={waitError}
+                  labels={labels}
+                  mode={waitMode}
+                  onCancel={() => {
+                    setWaitFormOpen(false)
+                    setWaitError(null)
+                  }}
+                  onModeChange={mode => {
+                    setWaitMode(mode)
+                    setWaitValue(mode === 'seconds' ? '600' : '')
+                  }}
+                  onReasonChange={setWaitReason}
+                  onSubmit={() => void addWait()}
+                  onValueChange={setWaitValue}
+                  pending={pending}
+                  reason={waitReason}
+                  value={waitValue}
+                />
+              )}
               <div className="flex flex-wrap items-center gap-1">
                 <ActionButton disabled={pending} label={labels.goalEdit} onClick={startEditing}>
                   <Codicon name="edit" size="0.75rem" />
@@ -453,6 +615,11 @@ export function GoalSection() {
                     <Codicon name="add" size="0.75rem" />
                   </ActionButton>
                 )}
+                {phase === 'active' && !waitBarrier && (
+                  <ActionButton disabled={pending} label={labels.goalWaitAdd} onClick={() => setWaitFormOpen(true)}>
+                    <Codicon name="clock" size="0.75rem" />
+                  </ActionButton>
+                )}
                 <ActionButton destructive disabled={pending} label={labels.goalClear} onClick={() => void clearGoal()}>
                   <Trash2 className="size-3" />
                 </ActionButton>
@@ -464,6 +631,219 @@ export function GoalSection() {
         </div>
       </SidebarSectionContent>
     </section>
+  )
+}
+
+interface GatesSectionProps {
+  gateCommand: string
+  gateError: string | null
+  gateFormOpen: boolean
+  gateRetries: string
+  gateTimeout: string
+  gates: SessionControlGate[]
+  labels: GoalFormProps['labels']
+  onCommandChange: (value: string) => void
+  onRemove: (gate: { gate: SessionControlGate; index: number }) => void
+  onRetriesChange: (value: string) => void
+  onSubmit: () => void
+  onTimeoutChange: (value: string) => void
+  onToggleForm: () => void
+  pending: boolean
+}
+
+function GatesSection({
+  gateCommand,
+  gateError,
+  gateFormOpen,
+  gateRetries,
+  gateTimeout,
+  gates,
+  labels,
+  onCommandChange,
+  onRemove,
+  onRetriesChange,
+  onSubmit,
+  onTimeoutChange,
+  onToggleForm,
+  pending
+}: GatesSectionProps) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{labels.goalGatesTitle}</span>
+        <button
+          className="text-[0.6875rem] font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+          onClick={onToggleForm}
+          type="button"
+        >
+          {labels.goalGateAdd}
+        </button>
+      </div>
+      {gates.length === 0 ? (
+        <p className="text-[0.6875rem] text-(--linear-text-quaternary)">{labels.goalGatesEmpty}</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {gates.map((gate, index) => (
+            <li className="group/gate flex items-start gap-1.5" key={`${index}-${gate.command}`}>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'mt-1 inline-block size-1.5 shrink-0 rounded-full',
+                  gate.last_exit_code === null
+                    ? 'bg-(--linear-text-quaternary)'
+                    : gate.last_exit_code === 0
+                      ? 'bg-(--linear-green)'
+                      : 'bg-(--linear-red)'
+                )}
+              />
+              <div className="min-w-0 flex-1">
+                <code className="block break-all text-[0.6875rem] text-(--linear-text-secondary)">
+                  $ {gate.command}
+                </code>
+                <span className="block text-[0.625rem] text-(--linear-text-quaternary)">
+                  {labels.goalGateMeta(gate.attempts, gate.max_retries, gate.timeout_seconds)}
+                  {gate.last_exit_code !== null ? ` · exit ${gate.last_exit_code}` : ''}
+                </span>
+              </div>
+              <Tip label={labels.goalGateRemove}>
+                <button
+                  aria-label={labels.goalGateRemove}
+                  className="shrink-0 text-(--linear-text-quaternary) opacity-0 transition-opacity hover:text-(--linear-red) focus-visible:opacity-100 group-hover/gate:opacity-100"
+                  onClick={() => onRemove({ gate, index: index + 1 })}
+                  type="button"
+                >
+                  <Codicon name="close" size="0.75rem" />
+                </button>
+              </Tip>
+            </li>
+          ))}
+        </ul>
+      )}
+      {gateFormOpen && (
+        <form
+          className="flex flex-col gap-1.5 rounded-md border-[0.5px] border-(--linear-border-panel) p-2"
+          onSubmit={event => {
+            event.preventDefault()
+            onSubmit()
+          }}
+        >
+          <input
+            aria-label={labels.goalGateCommand}
+            autoFocus
+            className="h-7 w-full rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 font-mono text-[0.6875rem] text-(--linear-text-primary) outline-none focus:border-(--linear-border-secondary)"
+            onChange={event => onCommandChange(event.target.value)}
+            placeholder={labels.goalGateCommandPlaceholder}
+            value={gateCommand}
+          />
+          <div className="flex items-center gap-1.5">
+            <input
+              aria-label={labels.goalGateTimeout}
+              className="h-6 w-16 rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 text-[0.6875rem] text-(--linear-text-primary) outline-none focus:border-(--linear-border-secondary)"
+              onChange={event => onTimeoutChange(event.target.value)}
+              placeholder={labels.goalGateTimeoutPlaceholder}
+              value={gateTimeout}
+            />
+            <input
+              aria-label={labels.goalGateRetries}
+              className="h-6 w-16 rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 text-[0.6875rem] text-(--linear-text-primary) outline-none focus:border-(--linear-border-secondary)"
+              onChange={event => onRetriesChange(event.target.value)}
+              placeholder={labels.goalGateRetriesPlaceholder}
+              value={gateRetries}
+            />
+            <button
+              className="ml-auto text-[0.6875rem] font-medium text-(--linear-text-secondary) disabled:opacity-50"
+              disabled={pending}
+              type="submit"
+            >
+              {labels.goalGateAddSave}
+            </button>
+          </div>
+          {gateError && <p className="text-[0.6875rem] text-(--linear-red)">{gateError}</p>}
+        </form>
+      )}
+    </div>
+  )
+}
+
+interface WaitFormProps {
+  error: string | null
+  labels: GoalFormProps['labels']
+  mode: 'pid' | 'seconds' | 'session'
+  onCancel: () => void
+  onModeChange: (mode: 'pid' | 'seconds' | 'session') => void
+  onReasonChange: (value: string) => void
+  onSubmit: () => void
+  onValueChange: (value: string) => void
+  pending: boolean
+  reason: string
+  value: string
+}
+
+function WaitForm({
+  error,
+  labels,
+  mode,
+  onCancel,
+  onModeChange,
+  onReasonChange,
+  onSubmit,
+  onValueChange,
+  pending,
+  reason,
+  value
+}: WaitFormProps) {
+  return (
+    <form
+      className="flex flex-col gap-1.5 rounded-md border-[0.5px] border-(--linear-border-panel) p-2"
+      onSubmit={event => {
+        event.preventDefault()
+        onSubmit()
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <select
+          aria-label={labels.goalWaitMode}
+          className="h-6 rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-1 text-[0.6875rem] text-(--linear-text-primary)"
+          onChange={event => onModeChange(event.target.value as 'pid' | 'seconds' | 'session')}
+          value={mode}
+        >
+          <option value="seconds">{labels.goalWaitModeSeconds}</option>
+          <option value="pid">{labels.goalWaitModePid}</option>
+          <option value="session">{labels.goalWaitModeSession}</option>
+        </select>
+        <input
+          aria-label={labels.goalWaitValue}
+          className="h-6 min-w-0 flex-1 rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 text-[0.6875rem] text-(--linear-text-primary) outline-none focus:border-(--linear-border-secondary)"
+          onChange={event => onValueChange(event.target.value)}
+          placeholder={labels.goalWaitValue}
+          value={value}
+        />
+      </div>
+      <input
+        aria-label={labels.goalWaitReason}
+        className="h-6 w-full rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 text-[0.6875rem] text-(--linear-text-primary) outline-none focus:border-(--linear-border-secondary)"
+        onChange={event => onReasonChange(event.target.value)}
+        placeholder={labels.goalWaitReasonPlaceholder}
+        value={reason}
+      />
+      {error && <p className="text-[0.6875rem] text-(--linear-red)">{error}</p>}
+      <div className="flex items-center gap-2">
+        <button
+          className="h-6 rounded-md bg-(--linear-accent) px-2 text-[0.6875rem] font-medium text-(--linear-on-accent) disabled:opacity-50"
+          disabled={pending}
+          type="submit"
+        >
+          {labels.goalWaitSave}
+        </button>
+        <button
+          className="h-6 rounded-md px-1.5 text-[0.6875rem] font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+          onClick={onCancel}
+          type="button"
+        >
+          {labels.goalWaitCancel}
+        </button>
+      </div>
+    </form>
   )
 }
 

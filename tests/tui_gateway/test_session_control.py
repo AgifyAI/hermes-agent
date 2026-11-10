@@ -612,7 +612,7 @@ class TestGoalEditing:
         assert load_goal(key).goal == "Finish the desktop control card"
 
     def test_goal_edit_validates_its_input(self, server, session):
-        sid, key, _ = session
+        sid, _key, _ = session
         for args, needle in (
             ({}, "goal text is required"),
             ({"text": "   "}, "goal text is required"),
@@ -621,5 +621,86 @@ class TestGoalEditing:
             ({"text": "ok", "revision": "3"}, "revision must be an integer"),
         ):
             response = _call(server, "session.control", session_id=sid, action="goal.edit", args=args)
+            assert "error" in response, args
+            assert needle in response["error"]["message"]
+
+
+class TestGatesAndWait:
+    def test_gate_add_remove_clear_are_real_and_published(self, server, session):
+        sid, key, _ = session
+        _save_goal(key)
+
+        added = _call(server, "session.control", session_id=sid, action="gate.add",
+                      args={"command": "pytest -q", "timeout_seconds": 60, "max_retries": 2})
+        assert "error" not in added, added
+        gates = added["result"]["control"]["goal"]["gates"]
+        assert gates == [{"attempts": 0, "command": "pytest -q", "last_exit_code": None,
+                          "max_retries": 2, "timeout_seconds": 60}]
+        assert "⚿ Gate added" in added["result"]["dispatch"]["output"]
+
+        removed = _call(server, "session.control", session_id=sid, action="gate.remove", args={"index": 1})
+        assert removed["result"]["control"]["goal"]["gates"] == []
+
+        _call(server, "session.control", session_id=sid, action="gate.add", args={"command": "true"})
+        _call(server, "session.control", session_id=sid, action="gate.add", args={"command": "false"})
+        cleared = _call(server, "session.control", session_id=sid, action="gate.clear")
+        assert cleared["result"]["control"]["goal"]["gates"] == []
+        assert "Cleared 2 gates" in cleared["result"]["dispatch"]["output"]
+
+    def test_gate_add_validates_command_timeout_and_retries(self, server, session):
+        sid, key, _ = session
+        _save_goal(key)
+        for args, needle in (
+            ({}, "gate command is required"),
+            ({"command": "   "}, "gate command is required"),
+            ({"command": "x" * 2001}, "too long"),
+            ({"command": "true", "timeout_seconds": 0}, "timeout_seconds"),
+            ({"command": "true", "timeout_seconds": 4000}, "timeout_seconds"),
+            ({"command": "true", "max_retries": 11}, "max_retries"),
+            ({"command": "true", "max_retries": -1}, "max_retries"),
+        ):
+            response = _call(server, "session.control", session_id=sid, action="gate.add", args=args)
+            assert "error" in response, args
+            assert needle in response["error"]["message"]
+
+    def test_gate_actions_need_a_goal(self, server, session):
+        sid, _, _ = session
+        response = _call(server, "session.control", session_id=sid, action="gate.add", args={"command": "true"})
+        assert "error" in response
+        assert "no active goal" in response["error"]["message"].lower()
+
+    def test_wait_set_and_clear_are_visible(self, server, session, monkeypatch):
+        from hermes_cli import goals
+
+        monkeypatch.setattr(goals, "count_active_delegations", lambda _sid: 2)
+        sid, key, _ = session
+        _save_goal(key)
+        set_wait = _call(server, "session.control", session_id=sid, action="wait.set",
+                         args={"seconds": 600, "reason": "rate limit"})
+        assert "error" not in set_wait, set_wait
+        barrier = set_wait["result"]["control"]["goal"]["wait_barrier"]
+        assert barrier["cause"] == "timer"
+        assert barrier["reason"] == "rate limit"
+        assert barrier["remaining_seconds"] > 0
+        assert barrier["max_seconds"] > 0
+
+        cleared = _call(server, "session.control", session_id=sid, action="wait.clear")
+        assert "error" not in cleared, cleared
+        assert cleared["result"]["control"]["goal"].get("wait_barrier") is None
+        assert "Deferral cleared" in cleared["result"]["dispatch"]["output"]
+
+    def test_wait_set_validates_its_target(self, server, session):
+        sid, key, _ = session
+        _save_goal(key)
+        for args, needle in (
+            ({}, "exactly one"),
+            ({"seconds": 0}, "seconds"),
+            ({"seconds": 90000}, "seconds"),
+            ({"pid": 0}, "pid"),
+            ({"pid": 1, "seconds": 10}, "exactly one"),
+            ({"session_id": "  "}, "session_id"),
+            ({"seconds": 10, "reason": "x" * 501}, "reason"),
+        ):
+            response = _call(server, "session.control", session_id=sid, action="wait.set", args=args)
             assert "error" in response, args
             assert needle in response["error"]["message"]

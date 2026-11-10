@@ -45,6 +45,16 @@ _MANAGER_ACTIONS = frozenset({
     "goal.edit",
     "goal.set",
     "contract.set",
+    # Quality gates (GST-198). session.control is owner-scoped (the Desktop viewer's own
+    # connection is the session owner, the same trust position as the local-admin rule the
+    # messaging surface applies); the shell command is echoed in the desktop confirmation
+    # before it is ever sent here.
+    "gate.add",
+    "gate.remove",
+    "gate.clear",
+    # Deferral management (GST-198): set/clear the one bounded waiting state.
+    "wait.set",
+    "wait.clear",
 })
 
 # Actions whose input travels as ``args`` and is validated before any manager exists.
@@ -52,6 +62,8 @@ _GOAL_EDIT_ACTIONS = frozenset({"goal.edit", "goal.set", "contract.set"})
 _CONTRACT_FIELDS = ("outcome", "verification", "constraints", "boundaries", "stop_when")
 _GOAL_TEXT_MAX = 4000
 _CONTRACT_FIELD_MAX = 2000
+_GATE_COMMAND_MAX = 2000
+_WAIT_REASON_MAX = 500
 
 _VALID_ACTIONS = frozenset(_ACTION_COMMAND_MAP) | _MANAGER_ACTIONS
 
@@ -399,8 +411,55 @@ def _validated_contract(rid, value, *, partial: bool):
     return clean, None
 
 
+def _validated_gate_add(rid, args: dict):
+    command = args.get("command")
+    if not isinstance(command, str) or not (command := command.strip()):
+        return None, _err(rid, 4004, "gate command is required")
+    if len(command) > _GATE_COMMAND_MAX:
+        return None, _err(rid, 4004, f"gate command is too long (max {_GATE_COMMAND_MAX})")
+    timeout = args.get("timeout_seconds")
+    if timeout is not None and (type(timeout) is not int or not 1 <= timeout <= 3600):
+        return None, _err(rid, 4004, "timeout_seconds must be an integer between 1 and 3600")
+    retries = args.get("max_retries")
+    if retries is not None and (type(retries) is not int or not 0 <= retries <= 10):
+        return None, _err(rid, 4004, "max_retries must be an integer between 0 and 10")
+    return {"command": command, "max_retries": retries, "timeout_seconds": timeout}, None
+
+
+def _validated_wait_set(rid, args: dict):
+    reason = args.get("reason", "")
+    if not isinstance(reason, str) or len(reason) > _WAIT_REASON_MAX:
+        return None, _err(rid, 4004, f"wait reason must be a string up to {_WAIT_REASON_MAX} characters")
+    targets = [key for key in ("seconds", "pid", "session_id") if args.get(key) is not None]
+    if len(targets) != 1:
+        return None, _err(rid, 4004, "wait.set needs exactly one of seconds, pid or session_id")
+    if "seconds" in targets and (type(args["seconds"]) is not int or not 1 <= args["seconds"] <= 86400):
+        return None, _err(rid, 4004, "seconds must be an integer between 1 and 86400")
+    if "pid" in targets and (type(args["pid"]) is not int or args["pid"] <= 0):
+        return None, _err(rid, 4004, "pid must be a positive integer")
+    if "session_id" in targets and (not isinstance(args["session_id"], str) or not args["session_id"].strip()):
+        return None, _err(rid, 4004, "session_id must be a non-empty string")
+    return {
+        "pid": args.get("pid"),
+        "reason": reason.strip(),
+        "seconds": args.get("seconds"),
+        "session_id": (args.get("session_id") or "").strip() or None,
+    }, None
+
+
 def _validate_action_args(rid, action: str, args: dict):
     """Validate the only actions with input before any manager is constructed."""
+    if action == "gate.add":
+        return _validated_gate_add(rid, args)
+    if action == "gate.remove":
+        index = args.get("index")
+        if type(index) is not int or index < 1:
+            return None, _err(rid, 4004, "gate index must be >= 1")
+        return {"index": index}, None
+    if action == "wait.set":
+        return _validated_wait_set(rid, args)
+    if action in {"gate.clear", "wait.clear"}:
+        return {}, None
     if action in {"goal.edit", "goal.set"}:
         text = args.get("text")
         if not isinstance(text, str) or not (text := text.strip()):
@@ -426,12 +485,12 @@ def _validate_action_args(rid, action: str, args: dict):
         text = args.get("text")
         if not isinstance(text, str) or not (text := text.strip()):
             return None, _err(rid, 4004, "subgoal text is required")
+        if len(text) > 500:
+            return None, _err(rid, 4004, "subgoal text is too long (max 500)")
         return {"text": text}, None
     if action == "subgoal.remove":
         index = args.get("index")
-        if type(index) is not int:
-            return None, _err(rid, 4004, "subgoal index must be an integer")
-        if index < 1:
+        if type(index) is not int or index < 1:
             return None, _err(rid, 4004, "subgoal index must be >= 1")
         return {"index": index}, None
     return {}, None
@@ -495,7 +554,63 @@ def _execute_manager_action(session_key: str, action: str, args: dict) -> dict:
     """Use manager APIs for controls that have no TUI command handler."""
     if action.startswith("subgoal."):
         return _execute_subgoal_action(session_key, action, args)
+    if action.startswith("gate."):
+        return _execute_gate_action(session_key, action, args)
+    if action.startswith("wait."):
+        return _execute_wait_action(session_key, action, args)
     return _execute_heartbeat_action(session_key, action)
+
+
+def _execute_gate_action(session_key: str, action: str, args: dict) -> dict:
+    """Quality gates from the panel: add (shell command), remove one, clear all."""
+    from hermes_cli.goals import GoalManager
+
+    manager = GoalManager(session_id=session_key)
+    if action == "gate.add":
+        gate = manager.add_gate(
+            args["command"], timeout_seconds=args["timeout_seconds"], max_retries=args["max_retries"])
+        output = (f"⚿ Gate added: $ {gate.command} "
+                  f"({gate.max_retries} retries, {gate.timeout_seconds}s timeout). "
+                  "It must pass before the goal can complete.")
+        return {"result": {"type": "exec", "output": output}}
+    if action == "gate.remove":
+        index = args["index"]
+        command = manager.remove_gate(index)
+        return {"result": {"type": "exec", "output": f"✓ Removed gate {index}: $ {command}"}}
+    count = manager.clear_gates()
+    output = f"✓ Cleared {count} gate{'s' if count != 1 else ''}." if count else "No gates to clear."
+    return {"result": {"type": "exec", "output": output}}
+
+
+def _execute_wait_action(session_key: str, action: str, args: dict) -> dict:
+    """The one bounded deferral: set it explicitly, or clear it (resume now)."""
+    from hermes_cli.goals import GoalManager
+
+    manager = GoalManager(session_id=session_key)
+    if action == "wait.clear":
+        if not manager.stop_waiting():
+            return {"result": {"type": "exec", "output": "No deferred continuation to resume."}}
+        return {"result": {"type": "exec", "output": "▶ Deferral cleared — the goal loop resumes now."}}
+    reason = args["reason"]
+    if args["pid"] is not None:
+        manager.wait_on(args["pid"], reason=reason)
+    elif args["session_id"]:
+        manager.wait_on_session(args["session_id"], reason=reason)
+    else:
+        manager.wait_for_seconds(args["seconds"], reason=reason)
+    state = manager.state
+    if state is not None and state.waiting_on_session is not None:
+        target = f"session {state.waiting_on_session}"
+    elif state is not None and state.waiting_on_pid is not None:
+        target = f"pid {state.waiting_on_pid}"
+    elif state is not None and state.waiting_on_delegations:
+        target = f"{state.waiting_on_delegations} subagent batch(es)"
+    else:
+        target = f"{manager.deferral_remaining()}s timed wait"
+    remaining = manager.deferral_remaining()
+    return {"result": {"type": "exec", "output": (
+        f"⏳ Goal deferred on {target} — {remaining}s left, ceiling {manager.max_wait_seconds()}s. "
+        "/goal unwait resumes now.")}}
 
 
 def _execute_subgoal_action(session_key: str, action: str, args: dict) -> dict:
