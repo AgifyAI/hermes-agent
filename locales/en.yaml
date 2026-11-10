@@ -2709,6 +2709,7 @@ cli:
     voice_continuous: " | Continuous"
     voice_mode_hint: "🎤 Voice mode{tts}{cont}  —  {shortcut} to record"
     goal_turns: "⊙ goal {used}/{max}"
+    goal_tokens: "⊙ goal {used}/{max} tok"
     goal: "⊙ goal"
     ctx_pinned: " pinned"
     ctx_unknown: "ctx --"

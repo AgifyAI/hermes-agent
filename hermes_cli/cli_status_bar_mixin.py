@@ -232,7 +232,9 @@ class CLIStatusBarMixin:
             "git_branch": "",
             "goal_active": False,
             "goal_turns_used": 0,
-            "goal_max_turns": 0}
+            "goal_max_turns": 0,
+            "goal_tokens_used": 0,
+            "goal_token_budget": 0}
 
         try:
             from hermes_cli.focus_view import focus_statusbar_segment
@@ -287,6 +289,8 @@ class CLIStatusBarMixin:
                 snapshot["goal_active"] = True
                 snapshot["goal_turns_used"] = int(getattr(goal_state, "turns_used", 0) or 0)
                 snapshot["goal_max_turns"] = int(getattr(goal_state, "max_turns", 0) or 0)
+                snapshot["goal_tokens_used"] = int(getattr(goal_state, "tokens_used", 0) or 0)
+                snapshot["goal_token_budget"] = int(getattr(goal_state, "token_budget", 0) or 0)
         except Exception:
             pass
 
@@ -986,6 +990,12 @@ class CLIStatusBarMixin:
         print their own glyph lines in the thread)."""
         if not snapshot.get("goal_active"):
             return ""
+        token_budget = snapshot.get("goal_token_budget") or 0
+        if token_budget:
+            # Tokens are the /goal budget since the 2026-11 decision.
+            return t("cli.status_bar.goal_tokens",
+                     used=f"{snapshot.get('goal_tokens_used') or 0:,}",
+                     max=f"{token_budget:,}")
         used = snapshot.get("goal_turns_used") or 0
         max_turns = snapshot.get("goal_max_turns") or 0
         return t("cli.status_bar.goal_turns", used=used, max=max_turns) if max_turns else t("cli.status_bar.goal")

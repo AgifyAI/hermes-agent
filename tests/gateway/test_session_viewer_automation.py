@@ -76,7 +76,7 @@ async def test_the_goal_judge_runs_on_the_owner(owner, monkeypatch):
     assert seen == [('write the report', 'drafted the outline')]
     assert decision['should_continue'] is True
     # A user turn is judged but consumes no continuation round: the count is the admitted rounds.
-    assert decision['message'] == '↻ Continuing toward goal (0/20): only the outline exists'
+    assert decision['message'] == '↻ Continuing toward goal (0/2,000,000 tokens): only the outline exists'
     assert decision['continuation_prompt'].startswith('[Continuing toward your standing goal]')
     assert json.loads(owner.db.get_meta('goal:' + owner.target))['rounds_started'] == 0
 

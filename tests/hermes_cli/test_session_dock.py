@@ -41,7 +41,7 @@ def test_dock_paints_goal_on_top_and_queue_last_and_follows_their_lifecycle(herm
 
     assert dock.refresh() and dock.has_rows
     lines = dock.dock_text(columns=80, rows=40).splitlines()
-    assert "⊙ Goal (active, 0/20 rounds): ship the dock feature" in lines[0]
+    assert "⊙ Goal (active, 0/20 rounds, 0/2,000,000 tokens): ship the dock feature" in lines[0]
     queue_at = next(i for i, line in enumerate(lines) if "Queue · 4 queued" in line)
     assert [line.strip() for line in lines[queue_at + 1:]] == [
         "1. first follow-up with a newline", "2. look at this", "3. spoken ask", "+1 more"]

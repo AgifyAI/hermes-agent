@@ -160,7 +160,7 @@ def _set(mgr, arg, *, drafting, last_user_message, render, progress, replace: bo
         current = mgr.state
         progress_bits = f"{current.rounds_started}/{current.max_rounds} rounds"
         if current.token_budget:
-            progress_bits += f", {current.tokens_used}/{current.token_budget} tokens"
+            progress_bits += f", {current.tokens_used:,}/{current.token_budget:,} tokens"
         if current.subgoals:
             progress_bits += f", {len(current.subgoals)} criteria"
         if current.gates:
@@ -178,8 +178,11 @@ def _set(mgr, arg, *, drafting, last_user_message, render, progress, replace: bo
     state = mgr.set(headline or arg, contract=contract, replace=replace)
     if replace and previous:
         output = f"✎ Goal rewritten in place ({state.rounds_started}/{state.max_rounds} rounds kept): {state.goal}"
+    elif state.token_budget:
+        output = render("gateway.goal.set", "⊙ Goal set ({budget:,}-token budget): {goal}",
+                        budget=state.token_budget, goal=state.goal)
     else:
-        output = render("gateway.goal.set", "⊙ Goal set ({budget}-round budget): {goal}",
+        output = render("gateway.goal.set", "⊙ Goal set ({budget}-round safety cap): {goal}",
                         budget=state.max_rounds, goal=state.goal)
     if previous and previous != state.goal:
         output += f"\n(previous objective was: {previous})"

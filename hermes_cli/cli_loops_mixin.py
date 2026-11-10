@@ -860,11 +860,16 @@ class CLILoopsMixin:
             pass
 
         from hermes_cli import goal_driver
+        marks = getattr(self, "_goal_token_marks", None)
+        if not isinstance(marks, dict):
+            marks = self._goal_token_marks = {}
+        turn_tokens = goal_driver.agent_tokens_delta(getattr(self, "agent", None), marks)
         decision = goal_driver.plan_after_turn(
             mgr, last_response, surface="cli",
             background_processes=_bg_procs, active_delegations=_active_deleg,
             failed=bool(getattr(self, "_last_turn_failed", False)) or not last_response.strip(),
             interrupted=bool(getattr(self, "_last_turn_interrupted", False)),
+            turn_tokens=turn_tokens,
         )
         _print_decision_message(decision)
         if decision.get("stop") == goal_driver.STOP_INTERRUPTED:

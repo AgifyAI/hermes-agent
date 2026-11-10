@@ -386,9 +386,14 @@ def _goal_followup_after_turn(
         except Exception as _bg_exc:  # health: allow BLE001 -- hook boundary: _hook_failure records it and a snapshot bug must never break the turn
             _hook_failure("goal background snapshot", _bg_exc)
         from hermes_cli import goal_driver
+        marks = session.get("_goal_token_marks")
+        if not isinstance(marks, dict):
+            marks = session["_goal_token_marks"] = {}
+        turn_tokens = goal_driver.agent_tokens_delta(session.get("agent"), marks)
         decision = goal_driver.plan_after_turn(
             goal_mgr, raw, surface="tui",
             background_processes=_bg_procs, active_delegations=_active_deleg,
+            turn_tokens=turn_tokens,
         )
         if verdict_msg := decision.get("message") or "":
             _emit("status.update", sid, {"kind": "goal", "text": verdict_msg})
