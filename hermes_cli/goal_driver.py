@@ -54,20 +54,6 @@ STOP_ROUND_IN_FLIGHT = "round-in-flight"
 STOP_CONTINUED = "continued"
 
 
-CLOSING_PROMPT_TEMPLATE = (
-    "[Closing this goal — the token budget is spent]\n"
-    "Goal: {goal}\n\n"
-    "Tokens used: {tokens_used:,} of {token_budget:,} (the last {reserve:,} are reserved for this "
-    "closing turn). Do NOT start new work, do not begin another investigation, and keep this turn "
-    "short.\n\n"
-    "Close the goal cleanly by stating, concisely:\n"
-    "1. What is done — the concrete result and the evidence for it.\n"
-    "2. What remains — every unfinished item, in order.\n"
-    "3. The exact next step someone can take from here.\n\n"
-    "Then stop. The goal is budget-limited and only a human /goal resume continues it."
-)
-
-
 @dataclass(frozen=True)
 class Continuation:
     """A reserved continuation waiting for a surface to admit it."""
@@ -254,6 +240,13 @@ def plan_after_turn(
     return decision
 
 
+def _closing_prompt(state, reserve: int) -> str:
+    """The ``budget_limit`` turn text lives with the other goal prompts."""
+    from hermes_cli.goals import build_closing_prompt
+
+    return build_closing_prompt(state, reserve=reserve)
+
+
 def _token_budget_stop(mgr, decision: dict[str, Any], *, surface: str) -> Optional[dict[str, Any]]:
     """Token budget reached: offer the ONE closing turn, then stop launching work.
 
@@ -293,9 +286,7 @@ def _token_budget_stop(mgr, decision: dict[str, Any], *, surface: str) -> Option
         goal_id=fresh.goal_id,
         revision=fresh.revision,
         round_no=round_no,
-        prompt=CLOSING_PROMPT_TEMPLATE.format(
-            goal=state.goal, tokens_used=state.tokens_used,
-            token_budget=state.token_budget, reserve=reserve),
+        prompt=_closing_prompt(state, reserve),
         closing=True,
     )
     logger.info(

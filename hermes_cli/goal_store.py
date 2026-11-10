@@ -300,6 +300,12 @@ class GoalState:
     # The goal round currently in flight (set at admission, cleared at the turn boundary). The model's
     # update_goal tool may only end the goal from inside a real goal round, never from a plain user turn.
     active_round: Optional[int] = None
+    # Objective rewrite tracking: ``objective_version`` bumps on a preserving rewrite,
+    # ``objective_seen_version`` records what the agent was last told (set at admission), so the next
+    # continuation can announce the change exactly once.
+    objective_version: int = 0
+    objective_seen_version: int = 0
+    previous_objective: str = ""
     time_used_seconds: float = 0.0
     created_at: float = 0.0
     updated_at: float = 0.0
@@ -345,6 +351,9 @@ class GoalState:
         tokens_used: int = 0,
         closing_issued: bool = False,
         active_round: Optional[int] = None,
+        objective_version: int = 0,
+        objective_seen_version: int = 0,
+        previous_objective: str = "",
         time_used_seconds: float = 0.0,
         created_at: float = 0.0,
         updated_at: float = 0.0,
@@ -386,6 +395,9 @@ class GoalState:
         self.tokens_used = max(0, int(tokens_used or 0))
         self.closing_issued = bool(closing_issued)
         self.active_round = int(active_round) if active_round else None
+        self.objective_version = int(objective_version or 0)
+        self.objective_seen_version = int(objective_seen_version or 0)
+        self.previous_objective = str(previous_objective or "")
         self.time_used_seconds = float(time_used_seconds or 0.0)
         self.created_at = float(created_at or 0.0)
         self.updated_at = float(updated_at or 0.0)
@@ -465,6 +477,9 @@ class GoalState:
             "tokens_used": int(data.get("tokens_used") or 0),
             "closing_issued": bool(data.get("closing_issued")),
             "active_round": data.get("active_round"),
+            "objective_version": int(data.get("objective_version") or 0),
+            "objective_seen_version": int(data.get("objective_seen_version") or 0),
+            "previous_objective": str(data.get("previous_objective") or ""),
             "time_used_seconds": float(data.get("time_used_seconds") or 0.0),
             "consecutive_parse_failures": int(data.get("consecutive_parse_failures") or 0),
             "consecutive_transport_failures": int(data.get("consecutive_transport_failures") or 0),

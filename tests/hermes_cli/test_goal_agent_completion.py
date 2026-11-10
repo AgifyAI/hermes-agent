@@ -185,7 +185,7 @@ class TestNoJudge:
         assert "Completion audit" in prompt
         assert "update_goal" in prompt
         assert "concrete evidence" in prompt
-        assert "blocked is refused before 3 goal rounds" in prompt
+        assert "blocked is refused before 3 goal rounds" in prompt.lower()
 
     def test_a_blocked_goal_stops_at_the_boundary(self, hermes_home):
         from hermes_cli import goal_driver
