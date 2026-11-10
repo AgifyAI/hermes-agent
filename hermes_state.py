@@ -1661,6 +1661,19 @@ class SessionDB(
         else:
             self._write_sql(sql, (key, value))
 
+    def cas_meta(self, key: str, expected: Optional[str], value: str) -> bool:
+        """Atomically replace state_meta[key] only while it still holds ``expected``.
+
+        ``expected=None`` means the key must not exist. One UPDATE/INSERT statement, so two
+        writers holding the same stale value cannot both succeed — the loser gets False and must
+        re-read. Used by the goal store for optimistic concurrency (#goal-revision)."""
+        if expected is None:
+            sql = "INSERT INTO state_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING"
+            return self._write_rowcount(sql, (key, value)) == 1
+        return self._write_rowcount(
+            "UPDATE state_meta SET value = ? WHERE key = ? AND value = ?", (value, key, expected)
+        ) == 1
+
     def retag_kanban_worker_sessions(self, workspaces_root: str) -> int:
         """Retag legacy kanban worker rows from ``cli`` to ``kanban`` by cwd under the board's workspaces
         root; gated once per root via state_meta. Returns rows retagged."""

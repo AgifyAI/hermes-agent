@@ -8,3 +8,20 @@ Importing it once here, before any window opens, keeps boot out of the mocked im
 """
 
 import hermes_bootstrap
+import pytest
+
+
+@pytest.fixture
+def deferred_turn():
+    """Pick the deferred prompt thread out of the threads a test captured.
+
+    Opening a fresh SessionDB while ``threading.Thread`` is stubbed also captures the short-lived
+    deleted-WAL sidecar scan; that is bookkeeping, not the turn, so the assertion stays about turn
+    scheduling instead of thread creation order.
+    """
+    def pick(threads):
+        turn = [t for t in threads if getattr(t.target, "__name__", "") != "_scan"]
+        assert turn, "no deferred turn thread was created"
+        return turn[0]
+
+    return pick

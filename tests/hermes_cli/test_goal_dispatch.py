@@ -68,9 +68,10 @@ def test_surface_goal_state_matches_cli(surface, command, monkeypatch):
     goals._DB_CACHE.clear()
     command = command.format(pid=os.getpid())
     snapshots = []
-    for name in ('cli', surface):
-        mgr = goals.GoalManager(session_id=name + '-parity-' + surface)
-        mgr.set('original objective')
+    for index, name in enumerate(('cli', surface)):
+        # Distinct sessions: one unfinished goal per session, so the two runs must each start fresh.
+        mgr = goals.GoalManager(session_id=f'{name}-parity-{surface}-{index}')
+        mgr.set('original objective', replace=True)
         mgr.add_gate('original gate')
         mgr.wait_on(os.getpid(), reason='existing barrier')
         result = _surface(name, mgr, monkeypatch)(command)
@@ -80,7 +81,9 @@ def test_surface_goal_state_matches_cli(surface, command, monkeypatch):
         if state:
             from dataclasses import asdict
             state = asdict(state)
-            for key in ('created_at', 'updated_at', 'waiting_since'):
+            # Identity and audit timestamps are per-session by design; the contract compared here is
+            # the goal's visible state after the same command.
+            for key in ('created_at', 'updated_at', 'waiting_since', 'goal_id', 'events'):
                 state.pop(key, None)
         snapshots.append(state)
     assert snapshots[0] == snapshots[1]
@@ -113,7 +116,11 @@ def test_drafts_start_work_but_inspection_and_literal_prefixes_do_not_draft(
     execute('wait invalid')
     assert goals.load_goal(mgr.session_id).goal == 'build it'
     assert prompts == ['build it']
+    # A goal is already in progress: the surface must confirm before rewriting. The explicit
+    # preserving rewrite keeps the goal id, rounds, criteria, gates and contract.
     execute('drafting docs')
+    assert goals.load_goal(mgr.session_id).goal == 'build it'
+    execute('edit drafting docs')
     assert goals.load_goal(mgr.session_id).goal == 'drafting docs'
     assert calls == ['build it']
     assert prompts[-1] == 'drafting docs'
@@ -147,11 +154,17 @@ def test_double_dash_sets_control_word_goal_and_announces_the_replace():
     goals._DB_CACHE.clear()
     mgr = goals.GoalManager(session_id='verb-escape')
     mgr.set('original objective')
-    result = _dispatch(mgr, '-- pause the nightly cron')
+    # One unfinished goal per session: the replacement is proposed, never silent.
+    blocked = _dispatch(mgr, '-- pause the nightly cron')
+    assert blocked.requires_confirmation
+    assert blocked.proposed_goal == 'pause the nightly cron'
+    assert goals.load_goal(mgr.session_id).goal == 'original objective'
+    rewritten = _dispatch(mgr, 'edit pause the nightly cron')
     assert goals.load_goal(mgr.session_id).goal == 'pause the nightly cron'
-    assert 'was: original objective' in result.output
-    mgr.clear()
-    fresh = goals.GoalManager(session_id=mgr.session_id)  # gateway/TUI reload per command
-    assert 'replaced' not in _dispatch(fresh, 'fresh objective').output
-    _dispatch(fresh, '--dry-run the migration')
-    assert goals.load_goal(mgr.session_id).goal == '--dry-run the migration'
+    assert 'previous objective was: original objective' in rewritten.output
+
+    fresh = goals.GoalManager(session_id='verb-escape-fresh')
+    assert 'rewritten' not in _dispatch(fresh, 'fresh objective').output
+    verbatim = goals.GoalManager(session_id='verb-escape-verbatim')
+    _dispatch(verbatim, '--dry-run the migration')
+    assert goals.load_goal(verbatim.session_id).goal == '--dry-run the migration'

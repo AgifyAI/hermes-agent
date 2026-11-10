@@ -230,7 +230,7 @@ def test_gate_continuation_respects_turn_budget():
         decision = mgr.evaluate_after_turn("only turn")
     assert decision["status"] == "paused"
     assert decision["should_continue"] is False
-    assert "turns used" in decision["message"]
+    assert "rounds used" in decision["message"]
 
 
 def test_no_gates_behaves_exactly_as_before():

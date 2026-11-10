@@ -69,7 +69,7 @@ def _exhaust_budget(session_id: str, goal_text: str = "ship the benchmark"):
         decision = mgr.evaluate_after_turn("worked a bit")
     assert decision["status"] == "paused"
     assert decision["should_continue"] is False
-    assert "turn budget exhausted" in (mgr.state.paused_reason or "")
+    assert "round budget exhausted" in (mgr.state.paused_reason or "")
     return mgr
 
 

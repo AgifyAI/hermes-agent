@@ -52,9 +52,19 @@ def _safe_goal_snapshot(state) -> dict | None:
         return None
     snapshot = {
         "title": state.goal,
+        # ``status`` keeps its historical names for old clients; ``phase`` is the versioned model
+        # (active | paused | blocked | budget_limited | complete).
         "status": state.status,
-        "turns_used": state.turns_used,
-        "max_turns": state.max_turns,
+        "phase": state.phase,
+        "goal_id": state.goal_id,
+        "revision": state.revision,
+        "turns_used": state.rounds_started,
+        "max_turns": state.max_rounds,
+        "rounds_started": state.rounds_started,
+        "max_rounds": state.max_rounds,
+        "token_budget": state.token_budget,
+        "tokens_used": state.tokens_used,
+        "time_used_seconds": state.time_used_seconds,
         "contract": state.contract.to_dict(),
         "subgoals": list(state.subgoals),
         "gates": [
@@ -74,6 +84,8 @@ def _safe_goal_snapshot(state) -> dict | None:
         snapshot["updated_at"] = state.last_turn_at
     if state.paused_reason:
         snapshot["paused_reason"] = state.paused_reason
+    if state.blocked_reason:
+        snapshot["blocked_reason"] = dict(state.blocked_reason)
     if state.last_verdict:
         snapshot["last_verdict"] = state.last_verdict
     if state.last_reason:

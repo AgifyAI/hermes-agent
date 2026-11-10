@@ -19,6 +19,8 @@ def _cli(history):
 
 
 def _kick(cli, text):
+    # One unfinished goal per session: clear the previous one so each kick is a fresh set.
+    cli._get_goal_manager().clear()
     cli._handle_goal_command("/goal " + text)
     return cli._pending_input.get_nowait()
 
