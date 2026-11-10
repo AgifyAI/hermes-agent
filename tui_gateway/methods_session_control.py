@@ -325,8 +325,8 @@ def _session_publish_lock(session: dict) -> threading.Lock:
 def _publish_session_control_snapshot(sid: str, session: dict | None, *, only_if_present: bool = False,
                                       only_if_changed: bool = False) -> None:
     """Best-effort ``session.control.update`` for one live session. Also called after the post-turn hooks,
-    because the goal judge and loop tick evaluation mutate persisted state AFTER ``message.complete`` — a
-    client refresh keyed on that event reads the pre-judge turn count. ``only_if_present`` keeps the
+    because the goal engine (gates, deferral, ending) and loop tick evaluation mutate persisted state
+    AFTER ``message.complete`` — a client refresh keyed on that event reads pre-decision counters. ``only_if_present`` keeps the
     post-turn event stream of a session with no automation state byte-identical to today's;
     ``only_if_changed`` (every tool completion) also skips a snapshot equal to the last one published."""
     if not session or not (session_key := str(session.get("session_key") or "")):

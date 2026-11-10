@@ -1345,14 +1345,18 @@ For a user/plugin policy gate at the same point — keep the agent going with yo
 
 ## Standing Goals (`/goal`)
 
-When a standing goal is active, Hermes judges whether each assistant response satisfies it. If not, it feeds a continuation prompt back into the same session and keeps working until the goal is done, the turn budget is exhausted, or the user pauses/clears it. The turn budget is the real backstop — judge failures fail **open** (continue) so a flaky judge never wedges progress.
+A standing goal keeps feeding continuation prompts into the same session until **the agent ends it** (it audits the work and calls `update_goal` with `complete` or `blocked`), you pause/clear it, or the token budget is spent. There is no LLM judge in the decision path; deterministic gates, the agent's own status, and the budget are the backstops.
 
 ```yaml
 goals:
-  max_turns: 20   # Max continuation turns before Hermes auto-pauses the goal (default: 20)
+  max_tokens: 2000000            # Token budget for the whole goal (0 disables it)
+  closing_reserve_tokens: 0      # Kept for one closing turn; 0 = auto (5%, minimum 20000)
+  blocked_min_rounds: 3          # update_goal(blocked) refused before this many rounds
+  max_wait_seconds: 1800         # Hard ceiling for any deferred continuation
+  max_turns: 20                  # DEPRECATED: round safety cap only, not the budget
 ```
 
-`max_turns` caps how many continuation turns a goal can drive before Hermes auto-pauses it and asks the user to `/goal resume`. It protects against judge false negatives (goal actually done but judge says continue) and unbounded model spend on fuzzy or unachievable goals. See [Goals](./features/goals.md) for the full feature.
+Tokens are the budget; rounds are only a safety cap (the driver allows up to 256). When the working budget is exhausted, one closing turn summarizes what is done and what remains, then the goal pauses as `budget_limited`; `/goal resume` extends the budget by twice the closing reserve. See [Goals](./features/goals.md) for phases, contracts, gates, history, the Desktop Automations panel and the full command list.
 
 ### API Timeouts
 

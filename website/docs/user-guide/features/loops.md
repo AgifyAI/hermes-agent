@@ -8,7 +8,7 @@ description: "Re-run a prompt on a recurring interval inside your session — He
 
 `/loop` re-runs a prompt (or a slash command) on a recurring cadence **inside your current session**. Each wakeup is a real agent turn: Hermes reads the current state fresh — the latest CI result, the newest queue depth, the file as it is now — does the work, reports back, and goes quiet until the next tick.
 
-It's Hermes' take on **Claude Code's `/loop`** (and its `/proactive` alias, which works here too). Where [`/goal`](./goals.md) is judge-driven — "keep working until this objective is achieved" — `/loop` is timer-driven: "do this again every N minutes (or whenever it makes sense) until something says stop."
+It's Hermes' take on **Claude Code's `/loop`** (and its `/proactive` alias, which works here too). Where [`/goal`](./goals.md) is agent-driven — "keep working until the agent audits this objective as done" — `/loop` is timer-driven: "do this again every N minutes (or whenever it makes sense) until something says stop."
 
 ## When to use it
 
@@ -97,7 +97,7 @@ In the desktop app and dashboard chat, the backend keeps firing an active loop a
 
 ## Mixing with `/goal`
 
-Both features inject synthetic turns at idle boundaries, so they follow one rule: **an active goal owns the session.** While a `/goal` is actively driving (judge saying "continue"), loop wakeups defer. The loop resumes using idle time as soon as the goal finishes, pauses, or parks itself on a wait barrier (`/goal wait`, or the judge's automatic WAIT verdict). A parked goal plus a `/loop` is a natural combo: the goal waits on the big async thing while the loop keeps a heartbeat on something else.
+Both features inject synthetic turns at idle boundaries, so they follow one rule: **an active goal owns the session.** While a `/goal` is running rounds, loop wakeups defer. The loop resumes using idle time as soon as the goal completes, pauses, or defers itself on a wait barrier (`/goal wait`, background work, a timer or subagents). A parked goal plus a `/loop` is a natural combo: the goal waits on the big async thing while the loop keeps a heartbeat on something else.
 
 A real user message always wins over both — wakeups only fire while the session is idle and nothing of yours is queued.
 

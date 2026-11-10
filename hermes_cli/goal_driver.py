@@ -18,7 +18,8 @@ The contract (DeepSeek Harness' ``dsh-goal-round-driver`` shape):
 * Clean stops are explicit decision outcomes: failed turn, interrupted turn, compression exhausted,
   round cap, replaced goal.
 
-The driver never imports the surfaces. It is synchronous (the judge and gates block), so callers run
+The driver never imports the surfaces. It is synchronous (quality gates and the deferral checks block),
+so callers run
 it off their event loop.
 """
 
@@ -105,7 +106,7 @@ def plan_after_turn(
     turn_tokens: int = 0,
     turn_seconds: float = 0.0,
 ) -> dict[str, Any]:
-    """Decide what happens after a turn: judge/gates, then reserve the next round if valid.
+    """Decide what happens after a turn: gates and deferral, then reserve the next round if valid.
 
     Returns the engine decision dict extended with ``stop``, ``goal_id``, ``revision`` and
     ``continuation`` (a :class:`Continuation` the caller must admit or release). The caller owns
@@ -309,7 +310,7 @@ def _token_budget_stop(mgr, decision: dict[str, Any], *, surface: str) -> Option
 def plan_recovery(mgr, prompt: str, *, surface: str) -> Optional[Continuation]:
     """Reserve a round for a surface-computed recovery continuation (compression retry).
 
-    The recovery prompt is not a judge verdict, but it still spends a turn: it goes through the same
+    The recovery prompt is not a goal decision, but it still spends a turn: it goes through the same
     armed/cap/reservation rules so it cannot bypass the round budget.
     """
     state = mgr.state if mgr is not None else None
