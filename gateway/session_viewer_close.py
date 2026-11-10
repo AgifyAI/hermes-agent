@@ -367,6 +367,15 @@ async def _run_close_lifecycle(authority, live, target, platform, reason):
     memory providers' end-of-session commit (the cached agent is evicted at a boundary, as a
     gateway ``/new`` does) and the finalize hooks under the owning profile's scope."""
     runner = authority.runner
+    # A closed session's goal is disarmed and its unadmitted round released: the durable goal stays
+    # readable, but nothing relaunches until the user resumes the goal explicitly.
+    try:
+        from hermes_cli import goal_driver
+        from hermes_cli.goals import GoalManager
+        goal_mgr = await asyncio.to_thread(GoalManager, target)
+        await asyncio.to_thread(goal_driver.disarm_on_session_unload, target, mgr=goal_mgr)
+    except Exception:  # health: allow BLE001 -- close lifecycle must continue past optional bookkeeping
+        logger.debug('goal disarm on session close failed', exc_info=True)
     evict = getattr(runner, '_evict_cached_agent_at_boundary', None)
     if evict is not None:
         evict(live.route)

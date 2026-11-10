@@ -663,6 +663,16 @@ def _teardown_popped_session(session: dict | None, *, end_reason: str = "tui_clo
     try:
         _teardown_session(session, end_reason=end_reason)
     finally:
+        # A closed session's goal must not relaunch on its own in this process: unload disarms it
+        # and drops a round that was reserved but never admitted.
+        session_key = session.get("session_key")
+        if session_key:
+            try:
+                from hermes_cli import goal_driver
+                from hermes_cli.goals import GoalManager
+                goal_driver.disarm_on_session_unload(session_key, mgr=GoalManager(session_key))
+            except Exception:  # health: allow BLE001 -- teardown of a closed session must not raise
+                logger.debug("goal disarm on session close failed", exc_info=True)
         # finally: a raising finalize (callers log and move on) must still free the ring.
         from tui_gateway.event_replay import forget_session
         forget_session(session.get("_sid") or "")

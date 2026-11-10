@@ -1,3 +1,4 @@
+# health: allow FILE_LINES -- session resume now leaves a stored conversation's /goal disarmed (the round driver must not relaunch it by itself); the growth is that three-line policy hook in the resume path.
 """Session / delegation / spawn-tree / billing / pet JSON-RPC handlers.
 
 Bodies are rebound onto server.py's globals at install time (method_ctx.py), so they use server
@@ -1070,6 +1071,10 @@ def _(rid, params: dict) -> dict:
         from hermes_state import SessionDB
         from tools.approval_yolo import restore_session_yolo  # a fresh backend starts with an empty set
         restore_session_yolo(ctx.target, SessionDB.session_yolo_enabled(ctx.found))
+        # Resuming a stored conversation leaves its /goal disarmed until the user runs /goal resume
+        # (a live-session reattach never reaches here).
+        from hermes_cli.goal_driver import disarm_on_session_open
+        disarm_on_session_open(ctx.target)
         if ctx.lazy:
             return _resume_lazy(ctx)
         return _resume_eager(ctx) if ctx.eager_build else (

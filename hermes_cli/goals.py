@@ -687,6 +687,10 @@ class GoalManager:
     def is_active(self) -> bool:
         return self._state is not None and self._state.phase == "active"
 
+    def is_armed(self) -> bool:
+        """Whether the round driver may continue this goal in this process (memory only)."""
+        return is_goal_armed(self.session_id)
+
     def has_goal(self) -> bool:
         """True while a goal is unfinished: active, paused, blocked or budget-limited."""
         return self._state is not None and self._state.is_unfinished()
@@ -774,6 +778,7 @@ class GoalManager:
         self._state.blocked_reason = (
             {"code": code or "blocked", "message": reason} if phase == "blocked" else None
         )
+        self._state.reserved_round = None
         # A blocked or budget-limited goal must not keep auto-running: only a human resume re-arms.
         if phase in {"blocked", "budget_limited", "paused"}:
             disarm_goal(self.session_id)
@@ -843,6 +848,7 @@ class GoalManager:
         self._state.phase = "paused"
         self._state.paused_reason = reason
         self._state.clear_wait()   # a wait barrier is meaningless once paused
+        self._state.reserved_round = None   # a paused goal has no continuation in flight
         disarm_goal(self.session_id)
         return self._save(event="paused", reason=reason, source="user")
 
@@ -854,6 +860,7 @@ class GoalManager:
         self._state.paused_reason = None
         self._state.blocked_reason = None
         self._state.clear_wait()   # resuming starts fresh
+        self._state.reserved_round = None
         if reset_budget:
             self._state.rounds_started = 0
         arm_goal(self.session_id)
@@ -864,6 +871,7 @@ class GoalManager:
             return
         self._state.phase = "cleared"
         self._state.clear_wait()
+        self._state.reserved_round = None
         disarm_goal(self.session_id)
         self._save(event="cleared")
         self._state = None
@@ -872,6 +880,7 @@ class GoalManager:
         if not self._state:
             return
         self._state.phase = "complete"
+        self._state.reserved_round = None
         self._state.last_verdict = "done"
         self._state.last_reason = reason
         disarm_goal(self.session_id)
@@ -918,6 +927,49 @@ class GoalManager:
         if self._state is None:
             return "(no active goal)"
         return self._state.render_subgoals_block() or "(no subgoals — use /subgoal <text> to add criteria)"
+
+    # --- round reservation (reservation → admission) -------------------
+
+    def pending_round(self) -> Optional[int]:
+        """The round reserved for a continuation that has not entered the session yet."""
+        return self._state.reserved_round if self._state is not None else None
+
+    def reserve_round(self) -> Optional[int]:
+        """Reserve the next round; ``None`` when the round cap is reached.
+
+        The reservation is idempotent (returning the round already reserved) so a duplicated
+        boundary cannot reserve twice, and it never counts the round — only ``admit_round`` does.
+        """
+        state = self._require_active()
+        if state.reserved_round:
+            return state.reserved_round
+        if state.rounds_started >= state.max_rounds:
+            return None
+        state.reserved_round = state.rounds_started + 1
+        self._save(event="round_reserved", round=state.reserved_round)
+        return state.reserved_round
+
+    def admit_round(self) -> bool:
+        """Consume the reservation: the continuation message really entered the session."""
+        state = self._state
+        if state is None or state.phase != "active" or not state.reserved_round:
+            return False
+        admitted = int(state.reserved_round)
+        state.rounds_started = admitted
+        state.reserved_round = None
+        state.last_turn_at = time.time()
+        self._save(event="round_admitted", round=admitted, max_rounds=state.max_rounds)
+        return True
+
+    def release_round(self, reason: str = "") -> bool:
+        """Drop a reservation that will never run; the round stays available."""
+        state = self._state
+        if state is None or not state.reserved_round:
+            return False
+        reserved = int(state.reserved_round)
+        state.reserved_round = None
+        self._save(event="round_released", round=reserved, reason=reason)
+        return True
 
     # --- /goal gate quality gates ---------------------------------------
 
@@ -1145,9 +1197,11 @@ class GoalManager:
         background_processes: Optional[list[dict[str, Any]]] = None,
         active_delegations: int = 0,
     ) -> dict[str, Any]:
-        """Run gates + judge and update state. Return a decision dict (``status``, ``should_continue``,
-        ``continuation_prompt``, ``verdict``, ``reason``, ``message``). Both real user prompts and our
-        own continuations increment ``turns_used`` — both consume model budget."""
+        """Run gates + judge and update state. Return a decision dict (``status``, ``phase``,
+        ``should_continue``, ``continuation_prompt``, ``verdict``, ``reason``, ``message``).
+
+        This method does not consume a round: rounds are reserved by ``reserve_round`` and counted
+        by ``admit_round`` when the continuation message really starts (see goal_driver)."""
         state = self._state
         if state is None or state.phase != "active":
             return _decision(state.status if state else None, False, None, "inactive", "no active goal", "",
@@ -1157,15 +1211,13 @@ class GoalManager:
         if self.is_waiting():
             return self._waiting_decision(state)
 
-        state.rounds_started += 1
         state.last_turn_at = time.time()
-        state.record("round_started", round=state.rounds_started, max_rounds=state.max_rounds)
 
         # Gates run BEFORE the judge: a failing gate is deterministic evidence the goal is not done,
         # so the judge is skipped and the gate's output drives the next turn (same turn budget).
         gate_decision = self._check_gates()
         if gate_decision is not None:
-            if gate_decision.get("should_continue") and state.turns_used >= state.max_turns:
+            if gate_decision.get("should_continue") and state.rounds_started >= state.max_rounds:
                 return self._budget_pause(state, "gate_failed", gate_decision.get("reason", ""), note=" (a quality gate is still failing)")
             return gate_decision
 
@@ -1221,7 +1273,7 @@ class GoalManager:
                 + _JUDGE_CONFIG_HINT.format(provider="openrouter", model="google/gemini-3-flash-preview"),
             )
 
-        if state.turns_used >= state.max_turns:
+        if state.rounds_started >= state.max_rounds:
             return self._budget_pause(state, "continue", reason)
 
         self._save()

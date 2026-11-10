@@ -339,12 +339,14 @@ def _turn_outcome(result: Any, error_surface: dict | None = None) -> tuple[Any, 
 
 
 def _goal_followup_after_turn(
-    sid: str, session: dict, result: Any, status: str, raw: Any) -> str | None:
-    """/goal continuation (mirrors gateway/run._post_turn_goal_continuation): the prompt to
-    chain once ``running`` is released, or None.  Compression failures are never judge
-    input: the error text is not work toward the goal, and judging it spends a turn."""
-    goal_followup = None
-    compression_exhausted = bool(isinstance(result, dict) and result.get("compression_exhausted"))
+    sid: str, session: dict, result: Any, status: str, raw: Any) -> dict | None:
+    """/goal continuation through the shared round driver.
+
+    Returns ``{"mgr": GoalManager, "continuation": Continuation}`` once a round is reserved, or
+    None.  The caller (``_run_post_turn_followups``) admits the round only when the chained turn
+    really starts, and releases it when a user prompt wins the boundary.
+    """
+    goal_mgr = None
     try:
         recovery_prompt, recovery_notice = _plan_goal_compression_recovery(
             session, result, status=status, raw=raw)
@@ -353,32 +355,49 @@ def _goal_followup_after_turn(
             render_notification(
                 lambda: _emit("status.update", sid, {"kind": "goal", "text": recovery_notice}),
                 platform="tui", user_config=getattr(session.get("agent"), "_notification_config", None))
-        goal_followup = recovery_prompt or None
-    except Exception as _goal_recovery_exc:
+        if recovery_prompt:
+            if session.get("session_key"):
+                goal_mgr = _active_goal_manager(session)
+            if goal_mgr is not None:
+                from hermes_cli import goal_driver
+                continuation = goal_driver.plan_recovery(goal_mgr, recovery_prompt, surface="tui")
+                if continuation is not None:
+                    return {"mgr": goal_mgr, "continuation": continuation}
+            return None
+    except Exception as _goal_recovery_exc:  # health: allow BLE001 -- hook boundary: _hook_failure records the traceback and a goal bug must never break a turn
         _hook_failure("goal compression recovery", _goal_recovery_exc)
+    compression_exhausted = bool(isinstance(result, dict) and result.get("compression_exhausted"))
     if compression_exhausted or not _is_successful_goal_turn(result, status, raw):
-        return goal_followup
+        return None
     try:
-        if session.get("session_key") and (goal_mgr := _active_goal_manager(session)) is not None:
-            _active_deleg = 0
-            try:
-                from hermes_cli.goals import count_active_delegations, gather_background_processes as _gather_bg
-                # Only THIS session's processes (TUI turns register under session_key): subagents'
-                # pollers must not park the parent's goal. Same rule as the CLI and gateway loops.
-                _bg_procs = _gather_bg(owner_task_id=session.get("session_key") or None)
-                _active_deleg = count_active_delegations(getattr(session.get("agent"), "session_id", None))
-            except Exception:
-                _bg_procs = None
-            decision = goal_mgr.evaluate_after_turn(
-                raw, user_initiated=True, background_processes=_bg_procs, active_delegations=_active_deleg)
-            if verdict_msg := decision.get("message") or "":
-                _emit("status.update", sid, {"kind": "goal", "text": verdict_msg})
-            if decision.get("should_continue") and (
-                cont_prompt := decision.get("continuation_prompt") or ""):
-                goal_followup = cont_prompt
+        if not session.get("session_key"):
+            return None
+        goal_mgr = _active_goal_manager(session)
+        if goal_mgr is None:
+            return None
+        _active_deleg = 0
+        _bg_procs = None
+        try:
+            from hermes_cli.goals import count_active_delegations, gather_background_processes as _gather_bg
+            # Only THIS session's processes (TUI turns register under session_key): subagents'
+            # pollers must not park the parent's goal. Same rule as the CLI and gateway loops.
+            _bg_procs = _gather_bg(owner_task_id=session.get("session_key") or None)
+            _active_deleg = count_active_delegations(getattr(session.get("agent"), "session_id", None))
+        except Exception as _bg_exc:  # health: allow BLE001 -- hook boundary: _hook_failure records it and a snapshot bug must never break the turn
+            _hook_failure("goal background snapshot", _bg_exc)
+        from hermes_cli import goal_driver
+        decision = goal_driver.plan_after_turn(
+            goal_mgr, raw, surface="tui",
+            background_processes=_bg_procs, active_delegations=_active_deleg,
+        )
+        if verdict_msg := decision.get("message") or "":
+            _emit("status.update", sid, {"kind": "goal", "text": verdict_msg})
+        continuation = decision.get("continuation")
+        if continuation is not None:
+            return {"mgr": goal_mgr, "continuation": continuation}
     except Exception as _goal_exc:
         _hook_failure("goal continuation hook", _goal_exc)
-    return goal_followup
+    return None
 
 
 def _after_complete_turn(sid: str, session: dict, st: _TurnRun, raw: Any) -> None:
@@ -437,18 +456,42 @@ def _dispatch_followup_turn(rid, sid: str, session: dict, prompt: Any, what: str
 
 
 def _run_post_turn_followups(
-    rid, sid: str, session: dict, result: Any, goal_followup: str | None) -> None:
+    rid, sid: str, session: dict, result: Any, goal_followup: Any) -> None:
     """Chain whatever should run after ``running`` was released.  Order: a mid-turn user
     prompt wins over every auto follow-up (drain it, skip the rest); a leftover /steer is
     requeued first so it isn't dropped; then goal continuation, then completion
-    notifications.  Each nested submit re-checks ``running`` under the lock."""
+    notifications.  Each nested submit re-checks ``running`` under the lock.
+
+    ``goal_followup`` is the shared driver's reserved ``{"mgr", "continuation"}``; a plain string
+    is a caller-owned prompt (probes and tests that already decided their own admission).
+    """
     steer = result.get("pending_steer") if isinstance(result, dict) else None
     if isinstance(steer, str) and steer.strip():
         with session["history_lock"]:
             _enqueue_prompt(session, steer, session.get("transport"))
     if _drain_queued_prompt(rid, sid, session):
+        if isinstance(goal_followup, dict):
+            from hermes_cli import goal_driver
+            goal_driver.release(goal_followup["mgr"], goal_followup["continuation"],
+                                reason="a user prompt won the turn boundary")
         return
-    if goal_followup:
+    if isinstance(goal_followup, dict):
+        from hermes_cli import goal_driver
+        mgr, continuation = goal_followup["mgr"], goal_followup["continuation"]
+
+        def _admit(prompt: str) -> bool:
+            with _session_turn_admission(session) as admitted:
+                if not admitted or session.get("running"):
+                    return False  # user already sent something — their turn wins
+                if session.get("_turn_cancel_requested"):
+                    return False  # the user pressed Stop; the goal resumes after their next prompt
+                session["running"] = True
+                return True
+
+        if goal_driver.admit(mgr, continuation, _admit):
+            _dispatch_followup_turn(rid, sid, session, continuation.prompt,
+                                    "goal continuation dispatch")
+    elif goal_followup:
         with _session_turn_admission(session) as admitted:
             if not admitted or session.get("running"):
                 return  # user already sent something — their turn wins

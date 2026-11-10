@@ -278,6 +278,9 @@ class GoalState:
     phase: str = "active"
     rounds_started: int = 0
     max_rounds: int = DEFAULT_MAX_ROUNDS
+    # Round reserved for a continuation that has not entered the session yet. The round is only
+    # counted (rounds_started) when the message really starts; a preempted hand-off clears it.
+    reserved_round: Optional[int] = None
     # Token budget (0 = unset → the round cap is the only budget). ``tokens_used`` is cumulative for
     # this goal and is what the closing reserve is computed from.
     token_budget: int = 0
@@ -322,6 +325,7 @@ class GoalState:
         turns_used: Optional[int] = None,
         max_rounds: Optional[int] = None,
         max_turns: Optional[int] = None,
+        reserved_round: Optional[int] = None,
         token_budget: int = 0,
         tokens_used: int = 0,
         time_used_seconds: float = 0.0,
@@ -360,6 +364,7 @@ class GoalState:
                               else (max_rounds or DEFAULT_MAX_ROUNDS))
         if self.max_rounds < 1:
             self.max_rounds = DEFAULT_MAX_ROUNDS
+        self.reserved_round = int(reserved_round) if reserved_round else None
         self.token_budget = max(0, int(token_budget or 0))
         self.tokens_used = max(0, int(tokens_used or 0))
         self.time_used_seconds = float(time_used_seconds or 0.0)
@@ -436,6 +441,7 @@ class GoalState:
             "turns_used": data.get("turns_used"),
             "max_rounds": data.get("max_rounds"),
             "max_turns": data.get("max_turns"),
+            "reserved_round": data.get("reserved_round"),
             "token_budget": int(data.get("token_budget") or 0),
             "tokens_used": int(data.get("tokens_used") or 0),
             "time_used_seconds": float(data.get("time_used_seconds") or 0.0),

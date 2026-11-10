@@ -293,7 +293,23 @@ class GatewayBusySessionMixin:
             kept = [e for e in overflow if not self._is_goal_continuation_event(e)]
             removed += len(overflow) - len(kept)
             self._peek_session_state(session_key).conversation.queued_events = kept
+        if removed:
+            self._release_goal_round_for_key(session_key, "continuation dropped by a goal command")
         return removed
+
+    def _release_goal_round_for_key(self, session_key: str, reason: str) -> None:
+        """A queued continuation was dropped: its reserved round goes back to the budget."""
+        if not session_key:
+            return
+        try:
+            store = getattr(self, "session_store", None)
+            session_id = store.peek_session_id(session_key) if store is not None else None
+            if not session_id:
+                return
+            from hermes_cli.goals import GoalManager
+            GoalManager(session_id=session_id).release_round(reason=reason)
+        except Exception as exc:  # health: allow BLE001 -- cleanup must never break the command
+            logger.debug("goal continuation: round release failed: %s", exc)
 
     def _goal_still_active_for_session(self, session_id: str) -> bool:
         """Best-effort fresh DB check before running a queued continuation."""

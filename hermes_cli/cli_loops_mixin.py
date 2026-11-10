@@ -706,6 +706,9 @@ class CLILoopsMixin:
             state = getattr(mgr, "state", None) if mgr is not None else None
             if state is None or state.status != "active":
                 return
+            if not mgr.is_armed():
+                # A restart/resume left the goal disarmed: a lifted barrier must not relaunch it.
+                return
             if not (state.waiting_on_pid is not None or state.waiting_on_session is not None or state.waiting_until):
                 return  # not parked
             if mgr.is_waiting():
@@ -819,66 +822,60 @@ class CLILoopsMixin:
             _cprint(f"  {_DIM}{t('cli.loop.remaining', label=mgr.state.remaining_label())}{_RST}")
 
     def _maybe_continue_goal_after_turn(self) -> None:
-        """Post-turn hook: judge the goal and maybe re-queue a continuation. A real user
-        message already queued preempts judging (re-judged after their turn). Ctrl+C
-        AUTO-PAUSES instead of judging — the judge on partial output nearly always says
-        "continue" and would re-queue exactly what was cancelled; pausing is recoverable
-        via ``/goal resume``. Empty-response skip mirrors ``gateway/run.py``."""
+        """Post-turn hook: run the shared goal round driver, then queue one admitted continuation.
+
+        The driver owns the stops (failed turn, Ctrl+C pause, round cap, disarmed after a resume,
+        replaced goal); this hook only supplies the CLI's ordered input queue as the dispatch, so a
+        real user message already queued wins the boundary and the reserved round is released.
+        """
         from cli import _DIM, _RST, _cprint, _looks_like_slash_command
         mgr = self._get_goal_manager()
         if mgr is None or not mgr.is_active():
             return
 
         # Slash commands don't count as "real user messages": they're dispatched via
-        # process_command, not chat(), so a queued /subgoal would consume its slot without
-        # ever re-firing this hook and the goal loop would silently stall. Peek at every
-        # queued entry (Queue.queue is the deque; FIFO undisturbed) and defer only on a
-        # non-slash payload. Bundled payloads are (text, images) tuples.
+        # process_command, not chat(), so a queued /subgoal must not defer the goal hook.
+        human_pending = False
         try:
             pending = getattr(self, "_pending_input", None)
             if pending is not None and not pending.empty():
                 try:
                     entries = [e[0] if isinstance(e, tuple) and e else e for e in list(pending.queue)]
-                    has_real_message = any(
+                    human_pending = any(
                         not (isinstance(e, str) and _looks_like_slash_command(e)) for e in entries)
                 except Exception:
-                    has_real_message = True  # can't introspect — defer to be safe
-                if has_real_message:
-                    return
+                    human_pending = True  # can't introspect — defer to be safe
         except Exception:
-            pass
-        if getattr(self, "_last_turn_interrupted", False):
-            try:
-                mgr.pause(reason="user-interrupted (Ctrl+C)")
-            except Exception as exc:
-                logging.debug("goal pause-on-interrupt failed: %s", exc)
-            _cprint(f"  {_DIM}{t('cli.goal.paused_interrupted')}{_RST}")
-            return
+            human_pending = True
 
-        # Empty/whitespace responses are almost always transient failures (API error,
-        # empty stream): judging would say "continue" and trip the parse-failure backstop.
-        # A failed turn (a refused one: its folder is gone) never reached the model, so the judge
-        # would grade the previous reply and burn the whole budget; same rule as the TUI's hook.
-        if getattr(self, "_last_turn_failed", False):
-            return
         last_response = self._last_assistant_response_text()
-        if not last_response.strip():
-            return
         _active_deleg = 0
+        _bg_procs = None
         try:
             from hermes_cli.goals import count_active_delegations, gather_background_processes as _gather_bg
             # Only THIS session's processes: subagents' pollers must not park the parent's goal.
             _bg_procs = _gather_bg(owner_task_id=getattr(self, "session_id", None) or None)
             _active_deleg = count_active_delegations(getattr(self.agent, "session_id", None))
         except Exception:
-            _bg_procs = None
-        decision = mgr.evaluate_after_turn(
-            last_response, user_initiated=True, background_processes=_bg_procs, active_delegations=_active_deleg)
+            pass
+
+        from hermes_cli import goal_driver
+        decision = goal_driver.plan_after_turn(
+            mgr, last_response, surface="cli",
+            background_processes=_bg_procs, active_delegations=_active_deleg,
+            failed=bool(getattr(self, "_last_turn_failed", False)) or not last_response.strip(),
+            interrupted=bool(getattr(self, "_last_turn_interrupted", False)),
+        )
         _print_decision_message(decision)
-        if decision.get("should_continue"):
-            prompt = decision.get("continuation_prompt")
-            if prompt:
-                try:
-                    self._pending_input.put(prompt)
-                except Exception as exc:
-                    logging.debug("goal continuation enqueue failed: %s", exc)
+        if decision.get("stop") == goal_driver.STOP_INTERRUPTED:
+            _cprint(f"  {_DIM}{t('cli.goal.paused_interrupted')}{_RST}")
+            return
+        continuation = decision.get("continuation")
+        if continuation is None:
+            return
+
+        def _enqueue(prompt: str) -> bool:
+            self._pending_input.put(prompt)
+            return True
+
+        goal_driver.admit(mgr, continuation, _enqueue, human_pending=human_pending)

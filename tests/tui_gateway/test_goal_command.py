@@ -226,6 +226,9 @@ def _exhaust_budget(session_key: str, goal_text: str = "finish the benchmark"):
 
     mgr = GoalManager(session_key)
     mgr.set(goal_text, max_turns=1)
+    # The round budget counts admitted continuation rounds (reservation → admission).
+    mgr.reserve_round()
+    mgr.admit_round()
     with patch(
         "hermes_cli.goals.judge_goal",
         return_value=("continue", "needs more steps", False, None, False),
@@ -374,7 +377,8 @@ def test_active_goal_retries_once_without_judging_failed_turn(
 
     assert seen_prompts == ["initial work", continuation]
     assert judged == ["recovered work"]
-    assert GoalManager(session_key).state.turns_used == 0
+    # The compression retry is a real continuation round: it was reserved and admitted.
+    assert GoalManager(session_key).state.turns_used == 1
     assert server._GOAL_COMPRESSION_RECOVERY_ATTEMPTS not in session
     completes = [p for event, _sid, p in turn_env if event == "message.complete"]
     assert [p["status"] for p in completes] == ["error", "complete"]
@@ -412,7 +416,7 @@ def test_second_consecutive_exhaustion_pauses_goal_instead_of_looping(
     assert judged == []
     state = GoalManager(session_key).state
     assert state.status == "paused"
-    assert state.turns_used == 0
+    assert state.turns_used == 1  # the first recovery retry was a real round
     assert state.paused_reason
     assert server._GOAL_COMPRESSION_RECOVERY_ATTEMPTS not in session
     notices = [

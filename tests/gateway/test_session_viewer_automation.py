@@ -48,7 +48,7 @@ async def owner(tmp_path, monkeypatch):
 async def test_goal_mutations_land_in_the_owners_row(owner):
     reply = await owner.call('goal', 'set', 'ship it', max_turns=5)
     state = json.loads(reply['state'])
-    assert (state['goal'], state['status'], state['max_turns']) == ('ship it', 'active', 5)
+    assert (state['goal'], state['phase'], state['max_rounds']) == ('ship it', 'active', 5)
     assert json.loads(owner.db.get_meta('goal:' + owner.target))['goal'] == 'ship it'
     reply = await owner.call('goal', 'add_subgoal', 'and test it')
     assert reply['value'] == 'and test it'
@@ -56,9 +56,9 @@ async def test_goal_mutations_land_in_the_owners_row(owner):
     reply = await owner.call('goal', 'remove_subgoal', 9)
     assert reply['error'] == {'type': 'IndexError', 'message': 'index out of range (1..1)'}
     await owner.call('goal', 'pause', reason='user-paused')
-    assert json.loads(owner.db.get_meta('goal:' + owner.target))['status'] == 'paused'
+    assert json.loads(owner.db.get_meta('goal:' + owner.target))['phase'] == 'paused'
     await owner.call('goal', 'clear')
-    assert json.loads(owner.db.get_meta('goal:' + owner.target))['status'] == 'cleared'
+    assert json.loads(owner.db.get_meta('goal:' + owner.target))['phase'] == 'cleared'
 
 
 @pytest.mark.asyncio
@@ -75,9 +75,10 @@ async def test_the_goal_judge_runs_on_the_owner(owner, monkeypatch):
     decision = reply['value']
     assert seen == [('write the report', 'drafted the outline')]
     assert decision['should_continue'] is True
-    assert decision['message'] == '↻ Continuing toward goal (1/20): only the outline exists'
+    # A user turn is judged but consumes no continuation round: the count is the admitted rounds.
+    assert decision['message'] == '↻ Continuing toward goal (0/20): only the outline exists'
     assert decision['continuation_prompt'].startswith('[Continuing toward your standing goal]')
-    assert json.loads(owner.db.get_meta('goal:' + owner.target))['turns_used'] == 1
+    assert json.loads(owner.db.get_meta('goal:' + owner.target))['rounds_started'] == 0
 
     from gateway.session_viewer_automation import viewer_driven
     assert not viewer_driven(owner.authority, owner.ref.session_id), 'no subscription: the gateway hooks run'
