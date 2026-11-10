@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sqlite3
 import subprocess
 import threading
@@ -35,6 +36,29 @@ _GATE_OUTPUT_TAIL_CHARS = 3000
 # Growth bound for the per-goal journal: enough to audit a long run, small enough that every
 # state write stays a few KB (the row is rewritten atomically on each mutation).
 MAX_EVENTS = 200
+
+# Conservative credential shapes only: a goal reason/command is user or agent text, and the audit
+# trail must never persist an API key it happens to quote. Deliberately narrow so ordinary prose is
+# untouched; the snapshot applies the same helper to every reason it exposes.
+_SECRET_PATTERNS = (
+    re.compile(r"\bsk-[A-Za-z0-9_-]{16,}\b"),
+    re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b"),
+    re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"),
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]{12,}"),
+    re.compile(r"(?i)\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password)\b\s*[:=]\s*\S+"),
+)
+_REDACTED = "[redacted]"
+
+
+def redact_secrets(text):
+    """Redact credential-looking substrings from audit text; non-strings pass through unchanged."""
+    if not isinstance(text, str) or not text:
+        return text
+    redacted = text
+    for pattern in _SECRET_PATTERNS:
+        redacted = pattern.sub(_REDACTED, redacted)
+    return redacted
 
 # Lifecycle phases (union of Codex CLI's statuses and DeepSeek Harness' phases).
 GOAL_PHASES = ("active", "paused", "blocked", "budget_limited", "complete")
@@ -544,9 +568,11 @@ class GoalState:
         """Append one journal entry (bounded). Never raises: an audit entry must not fail a write."""
         try:
             entry: dict[str, Any] = {"ts": round(time.time(), 3), "event": str(event)}
+            if self.goal_id:
+                entry["goal_id"] = self.goal_id
             for key, value in detail.items():
                 if value is not None and value != "":
-                    entry[key] = value
+                    entry[key] = redact_secrets(value) if isinstance(value, str) else value
             self.events.append(entry)
             if len(self.events) > MAX_EVENTS:
                 del self.events[: len(self.events) - MAX_EVENTS]

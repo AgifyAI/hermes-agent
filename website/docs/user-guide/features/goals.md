@@ -305,6 +305,33 @@ you left off. The **armed** state (the in-process flag that lets a continuation 
 deliberately not persisted: after a restart, resume, fork or unload, a goal stays visible and
 inspectable but does not relaunch until you `/goal resume`. This prevents ghost loops.
 
+### Observability and cost
+
+Every goal keeps its own audit trail, independent of the transcript:
+
+- **Accounting per goal:** tokens spent vs budget, elapsed goal time, rounds used vs the safety cap,
+  closing-reserve state. `/goal status` prints them in one line (for example
+  `⊙ Goal (active, 3/256 rounds, 128,450/2,000,000 tokens, 4m, contract, 2 gates): …`) and the
+  Desktop card/panel shows the same numbers.
+- **Event journal:** creation, rewrite, contract change, round reserved/admitted/released, pause,
+  resume, deferral start/end, gate added/passed/failed, token spend, closing turn, budget limit and
+  the agent's `complete`/`blocked` transitions. The journal is bounded (200 entries in the persisted
+  row); the Desktop History list reads its tail (30 entries) with time, round, tokens, reason and gate
+  command/exit code — enough to rebuild what happened without reading logs.
+- **Correlation:** every journal entry carries the `goal_id`, round events carry the round number,
+  and transition logs name `goal_id` and round, so a goal can be traced across CLI, gateway and
+  Desktop logs.
+- **Secrets never enter the trail:** credential-looking strings (`sk-…`, GitHub/Stripe/Slack tokens,
+  `Bearer …`, `api_key: …`) are redacted from journal details, from every reason exposed to the
+  Desktop snapshot, and from the logs the goal engine writes. Gate output tails stay in the engine
+  only — the panel receives the exit code, never the output.
+- **Untrusted objective:** the objective is always rendered inside an explicit
+  `<untrusted_objective>` data fence, with `<`, `>`, `&` escaped and a hard length cap (4000
+  characters), so user text can never close the fence or impersonate system instructions.
+- **Gate authorization:** adding a gate executes shell, so the messaging gateway requires an
+  explicit admin for `/goal gate add` (listing/removing stay open for recovery); the Desktop RPC is
+  scoped to the session owner and the confirmation shows the exact command before it is sent.
+
 ### Prompt cache
 
 The continuation prompt is a plain user-role message appended to history. It does not mutate the

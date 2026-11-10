@@ -59,6 +59,7 @@ export interface SessionControlGoalHistoryEvent {
   event: string
   exit_code?: number
   goal?: string
+  goal_id?: string
   phase?: string
   reason?: string
   round?: number
@@ -433,7 +434,8 @@ const HISTORY_KEYS = new Set([
   'exit_code',
   'cause',
   'code',
-  'goal'
+  'goal',
+  'goal_id'
 ])
 
 /** Tolerant tail parser: one malformed journal entry must not hide the whole goal card. */
@@ -454,7 +456,7 @@ function parseGoalHistory(value: unknown): SessionControlGoalHistoryEvent[] | nu
     }
 
     const entry: SessionControlGoalHistoryEvent = { at: raw.at, event: raw.event }
-    const strings = ['phase', 'reason', 'command', 'cause', 'code', 'goal'] as const
+    const strings = ['phase', 'reason', 'command', 'cause', 'code', 'goal', 'goal_id'] as const
     const integers = ['round', 'tokens', 'total', 'exit_code'] as const
 
     if (strings.some(key => hasOwn(raw, key) && typeof raw[key] !== 'string')) {
