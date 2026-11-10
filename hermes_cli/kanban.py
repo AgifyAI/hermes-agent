@@ -848,7 +848,7 @@ def _goal_mode_handoff_rejection(task: Optional[kb.Task], evidence: str):
     if client is None or not model:
         return ("done", None)
 
-    from hermes_cli.goals import judge_goal
+    from hermes_cli.aux_judge import judge_goal
 
     verdict, reason, transport_failed = "done", "", False
     try:

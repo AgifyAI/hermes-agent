@@ -417,7 +417,7 @@ class TestTickLifecycle:
         state = mgr.set("poll", interval_seconds=300, until="the suite is green")
         state.next_due_at = time.time() - 1
         mgr.fire_tick()
-        with patch("hermes_cli.goals.judge_goal", return_value=("done", "suite green", False, None, False)):
+        with patch("hermes_cli.aux_judge.judge_goal", return_value=("done", "suite green", False, None, False)):
             decision = mgr.complete_tick("All 500 tests passed.")
         assert decision["stopped"] is True
         assert decision["status"] == "done"
@@ -429,7 +429,7 @@ class TestTickLifecycle:
         state = mgr.set("poll", interval_seconds=300, until="the suite is green")
         state.next_due_at = time.time() - 1
         mgr.fire_tick()
-        with patch("hermes_cli.goals.judge_goal", return_value=("continue", "3 failures", False, None, False)):
+        with patch("hermes_cli.aux_judge.judge_goal", return_value=("continue", "3 failures", False, None, False)):
             decision = mgr.complete_tick("3 tests still failing")
         assert decision["stopped"] is False
 
@@ -441,7 +441,7 @@ class TestTickLifecycle:
         state = mgr.set("poll", interval_seconds=300, until="the deleted repo's CI is green")
         state.next_due_at = time.time() - 1
         mgr.fire_tick()
-        with patch("hermes_cli.goals.judge_goal", return_value=("blocked", "repo no longer exists", False, None, False)):
+        with patch("hermes_cli.aux_judge.judge_goal", return_value=("blocked", "repo no longer exists", False, None, False)):
             decision = mgr.complete_tick("The repository was deleted; there is no CI to watch.")
         assert decision["stopped"] is True
         assert decision["status"] == "paused"
@@ -454,7 +454,7 @@ class TestTickLifecycle:
         state = mgr.set("poll", interval_seconds=300, until="green")
         state.next_due_at = time.time() - 1
         mgr.fire_tick()
-        with patch("hermes_cli.goals.judge_goal", side_effect=RuntimeError("api down")):
+        with patch("hermes_cli.aux_judge.judge_goal", side_effect=RuntimeError("api down")):
             decision = mgr.complete_tick("some output")
         assert decision["stopped"] is False  # fail-open: keep looping
 

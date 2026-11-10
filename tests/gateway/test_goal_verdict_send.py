@@ -130,13 +130,12 @@ async def test_goal_verdict_continue_enqueues_continuation(hermes_home):
     mgr = GoalManager(session_entry.session_id)
     mgr.set("polish the docs")
 
-    with patch("hermes_cli.goals.judge_goal", return_value=("continue", "still needs work", False, None, False)):
-        await runner._post_turn_goal_continuation(
-            session_entry=session_entry,
-            source=src,
-            final_response="here's a partial edit",
-        )
-        await _drain_until(lambda: adapter.sends and adapter._pending_messages)
+    await runner._post_turn_goal_continuation(
+        session_entry=session_entry,
+        source=src,
+        final_response="here's a partial edit",
+    )
+    await _drain_until(lambda: adapter.sends and adapter._pending_messages)
 
     # Status line sent back
     assert len(adapter.sends) == 1
@@ -158,13 +157,12 @@ async def test_goal_verdict_budget_exhausted_sends_pause(hermes_home):
     state.turns_used = 2
     save_goal(session_entry.session_id, state)
 
-    with patch("hermes_cli.goals.judge_goal", return_value=("continue", "keep going", False, None, False)):
-        await runner._post_turn_goal_continuation(
-            session_entry=session_entry,
-            source=src,
-            final_response="still partial",
-        )
-        await _drain_until(lambda: adapter.sends)
+    await runner._post_turn_goal_continuation(
+        session_entry=session_entry,
+        source=src,
+        final_response="still partial",
+    )
+    await _drain_until(lambda: adapter.sends)
 
     assert len(adapter.sends) == 1
     content = adapter.sends[0]["content"]

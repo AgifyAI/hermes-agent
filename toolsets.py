@@ -21,6 +21,7 @@ _HERMES_CORE_TOOLS = [
     "todo_list", "memory",
     "session_search",
     "clarify",
+    "update_goal",
     "execute_code", "delegate_task",
     "cronjob_manage",
     "kanban_show", "kanban_list",
@@ -149,6 +150,7 @@ TOOLSETS = {
         platforms=frozenset({"desktop"}),
     ),
     "clarify": _ts("Ask the user clarifying questions (multiple-choice or open-ended)", ["clarify"]),
+    "goal": _ts("End the standing /goal from the agent side (complete after the audit, or blocked)", ["update_goal"]),
     "code_execution": _ts("Run Python scripts that call tools programmatically (reduces LLM round trips)", ["execute_code"]),
     "delegation": _ts("Spawn subagents with isolated context for complex subtasks", ["delegate_task"]),
     "kanban": _ts(

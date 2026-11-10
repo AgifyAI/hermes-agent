@@ -194,12 +194,12 @@ def _set(mgr, arg, *, drafting, last_user_message, render, progress, replace: bo
                    "(e.g. verify: <command>), then /goal resume. Use /goal show to review."
                    if state.has_contract() else
                    "\nCouldn't draft a contract (aux model unavailable) — running as a "
-                   "free-form goal. The per-turn judge still applies.")
+                   "free-form goal. The agent still ends it through update_goal.")
     else:
         against = " against the contract above" if state.has_contract() else ""
-        output += (f"\nAfter each turn, a judge model checks if the goal is done{against}. "
-                   "Hermes keeps working until it is, you pause/clear it, or the budget is "
-                   "exhausted. Use /goal status, /goal show, /goal pause, /goal resume, /goal clear.")
+        output += (f"\nThe agent ends the goal itself by calling update_goal{against} after a "
+                   "completion audit. Hermes keeps working until it does, you pause/clear it, or the "
+                   "budget is exhausted. Use /goal status, /goal show, /goal pause, /goal resume, /goal clear.")
     return GoalCommandResult(output, goals.goal_kick_prompt(state.goal, last_user_message), kickoff=True)
 
 

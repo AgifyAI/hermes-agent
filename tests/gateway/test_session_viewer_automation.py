@@ -62,21 +62,15 @@ async def test_goal_mutations_land_in_the_owners_row(owner):
 
 
 @pytest.mark.asyncio
-async def test_the_goal_judge_runs_on_the_owner(owner, monkeypatch):
-    from hermes_cli import goals
-    seen = []
-
-    def judge(goal, response, **kw):
-        seen.append((goal, response))
-        return 'continue', 'only the outline exists', False, None, False
-    monkeypatch.setattr(goals, 'judge_goal', judge)
+async def test_the_goal_turn_decision_runs_on_the_owner(owner):
+    """No judge: the owner decides the boundary and leaves the ending to the agent's update_goal."""
     await owner.call('goal', 'set', 'write the report')
     reply = await owner.call('goal', 'evaluate_after_turn', 'drafted the outline')
     decision = reply['value']
-    assert seen == [('write the report', 'drafted the outline')]
     assert decision['should_continue'] is True
-    # A user turn is judged but consumes no continuation round: the count is the admitted rounds.
-    assert decision['message'] == '↻ Continuing toward goal (0/2,000,000 tokens): only the outline exists'
+    # A user turn consumes no continuation round: the count is the admitted rounds.
+    assert decision['message'] == '↻ Continuing toward goal (0/2,000,000 tokens)'
+    assert 'update_goal' in decision['continuation_prompt']
     assert decision['continuation_prompt'].startswith('[Continuing toward your standing goal]')
     assert json.loads(owner.db.get_meta('goal:' + owner.target))['rounds_started'] == 0
 

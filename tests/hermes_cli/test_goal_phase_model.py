@@ -148,9 +148,8 @@ class TestOneUnfinishedGoal:
         mgr.add_gate("true")
         mgr.reserve_round()
         mgr.admit_round()
-        with patch("hermes_cli.goals.judge_goal", return_value=("continue", "more", False, None, False)):
-            mgr.evaluate_after_turn("worked")
-            mgr.pause(reason="user-paused")
+        mgr.evaluate_after_turn("worked")
+        mgr.pause(reason="user-paused")
 
         rewritten = mgr.set("second objective", replace=True)
         assert rewritten.goal == "second objective"
@@ -189,30 +188,31 @@ class TestPhases:
         mgr.set("small goal")
         mgr.reserve_round()
         mgr.admit_round()
-        with patch("hermes_cli.goals.judge_goal", return_value=("continue", "more", False, None, False)):
-            decision = mgr.evaluate_after_turn("step")
+        decision = mgr.evaluate_after_turn("step")
         assert decision["phase"] == "budget_limited"
         assert decision["status"] == "paused"  # legacy view
         assert mgr.state.phase == "budget_limited"
         assert mgr.state.blocked_reason is None
 
-    def test_blocked_verdict_sets_blocked_with_a_reason_code(self, hermes_home):
+    def test_agent_blocked_sets_blocked_with_a_reason_code(self, hermes_home):
         from hermes_cli import goals
 
         mgr = goals.GoalManager("blocked-phase")
         mgr.set("impossible goal")
-        with patch("hermes_cli.goals.judge_goal", return_value=("blocked", "no access", False, None, False)):
-            decision = mgr.evaluate_after_turn("cannot do it")
-        assert decision["phase"] == "blocked"
+        for _ in range(3):
+            mgr.reserve_round()
+            mgr.admit_round()
+        payload = mgr.mark_blocked_by_agent("no access to the target system")
+        assert payload["status"] == "blocked"
         assert mgr.state.phase == "blocked"
-        assert mgr.state.blocked_reason == {"code": "judge-blocked", "message": "judged unachievable: no access"}
+        assert mgr.state.blocked_reason == {"code": "agent-blocked", "message": "no access to the target system"}
 
     def test_resume_clears_blocked_and_arms_again(self, hermes_home):
         from hermes_cli import goals
 
         mgr = goals.GoalManager("blocked-resume")
         mgr.set("goal")
-        mgr._pause_state("no access", phase="blocked", code="judge-blocked")
+        mgr._pause_state("no access", phase="blocked", code="agent-blocked")
         assert not goals.is_goal_armed("blocked-resume")
         state = mgr.resume()
         assert state.phase == "active"

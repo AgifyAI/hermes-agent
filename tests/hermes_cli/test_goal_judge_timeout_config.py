@@ -10,8 +10,7 @@ failures pointing at provider/key. The reader mirrors `_goal_judge_max_tokens`
 
 import pytest
 
-from hermes_cli import goals
-from hermes_cli.goals import DEFAULT_JUDGE_TIMEOUT, _goal_judge_timeout
+from hermes_cli.aux_judge import DEFAULT_JUDGE_TIMEOUT, _goal_judge_timeout, judge_goal
 
 
 def _patch_config(monkeypatch, cfg):
@@ -52,7 +51,7 @@ def test_judge_goal_resolves_timeout_from_config(monkeypatch):
     monkeypatch.setitem(sys.modules, "agent.auxiliary_client", _FakeAux)
     _patch_config(monkeypatch, {"auxiliary": {"goal_judge": {"timeout": 120}}})
 
-    verdict, _, _, _, transport_failed = goals.judge_goal(
+    verdict, _, _, _, transport_failed = judge_goal(
         "do the thing", "here is a substantive response to evaluate"
     )
 
@@ -76,5 +75,5 @@ def test_judge_goal_explicit_timeout_wins(monkeypatch):
     monkeypatch.setitem(sys.modules, "agent.auxiliary_client", _FakeAux)
     _patch_config(monkeypatch, {"auxiliary": {"goal_judge": {"timeout": 120}}})
 
-    goals.judge_goal("g", "r", timeout=7.5)
+    judge_goal("g", "r", timeout=7.5)
     assert captured.get("timeout") == 7.5
