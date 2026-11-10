@@ -21,6 +21,7 @@ import { SidebarPanelLabel } from '../shell/sidebar-label'
 
 import { ProjectTree } from './files/tree'
 import { useProjectTree } from './files/use-project-tree'
+import { GoalSection } from './goal-section'
 import { MemorySection } from './memory-section'
 import { QueueSection } from './queue-section'
 import { ScratchpadSection } from './scratchpad'
@@ -116,6 +117,10 @@ export function RightSidebarPane({ fitContent = false, onActivateFile, onActivat
         panesFlipped ? 'border-r-[0.5px]' : 'border-l-[0.5px]'
       )}
     >
+      <section aria-label={r.automationsTitle} className="flex shrink-0 flex-col gap-1.5">
+        <SidebarPanelLabel className="pl-2">{r.automationsTitle}</SidebarPanelLabel>
+        <GoalSection />
+      </section>
       <ScratchpadSection />
       <MemorySection />
       <QueueSection />

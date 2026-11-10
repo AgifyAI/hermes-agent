@@ -34,6 +34,7 @@ import { $sessionsLoading } from '@/store/session'
 
 import { cloneAttachments, type QueueEditState } from '../composer-utils'
 import { replaceQueuedPrompt } from '../discard-lost-prompt'
+import { onComposerPromptSendRequest } from '../prompt-send'
 import { onComposerQueueSendRequest } from '../queue-send'
 import { useComposerScope } from '../scope'
 import type { ChatBarProps } from '../types'
@@ -625,6 +626,35 @@ export function useComposerQueue({
         void sendQueuedNow(detail.entryId)
       }),
     [activeQueueSessionKey, composerVisible, sendQueuedNow]
+  )
+
+  // The right sidebar's control cards (goal resume, …) ask the owning composer
+  // to submit the backend-produced continuation: busy queueing and transcript
+  // ids stay here, exactly like a typed prompt.
+  useEffect(
+    () =>
+      onComposerPromptSendRequest(detail => {
+        if (!composerVisible || detail.claimed || detail.sessionKey !== activeQueueSessionKey) {
+          return
+        }
+
+        detail.claimed = true
+
+        void Promise.resolve(
+          onSubmit(detail.text, {
+            displayKind: 'hidden',
+            displayText: detail.displayText,
+            sessionId: sessionId ?? undefined
+          })
+        )
+          .then(accepted => {
+            detail.accepted = accepted !== false
+          })
+          .catch(() => {
+            detail.accepted = false
+          })
+      }),
+    [activeQueueSessionKey, composerVisible, onSubmit, sessionId]
   )
 
   // Deliver a queued entry as a mid-turn redirect — the queue-panel sibling of

@@ -31,7 +31,7 @@ vi.mock('@/store/goals', async importOriginal => {
 })
 
 import { I18nProvider } from '@/i18n'
-import { clearQueuedPrompts, getQueuedPrompts } from '@/store/composer-queue'
+import { clearQueuedPrompts } from '@/store/composer-queue'
 import { $goalsBySession } from '@/store/goals'
 import {
   $sessionControlBySession,
@@ -174,11 +174,8 @@ describe('ComposerStatusStack session-control UI', () => {
     expect(screen.getByText('Legacy Goal Title')).toBeTruthy()
   })
 
-  // 2. supported structured goal replaces, not duplicates, legacy goal
-  it('replaces legacy goal when structured session control is supported without duplication', () => {
-    $goalsBySession.set({
-      [SID]: { status: 'active', title: 'Legacy Goal Title', updatedAt: Date.now() }
-    })
+  // 2. the goal left the composer: its card lives in the Automations panel.
+  it('no longer renders the structured goal card in the composer', () => {
     $sessionControlBySession.set({
       [SID]: mockEntry({
         capability: 'supported',
@@ -188,9 +185,8 @@ describe('ComposerStatusStack session-control UI', () => {
 
     renderStack()
 
-    fireEvent.click(screen.getByRole('button', { name: /Goal active/ }))
-    expect(screen.getByText('Structured Goal Title')).toBeTruthy()
-    expect(screen.queryByText('Legacy Goal Title')).toBeNull()
+    expect(screen.queryByText('Structured Goal Title')).toBeNull()
+    expect(screen.queryByRole('button', { name: /goal actions/i })).toBeNull()
   })
 
   // 11. loop pause/resume/stop calls exact action
@@ -288,126 +284,5 @@ describe('ComposerStatusStack session-control UI', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  // 13. action rejection produces alert/live feedback
-  it('displays an alert role when action rejects', async () => {
-    mockRunSessionControlAction.mockRejectedValue(new Error('Gateway rejected mutation'))
-
-    $sessionControlBySession.set({
-      [SID]: mockEntry({
-        snapshot: sampleSnapshot({
-          goal: sampleGoal({ status: 'active' })
-        })
-      })
-    })
-
-    renderStack()
-
-    const menuTrigger = screen.getByRole('button', { name: /goal actions/i })
-    fireEvent.click(menuTrigger)
-
-    const pauseItem = await screen.findByRole('menuitem', { name: /pause goal/i })
-    fireEvent.click(pauseItem)
-
-    const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('Gateway rejected mutation')
-  })
-
-  // 14. send dispatch submits exact hidden continuation via ChatBar callback and never calls a text slash path
-  it('submits hidden continuation on send dispatch through onSubmit callback', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(true)
-
-    mockRunSessionControlAction.mockResolvedValue({
-      type: 'send',
-      message: 'Continue toward goal: verify tests',
-      output: null,
-      notice: null,
-      display: null
-    })
-
-    $sessionControlBySession.set({
-      [SID]: mockEntry({
-        snapshot: sampleSnapshot({
-          goal: sampleGoal({ status: 'paused' })
-        })
-      })
-    })
-
-    renderStack(SID, { onSubmit })
-
-    const menuTrigger = screen.getByRole('button', { name: /goal actions/i })
-    fireEvent.click(menuTrigger)
-
-    const resumeItem = await screen.findByRole('menuitem', { name: /resume goal/i })
-    fireEvent.click(resumeItem)
-
-    await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledWith('Continue toward goal: verify tests', {
-        displayKind: 'hidden',
-        sessionId: SID
-      })
-    })
-  })
-
-  // 21. continuation failure when onSubmit returns false
-  it('reports continuation failure when onSubmit returns false or is missing', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(false)
-
-    mockRunSessionControlAction.mockResolvedValue({
-      display: null,
-      message: 'Continue toward goal: run checks',
-      notice: null,
-      output: null,
-      type: 'send'
-    })
-
-    $sessionControlBySession.set({
-      [SID]: mockEntry({
-        snapshot: sampleSnapshot({ goal: sampleGoal({ status: 'paused' }) })
-      })
-    })
-
-    renderStack(SID, { onSubmit })
-
-    const menuTrigger = screen.getByRole('button', { name: /goal actions/i })
-    fireEvent.click(menuTrigger)
-
-    const resumeItem = await screen.findByRole('menuitem', { name: /resume goal/i })
-    fireEvent.click(resumeItem)
-
-    await waitFor(() => {
-      const alert = screen.getByRole('alert')
-      expect(alert.textContent).toContain('Failed to submit goal continuation')
-    })
-  })
-
-  it('queues the resume continuation instead of failing when the target session is busy', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(false)
-    $sessionStates.set({ [SID]: { busy: true, storedSessionId: 'stored-1' } as never })
-
-    mockRunSessionControlAction.mockResolvedValue({
-      display: '/goal resume',
-      message: 'Continue toward goal: verify tests',
-      notice: null,
-      output: null,
-      type: 'send'
-    })
-    $sessionControlBySession.set({
-      [SID]: mockEntry({ snapshot: sampleSnapshot({ goal: sampleGoal({ status: 'paused' }) }) })
-    })
-
-    renderStack(SID, { onSubmit })
-    fireEvent.click(screen.getByRole('button', { name: /goal actions/i }))
-    fireEvent.click(await screen.findByRole('menuitem', { name: /resume goal/i }))
-
-    await waitFor(() => {
-      expect(getQueuedPrompts('stored-1')).toMatchObject([
-        { displayText: '/goal resume', text: 'Continue toward goal: verify tests' }
-      ])
-    })
-    expect(onSubmit).not.toHaveBeenCalled()
-    expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.getByText(/continuation queued/i)).toBeTruthy()
   })
 })

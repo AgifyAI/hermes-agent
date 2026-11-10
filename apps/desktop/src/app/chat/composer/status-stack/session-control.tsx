@@ -6,7 +6,7 @@ import { Codicon } from '@/components/ui/codicon'
 import { useI18n } from '@/i18n'
 import type { SessionControlEntry } from '@/store/session-control'
 
-import { SessionControlGoalSection } from './session-control-goal'
+import { GoalPanelIndicator } from './session-control-goal-indicator'
 import { SessionControlHeartbeatSection } from './session-control-heartbeat'
 import { SessionControlLoopSection } from './session-control-loop'
 
@@ -80,15 +80,7 @@ export const SessionControlSections = memo(function SessionControlSections({
           {feedbackSuccess}
         </div>
       )}
-      {snapshot?.goal && (
-        <SessionControlGoalSection
-          goal={snapshot.goal}
-          onFeedback={handleFeedback}
-          onSubmit={onSubmit}
-          pendingAction={entry.pendingAction}
-          sessionId={sessionId}
-        />
-      )}
+      {snapshot?.goal && <GoalPanelIndicator goal={snapshot.goal} />}
       {snapshot?.loop && (
         <SessionControlLoopSection
           loop={snapshot.loop}
