@@ -1,5 +1,34 @@
 // The right sidebar's copy (file tree, folder picker, terminals); `Translations.rightSidebar`.
 export interface RightSidebarTranslations {
+  automationsTitle: string
+  goalTitle: string
+  goalEmpty: string
+  goalProgressTokens: (used: string, budget: string) => string
+  goalProgressRounds: (started: number | string, max: number | string) => string
+  goalTime: (seconds: number) => string
+  goalWaitingOn: (cause: string) => string
+  goalWaitingOnSeconds: (cause: string, seconds: number) => string
+  goalResumeNow: string
+  goalReason: (reason: string) => string
+  goalCriterionRemove: string
+  goalCriterionPlaceholder: string
+  goalCriterionAdd: string
+  goalPause: string
+  goalResume: string
+  goalClear: string
+  goalAddCriterion: string
+  goalClearConfirmTitle: string
+  goalClearConfirmBody: string
+  goalClearConfirm: string
+  goalContinuationFailed: string
+  goalActionDone: string
+  goalActionFailed: string
+  goalPhaseActive: string
+  goalPhasePaused: string
+  goalPhaseBlocked: string
+  goalPhaseBudgetLimited: string
+  goalPhaseComplete: string
+  goalOpenPanel: string
   pendingMemoryTitle: string
   pendingMemoryTextAria: string
   pendingMemoryLoading: string

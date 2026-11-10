@@ -93,7 +93,7 @@ it('auto-expands only todos and keeps other groups closed as activity arrives', 
   expect(screen.getByText('Worker task')).toBeTruthy()
 })
 
-it('starts structured goals collapsed and preserves manual queue expansion when parked', () => {
+it('keeps structured goals out of the stack and preserves manual queue expansion when parked', () => {
   $sessionControlBySession.set({
     owner: {
       capability: 'supported',
@@ -118,11 +118,10 @@ it('starts structured goals collapsed and preserves manual queue expansion when 
     }
   })
   const view = render(stack())
-  const goal = screen.getByRole('button', { name: /Goal active/ })
-  expect(goal.getAttribute('aria-expanded')).toBe('false')
+  // The goal lives in the right-sidebar Automations panel now: no stack row, one discreet door.
+  expect(screen.queryByRole('button', { name: /Goal active/ })).toBeNull()
   expect(screen.queryByText('Criterion')).toBeNull()
-  fireEvent.click(goal)
-  expect(screen.getByText('Criterion')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Automations' })).toBeTruthy()
 
   const queued = screen.getByRole('button', { name: /1 queued/i })
   fireEvent.click(queued)

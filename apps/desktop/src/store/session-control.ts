@@ -8,6 +8,7 @@ import { ambientRequestFor } from './session-gone-latch'
 import { requestForOwnedSession } from './session-states'
 
 export type SessionControlGoalStatus = 'active' | 'done' | 'paused'
+export type SessionControlGoalPhase = 'active' | 'budget_limited' | 'blocked' | 'complete' | 'paused'
 export type SessionControlLoopMode = 'interval' | 'self_paced'
 export type SessionControlLoopStatus = 'active' | 'done' | 'paused'
 export type SessionControlHeartbeatStatus = 'active' | 'paused'
@@ -28,14 +29,41 @@ export interface SessionControlGate {
   timeout_seconds: number
 }
 
+export type SessionControlDeferralCause =
+  | 'background-process'
+  | 'background-session'
+  | 'compaction'
+  | 'human-pending'
+  | 'subagents'
+  | 'timer'
+
+/** Shared fields of the one deferred-continuation concept (GST-204). */
+export interface SessionControlDeferral {
+  cause?: SessionControlDeferralCause
+  deadline_at?: number
+  max_seconds?: number
+  reason: string
+  remaining_seconds?: number
+}
+
 export type SessionControlWaitBarrier =
-  | { reason: string; type: 'until'; until_at: number }
-  | { reason: string; target: string; type: 'session' }
-  | { reason: string; target: number; type: 'pid' }
+  | (SessionControlDeferral & { type: 'until'; until_at: number })
+  | (SessionControlDeferral & { target: string; type: 'session' })
+  | (SessionControlDeferral & { target: number; type: 'pid' })
 
 export interface SessionControlGoal {
+  blocked_reason?: { code: string; message: string }
+  closing_issued?: boolean
   contract: SessionControlGoalContract
   gates: SessionControlGate[]
+  goal_id?: string
+  max_rounds?: number
+  phase?: SessionControlGoalPhase
+  revision?: number
+  rounds_started?: number
+  time_used_seconds?: number
+  token_budget?: number
+  tokens_used?: number
   last_reason?: string
   last_verdict?: 'blocked' | 'continue' | 'done' | 'skipped' | 'wait'
   max_turns: number
@@ -125,6 +153,7 @@ interface RefreshOptions {
 type UnknownRecord = Record<string, unknown>
 
 const GOAL_STATUSES = new Set<SessionControlGoalStatus>(['active', 'done', 'paused'])
+const GOAL_PHASES = new Set<SessionControlGoalPhase>(['active', 'budget_limited', 'blocked', 'complete', 'paused'])
 
 const GOAL_VERDICTS = new Set<NonNullable<SessionControlGoal['last_verdict']>>([
   'blocked',
@@ -225,53 +254,126 @@ function parseGate(value: unknown): SessionControlGate | null {
   }
 }
 
+const DEFERRAL_CAUSES = new Set<NonNullable<SessionControlDeferralCause>>([
+  'background-process',
+  'background-session',
+  'compaction',
+  'human-pending',
+  'subagents',
+  'timer'
+])
+
+/** The optional deferral metadata every barrier may carry. */
+function parseDeferral(value: UnknownRecord): SessionControlDeferral | null {
+  if (typeof value.reason !== 'string') {
+    return null
+  }
+
+  if (hasOwn(value, 'cause') && (typeof value.cause !== 'string' || !DEFERRAL_CAUSES.has(value.cause as never))) {
+    return null
+  }
+
+  for (const key of ['deadline_at', 'remaining_seconds', 'max_seconds'] as const) {
+    if (hasOwn(value, key) && !isFiniteNumber(value[key])) {
+      return null
+    }
+  }
+
+  return { reason: value.reason }
+}
+
 function parseWaitBarrier(value: unknown): SessionControlWaitBarrier | null {
   if (!isRecord(value) || typeof value.type !== 'string') {
     return null
   }
 
+  const deferral = parseDeferral(value)
+
+  if (!deferral) {
+    return null
+  }
+
+  const extra = ['cause', 'deadline_at', 'remaining_seconds', 'max_seconds']
+  const copyDeferral = (barrier: SessionControlWaitBarrier) => {
+    if (hasOwn(value, 'cause')) {
+      barrier.cause = value.cause as NonNullable<SessionControlDeferralCause>
+    }
+
+    if (hasOwn(value, 'deadline_at')) {
+      barrier.deadline_at = value.deadline_at as number
+    }
+
+    if (hasOwn(value, 'remaining_seconds')) {
+      barrier.remaining_seconds = value.remaining_seconds as number
+    }
+
+    if (hasOwn(value, 'max_seconds')) {
+      barrier.max_seconds = value.max_seconds as number
+    }
+
+    return barrier
+  }
+
   if (value.type === 'until') {
     if (
-      !hasExactFields(value, ['type', 'until_at', 'reason']) ||
-      !isFiniteNumber(value.until_at) ||
-      typeof value.reason !== 'string'
+      !hasExactFields(value, ['type', 'until_at', 'reason'], extra) ||
+      !isFiniteNumber(value.until_at)
     ) {
       return null
     }
 
-    return { reason: value.reason, type: 'until', until_at: value.until_at }
+    return copyDeferral({ reason: deferral.reason, type: 'until', until_at: value.until_at })
   }
 
   if (value.type === 'session') {
-    if (
-      !hasExactFields(value, ['type', 'target', 'reason']) ||
-      typeof value.target !== 'string' ||
-      typeof value.reason !== 'string'
-    ) {
+    if (!hasExactFields(value, ['type', 'target', 'reason'], extra) || typeof value.target !== 'string') {
       return null
     }
 
-    return { reason: value.reason, target: value.target, type: 'session' }
+    return copyDeferral({ reason: deferral.reason, target: value.target, type: 'session' })
   }
 
   if (value.type === 'pid') {
-    if (
-      !hasExactFields(value, ['type', 'target', 'reason']) ||
-      !isInteger(value.target) ||
-      typeof value.reason !== 'string'
-    ) {
+    if (!hasExactFields(value, ['type', 'target', 'reason'], extra) || !isInteger(value.target)) {
       return null
     }
 
-    return { reason: value.reason, target: value.target, type: 'pid' }
+    return copyDeferral({ reason: deferral.reason, target: value.target, type: 'pid' })
   }
 
   return null
 }
 
+function parseBlockedReason(value: unknown): { code: string; message: string } | null {
+  if (!isRecord(value) || !hasExactFields(value, ['code', 'message'])) {
+    return null
+  }
+
+  return typeof value.code === 'string' && typeof value.message === 'string'
+    ? { code: value.code, message: value.message }
+    : null
+}
+
 function parseGoal(value: unknown): SessionControlGoal | null {
   const required = ['title', 'status', 'turns_used', 'max_turns', 'contract', 'subgoals', 'gates']
-  const optional = ['created_at', 'updated_at', 'paused_reason', 'last_verdict', 'last_reason', 'wait_barrier']
+  const optional = [
+    'blocked_reason',
+    'closing_issued',
+    'created_at',
+    'goal_id',
+    'last_reason',
+    'last_verdict',
+    'max_rounds',
+    'paused_reason',
+    'phase',
+    'revision',
+    'rounds_started',
+    'time_used_seconds',
+    'token_budget',
+    'tokens_used',
+    'updated_at',
+    'wait_barrier'
+  ]
 
   if (!isRecord(value) || !hasExactFields(value, required, optional)) {
     return null
@@ -291,7 +393,15 @@ function parseGoal(value: unknown): SessionControlGoal | null {
     (hasOwn(value, 'updated_at') && !isFiniteNumber(value.updated_at)) ||
     (hasOwn(value, 'last_verdict') &&
       (typeof value.last_verdict !== 'string' ||
-        !GOAL_VERDICTS.has(value.last_verdict as NonNullable<SessionControlGoal['last_verdict']>)))
+        !GOAL_VERDICTS.has(value.last_verdict as NonNullable<SessionControlGoal['last_verdict']>))) ||
+    (hasOwn(value, 'phase') &&
+      (typeof value.phase !== 'string' || !GOAL_PHASES.has(value.phase as SessionControlGoalPhase))) ||
+    (hasOwn(value, 'blocked_reason') && !parseBlockedReason(value.blocked_reason)) ||
+    (hasOwn(value, 'closing_issued') && typeof value.closing_issued !== 'boolean') ||
+    ['goal_id', 'revision', 'rounds_started', 'max_rounds', 'token_budget', 'tokens_used'].some(
+      key => hasOwn(value, key) && (key === 'goal_id' ? typeof value[key] !== 'string' : !isInteger(value[key]))
+    ) ||
+    (hasOwn(value, 'time_used_seconds') && !isFiniteNumber(value.time_used_seconds))
   ) {
     return null
   }
@@ -338,6 +448,36 @@ function parseGoal(value: unknown): SessionControlGoal | null {
 
   if (waitBarrier) {
     goal.wait_barrier = waitBarrier
+  }
+
+  if (hasOwn(value, 'phase')) {
+    goal.phase = value.phase as SessionControlGoalPhase
+  }
+
+  if (hasOwn(value, 'goal_id')) {
+    goal.goal_id = value.goal_id as string
+  }
+
+  for (const key of ['revision', 'rounds_started', 'max_rounds', 'token_budget', 'tokens_used'] as const) {
+    if (hasOwn(value, key)) {
+      goal[key] = value[key] as number
+    }
+  }
+
+  if (hasOwn(value, 'time_used_seconds')) {
+    goal.time_used_seconds = value.time_used_seconds as number
+  }
+
+  if (hasOwn(value, 'closing_issued')) {
+    goal.closing_issued = value.closing_issued as boolean
+  }
+
+  if (hasOwn(value, 'blocked_reason')) {
+    const blocked = parseBlockedReason(value.blocked_reason)
+
+    if (blocked) {
+      goal.blocked_reason = blocked
+    }
   }
 
   return goal
