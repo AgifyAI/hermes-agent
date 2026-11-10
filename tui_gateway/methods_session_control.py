@@ -72,9 +72,10 @@ _VALID_ACTIONS = frozenset(_ACTION_COMMAND_MAP) | _MANAGER_ACTIONS
 
 
 def _safe_goal_snapshot(state) -> dict | None:
-    """Return only stable, frontend-safe GoalState fields."""
+    """Return only stable, frontend-safe GoalState fields (reasons redacted)."""
     if state is None or state.status == "cleared":
         return None
+    from hermes_cli.goals import redact_secrets
     snapshot = {
         "title": state.goal,
         # ``status`` keeps its historical names for old clients; ``phase`` is the versioned model
@@ -109,13 +110,16 @@ def _safe_goal_snapshot(state) -> dict | None:
     if state.last_turn_at:
         snapshot["updated_at"] = state.last_turn_at
     if state.paused_reason:
-        snapshot["paused_reason"] = state.paused_reason
+        snapshot["paused_reason"] = redact_secrets(state.paused_reason)
     if state.blocked_reason:
-        snapshot["blocked_reason"] = dict(state.blocked_reason)
+        snapshot["blocked_reason"] = {
+            key: redact_secrets(value) if isinstance(value, str) else value
+            for key, value in state.blocked_reason.items()
+        }
     if state.last_verdict:
         snapshot["last_verdict"] = state.last_verdict
     if state.last_reason:
-        snapshot["last_reason"] = state.last_reason
+        snapshot["last_reason"] = redact_secrets(state.last_reason)
     if barrier := _extract_wait_barrier(state):
         snapshot["wait_barrier"] = barrier
     if history := _goal_history(state):
@@ -124,7 +128,8 @@ def _safe_goal_snapshot(state) -> dict | None:
 
 
 _HISTORY_LIMIT = 30
-_HISTORY_KEYS = ("phase", "reason", "round", "tokens", "total", "command", "exit_code", "cause", "code", "goal")
+_HISTORY_KEYS = ("phase", "reason", "round", "tokens", "total", "command", "exit_code", "cause", "code",
+                 "goal", "goal_id")
 
 
 def _goal_history(state) -> list[dict]:
@@ -133,6 +138,8 @@ def _goal_history(state) -> list[dict]:
     The journal lives in the goal row (MAX_EVENTS entries); the panel shows a compact chronological
     list, so only the tail and the fields the card actually renders cross the RPC boundary.
     """
+    from hermes_cli.goals import redact_secrets
+
     events = getattr(state, "events", None) or []
     history = []
     for event in events[-_HISTORY_LIMIT:]:
@@ -141,7 +148,9 @@ def _goal_history(state) -> list[dict]:
         entry = {"at": float(event.get("ts") or 0.0), "event": str(event.get("event") or "")}
         for key in _HISTORY_KEYS:
             value = event.get(key)
-            if isinstance(value, (str, int, float, bool)) and value != "":
+            if isinstance(value, str):
+                entry[key] = redact_secrets(value)
+            elif isinstance(value, (int, float, bool)) and value != "":
                 entry[key] = value
         history.append(entry)
     return history

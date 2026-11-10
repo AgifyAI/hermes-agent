@@ -808,7 +808,7 @@ class TestGoalHistory:
         assert history[-1]["event"] == "subgoal_added"
         for entry in history:
             assert set(entry) <= {"at", "event", "phase", "reason", "round", "tokens", "total", "command",
-                                  "exit_code", "cause", "code", "goal"}
+                                  "exit_code", "cause", "code", "goal", "goal_id"}
 
     def test_round_and_gate_events_carry_their_fields(self, server, session):
         from hermes_cli.goals import GoalManager
@@ -827,3 +827,23 @@ class TestGoalHistory:
         assert events["round_admitted"]["round"] >= 1
         assert events["gate_added"]["command"] == "false"
         assert events["gate_failed"]["exit_code"] == 1
+
+
+class TestGoalSnapshotSafety:
+    def test_snapshot_redacts_reasons_and_never_exposes_gate_output(self, server, session):
+        from hermes_cli.goals import GoalManager
+
+        sid, key, _ = session
+        _save_goal(key)
+        mgr = GoalManager(key)
+        mgr.add_gate("false")
+        mgr._check_gates()  # records a gate_failed event with an output tail on the gate
+        mgr.pause("auth failed with sk-live-abcdefghijklmnop123456")
+
+        response = _call(server, "session.control.read", session_id=sid)
+        goal = response["result"]["control"]["goal"]
+        assert "sk-live" not in goal["paused_reason"]
+        assert "[redacted]" in goal["paused_reason"]
+        assert all("last_output_tail" not in gate for gate in goal["gates"])
+        assert all("last_output_tail" not in entry for entry in goal["history"])
+        assert all(entry.get("goal_id") == goal["goal_id"] for entry in goal["history"])

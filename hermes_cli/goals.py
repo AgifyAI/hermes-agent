@@ -53,6 +53,7 @@ from hermes_cli.goal_store import (
     load_goal,
     migrate_goal_to_session,
     parse_contract,
+    redact_secrets,
     run_gate,
     save_goal,
 )
@@ -573,7 +574,8 @@ class GoalManager:
         sub = f", {len(s.subgoals)} subgoal{'s' if len(s.subgoals) != 1 else ''}" if s.subgoals else ""
         con = ", contract" if self.has_contract() else ""
         gat = f", {len(s.gates)} gate{'s' if len(s.gates) != 1 else ''}" if s.gates else ""
-        meta = f"{rounds}{tokens}{sub}{con}{gat}"
+        elapsed = f", {int(s.time_used_seconds // 60)}m" if s.time_used_seconds else ""
+        meta = f"{rounds}{tokens}{elapsed}{sub}{con}{gat}"
         if s.phase == "active":
             if self.is_waiting():
                 cause = self.deferral_cause() or DEFERRAL_TIMER
@@ -719,6 +721,7 @@ class GoalManager:
     def pause(self, reason: str = "user-paused") -> Optional[GoalState]:
         if not self._state:
             return None
+        logger.info("goal %s: paused (%s)", self._state.goal_id, reason)
         self._state.phase = "paused"
         self._state.active_round = None
         self._state.paused_reason = reason
@@ -731,6 +734,7 @@ class GoalManager:
         """Human resume: the only action that re-arms the round driver after a restart."""
         if not self._state:
             return None
+        logger.info("goal %s: resumed (rounds reset=%s)", self._state.goal_id, bool(reset_budget))
         self._state.phase = "active"
         self._state.paused_reason = None
         self._state.blocked_reason = None
@@ -838,6 +842,7 @@ class GoalManager:
         if state.rounds_started >= state.max_rounds:
             return None
         state.reserved_round = state.rounds_started + 1
+        logger.info("goal %s: round %s reserved", state.goal_id, state.reserved_round)
         self._save(event="round_reserved", round=state.reserved_round)
         return state.reserved_round
 
@@ -855,6 +860,7 @@ class GoalManager:
         state.active_round = admitted
         state.objective_seen_version = int(state.objective_version or 0)
         state.last_turn_at = time.time()
+        logger.info("goal %s: round %s admitted", state.goal_id, admitted)
         self._save(event="round_admitted", round=admitted, max_rounds=state.max_rounds)
         return True
 
@@ -869,7 +875,7 @@ class GoalManager:
             f"token budget reached ({int(state.tokens_used or 0):,}/{int(state.token_budget or 0):,}, "
             f"{reserve:,} reserved for the closing turn)"
         )
-        return self._save(event="closing_issued", tokens_used=state.tokens_used,
+        return self._save(event="budget_limited", tokens_used=state.tokens_used,
                           token_budget=state.token_budget, reserve=reserve)
 
     def release_round(self, reason: str = "") -> bool:
@@ -879,6 +885,7 @@ class GoalManager:
             return False
         reserved = int(state.reserved_round)
         state.reserved_round = None
+        logger.info("goal %s: round %s released (%s)", state.goal_id, reserved, reason or "no reason")
         self._save(event="round_released", round=reserved, reason=reason)
         return True
 
@@ -1189,6 +1196,8 @@ class GoalManager:
         state.active_round = None
         state.last_verdict = "complete"
         state.last_reason = summary
+        logger.info("goal %s: completed by agent (%d rounds, %s tokens): %s",
+                    state.goal_id, state.rounds_started, state.tokens_used, summary)
         disarm_goal(self.session_id)
         self._save(event="completed", source="agent", reason=summary)
         return {"status": "complete", "message": (
@@ -1210,6 +1219,8 @@ class GoalManager:
         state = self._require_goal_round("update_goal(blocked)")
         needed = int(self.blocked_min_rounds or 3)
         if state.rounds_started < needed:
+            logger.info("goal %s: blocked refused at round %d (needs %d): %s",
+                        state.goal_id, state.rounds_started, needed, redact_secrets(reason))
             raise GoalToolRefusal(
                 "GOAL_BLOCKED_TOO_EARLY",
                 f"blocked is refused before {needed} goal rounds (started {state.rounds_started}); "
@@ -1221,6 +1232,8 @@ class GoalManager:
         state.paused_reason = f"agent reported blocked: {reason}"
         state.last_verdict = "blocked"
         state.last_reason = reason
+        logger.info("goal %s: blocked by agent (%d rounds): %s",
+                    state.goal_id, state.rounds_started, redact_secrets(reason))
         disarm_goal(self.session_id)
         self._save(event="blocked", source="agent", reason=reason)
         return {"status": "blocked", "message": (
