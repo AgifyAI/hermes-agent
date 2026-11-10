@@ -41,7 +41,17 @@ _MANAGER_ACTIONS = frozenset({
     "heartbeat.pause",
     "heartbeat.resume",
     "heartbeat.clear",
+    # Goal editing (GST-202): objective rewrite (preserving), new goal, contract update.
+    "goal.edit",
+    "goal.set",
+    "contract.set",
 })
+
+# Actions whose input travels as ``args`` and is validated before any manager exists.
+_GOAL_EDIT_ACTIONS = frozenset({"goal.edit", "goal.set", "contract.set"})
+_CONTRACT_FIELDS = ("outcome", "verification", "constraints", "boundaries", "stop_when")
+_GOAL_TEXT_MAX = 4000
+_CONTRACT_FIELD_MAX = 2000
 
 _VALID_ACTIONS = frozenset(_ACTION_COMMAND_MAP) | _MANAGER_ACTIONS
 
@@ -343,6 +353,12 @@ def _(rid, params: dict) -> dict:
         if action in _ACTION_COMMAND_MAP:
             name, arg = _ACTION_COMMAND_MAP[action]
             action_result = _dispatch_command(rid, session_id=params.get("session_id") or "", name=name, arg=arg)
+        elif action in _GOAL_EDIT_ACTIONS:
+            action_result = _execute_goal_edit_action(
+                rid, session_id=params.get("session_id") or "", session_key=session_key,
+                action=action, args=validated)
+            if "error" in action_result:
+                return action_result
         else:
             action_result = _execute_manager_action(session_key, action, validated)
     except (RuntimeError, ValueError, IndexError) as exc:
@@ -364,8 +380,48 @@ def _(rid, params: dict) -> dict:
     return _ok(rid, {"control": control, "dispatch": _dispatch_envelope(action_result)})
 
 
+def _validated_contract(rid, value, *, partial: bool):
+    """Validate the 5-field completion contract payload; None = absent."""
+    if value is None:
+        return {}, None
+    if not isinstance(value, dict) or set(value) - set(_CONTRACT_FIELDS):
+        return None, _err(rid, 4004, "contract must be an object with outcome, verification, constraints, boundaries, stop_when")
+    clean: dict[str, str] = {}
+    for key in _CONTRACT_FIELDS:
+        if key not in value:
+            continue
+        field = value[key]
+        if not isinstance(field, str):
+            return None, _err(rid, 4004, f"contract {key} must be a string")
+        if len(field) > _CONTRACT_FIELD_MAX:
+            return None, _err(rid, 4004, f"contract {key} is too long (max {_CONTRACT_FIELD_MAX})")
+        clean[key] = field.strip()
+    return clean, None
+
+
 def _validate_action_args(rid, action: str, args: dict):
     """Validate the only actions with input before any manager is constructed."""
+    if action in {"goal.edit", "goal.set"}:
+        text = args.get("text")
+        if not isinstance(text, str) or not (text := text.strip()):
+            return None, _err(rid, 4004, "goal text is required")
+        if len(text) > _GOAL_TEXT_MAX:
+            return None, _err(rid, 4004, f"goal text is too long (max {_GOAL_TEXT_MAX})")
+        contract, err = _validated_contract(rid, args.get("contract"), partial=False)
+        if err:
+            return None, err
+        revision = args.get("revision")
+        if revision is not None and type(revision) is not int:
+            return None, _err(rid, 4004, "revision must be an integer")
+        return {"text": text, "contract": contract, "revision": revision}, None
+    if action == "contract.set":
+        contract, err = _validated_contract(rid, args.get("contract"), partial=True)
+        if err:
+            return None, err
+        revision = args.get("revision")
+        if revision is not None and type(revision) is not int:
+            return None, _err(rid, 4004, "revision must be an integer")
+        return {"contract": contract, "revision": revision}, None
     if action == "subgoal.add":
         text = args.get("text")
         if not isinstance(text, str) or not (text := text.strip()):
@@ -391,6 +447,48 @@ def _dispatch_command(rid, *, session_id: str, name: str, arg: str) -> dict:
     except Exception as exc:
         logger.debug("command.dispatch %s %s failed: %s", name, arg, exc, exc_info=True)
         return _err(rid, 5031, f"dispatch failed: {exc}")
+
+
+def _goal_command_arg(verb: str, text: str, contract: dict[str, str]) -> str:
+    """Build the /goal command line for an edit/set, inline contract fields included."""
+    lines = [text]
+    for key in _CONTRACT_FIELDS:
+        value = contract.get(key)
+        if value:
+            lines.append(f"{key}: {value}")
+    body = "\n".join(lines)
+    return f"{verb} {body}" if verb else body
+
+
+def _execute_goal_edit_action(rid, *, session_id: str, session_key: str, action: str, args: dict) -> dict:
+    """goal.edit / goal.set / contract.set: preserving rewrite, new goal, contract update.
+
+    ``revision`` is the snapshot revision the client's form was built from; a mismatch means another
+    surface changed the goal meanwhile, so the card must refresh instead of overwriting.
+    """
+    from hermes_cli.goals import GoalContract, GoalManager, load_goal
+
+    state = load_goal(session_key)
+    expected = args.get("revision")
+    if expected is not None and state is not None and int(state.revision) != int(expected):
+        return _err(rid, 4004,
+                    "the goal changed since this form was loaded; reload the card and try again")
+    if action == "contract.set":
+        if state is None or state.phase == "cleared":
+            return _err(rid, 4004, "no goal to update the contract on")
+        merged = state.contract.to_dict()
+        merged.update(args["contract"])
+        contract = GoalContract.from_dict(merged)
+        try:
+            modified = GoalManager(session_key).set_contract(contract)
+        except (RuntimeError, ValueError) as exc:
+            return _err(rid, 4004, _manager_error_message(action, exc))
+        if modified is None:
+            return _err(rid, 4004, "no goal to update the contract on")
+        return {"result": {"type": "exec", "output": "Completion contract updated."}}
+    verb = "edit" if action == "goal.edit" else ""
+    return _dispatch_command(rid, session_id=session_id, name="goal",
+                             arg=_goal_command_arg(verb, args["text"], args["contract"]))
 
 
 def _execute_manager_action(session_key: str, action: str, args: dict) -> dict:

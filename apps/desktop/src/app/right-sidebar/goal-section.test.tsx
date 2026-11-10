@@ -44,6 +44,7 @@ const sampleGoal = (overrides?: Partial<SessionControlGoal>): SessionControlGoal
   gates: [],
   max_turns: 256,
   phase: 'active',
+  revision: 1,
   rounds_started: 2,
   status: 'active',
   subgoals: ['Keep the API stable'],
@@ -135,6 +136,108 @@ describe('GoalSection', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Resume' }))
     await waitFor(() => expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'goal.resume', undefined))
+  })
+
+  it('opens an edit form prefilled with the objective and contract', () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    const objective = screen.getByRole('textbox', { name: 'Objective' }) as HTMLTextAreaElement
+    expect(objective.value).toBe('Ship the automations panel')
+    expect((screen.getByRole('textbox', { name: 'Verification' }) as HTMLInputElement).value).toBe('')
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy()
+  })
+
+  it('rewrites an active goal only after confirming, keeping the revision', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), {
+      target: { value: 'Ship the panel and the contract editor' }
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Verification' }), {
+      target: { value: 'npm run test:ui passes' }
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'goal.edit', {
+        contract: { verification: 'npm run test:ui passes' },
+        revision: 1,
+        text: 'Ship the panel and the contract editor'
+      })
+    )
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save' })).toBeNull())
+  })
+
+  it('does not rewrite when the confirmation is refused', async () => {
+    mockConfirm.mockResolvedValue(false)
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalled())
+    expect(mockRunSessionControlAction).not.toHaveBeenCalledWith(SID, 'goal.edit', expect.anything())
+  })
+
+  it('creates a goal from the empty state without a destructive confirmation', async () => {
+    $sessionControlBySession.set({ [SID]: entry(sampleSnapshot({ goal: null })) })
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Set a goal' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), {
+      target: { value: 'A brand new objective' }
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() =>
+      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'goal.set', {
+        text: 'A brand new objective'
+      })
+    )
+    expect(mockConfirm).not.toHaveBeenCalled()
+  })
+
+  it('starts a new goal from a complete one after confirming', async () => {
+    $sessionControlBySession.set({
+      [SID]: entry(sampleSnapshot({ goal: sampleGoal({ phase: 'complete', status: 'done' }) }))
+    })
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: 'Next objective' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(mockConfirm).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'goal.set', {
+        revision: 1,
+        text: 'Next objective'
+      })
+    )
+  })
+
+  it('shows an inline error and keeps the form when saving fails', async () => {
+    mockRunSessionControlAction.mockRejectedValue(new Error('the goal changed since this form was loaded'))
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('changed since this form was loaded')
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy()
+  })
+
+  it('validates an empty objective before calling the backend', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('Write an objective')
+    expect(mockRunSessionControlAction).not.toHaveBeenCalledWith(SID, 'goal.edit', expect.anything())
+  })
+
+  it('cancels an edit without calling the backend', async () => {
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull()
+    expect(screen.getByText('Ship the automations panel')).toBeTruthy()
+    expect(mockRunSessionControlAction).not.toHaveBeenCalled()
   })
 
   it('clears the goal only after the confirmation', async () => {

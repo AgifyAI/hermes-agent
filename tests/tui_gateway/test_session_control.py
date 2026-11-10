@@ -533,3 +533,93 @@ class TestUpdatePublication:
         assert "message.complete" in order and "session.control.update" in order
         assert order.index("message.complete") < order.index("session.control.update")
         assert emitted[order.index("session.control.update")][2]["control"]["goal"]["turns_used"] == 4
+
+
+class TestGoalEditing:
+    def _seed(self, key, **overrides):
+        _save_goal(key, **overrides)
+        from hermes_cli.goals import GoalManager
+
+        mgr = GoalManager(key)
+        mgr.add_subgoal("Keep the API stable")
+        mgr.add_gate("true")
+        mgr.set_contract(mgr.state.contract.__class__(verification="pytest passes"))
+        return GoalManager(key).state
+
+    def test_goal_edit_rewrites_preserving_rounds_criteria_gates_and_contract(self, server, session):
+        from hermes_cli.goals import GoalManager, load_goal
+
+        sid, key, _ = session
+        state = self._seed(key, turns_used=3)
+        response = _call(server, "session.control", session_id=sid, action="goal.edit",
+                         args={"text": "a new objective", "revision": state.revision})
+        assert "error" not in response, response
+        goal = response["result"]["control"]["goal"]
+        assert goal["title"] == "a new objective"
+        assert goal["turns_used"] == 3
+        assert goal["subgoals"] == ["Keep the API stable"]
+        assert [gate["command"] for gate in goal["gates"]] == ["true"]
+        assert goal["contract"]["verification"] == "pytest passes"
+        # The rewrite is announced to the agent on the next round (objective_updated prompt).
+        stored = load_goal(key)
+        assert stored.objective_version == 1
+        assert stored.previous_objective == "Finish the desktop control card"
+
+    def test_goal_edit_rejects_a_stale_revision(self, server, session):
+        from hermes_cli.goals import GoalManager
+
+        sid, key, _ = session
+        state = self._seed(key)
+        # Another surface moves the goal after the form was loaded.
+        GoalManager(key).add_subgoal("concurrent criterion")
+        response = _call(server, "session.control", session_id=sid, action="goal.edit",
+                         args={"text": "a new objective", "revision": state.revision})
+        assert "error" in response
+        assert "changed since this form" in response["error"]["message"]
+
+    def test_contract_set_updates_and_merges_only_given_fields(self, server, session):
+        from hermes_cli.goals import load_goal
+
+        sid, key, _ = session
+        self._seed(key)
+        response = _call(server, "session.control", session_id=sid, action="contract.set",
+                         args={"contract": {"outcome": "shipped", "verification": "npm run test:ui"}})
+        assert "error" not in response, response
+        contract = load_goal(key).contract
+        assert (contract.outcome, contract.verification) == ("shipped", "npm run test:ui")
+
+    def test_goal_set_creates_a_fresh_goal_when_none_is_running(self, server, session):
+        from hermes_cli.goals import load_goal
+
+        sid, key, _ = session
+        _save_goal(key, status="cleared")
+        response = _call(server, "session.control", session_id=sid, action="goal.set",
+                         args={"text": "brand new objective"})
+        assert "error" not in response, response
+        stored = load_goal(key)
+        assert stored.goal == "brand new objective"
+        assert stored.phase == "active"
+        assert stored.rounds_started == 0
+
+    def test_goal_set_refuses_to_clobber_an_active_goal(self, server, session):
+        from hermes_cli.goals import load_goal
+
+        sid, key, _ = session
+        self._seed(key, turns_used=2)
+        response = _call(server, "session.control", session_id=sid, action="goal.set",
+                         args={"text": "replacement objective"})
+        assert "already in progress" in json.dumps(response)
+        assert load_goal(key).goal == "Finish the desktop control card"
+
+    def test_goal_edit_validates_its_input(self, server, session):
+        sid, key, _ = session
+        for args, needle in (
+            ({}, "goal text is required"),
+            ({"text": "   "}, "goal text is required"),
+            ({"text": "x" * 4001}, "too long"),
+            ({"text": "ok", "contract": {"unknown": "x"}}, "contract must be an object"),
+            ({"text": "ok", "revision": "3"}, "revision must be an integer"),
+        ):
+            response = _call(server, "session.control", session_id=sid, action="goal.edit", args=args)
+            assert "error" in response, args
+            assert needle in response["error"]["message"]
