@@ -64,6 +64,7 @@ def _safe_goal_snapshot(state) -> dict | None:
         "max_rounds": state.max_rounds,
         "token_budget": state.token_budget,
         "tokens_used": state.tokens_used,
+        "closing_issued": state.closing_issued,
         "time_used_seconds": state.time_used_seconds,
         "contract": state.contract.to_dict(),
         "subgoals": list(state.subgoals),

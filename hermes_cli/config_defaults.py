@@ -1395,13 +1395,12 @@ DEFAULT_CONFIG = {
     # Ephemeral prefill messages file — JSON list of {role, content} dicts injected at the start of
     # every API call for few-shot priming. Never saved to sessions/logs/trajectories.
     "prefill_messages_file": "",
-    # Goals — persistent cross-turn /goal loop: after each turn an aux-model judge checks if the
-    # goal is satisfied, else a continuation prompt re-enters the session until done, budget
-    # exhausted, or paused. Judge failures fail OPEN; the budget is the backstop.
+    # Goals — /goal continuation loop. The budget is measured in TOKENS (decision 2026-11); the round
+    # cap is deprecated as a budget and kept only as a hard safety limit.
     "goals": {
-        # Max continuation turns before auto-pause (/goal resume) — guards against judge false
-        # negatives and unbounded spend.
-        "max_turns": 20,
+        "max_tokens": 2_000_000,       # /goal token budget (0 disables it)
+        "closing_reserve_tokens": 0,   # kept for the closing turn; 0 = auto (5%, min 20k)
+        "max_turns": 20,               # DEPRECATED: safety cap only, not the budget
     },
     # Loops — /loop re-runs a prompt or slash command on a cadence in-session. Fixed interval fires
     # on the user's clock; self-paced (no interval) starts at the floor and backs off exponentially

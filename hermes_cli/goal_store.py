@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────
 
-DEFAULT_MAX_ROUNDS = 20
+DEFAULT_MAX_ROUNDS = 256
 DEFAULT_GATE_TIMEOUT_SECONDS = 300
 DEFAULT_GATE_MAX_RETRIES = 3
 # Bounded tail of a failed gate's combined stdout/stderr fed back to the agent.
@@ -281,10 +281,12 @@ class GoalState:
     # Round reserved for a continuation that has not entered the session yet. The round is only
     # counted (rounds_started) when the message really starts; a preempted hand-off clears it.
     reserved_round: Optional[int] = None
-    # Token budget (0 = unset → the round cap is the only budget). ``tokens_used`` is cumulative for
-    # this goal and is what the closing reserve is computed from.
+    # Token budget (0 = unset → no token stop). ``tokens_used`` is cumulative for this goal and is
+    # what the closing reserve is computed from.
     token_budget: int = 0
     tokens_used: int = 0
+    # The one closing turn (summary / what remains / next step) was already offered.
+    closing_issued: bool = False
     time_used_seconds: float = 0.0
     created_at: float = 0.0
     updated_at: float = 0.0
@@ -328,6 +330,7 @@ class GoalState:
         reserved_round: Optional[int] = None,
         token_budget: int = 0,
         tokens_used: int = 0,
+        closing_issued: bool = False,
         time_used_seconds: float = 0.0,
         created_at: float = 0.0,
         updated_at: float = 0.0,
@@ -367,6 +370,7 @@ class GoalState:
         self.reserved_round = int(reserved_round) if reserved_round else None
         self.token_budget = max(0, int(token_budget or 0))
         self.tokens_used = max(0, int(tokens_used or 0))
+        self.closing_issued = bool(closing_issued)
         self.time_used_seconds = float(time_used_seconds or 0.0)
         self.created_at = float(created_at or 0.0)
         self.updated_at = float(updated_at or 0.0)
@@ -444,6 +448,7 @@ class GoalState:
             "reserved_round": data.get("reserved_round"),
             "token_budget": int(data.get("token_budget") or 0),
             "tokens_used": int(data.get("tokens_used") or 0),
+            "closing_issued": bool(data.get("closing_issued")),
             "time_used_seconds": float(data.get("time_used_seconds") or 0.0),
             "consecutive_parse_failures": int(data.get("consecutive_parse_failures") or 0),
             "consecutive_transport_failures": int(data.get("consecutive_transport_failures") or 0),

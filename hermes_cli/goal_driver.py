@@ -25,6 +25,7 @@ it off their event loop.
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
@@ -53,6 +54,20 @@ STOP_ROUND_IN_FLIGHT = "round-in-flight"
 STOP_CONTINUED = "continued"
 
 
+CLOSING_PROMPT_TEMPLATE = (
+    "[Closing this goal — the token budget is spent]\n"
+    "Goal: {goal}\n\n"
+    "Tokens used: {tokens_used:,} of {token_budget:,} (the last {reserve:,} are reserved for this "
+    "closing turn). Do NOT start new work, do not begin another investigation, and keep this turn "
+    "short.\n\n"
+    "Close the goal cleanly by stating, concisely:\n"
+    "1. What is done — the concrete result and the evidence for it.\n"
+    "2. What remains — every unfinished item, in order.\n"
+    "3. The exact next step someone can take from here.\n\n"
+    "Then stop. The goal is budget-limited and only a human /goal resume continues it."
+)
+
+
 @dataclass(frozen=True)
 class Continuation:
     """A reserved continuation waiting for a surface to admit it."""
@@ -61,6 +76,26 @@ class Continuation:
     revision: int
     round_no: int
     prompt: str
+    # The single closing turn (budget spent): it runs while the goal is already budget_limited.
+    closing: bool = False
+
+
+def agent_tokens_delta(agent: Any, marks: dict[str, int], key: str = "total") -> int:
+    """Tokens spent by the turn that just finished, from the agent's cumulative counters.
+
+    The agent's ``session_*_tokens`` counters are cumulative for its whole life, so the surface keeps
+    the last observed value in *marks* and the driver accounts the positive delta. A new agent (or a
+    restored one whose counters restarted) yields the current value, never a negative.
+    """
+    if agent is None:
+        return 0
+    try:
+        current = int(getattr(agent, "session_total_tokens", 0) or 0)
+        previous = int(marks.get(key, 0) or 0)
+        marks[key] = current
+        return max(0, current - previous if current >= previous else current)
+    except (TypeError, ValueError):  # health: allow BLE001 -- a fake agent without counters spends nothing to report
+        return 0
 
 
 def _inert(decision: dict[str, Any], stop: str) -> dict[str, Any]:
@@ -81,6 +116,8 @@ def plan_after_turn(
     failed: bool = False,
     interrupted: bool = False,
     compression_exhausted: bool = False,
+    turn_tokens: int = 0,
+    turn_seconds: float = 0.0,
 ) -> dict[str, Any]:
     """Decide what happens after a turn: judge/gates, then reserve the next round if valid.
 
@@ -90,12 +127,33 @@ def plan_after_turn(
     """
     state = mgr.state if mgr is not None else None
     if state is None or state.phase != "active":
+        if state is not None and state.phase == "budget_limited":
+            # The closing turn already ran (or is in flight): no background work is relaunched;
+            # only a human resume grants a new allowance.
+            return _inert(
+                {"status": "paused", "phase": "budget_limited", "should_continue": False,
+                 "continuation_prompt": None, "verdict": "budget-limited",
+                 "reason": "token budget reached",
+                 "message": (f"⏹ Goal budget-limited — {int(state.tokens_used or 0):,}/"
+                             f"{int(state.token_budget or 0):,} tokens used. "
+                             "Use /goal resume to grant more budget, or /goal clear to stop.")},
+                STOP_BUDGET,
+            )
         return _inert(
             {"status": state.status if state else None, "phase": state.phase if state else None,
              "should_continue": False, "continuation_prompt": None, "verdict": "inactive",
              "reason": "no active goal", "message": ""},
             STOP_INACTIVE,
         )
+
+    # Tokens are real spend whatever happens next: account them before any stop decision so the goal
+    # cost stays exact even on a failed, disarmed or interrupted turn.
+    if not turn_seconds:
+        last = float(state.last_turn_at or state.created_at or 0.0)
+        if last:
+            turn_seconds = max(0.0, time.time() - last)
+    if turn_tokens or turn_seconds:
+        mgr.add_tokens(turn_tokens, seconds=turn_seconds)
 
     if not mgr.is_armed():
         # Restart/resume/fork/unload disarm; nothing relaunches until a human resumes the goal.
@@ -152,6 +210,10 @@ def plan_after_turn(
     if state.reserved_round:
         return _inert(decision, STOP_ROUND_IN_FLIGHT)
 
+    budget_stop = _token_budget_stop(mgr, decision, surface=surface)
+    if budget_stop is not None:
+        return budget_stop
+
     round_no = mgr.reserve_round()
     if round_no is None:
         return _inert(
@@ -176,6 +238,57 @@ def plan_after_turn(
     return decision
 
 
+def _token_budget_stop(mgr, decision: dict[str, Any], *, surface: str) -> Optional[dict[str, Any]]:
+    """Token budget reached: offer the ONE closing turn, then stop launching work.
+
+    The closing reserve is part of the budget: normal work stops while that reserve is still
+    unspent, so the closing turn (summary / remaining / next step) is always affordable.
+    """
+    state = mgr.state
+    if state is None or not state.token_budget:
+        return None
+    remaining = int(state.token_budget) - int(state.tokens_used or 0)
+    reserve = mgr.closing_reserve()
+    if remaining > reserve:
+        return None
+    if state.closing_issued:
+        _inert(decision, STOP_BUDGET)
+        decision["phase"] = "budget_limited"
+        decision["message"] = (
+            f"⏹ Goal budget-limited — {state.tokens_used:,}/{state.token_budget:,} tokens used "
+            f"({reserve:,} kept for the closing turn, already delivered). "
+            "Use /goal resume to grant more budget, or /goal clear to stop."
+        )
+        return decision
+    round_no = mgr.reserve_round()
+    if round_no is None:
+        return _inert(decision, STOP_BUDGET)
+    if mgr.issue_closing_turn(reserve=reserve) is None:
+        return _inert(decision, STOP_BUDGET)
+    state = mgr.state or state
+    fresh = state
+    decision["stop"] = STOP_CONTINUED
+    decision["phase"] = "budget_limited"
+    decision["message"] = (
+        f"⏹ Goal budget-limited — {state.tokens_used:,}/{state.token_budget:,} tokens used. "
+        f"One closing turn (summary, what remains, next step) is being sent."
+    )
+    decision["continuation"] = Continuation(
+        goal_id=fresh.goal_id,
+        revision=fresh.revision,
+        round_no=round_no,
+        prompt=CLOSING_PROMPT_TEMPLATE.format(
+            goal=state.goal, tokens_used=state.tokens_used,
+            token_budget=state.token_budget, reserve=reserve),
+        closing=True,
+    )
+    logger.info(
+        "goal driver[%s]: closing turn reserved for %s (%s/%s tokens, reserve %s)",
+        surface, mgr.session_id, state.tokens_used, state.token_budget, reserve,
+    )
+    return decision
+
+
 def plan_recovery(mgr, prompt: str, *, surface: str) -> Optional[Continuation]:
     """Reserve a round for a surface-computed recovery continuation (compression retry).
 
@@ -185,6 +298,8 @@ def plan_recovery(mgr, prompt: str, *, surface: str) -> Optional[Continuation]:
     state = mgr.state if mgr is not None else None
     if state is None or state.phase != "active" or not mgr.is_armed() or not prompt:
         return None
+    if state.token_budget and int(state.tokens_used or 0) >= int(state.token_budget) - mgr.closing_reserve():
+        return None  # only the closing reserve is left: no recovery work
     if state.reserved_round:
         return None
     round_no = mgr.reserve_round()
@@ -211,11 +326,12 @@ def can_admit(mgr, continuation: Optional[Continuation], *, human_pending: bool 
         release(mgr, continuation, reason="a user message won the boundary")
         return False
     fresh = load_goal(mgr.session_id, upgrade=False) or mgr.state
+    allowed_phase = "budget_limited" if continuation.closing else "active"
     if (
         fresh is None
         or fresh.goal_id != continuation.goal_id
         or fresh.revision != continuation.revision
-        or fresh.phase != "active"
+        or fresh.phase != allowed_phase
         or fresh.reserved_round not in (None, continuation.round_no)
     ):
         # Ghost relaunch guard: the goal was cleared, completed, rewritten (a preserving rewrite keeps
@@ -290,12 +406,15 @@ def finish_after_turn(
     interrupted: bool = False,
     compression_exhausted: bool = False,
     human_pending: bool = False,
+    turn_tokens: int = 0,
+    turn_seconds: float = 0.0,
 ) -> dict[str, Any]:
     """``plan_after_turn`` + ``admit`` in one call for surfaces whose dispatch is synchronous."""
     decision = plan_after_turn(
         mgr, response, surface=surface, background_processes=background_processes,
         active_delegations=active_delegations, failed=failed, interrupted=interrupted,
         compression_exhausted=compression_exhausted,
+        turn_tokens=turn_tokens, turn_seconds=turn_seconds,
     )
     continuation = decision.get("continuation")
     if continuation is not None:
@@ -342,6 +461,7 @@ __all__ = [
     "STOP_ROUND_IN_FLIGHT",
     "Continuation",
     "admit",
+    "agent_tokens_delta",
     "can_admit",
     "claim",
     "disarm_on_session_open",

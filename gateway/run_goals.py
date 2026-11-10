@@ -254,6 +254,20 @@ class GatewayGoalsMixin:
                 "goal continuation: status send failed: %s", getattr(result, "error", "unknown error"),
             )
 
+    @staticmethod
+    def _goal_turn_tokens() -> int:
+        """Tokens the turn just spent, from the owner's captured execution usage."""
+        try:
+            from gateway.session_results import execution_result
+            captured = execution_result.get() or {}
+            usage = captured.get("usage") or {}
+            total = usage.get("total_tokens")
+            if total is None:
+                total = int(usage.get("input_tokens") or 0) + int(usage.get("output_tokens") or 0)
+            return max(0, int(total or 0))
+        except Exception:  # health: allow BLE001 -- an unreadable usage capture only loses billing detail
+            return 0
+
     def _goal_continuation_may_start(self, session_id: Optional[str], session_key: Optional[str]) -> bool:
         """A queued goal continuation is about to run: drop it if the goal moved, else consume its round."""
         if not self._goal_still_active_for_session(session_id):
@@ -358,7 +372,7 @@ class GatewayGoalsMixin:
             lambda: goal_driver.plan_after_turn(
                 mgr, final_response or "", surface="gateway",
                 background_processes=_bg_procs, active_delegations=_active_deleg,
-                failed=self._turn_failed(),
+                failed=self._turn_failed(), turn_tokens=self._goal_turn_tokens(),
             ),
         )
         msg = decision.get("message") or ""

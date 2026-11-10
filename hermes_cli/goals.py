@@ -653,6 +653,24 @@ def _decision(status, should_continue: bool, prompt: Optional[str], verdict: str
             "continuation_prompt": prompt, "verdict": verdict, "reason": reason, "message": message}
 
 
+DEFAULT_GOAL_TOKEN_BUDGET = 2_000_000
+# Smallest closing reserve auto-computed from a budget; a closing turn must at least fit a summary.
+MIN_CLOSING_RESERVE_TOKENS = 20_000
+
+
+def _goals_setting(key: str, default, cast):
+    """Resolve ``goals.<key>``; an unreadable/non-positive value falls back to *default*."""
+    try:
+        from hermes_cli.config import load_config
+
+        value = cast(((load_config() or {}).get("goals") or {}).get(key, default))
+        if value > 0:
+            return value
+    except (ImportError, AttributeError, OSError, TypeError, ValueError) as exc:
+        logger.debug("goal setting %s unavailable (%s); using %r", key, exc, default)
+    return default
+
+
 _JUDGE_CONFIG_HINT = (
     "~/.hermes/config.yaml:\n  auxiliary:\n    goal_judge:\n      provider: {provider}\n      model: {model}\n"
     "Then /goal resume to continue."
@@ -667,11 +685,59 @@ class GoalManager:
     canonical user-role message to feed back into ``run_conversation``.
     """
 
-    def __init__(self, session_id: str, *, default_max_turns: int = DEFAULT_MAX_TURNS):
+    def __init__(self, session_id: str, *, default_max_turns: int = DEFAULT_MAX_TURNS,
+                 default_max_tokens: Optional[int] = None):
         self.session_id = session_id
+        # Rounds are a safety cap only since the 2026-11 budget decision; tokens are the budget.
         self.default_max_turns = int(default_max_turns or DEFAULT_MAX_TURNS)
+        self.default_max_tokens = (
+            int(default_max_tokens) if default_max_tokens is not None
+            else _goals_setting("max_tokens", DEFAULT_GOAL_TOKEN_BUDGET, int)
+        )
+        self.closing_reserve_configured = _goals_setting("closing_reserve_tokens", 0, int)
         self._state: Optional[GoalState] = load_goal(session_id)
         self._revision: int = self._state.revision if self._state is not None else 0
+
+    # --- token budget -------------------------------------------------
+
+    def closing_reserve(self) -> int:
+        """Tokens kept for the closing turn, never more than the budget itself."""
+        state = self._state
+        budget = int(getattr(state, "token_budget", 0) or 0)
+        if self.closing_reserve_configured > 0:
+            reserve = self.closing_reserve_configured
+        else:
+            reserve = max(MIN_CLOSING_RESERVE_TOKENS, budget // 20) if budget else MIN_CLOSING_RESERVE_TOKENS
+        return min(reserve, budget) if budget else reserve
+
+    def remaining_tokens(self) -> Optional[int]:
+        """Tokens left before the closing reserve is reached; None without a token budget."""
+        state = self._state
+        budget = int(getattr(state, "token_budget", 0) or 0) if state is not None else 0
+        if not budget:
+            return None
+        return budget - int(state.tokens_used or 0)
+
+    def add_tokens(self, tokens: int, *, seconds: float = 0.0) -> None:
+        """Account one turn's real provider usage; never negative, recorded once per turn."""
+        state = self._state
+        if state is None:
+            return
+        tokens = max(0, int(tokens or 0))
+        seconds = max(0.0, float(seconds or 0.0))
+        if not tokens and not seconds:
+            return
+        state.tokens_used += tokens
+        state.time_used_seconds += seconds
+        self._save(event="tokens_used", tokens=tokens, total=state.tokens_used,
+                   time_seconds=round(seconds, 1))
+
+    def tokens_until_closing(self) -> Optional[int]:
+        """How many tokens of real work remain before only the closing reserve is left."""
+        remaining = self.remaining_tokens()
+        if remaining is None:
+            return None
+        return remaining - self.closing_reserve()
 
     def refresh(self) -> None:
         """Re-read state from the DB (another writer, e.g. a tool, moved it)."""
@@ -703,7 +769,10 @@ class GoalManager:
         if s is None or s.phase == "cleared":
             return "No active goal. Set one with /goal <text>."
         rounds = f"{s.rounds_started}/{s.max_rounds} rounds"
-        tokens = f", {s.tokens_used}/{s.token_budget} tokens" if s.token_budget else ""
+        if s.token_budget:
+            tokens = f", {s.tokens_used:,}/{s.token_budget:,} tokens"
+        else:
+            tokens = f", {s.tokens_used:,} tokens" if s.tokens_used else ""
         sub = f", {len(s.subgoals)} subgoal{'s' if len(s.subgoals) != 1 else ''}" if s.subgoals else ""
         con = ", contract" if self.has_contract() else ""
         gat = f", {len(s.gates)} gate{'s' if len(s.gates) != 1 else ''}" if s.gates else ""
@@ -722,7 +791,7 @@ class GoalManager:
             why = (s.blocked_reason or {}).get("message") or s.paused_reason or "blocked"
             return f"🚫 Goal (blocked, {meta} — {why}): {s.goal}"
         if s.phase == "budget_limited":
-            why = s.paused_reason or "budget exhausted"
+            why = s.paused_reason or "token budget exhausted"
             return f"⏹ Goal (budget limited, {meta} — {why}): {s.goal}"
         if s.phase == "paused":
             extra = f" — {s.paused_reason}" if s.paused_reason else ""
@@ -795,6 +864,7 @@ class GoalManager:
         goal: str,
         *,
         max_turns: Optional[int] = None,
+        max_tokens: Optional[int] = None,
         contract: Optional[GoalContract] = None,
         replace: bool = False,
     ) -> GoalState:
@@ -823,6 +893,9 @@ class GoalManager:
                 previous.contract = contract
             if max_turns:
                 previous.max_rounds = int(max_turns)
+            if max_tokens is not None:
+                previous.token_budget = max(0, int(max_tokens))
+                previous.closing_issued = False
             self._state = previous
             arm_goal(self.session_id)
             return self._save(event="goal_rewritten", goal=goal)
@@ -830,6 +903,7 @@ class GoalManager:
             goal=goal, goal_id=uuid.uuid4().hex, phase="active", rounds_started=0,
             created_at=time.time(), last_turn_at=0.0,
             max_rounds=int(max_turns) if max_turns else self.default_max_turns,
+            token_budget=(max(0, int(max_tokens)) if max_tokens is not None else self.default_max_tokens),
             contract=contract if contract is not None else GoalContract(),
         )
         arm_goal(self.session_id)
@@ -863,8 +937,16 @@ class GoalManager:
         self._state.reserved_round = None
         if reset_budget:
             self._state.rounds_started = 0
+        if self._state.token_budget:
+            # The budget was the reason for the stop: a human resume grants one more closing reserve
+            # plus an equal working allowance, computed from what was actually spent.
+            reserve = self.closing_reserve()
+            if self._state.phase == "budget_limited" or self._state.tokens_used >= self._state.token_budget - reserve:
+                self._state.token_budget = max(self._state.token_budget, self._state.tokens_used) + 2 * reserve
+                self._state.closing_issued = False
         arm_goal(self.session_id)
-        return self._save(event="resumed", reset_rounds=bool(reset_budget))
+        return self._save(event="resumed", reset_rounds=bool(reset_budget),
+                          token_budget=self._state.token_budget)
 
     def clear(self) -> None:
         if self._state is None:
@@ -950,9 +1032,12 @@ class GoalManager:
         return state.reserved_round
 
     def admit_round(self) -> bool:
-        """Consume the reservation: the continuation message really entered the session."""
+        """Consume the reservation: the continuation message really entered the session.
+
+        ``budget_limited`` is accepted because the single closing turn runs after the budget stop.
+        """
         state = self._state
-        if state is None or state.phase != "active" or not state.reserved_round:
+        if state is None or state.phase not in {"active", "budget_limited"} or not state.reserved_round:
             return False
         admitted = int(state.reserved_round)
         state.rounds_started = admitted
@@ -960,6 +1045,20 @@ class GoalManager:
         state.last_turn_at = time.time()
         self._save(event="round_admitted", round=admitted, max_rounds=state.max_rounds)
         return True
+
+    def issue_closing_turn(self, *, reserve: int) -> Optional[GoalState]:
+        """Flag the single closing turn: budget reached, one summary continuation allowed."""
+        state = self._state
+        if state is None or state.closing_issued:
+            return None
+        state.phase = "budget_limited"
+        state.closing_issued = True
+        state.paused_reason = (
+            f"token budget reached ({int(state.tokens_used or 0):,}/{int(state.token_budget or 0):,}, "
+            f"{reserve:,} reserved for the closing turn)"
+        )
+        return self._save(event="closing_issued", tokens_used=state.tokens_used,
+                          token_budget=state.token_budget, reserve=reserve)
 
     def release_round(self, reason: str = "") -> bool:
         """Drop a reservation that will never run; the round stays available."""
@@ -1278,9 +1377,13 @@ class GoalManager:
 
         self._save()
         self._state.record("verdict", verdict=verdict, round=state.rounds_started)
+        if state.token_budget:
+            progress = f"{state.tokens_used:,}/{state.token_budget:,} tokens"
+        else:
+            progress = f"{state.rounds_started}/{state.max_rounds} rounds"
         return _decision(
             "active", True, self.next_continuation_prompt(), "continue", reason,
-            f"↻ Continuing toward goal ({state.rounds_started}/{state.max_rounds}): {reason}",
+            f"↻ Continuing toward goal ({progress}): {reason}",
         )
 
     def next_continuation_prompt(self) -> Optional[str]:
