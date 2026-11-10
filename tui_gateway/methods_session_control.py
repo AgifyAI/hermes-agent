@@ -97,15 +97,43 @@ def _safe_goal_snapshot(state) -> dict | None:
 
 
 def _extract_wait_barrier(state) -> dict | None:
-    """Expose absolute barriers; countdown presentation belongs to the client."""
+    """Expose the one continuation deferral; countdown presentation belongs to the client.
+
+    ``cause`` makes the wait actionable in the panel (background work / timer / subagents /
+    compaction / human-pending), ``deadline_at`` and ``remaining_seconds`` carry the hard ceiling.
+    """
     reason = state.waiting_reason or ""
-    if state.waiting_until and time.time() < state.waiting_until:
-        return {"type": "until", "until_at": state.waiting_until, "reason": reason}
+    now = time.time()
+    cause = state.waiting_cause
+    ceiling = float(state.waiting_max_seconds or 0.0)
     if state.waiting_on_session is not None:
-        return {"type": "session", "target": state.waiting_on_session, "reason": reason}
-    if state.waiting_on_pid is not None:
-        return {"type": "pid", "target": state.waiting_on_pid, "reason": reason}
-    return None
+        target = state.waiting_on_session
+        kind = "session"
+    elif state.waiting_on_pid is not None:
+        target = state.waiting_on_pid
+        kind = "pid"
+    elif state.waiting_until and now < state.waiting_until:
+        target = None
+        kind = "until"
+    else:
+        return None
+    if cause is None:
+        cause = {"session": "background-session", "pid": "background-process"}.get(kind, "timer")
+    started = float(state.waiting_since or 0.0)
+    hard_stop = started + ceiling if started and ceiling else 0.0
+    if kind == "until":
+        deadline = min(float(state.waiting_until), hard_stop) if hard_stop else float(state.waiting_until)
+    else:
+        deadline = hard_stop
+    barrier = {"type": kind, "cause": cause, "reason": reason}
+    if target is not None:
+        barrier["target"] = target
+    if deadline:
+        barrier["deadline_at"] = deadline
+        barrier["remaining_seconds"] = max(0, round(deadline - now))
+    if ceiling:
+        barrier["max_seconds"] = ceiling
+    return barrier
 
 
 def _safe_loop_snapshot(state, *, deferred_by_goal: bool) -> dict | None:

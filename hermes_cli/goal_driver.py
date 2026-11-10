@@ -183,6 +183,19 @@ def plan_after_turn(
              "reason": "turn interrupted by the user"},
             STOP_INTERRUPTED,
         )
+    if compression_exhausted:
+        # No judge and no continuation: without this pause the goal stayed active with no next round
+        # (silent orphan after an exhausted compaction). Pausing is visible and /goal resume retries.
+        mgr.pause(reason="context compression exhausted before the goal round could finish")
+        return _inert(
+            {"status": "paused", "phase": "paused", "should_continue": False,
+             "continuation_prompt": None, "verdict": "compression-exhausted",
+             "reason": "context compression exhausted",
+             "message": ("⏸ Goal paused — context compression failed before this round could finish. "
+                         "The history is safe; /goal resume retries, /goal edit re-scopes the work.")},
+            STOP_COMPRESSION,
+        )
+
     decision = mgr.evaluate_after_turn(
         response or "",
         user_initiated=True,
@@ -201,9 +214,6 @@ def plan_after_turn(
         return _inert(decision, STOP_BUDGET)
     if decision.get("phase") == "paused":
         return _inert(decision, decision.get("stop") or STOP_BUDGET)
-    if compression_exhausted:
-        # Compression failure is not goal progress: never judge it, never continue on it.
-        return _inert(decision, STOP_COMPRESSION)
     if not decision.get("should_continue") or not decision.get("continuation_prompt"):
         return _inert(decision, decision.get("stop") or STOP_INACTIVE)
 

@@ -1395,11 +1395,11 @@ DEFAULT_CONFIG = {
     # Ephemeral prefill messages file — JSON list of {role, content} dicts injected at the start of
     # every API call for few-shot priming. Never saved to sessions/logs/trajectories.
     "prefill_messages_file": "",
-    # Goals — /goal continuation loop: TOKENS are the budget (2026-11); rounds are a safety cap only.
-    "goals": {
+    "goals": {  # /goal loop: TOKENS are the budget (2026-11); rounds are only a safety cap
         "max_tokens": 2_000_000,       # /goal token budget (0 disables it)
         "closing_reserve_tokens": 0,   # kept for the closing turn; 0 = auto (5%, min 20k)
-        "blocked_min_rounds": 3,       # update_goal(blocked) is refused before this many rounds
+        "blocked_min_rounds": 3,       # update_goal(blocked) refused before this many rounds
+        "max_wait_seconds": 1800,      # hard ceiling for ANY deferred continuation
         "max_turns": 20,               # DEPRECATED: safety cap only, not the budget
     },
     # Loops — /loop re-runs a prompt or slash command on a cadence in-session. Fixed interval fires

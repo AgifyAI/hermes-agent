@@ -329,6 +329,11 @@ class GoalState:
     waiting_on_delegations: int = 0
     waiting_reason: Optional[str] = None
     waiting_since: float = 0.0
+    # One explicit deferred-continuation concept: why the loop is deferred (background-process,
+    # background-session, timer, subagents, compaction, human-pending) and the hard ceiling that was
+    # in force when it was set. No deferral may outlive its ceiling.
+    waiting_cause: Optional[str] = None
+    waiting_max_seconds: float = 0.0
     contract: GoalContract = field(default_factory=GoalContract)
     gates: list[GoalGate] = field(default_factory=list)
     # Append-only audit journal: one entry per mutation, oldest first, bounded to MAX_EVENTS.
@@ -371,6 +376,8 @@ class GoalState:
         waiting_on_delegations: int = 0,
         waiting_reason: Optional[str] = None,
         waiting_since: float = 0.0,
+        waiting_cause: Optional[str] = None,
+        waiting_max_seconds: float = 0.0,
         contract: Optional[GoalContract] = None,
         gates: Optional[list] = None,
         events: Optional[list] = None,
@@ -415,6 +422,8 @@ class GoalState:
         self.waiting_on_delegations = int(waiting_on_delegations or 0)
         self.waiting_reason = waiting_reason
         self.waiting_since = float(waiting_since or 0.0)
+        self.waiting_cause = str(waiting_cause) if waiting_cause else None
+        self.waiting_max_seconds = float(waiting_max_seconds or 0.0)
         self.contract = contract if isinstance(contract, GoalContract) else GoalContract.from_dict(contract)
         self.gates = [
             g if isinstance(g, GoalGate) else GoalGate.from_dict(g)
@@ -484,7 +493,8 @@ class GoalState:
             "consecutive_parse_failures": int(data.get("consecutive_parse_failures") or 0),
             "consecutive_transport_failures": int(data.get("consecutive_transport_failures") or 0),
         }
-        floats = {k: float(data.get(k) or 0.0) for k in ("created_at", "last_turn_at", "waiting_until", "waiting_since")}
+        floats = {k: float(data.get(k) or 0.0) for k in (
+            "created_at", "last_turn_at", "waiting_until", "waiting_since", "waiting_max_seconds")}
         return cls(
             goal=data.get("goal", ""),
             goal_id=str(data.get("goal_id") or ""),
@@ -528,6 +538,8 @@ class GoalState:
         self.waiting_on_delegations = 0
         self.waiting_reason = None
         self.waiting_since = 0.0
+        self.waiting_cause = None
+        self.waiting_max_seconds = 0.0
 
     def record(self, event: str, **detail: Any) -> None:
         """Append one journal entry (bounded). Never raises: an audit entry must not fail a write."""
