@@ -65,8 +65,10 @@ def _clear(mgr, arg, render):
 
 
 def _unwait(mgr, arg, render):
-    return GoalCommandResult("▶ Wait barrier cleared — goal loop resumes." if mgr.stop_waiting()
-                             else "No wait barrier set.")
+    cause = mgr.deferral_cause()
+    if not mgr.stop_waiting():
+        return GoalCommandResult("No deferred continuation to resume.")
+    return GoalCommandResult(f"▶ Deferral ({cause}) cleared — the goal loop resumes now.")
 
 
 def _wait(mgr, arg):
@@ -80,7 +82,10 @@ def _wait(mgr, arg):
     reason = tokens[1].strip() if len(tokens) > 1 else ""
     mgr.wait_on(pid, reason=reason)
     suffix = f" ({reason})" if reason else ""
-    return GoalCommandResult(f"⏳ Goal parked on pid {pid}{suffix}. Loop pauses until it exits.")
+    ceiling = mgr.max_wait_seconds()
+    return GoalCommandResult(
+        f"⏳ Goal deferred on pid {pid}{suffix}. The loop resumes when it exits, or after at most "
+        f"{ceiling}s; /goal unwait resumes now.")
 
 
 def _gate_add(mgr, arg):

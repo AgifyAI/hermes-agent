@@ -338,6 +338,7 @@ class GatewayGoalsMixin:
 
     async def _post_turn_goal_continuation(
         self, *, session_entry: Any, source: Any, final_response: str,
+        compression_exhausted: bool = False,
     ) -> None:
         """Run the goal round driver after a gateway turn and, if it reserved one, hand the
         continuation to the adapter's FIFO so a simultaneous real user message takes priority.
@@ -373,6 +374,7 @@ class GatewayGoalsMixin:
                 mgr, final_response or "", surface="gateway",
                 background_processes=_bg_procs, active_delegations=_active_deleg,
                 failed=self._turn_failed(), turn_tokens=self._goal_turn_tokens(),
+                compression_exhausted=compression_exhausted,
             ),
         )
         msg = decision.get("message") or ""
@@ -438,8 +440,15 @@ class GatewayGoalsMixin:
         hooks = [("loop completion", self._post_turn_loop_completion)]
         if final_text.strip() and not failed:
             hooks.insert(0, ("goal continuation", self._post_turn_goal_continuation))
+        compression_exhausted = bool(
+            isinstance(agent_result, dict) and agent_result.get("compression_exhausted"))
         for label, hook in hooks:
             try:
+                if label == "goal continuation":
+                    await hook(session_entry=session_entry, source=source,
+                               final_response="" if failed else final_text,
+                               compression_exhausted=compression_exhausted)
+                    continue
                 await hook(session_entry=session_entry, source=source, final_response="" if failed else final_text)
             except Exception as exc:
                 logger.debug("%s hook failed: %s", label, exc)

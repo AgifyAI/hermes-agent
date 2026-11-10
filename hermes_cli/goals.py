@@ -58,9 +58,20 @@ from hermes_cli.goal_store import (
 )
 
 DEFAULT_MAX_TURNS = DEFAULT_MAX_ROUNDS
-# Longest a pid/session wait barrier may hold the loop before judging resumes. Timed barriers
-# (``waiting_until``) carry their own deadline and are exempt.
-_MAX_BARRIER_WAIT_S = 30 * 60
+# Causes a continuation may be deferred for. One concept, explicit causes: every deferral has a
+# reason, a target and a hard ceiling (goals.max_wait_seconds), so no goal can sit parked forever.
+DEFERRAL_BACKGROUND_PROCESS = "background-process"
+DEFERRAL_BACKGROUND_SESSION = "background-session"
+DEFERRAL_TIMER = "timer"
+DEFERRAL_SUBAGENTS = "subagents"
+DEFERRAL_COMPACTION = "compaction"
+DEFERRAL_HUMAN_PENDING = "human-pending"
+DEFERRAL_CAUSES = (
+    DEFERRAL_BACKGROUND_PROCESS, DEFERRAL_BACKGROUND_SESSION, DEFERRAL_TIMER,
+    DEFERRAL_SUBAGENTS, DEFERRAL_COMPACTION, DEFERRAL_HUMAN_PENDING,
+)
+DEFAULT_MAX_WAIT_SECONDS = 30 * 60
+_MAX_BARRIER_WAIT_S = DEFAULT_MAX_WAIT_SECONDS   # legacy name; the configured cap wins
 
 
 CONTINUATION_HEADER = "[Continuing toward your standing goal]"
@@ -569,14 +580,14 @@ class GoalManager:
         gat = f", {len(s.gates)} gate{'s' if len(s.gates) != 1 else ''}" if s.gates else ""
         meta = f"{rounds}{tokens}{sub}{con}{gat}"
         if s.phase == "active":
-            if s.waiting_on_session and _session_waiting(s.waiting_on_session):
-                return f"⏳ Goal (parked on {s.waiting_reason or f'session {s.waiting_on_session}'}, {meta}): {s.goal}"
-            if s.waiting_on_pid and _pid_alive(s.waiting_on_pid):
-                return f"⏳ Goal (parked on {s.waiting_reason or f'pid {s.waiting_on_pid}'}, {meta}): {s.goal}"
-            if s.waiting_until and time.time() < s.waiting_until:
-                remaining = int(s.waiting_until - time.time())
-                wr = s.waiting_reason or f"{remaining}s"
-                return f"⏳ Goal (parked {remaining}s — {wr}, {meta}): {s.goal}"
+            if self.is_waiting():
+                cause = self.deferral_cause() or DEFERRAL_TIMER
+                target = self._deferral_target(s)
+                remaining = self.deferral_remaining()
+                ceiling = int(s.waiting_max_seconds or 0) or self.max_wait_seconds()
+                why = s.waiting_reason or target
+                return (f"⏳ Goal (deferred: {cause}, {remaining}s left of {ceiling}s — {why}, "
+                        f"{meta}): {s.goal}")
             return f"⊙ Goal (active, {meta}): {s.goal}"
         if s.phase == "blocked":
             why = (s.blocked_reason or {}).get("message") or s.paused_reason or "blocked"
@@ -968,83 +979,165 @@ class GoalManager:
         self._save(event="gate_passed")
         return None
 
-    # --- /goal wait barrier -------------------------------------------
+    # --- one deferred-continuation concept ----------------------------
+    #
+    # A goal round is never "parked" by several unrelated barriers any more: there is ONE deferral,
+    # with an explicit cause, a target, a reason and a hard ceiling. A human message wins the boundary
+    # by releasing the continuation instead (no deferral at all).
 
-    def _park(self, reason: str, **barrier) -> GoalState:
+    def max_wait_seconds(self) -> int:
+        """Hard ceiling for any deferral (``goals.max_wait_seconds``)."""
+        return int(_goals_setting("max_wait_seconds", DEFAULT_MAX_WAIT_SECONDS, int))
+
+    def deferral_cause(self) -> Optional[str]:
+        """Why the loop is deferred, if it is; legacy rows infer it from the stored target."""
+        state = self._state
+        if state is None:
+            return None
+        if state.waiting_cause:
+            return state.waiting_cause
+        if state.waiting_on_session is not None:
+            return DEFERRAL_BACKGROUND_SESSION
+        if state.waiting_on_pid is not None:
+            return DEFERRAL_BACKGROUND_PROCESS
+        if state.waiting_on_delegations > 0:
+            return DEFERRAL_SUBAGENTS
+        if state.waiting_until:
+            return DEFERRAL_TIMER
+        return None
+
+    def deferral_deadline(self) -> Optional[float]:
+        """Absolute instant after which this deferral cannot hold the loop any longer."""
+        state = self._state
+        if state is None:
+            return None
+        ceiling = int(state.waiting_max_seconds or 0) or self.max_wait_seconds()
+        started = float(state.waiting_since or 0.0)
+        hard_stop = started + ceiling if started else None
+        if state.waiting_until:
+            return min(float(state.waiting_until), hard_stop) if hard_stop else float(state.waiting_until)
+        return hard_stop
+
+    def deferral_remaining(self) -> int:
+        """Seconds left before the deferral lifts by itself (0 when it already expired)."""
+        deadline = self.deferral_deadline()
+        if deadline is None:
+            return 0
+        return max(0, round(deadline - time.time()))
+
+    def _deferral_target(self, state: GoalState) -> str:
+        if state.waiting_on_session is not None:
+            return f"session {state.waiting_on_session}"
+        if state.waiting_on_pid is not None:
+            return f"pid {state.waiting_on_pid}"
+        if state.waiting_on_delegations:
+            return f"{state.waiting_on_delegations} subagent batch(es)"
+        remaining = self.deferral_remaining()
+        return f"{remaining}s timed wait"
+
+    def defer_continuation(
+        self,
+        cause: str,
+        *,
+        reason: str = "",
+        pid: Optional[int] = None,
+        session_id: Optional[str] = None,
+        seconds: Optional[int] = None,
+        on_delegations: int = 0,
+    ) -> GoalState:
+        """Defer the next continuation for ONE explicit cause, bounded and visible.
+
+        ``seconds`` (and every process/session wait) is clamped to ``goals.max_wait_seconds`` so a
+        watcher that never exits can never hold the goal forever. Pause/clear/resume reset the
+        deferral; ``/goal unwait`` resumes immediately.
+        """
+        cause = str(cause or "").strip()
+        if cause not in DEFERRAL_CAUSES:
+            raise ValueError(f"unknown deferral cause {cause!r}")
         state = self._require_active()
+        ceiling = self.max_wait_seconds()
         state.clear_wait()
-        for k, v in barrier.items():
-            setattr(state, k, v)
-        state.waiting_reason = (reason or "").strip() or None
+        state.waiting_cause = cause
+        state.waiting_max_seconds = float(ceiling)
         state.waiting_since = time.time()
-        return self._save()
+        state.waiting_reason = (reason or "").strip() or None
+        if cause in (DEFERRAL_BACKGROUND_PROCESS, DEFERRAL_BACKGROUND_SESSION):
+            if session_id:
+                state.waiting_on_session = str(session_id)
+            elif pid is not None:
+                state.waiting_on_pid = int(pid)
+            else:
+                raise ValueError(f"{cause} needs a pid or a session id")
+        elif cause == DEFERRAL_SUBAGENTS:
+            state.waiting_on_delegations = max(1, int(on_delegations or 0))
+            state.waiting_until = time.time() + ceiling
+        else:  # timer / compaction / human-pending
+            duration = int(seconds or ceiling)
+            state.waiting_until = time.time() + max(1, min(duration, ceiling))
+        self._save(event="continuation_deferred", cause=cause,
+                   reason=state.waiting_reason, seconds=ceiling)
+        return state
 
     def wait_on(self, pid: int, reason: str = "") -> GoalState:
-        """Park the goal loop until a background PID exits (no turn burned, no judge call). For a
-        process with a watch/notify trigger prefer ``wait_on_session``. Requires an active goal."""
+        """Defer until a background PID exits (bounded). Prefer ``wait_on_session`` for a watcher."""
         self._require_active()
         pid = int(pid)
         if pid <= 0:
             raise ValueError("pid must be a positive integer")
         if not _pid_alive(pid):
             raise ValueError("pid is not alive on this host")
-        return self._park(reason, waiting_on_pid=pid)
+        return self.defer_continuation(DEFERRAL_BACKGROUND_PROCESS, pid=pid, reason=reason)
 
     def wait_on_session(self, session_id: str, reason: str = "") -> GoalState:
-        """Park on a process_registry session's OWN trigger: exit OR ``watch_patterns`` match. The
-        right barrier for a long-lived watcher/poller that signals mid-run and may never exit."""
+        """Defer on a process_registry session's OWN trigger (exit OR watch_patterns match), bounded."""
         self._require_active()
         session_id = str(session_id or "").strip()
         if not session_id:
             raise ValueError("session_id must be a non-empty string")
-        return self._park(reason, waiting_on_session=session_id)
+        return self.defer_continuation(DEFERRAL_BACKGROUND_SESSION, session_id=session_id, reason=reason)
 
     def wait_for_seconds(self, seconds: int, reason: str = "", *, on_delegations: int = 0) -> GoalState:
-        """Park until ``seconds`` from now (backoff/cooldown waits with no process to track). With
-        ``on_delegations`` the wait is FOR those live delegation batches: it also lifts as soon as
-        fewer are live (a batch result came back), so the loop re-judges with the result in hand
-        instead of sleeping out a 20-minute timer (independent review: results arrived with 1,199 s
-        left on the timer and nothing re-judged)."""
+        """Defer for a bounded time; with ``on_delegations`` it also lifts when a batch returns."""
         self._require_active()
         seconds = int(seconds)
         if seconds <= 0:
             raise ValueError("seconds must be a positive integer")
-        return self._park(reason, waiting_until=time.time() + seconds, waiting_on_delegations=max(0, int(on_delegations)))
+        cause = DEFERRAL_SUBAGENTS if on_delegations > 0 else DEFERRAL_TIMER
+        return self.defer_continuation(cause, seconds=seconds, reason=reason, on_delegations=on_delegations)
 
     def stop_waiting(self) -> bool:
-        """Clear any active wait barrier (pid / session / time). Returns True if one was cleared."""
+        """Resume now: clear the deferral, whatever its cause. Returns True if one was cleared."""
         s = self._state
-        if s is None or (s.waiting_on_pid is None and s.waiting_on_session is None and not s.waiting_until):
+        if s is None or self.deferral_cause() is None:
             return False
+        cause = self.deferral_cause()
         s.clear_wait()
-        self._save()
+        self._save(event="continuation_resumed", cause=cause, source="unwait")
         return True
 
     def is_waiting(self) -> bool:
-        """True iff a barrier is set AND not yet satisfied. A satisfied barrier is cleared here
-        (lazy auto-clear) so the next evaluation resumes normal judging. A pid/session barrier
-        also expires after ``_MAX_BARRIER_WAIT_S``: a watcher or poller that never exits would
-        otherwise park the goal indefinitely (one run sat 3 h 22 min on a poller that outlived
-        the work it was polling)."""
+        """True while the deferral holds. Enforces the hard ceiling for EVERY cause (timed waits
+        included) and lifts satisfied barriers lazily, so no goal stays parked for ever."""
         s = self._state
-        if s is None:
+        cause = self.deferral_cause()
+        if s is None or cause is None:
             return False
         if s.waiting_on_session is not None:
             still = _session_waiting(s.waiting_on_session)
         elif s.waiting_on_pid is not None:
             still = _pid_alive(s.waiting_on_pid)
-        elif s.waiting_until:
-            still = time.time() < s.waiting_until
-            if still and s.waiting_on_delegations > 0:
-                # Set because of live delegations: lift the moment one of them returned.
+        elif s.waiting_on_delegations > 0:
+            still = time.time() < float(s.waiting_until or 0.0)
+            if still:
                 live = count_active_delegations(self.session_id)
                 if live < s.waiting_on_delegations:
                     still = False
         else:
-            return False
-        if still and s.waiting_since and s.waiting_until == 0.0 and time.time() - s.waiting_since > _MAX_BARRIER_WAIT_S:
-            logger.info("goal %s: wait barrier on %s exceeded %ds; resuming judging",
-                        self.session_id, s.waiting_on_session or s.waiting_on_pid, _MAX_BARRIER_WAIT_S)
+            still = time.time() < float(s.waiting_until or 0.0)
+        deadline = self.deferral_deadline()
+        if still and deadline is not None and time.time() >= deadline:
+            logger.info("goal %s: deferral (%s) exceeded its %ds ceiling; resuming",
+                        self.session_id, cause, self.max_wait_seconds())
             still = False
         if not still:
             self.stop_waiting()
@@ -1053,14 +1146,16 @@ class GoalManager:
     # --- the main entry point called after every turn -----------------
 
     def _waiting_decision(self, state: GoalState) -> dict[str, Any]:
-        if state.waiting_on_session is not None:
-            tgt = f"session {state.waiting_on_session}"
-        elif state.waiting_on_pid is not None:
-            tgt = f"pid {state.waiting_on_pid}"
-        else:
-            tgt = f"{max(0, int(state.waiting_until - time.time()))}s remaining"
-        reason = state.waiting_reason or tgt
-        return _decision("active", False, None, "waiting", reason, f"⏳ Goal parked — waiting on {tgt}: {reason}")
+        cause = self.deferral_cause() or DEFERRAL_TIMER
+        target = self._deferral_target(state)
+        remaining = self.deferral_remaining()
+        reason = state.waiting_reason or target
+        ceiling = int(state.waiting_max_seconds or 0) or self.max_wait_seconds()
+        return _decision(
+            "active", False, None, "waiting", reason,
+            f"⏳ Goal deferred ({cause}) — waiting on {target}, up to {ceiling}s "
+            f"({remaining}s left): {reason}. Use /goal unwait to resume now.",
+        )
 
     # --- model-driven completion (the update_goal tool) -----------------
 
