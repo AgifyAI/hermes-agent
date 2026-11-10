@@ -118,7 +118,33 @@ def _safe_goal_snapshot(state) -> dict | None:
         snapshot["last_reason"] = state.last_reason
     if barrier := _extract_wait_barrier(state):
         snapshot["wait_barrier"] = barrier
+    if history := _goal_history(state):
+        snapshot["history"] = history
     return snapshot
+
+
+_HISTORY_LIMIT = 30
+_HISTORY_KEYS = ("phase", "reason", "round", "tokens", "total", "command", "exit_code", "cause", "code", "goal")
+
+
+def _goal_history(state) -> list[dict]:
+    """The goal's own event journal, newest last, bounded and reduced to client-safe scalar fields.
+
+    The journal lives in the goal row (MAX_EVENTS entries); the panel shows a compact chronological
+    list, so only the tail and the fields the card actually renders cross the RPC boundary.
+    """
+    events = getattr(state, "events", None) or []
+    history = []
+    for event in events[-_HISTORY_LIMIT:]:
+        if not isinstance(event, dict):
+            continue
+        entry = {"at": float(event.get("ts") or 0.0), "event": str(event.get("event") or "")}
+        for key in _HISTORY_KEYS:
+            value = event.get(key)
+            if isinstance(value, (str, int, float, bool)) and value != "":
+                entry[key] = value
+        history.append(entry)
+    return history
 
 
 def _extract_wait_barrier(state) -> dict | None:

@@ -147,6 +147,7 @@ export function GoalSection() {
   const [waitValue, setWaitValue] = useState('600')
   const [waitReason, setWaitReason] = useState('')
   const [waitError, setWaitError] = useState<string | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   // "Open the goal card" from elsewhere (indicator, deep link) re-opens it.
   useEffect(() => {
@@ -410,6 +411,18 @@ export function GoalSection() {
     }
   }, [act, labels, waitMode, waitReason, waitValue])
 
+  const history = goal?.history ?? []
+
+  const historyLabel = useCallback(
+    (event: string): string => {
+      const key = `historyEvent_${event}`
+      const value = (labels as unknown as Record<string, unknown>)[key]
+
+      return typeof value === 'string' ? value : event.replaceAll('_', ' ')
+    },
+    [labels]
+  )
+
   const phase = goal ? phaseOf(goal) : null
   const pending = Boolean(entry?.pendingAction) || busy
   const waitBarrier = goal?.wait_barrier
@@ -596,6 +609,55 @@ export function GoalSection() {
                   reason={waitReason}
                   value={waitValue}
                 />
+              )}
+              {history.length > 0 && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  <button
+                    aria-expanded={historyOpen}
+                    className="flex items-center gap-1 self-start text-[0.6875rem] font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+                    onClick={() => setHistoryOpen(open => !open)}
+                    type="button"
+                  >
+                    <Codicon name={historyOpen ? 'chevron-down' : 'chevron-right'} size="0.75rem" />
+                    {labels.historyTitle(history.length)}
+                  </button>
+                  {historyOpen && (
+                    <ul className="flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+                      {history.slice(-12).reverse().map((entry, index) => {
+                        const time = new Date(entry.at * 1000).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+
+                        return (
+                          <li className="flex min-w-0 items-baseline gap-1 text-[0.625rem]" key={`${entry.at}-${index}`}>
+                            <span className="shrink-0 tabular-nums text-(--linear-text-quaternary)">{time}</span>
+                            <span className="shrink-0 text-(--linear-text-tertiary)">{historyLabel(entry.event)}</span>
+                            {entry.round !== undefined && (
+                              <span className="shrink-0 text-(--linear-text-quaternary)">
+                                · {labels.historyRound(entry.round)}
+                              </span>
+                            )}
+                            {entry.tokens !== undefined && (
+                              <span className="shrink-0 text-(--linear-text-quaternary)">
+                                · {labels.historyTokens(entry.tokens)}
+                              </span>
+                            )}
+                            {entry.reason && (
+                              <span className="min-w-0 truncate text-(--linear-text-quaternary)">— {entry.reason}</span>
+                            )}
+                            {entry.command && (
+                              <code className="min-w-0 truncate text-(--linear-text-quaternary)">$ {entry.command}</code>
+                            )}
+                            {entry.exit_code !== undefined && (
+                              <span className="shrink-0 text-(--linear-text-quaternary)">exit {entry.exit_code}</span>
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
               )}
               <div className="flex flex-wrap items-center gap-1">
                 <ActionButton disabled={pending} label={labels.goalEdit} onClick={startEditing}>

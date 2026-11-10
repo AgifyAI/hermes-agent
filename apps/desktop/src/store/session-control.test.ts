@@ -34,6 +34,10 @@ const FULL_SNAPSHOT: SessionControlSnapshot = {
     },
     created_at: 1_700_000_000,
     gates: [{ attempts: 0, command: 'npm test', last_exit_code: null, max_retries: 2, timeout_seconds: 60 }],
+    history: [
+      { at: 1_700_000_000, event: 'goal_set' },
+      { at: 1_700_000_050, event: 'tokens_used', reason: 'turn budget', tokens: 1200, total: 1200 }
+    ],
     max_turns: 20,
     status: 'active',
     subgoals: ['write tests', 'repair state'],
@@ -107,6 +111,28 @@ describe('session-control store', () => {
     expect(parsed!.goal!.contract).not.toBe(FULL_SNAPSHOT.goal!.contract)
     expect(parsed!.loop!.mode).toBe('interval')
     expect(parsed!.goal!.wait_barrier).toEqual({ reason: 'waiting for deploy', type: 'until', until_at: 1_700_000_200 })
+    expect(parsed!.goal!.history).toEqual([
+      { at: 1_700_000_000, event: 'goal_set' },
+      { at: 1_700_000_050, event: 'tokens_used', reason: 'turn budget', tokens: 1200, total: 1200 }
+    ])
+  })
+
+  it('drops one malformed history entry without hiding the goal', () => {
+    const parsed = parseSessionControlSnapshot({
+      ...FULL_SNAPSHOT,
+      goal: {
+        ...FULL_SNAPSHOT.goal!,
+        history: [{ at: 1_700_000_000, event: 'goal_set' }, { at: 'yesterday', event: 'paused' }]
+      }
+    })
+
+    expect(parsed!.goal!.history).toEqual([{ at: 1_700_000_000, event: 'goal_set' }])
+  })
+
+  it('rejects a history field that is not a list', () => {
+    expect(
+      parseSessionControlSnapshot({ ...FULL_SNAPSHOT, goal: { ...FULL_SNAPSHOT.goal!, history: 'goal_set' } })
+    ).toBeNull()
   })
 
   it.each([

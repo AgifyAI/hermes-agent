@@ -16,8 +16,11 @@ const goal: SessionControlGoal = {
   phase: 'active',
   status: 'active',
   subgoals: [],
+  rounds_started: 3,
   title: 'Ship the panel',
-  turns_used: 1
+  token_budget: 2_000_000,
+  tokens_used: 128_450,
+  turns_used: 3
 }
 
 const renderIndicator = () =>
@@ -44,6 +47,8 @@ describe('GoalPanelIndicator', () => {
     const button = screen.getByRole('button', { name: 'Automations' })
     expect(button.textContent).toContain('Goal')
     expect(button.textContent).toContain('Active')
+    expect(button.textContent).toContain('R3')
+    expect(button.textContent).toContain('128k/2.0M')
     fireEvent.click(button)
     expect($rightSidebarSectionRequest.get()?.section).toBe('goal')
   })
