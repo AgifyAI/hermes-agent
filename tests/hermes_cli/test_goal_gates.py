@@ -155,28 +155,23 @@ def test_gates_persist_and_reload():
 # ──────────────────────────────────────────────────────────────────────
 
 
-def test_failing_gate_short_circuits_judge():
+def test_failing_gate_short_circuits_the_turn_decision():
     mgr = _mgr_with_goal("gate-fail-sid")
     mgr.add_gate("exit 5")
-    with patch("hermes_cli.goals.judge_goal") as mock_judge:
-        decision = mgr.evaluate_after_turn("I think it's done!")
-    mock_judge.assert_not_called()
+    decision = mgr.evaluate_after_turn("I think it's done!")
     assert decision["verdict"] == "gate_failed"
     assert decision["should_continue"] is True
     assert "exit 5" in decision["continuation_prompt"]
     assert "quality gate" in decision["continuation_prompt"].lower()
 
 
-def test_passing_gates_fall_through_to_judge():
+def test_passing_gates_fall_through_to_the_normal_continuation():
     mgr = _mgr_with_goal("gate-pass-sid")
     mgr.add_gate("true")
-    with patch(
-        "hermes_cli.goals.judge_goal",
-        return_value=("done", "all good", False, None, False),
-    ) as mock_judge:
-        decision = mgr.evaluate_after_turn("finished")
-    mock_judge.assert_called_once()
-    assert decision["verdict"] == "done"
+    decision = mgr.evaluate_after_turn("finished")
+    # No judge: passing gates only clears the deterministic stop; the agent still owns the ending.
+    assert decision["verdict"] == "continue"
+    assert decision["continuation_prompt"]
     # Passing run resets attempt bookkeeping.
     assert mgr.state.gates[0].attempts == 0
     assert mgr.state.gates[0].last_exit_code == 0
@@ -186,11 +181,9 @@ def test_gate_retry_exhaustion_pauses_goal():
     mgr = _mgr_with_goal("gate-exhaust-sid")
     mgr.add_gate("exit 1")
     mgr.state.gates[0].max_retries = 2
-    with patch("hermes_cli.goals.judge_goal") as mock_judge:
-        d1 = mgr.evaluate_after_turn("attempt one")
-        d2 = mgr.evaluate_after_turn("attempt two")
-        d3 = mgr.evaluate_after_turn("attempt three")
-    mock_judge.assert_not_called()
+    d1 = mgr.evaluate_after_turn("attempt one")
+    d2 = mgr.evaluate_after_turn("attempt two")
+    d3 = mgr.evaluate_after_turn("attempt three")
     assert d1["should_continue"] is True
     assert d2["should_continue"] is True
     assert d3["status"] == "paused"
@@ -212,13 +205,11 @@ def test_failed_gate_reruns_when_untracked_file_content_changes(tmp_path, monkey
 
     mgr = _mgr_with_goal("gate-content-sid")
     mgr.add_gate(f"grep -q after {result}")
-    with patch("hermes_cli.goals.judge_goal", return_value=("done", "ok", False, None, False)) as judge:
-        d1 = mgr.evaluate_after_turn("turn 1")
-        result.write_text("after", encoding="utf-8")
-        d2 = mgr.evaluate_after_turn("turn 2")
+    d1 = mgr.evaluate_after_turn("turn 1")
+    result.write_text("after", encoding="utf-8")
+    d2 = mgr.evaluate_after_turn("turn 2")
     assert d1["verdict"] == "gate_failed"
-    assert d2["verdict"] == "done"
-    judge.assert_called_once()
+    assert d2["verdict"] == "continue"
     assert mgr.state.gates[0].attempts == 0
 
 
@@ -229,8 +220,7 @@ def test_gate_continuation_respects_turn_budget():
     # The round budget counts admitted continuation rounds (reservation → admission).
     mgr.reserve_round()
     mgr.admit_round()
-    with patch("hermes_cli.goals.judge_goal"):
-        decision = mgr.evaluate_after_turn("only turn")
+    decision = mgr.evaluate_after_turn("only turn")
     assert decision["status"] == "paused"
     assert decision["should_continue"] is False
     assert "rounds used" in decision["message"]
@@ -238,12 +228,7 @@ def test_gate_continuation_respects_turn_budget():
 
 def test_no_gates_behaves_exactly_as_before():
     mgr = _mgr_with_goal("gate-none-sid")
-    with patch(
-        "hermes_cli.goals.judge_goal",
-        return_value=("continue", "keep going", False, None, False),
-    ) as mock_judge:
-        decision = mgr.evaluate_after_turn("wip")
-    mock_judge.assert_called_once()
+    decision = mgr.evaluate_after_turn("wip")
     assert decision["verdict"] == "continue"
     assert decision["should_continue"] is True
 
@@ -272,9 +257,8 @@ def backend_and_session(tmp_path, monkeypatch):
     return backend, session, bind
 
 
-def _evaluate_with_done_judge(mgr):
-    with patch("hermes_cli.goals.judge_goal", return_value=("done", "all good", False, None, False)) as judge:
-        return mgr.evaluate_after_turn("ready"), judge
+def _evaluate_turn(mgr):
+    return mgr.evaluate_after_turn("ready")
 
 
 def test_gate_runs_in_the_session_workspace_not_the_backend_directory(backend_and_session):
@@ -283,10 +267,9 @@ def test_gate_runs_in_the_session_workspace_not_the_backend_directory(backend_an
     mgr.add_gate("sh check.sh")
     unbind = bind(session)
     try:
-        decision, judge = _evaluate_with_done_judge(mgr)
+        decision = _evaluate_turn(mgr)
     finally:
         unbind()
-    judge.assert_not_called()
     assert decision["verdict"] == "gate_failed"
     assert mgr.state.gates[0].last_exit_code == 1
     assert str(session.resolve()) in mgr.state.gates[0].last_output_tail
@@ -302,11 +285,10 @@ def test_missing_session_workspace_pauses_instead_of_running_elsewhere(backend_a
     unbind = bind(missing)
     try:
         with patch("hermes_cli.goals.run_gate") as run:
-            decision, judge = _evaluate_with_done_judge(mgr)
+            decision = _evaluate_turn(mgr)
     finally:
         unbind()
     run.assert_not_called()
-    judge.assert_not_called()
     assert decision["status"] == "paused" and decision["should_continue"] is False
     assert str(missing) in decision["message"] and "still failing" not in decision["message"]
     assert str(missing) in (mgr.state.paused_reason or "")
@@ -321,7 +303,6 @@ def test_gate_without_a_session_workspace_keeps_the_launch_directory(backend_and
     clear_session_cwd()
     mgr = _mgr_with_goal("gate-launch-cwd-sid")
     mgr.add_gate("sh check.sh")
-    decision, judge = _evaluate_with_done_judge(mgr)
-    judge.assert_called_once()
-    assert decision["verdict"] == "done"
+    decision = _evaluate_turn(mgr)
+    assert decision["verdict"] == "continue"
     assert str(backend.resolve()) in mgr.state.gates[0].last_output_tail

@@ -56,15 +56,15 @@ def test_no_manager_before_the_gateway_session_is_open(cli):
     assert cli.cli._get_goal_manager() is None and cli.conn.calls == []
 
 
-def test_judge_decision_comes_from_the_gateway(cli, monkeypatch):
-    from hermes_cli import goals
-    monkeypatch.setattr(goals, 'judge_goal', lambda *a, **k: ('done', 'the report is written', False, None, False))
+def test_turn_decision_comes_from_the_gateway(cli):
+    """No judge: the boundary decision runs in the gateway and leaves the ending to the agent."""
     mgr = cli.cli._get_goal_manager()
     mgr.set('write the report')
     decision = mgr.evaluate_after_turn('the report is written', user_initiated=True)
-    assert decision['message'] == '✓ Goal achieved: the report is written'
     assert ('goal', 'evaluate_after_turn') in cli.conn.calls
-    assert mgr.state.status == 'done'
+    assert decision['should_continue'] is True
+    assert 'update_goal' in (decision.get('continuation_prompt') or '')
+    assert mgr.state.phase == 'active'
 
 
 def test_idle_polls_cost_no_round_trip(cli):

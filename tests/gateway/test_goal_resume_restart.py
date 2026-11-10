@@ -66,11 +66,7 @@ def _exhaust_budget(session_id: str, goal_text: str = "ship the benchmark"):
     # only round before the boundary that must report exhaustion.
     mgr.reserve_round()
     mgr.admit_round()
-    with patch(
-        "hermes_cli.goals.judge_goal",
-        return_value=("continue", "needs more steps", False, None, False),
-    ):
-        decision = mgr.evaluate_after_turn("worked a bit")
+    decision = mgr.evaluate_after_turn("worked a bit")
     assert decision["status"] == "paused"
     assert decision["should_continue"] is False
     assert "round budget exhausted" in (mgr.state.paused_reason or "")

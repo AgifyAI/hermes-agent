@@ -1,4 +1,7 @@
-"""The goal judge names a Nous auxiliary auth failure instead of an opaque judge error (#42177).
+"""The auxiliary side-judge names a Nous auth failure instead of an opaque judge error (#42177).
+
+The standing /goal no longer uses an auxiliary judge (the agent ends its own goal through
+``update_goal``); ``/loop --until`` and the kanban review gate still do.
 
 ``_resolve_nous_runtime_api`` swallows the Nous resolver's ``AuthError`` so the ladder can fall
 back; the failure must still reach the operator (one WARNING) and the goal-loop status line.
@@ -24,7 +27,7 @@ def test_goal_judge_reason_names_nous_auth_failure_and_still_fails_open(tmp_path
         "model": {"provider": "nous", "default": "test-model"},
         "auxiliary": {"goal_judge": {"provider": "nous", "model": "test-model"}},
     }), encoding="utf-8")
-    from hermes_cli.goals import judge_goal
+    from hermes_cli.aux_judge import judge_goal
 
     verdict, reason, parse_failed, wait_directive, judge_errored = judge_goal(
         "ship the fix", "edited the file and ran the tests", timeout=5)

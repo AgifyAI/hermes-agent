@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from typing import Any, Callable, Optional
 
 from agent.redact import redact_sensitive_text
-from hermes_cli.goals import judge_goal
+from hermes_cli.aux_judge import judge_goal
 from tools.registry import no_cache_check_fn, registry, tool_error
 from hermes_cli.config import cfg_get, load_config
 from tools.kanban_tools_schemas import (

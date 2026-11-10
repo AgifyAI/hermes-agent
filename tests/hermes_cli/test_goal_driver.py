@@ -7,8 +7,6 @@ or a human message can do to a continuation that is still being decided.
 from __future__ import annotations
 
 import queue
-from unittest.mock import patch
-
 import pytest
 
 
@@ -35,16 +33,13 @@ def _mgr(session_id: str = "driver-sid", *, max_rounds: int = 5):
     return mgr
 
 
-CONTINUE_JUDGE = ("continue", "more work", False, None, False)
-
 
 class TestReservationAndAdmission:
     def test_a_round_is_not_counted_when_the_turn_is_only_judged(self, hermes_home):
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert decision["continuation"].round_no == 1
         assert mgr.state.rounds_started == 0  # reserved, not consumed
@@ -54,8 +49,7 @@ class TestReservationAndAdmission:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         sent = []
         assert goal_driver.admit(mgr, decision["continuation"], lambda p: sent.append(p) or True)
         assert sent == [decision["continuation"].prompt]
@@ -67,8 +61,7 @@ class TestReservationAndAdmission:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         sent = []
         admitted = goal_driver.admit(mgr, decision["continuation"], lambda p: sent.append(p) or True,
                                      human_pending=True)
@@ -81,8 +74,7 @@ class TestReservationAndAdmission:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert goal_driver.admit(mgr, decision["continuation"], lambda _p: False) is False
         assert mgr.state.rounds_started == 0
         assert mgr.state.reserved_round is None
@@ -91,9 +83,8 @@ class TestReservationAndAdmission:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            first = goal_driver.plan_after_turn(mgr, "worked", surface="test")
-            second = goal_driver.plan_after_turn(mgr, "worked again", surface="test")
+        first = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        second = goal_driver.plan_after_turn(mgr, "worked again", surface="test")
         assert first["stop"] == goal_driver.STOP_CONTINUED
         assert second["stop"] == goal_driver.STOP_ROUND_IN_FLIGHT
         assert second["continuation"] is None
@@ -104,8 +95,7 @@ class TestReservationAndAdmission:
         mgr = _mgr(max_rounds=1)
         mgr.reserve_round()
         mgr.admit_round()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert decision["stop"] == goal_driver.STOP_BUDGET
         assert decision["continuation"] is None
         assert mgr.state.phase == "budget_limited"
@@ -114,13 +104,11 @@ class TestReservationAndAdmission:
 
 
 class TestCleanStops:
-    def test_a_failed_turn_is_never_judged(self, hermes_home):
+    def test_a_failed_turn_never_continues(self, hermes_home):
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal") as judge:
-            decision = goal_driver.plan_after_turn(mgr, "boom", surface="test", failed=True)
-        judge.assert_not_called()
+        decision = goal_driver.plan_after_turn(mgr, "boom", surface="test", failed=True)
         assert decision["stop"] == goal_driver.STOP_FAILED_TURN
         assert mgr.state.phase == "active"
 
@@ -128,21 +116,18 @@ class TestCleanStops:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal") as judge:
-            decision = goal_driver.plan_after_turn(mgr, "partial", surface="test", interrupted=True)
-        judge.assert_not_called()
+        decision = goal_driver.plan_after_turn(mgr, "partial", surface="test", interrupted=True)
         assert decision["stop"] == goal_driver.STOP_INTERRUPTED
         assert mgr.state.phase == "paused"
         assert "Ctrl+C" in (mgr.state.paused_reason or "")
 
-    def test_compression_exhaustion_is_never_judged(self, hermes_home):
+    def test_compression_exhaustion_never_continues(self, hermes_home):
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE) as judge:
-            decision = goal_driver.plan_after_turn(
-                mgr, "context length exceeded", surface="test", compression_exhausted=True)
-        judge.assert_called_once()  # the engine still judges; the driver refuses to continue on it
+        decision = goal_driver.plan_after_turn(
+            mgr, "context length exceeded", surface="test", compression_exhausted=True)
+        # There is no judge to run: the driver simply refuses to continue on a compression failure.
         assert decision["stop"] == goal_driver.STOP_COMPRESSION
         assert decision["continuation"] is None
 
@@ -150,8 +135,7 @@ class TestCleanStops:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         continuation = decision["continuation"]
         from hermes_cli.goals import GoalManager
 
@@ -165,8 +149,7 @@ class TestCleanStops:
         from hermes_cli.goals import GoalManager
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         GoalManager("driver-sid").set("a different objective", replace=True)
         sent = []
         assert goal_driver.admit(mgr, decision["continuation"], lambda p: sent.append(p) or True) is False
@@ -181,9 +164,7 @@ class TestArmedLifecycle:
         _mgr()
         disarm_goal("driver-sid")  # what a new process starts with
         mgr = GoalManager("driver-sid")
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE) as judge:
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
-        judge.assert_not_called()
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert decision["stop"] == goal_driver.STOP_DISARMED
         assert decision["continuation"] is None
 
@@ -193,8 +174,7 @@ class TestArmedLifecycle:
 
         mgr = _mgr()
         mgr.resume()  # the human resume action
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert decision["stop"] == goal_driver.STOP_CONTINUED
 
     def test_unloading_a_session_disarms_and_releases(self, hermes_home):
@@ -202,8 +182,7 @@ class TestArmedLifecycle:
         from hermes_cli.goals import GoalManager, is_goal_armed
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert mgr.state.reserved_round == 1
         reloaded = GoalManager("driver-sid")
         goal_driver.disarm_on_session_unload("driver-sid", mgr=reloaded)
@@ -261,8 +240,7 @@ class TestCliSurface:
     def _run(self, cli):
         from hermes_cli.cli_loops_mixin import CLILoopsMixin
 
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            CLILoopsMixin._maybe_continue_goal_after_turn(cli)
+        CLILoopsMixin._maybe_continue_goal_after_turn(cli)
 
     def test_the_cli_hook_queues_and_admits_one_continuation(self, hermes_home):
         mgr = _mgr()

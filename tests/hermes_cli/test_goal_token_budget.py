@@ -55,9 +55,8 @@ class TestTokenAccounting:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(
-                mgr, "worked", surface="test", turn_tokens=5_000, turn_seconds=1.0)
+        decision = goal_driver.plan_after_turn(
+            mgr, "worked", surface="test", turn_tokens=5_000, turn_seconds=1.0)
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert mgr.state.tokens_used == 5_000
         assert mgr.state.rounds_started == 0  # reservation only, not admitted
@@ -97,8 +96,7 @@ class TestClosingReserve:
         from hermes_cli import goal_driver
 
         mgr = _mgr()  # budget 100k, reserve 20k
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=50_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=50_000)
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert decision["continuation"].closing is False
 
@@ -106,8 +104,7 @@ class TestClosingReserve:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert decision["continuation"].closing is True
         assert decision["phase"] == "budget_limited"
@@ -124,10 +121,9 @@ class TestClosingReserve:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            first = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
-            assert first["continuation"].closing is True
-            second = goal_driver.plan_after_turn(mgr, "closing summary", surface="test", turn_tokens=1_000)
+        first = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
+        assert first["continuation"].closing is True
+        second = goal_driver.plan_after_turn(mgr, "closing summary", surface="test", turn_tokens=1_000)
         assert second["stop"] == goal_driver.STOP_BUDGET
         assert second["continuation"] is None
         assert mgr.state.phase == "budget_limited"
@@ -137,8 +133,7 @@ class TestClosingReserve:
         from hermes_cli.goals import GoalManager
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
         sent = []
         assert goal_driver.admit(mgr, decision["continuation"], lambda p: sent.append(p) or True) is True
         assert len(sent) == 1
@@ -151,8 +146,7 @@ class TestClosingReserve:
         from hermes_cli.goals import GoalManager
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
+        goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=85_000)
         assert mgr.state.phase == "budget_limited"
         before = mgr.state.token_budget
         mgr.resume()
@@ -161,8 +155,7 @@ class TestClosingReserve:
         assert state.closing_issued is False
         assert state.token_budget > before
         assert state.token_budget >= state.tokens_used + 2 * mgr.closing_reserve()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked again", surface="test", turn_tokens=1_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked again", surface="test", turn_tokens=1_000)
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert decision["continuation"].closing is False
 
@@ -173,8 +166,7 @@ class TestClosingReserve:
         mgr.add_tokens(85_000)
         assert goal_driver.plan_recovery(mgr, "retry compression", surface="test") is None
         # The closing turn itself is still offered by the normal path.
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test")
         assert decision["continuation"].closing is True
 
     def test_an_unset_token_budget_leaves_the_round_safety_path(self, hermes_home):
@@ -184,8 +176,7 @@ class TestClosingReserve:
         mgr = GoalManager("no-token-budget", default_max_tokens=0)
         mgr.set("no token budget", max_tokens=0)
         assert mgr.state.token_budget == 0
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=10_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=10_000)
         assert decision["stop"] == goal_driver.STOP_CONTINUED
         assert decision["continuation"].closing is False
         assert mgr.state.tokens_used == 10_000
@@ -203,6 +194,5 @@ class TestDisplay:
         from hermes_cli import goal_driver
 
         mgr = _mgr()
-        with patch("hermes_cli.goals.judge_goal", return_value=CONTINUE_JUDGE):
-            decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=4_000)
+        decision = goal_driver.plan_after_turn(mgr, "worked", surface="test", turn_tokens=4_000)
         assert "4,000/100,000 tokens" in decision["message"]

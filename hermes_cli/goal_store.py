@@ -83,6 +83,16 @@ class GoalStaleRevision(GoalError):
         )
 
 
+class GoalToolRefusal(GoalError):
+    """A model-initiated goal transition was refused; ``code`` + message are stable for tests/UI."""
+
+    code = "GOAL_REFUSED"
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(message)
+
+
 class GoalAlreadyActive(GoalError):
     """One unfinished goal per session: create, edit or clear it instead of overwriting."""
 
@@ -287,6 +297,9 @@ class GoalState:
     tokens_used: int = 0
     # The one closing turn (summary / what remains / next step) was already offered.
     closing_issued: bool = False
+    # The goal round currently in flight (set at admission, cleared at the turn boundary). The model's
+    # update_goal tool may only end the goal from inside a real goal round, never from a plain user turn.
+    active_round: Optional[int] = None
     time_used_seconds: float = 0.0
     created_at: float = 0.0
     updated_at: float = 0.0
@@ -331,6 +344,7 @@ class GoalState:
         token_budget: int = 0,
         tokens_used: int = 0,
         closing_issued: bool = False,
+        active_round: Optional[int] = None,
         time_used_seconds: float = 0.0,
         created_at: float = 0.0,
         updated_at: float = 0.0,
@@ -371,6 +385,7 @@ class GoalState:
         self.token_budget = max(0, int(token_budget or 0))
         self.tokens_used = max(0, int(tokens_used or 0))
         self.closing_issued = bool(closing_issued)
+        self.active_round = int(active_round) if active_round else None
         self.time_used_seconds = float(time_used_seconds or 0.0)
         self.created_at = float(created_at or 0.0)
         self.updated_at = float(updated_at or 0.0)
@@ -449,6 +464,7 @@ class GoalState:
             "token_budget": int(data.get("token_budget") or 0),
             "tokens_used": int(data.get("tokens_used") or 0),
             "closing_issued": bool(data.get("closing_issued")),
+            "active_round": data.get("active_round"),
             "time_used_seconds": float(data.get("time_used_seconds") or 0.0),
             "consecutive_parse_failures": int(data.get("consecutive_parse_failures") or 0),
             "consecutive_transport_failures": int(data.get("consecutive_transport_failures") or 0),
@@ -896,6 +912,7 @@ __all__ = [
     "GoalGate",
     "GoalStaleRevision",
     "GoalState",
+    "GoalToolRefusal",
     "arm_goal",
     "clear_goal",
     "delete_goal",

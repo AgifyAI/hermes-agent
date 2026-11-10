@@ -100,21 +100,8 @@ def test_legacy_db_migrates_goal_columns(tmp_path, monkeypatch):
 # Goal loop logic (callback-injected, no live model)
 # ---------------------------------------------------------------------------
 
-def _patch_judge(monkeypatch, verdicts):
-    """Make judge_goal return a scripted sequence of verdicts."""
-    seq = list(verdicts)
-
-    def _fake_judge(goal, response, subgoals=None, background_processes=None, **_kw):
-        v = seq.pop(0) if seq else "done"
-        # 5-tuple contract: verdict, reason, parse failure, wait, transport failure.
-        return v, f"scripted:{v}", False, None, False
-
-    monkeypatch.setattr(goals, "judge_goal", _fake_judge)
-
-
 def test_loop_stops_when_worker_already_completed(monkeypatch):
-    # Worker called kanban_complete on its first turn — no judging needed.
-    _patch_judge(monkeypatch, ["continue"])  # should never be consulted
+    # Worker called kanban_complete on its first turn — the board status is the authority.
     turns = []
 
     res = goals.run_kanban_goal_loop(
@@ -129,34 +116,9 @@ def test_loop_stops_when_worker_already_completed(monkeypatch):
     assert turns == []  # no extra turns
 
 
-def test_loop_stops_on_judge_transport_failure(monkeypatch):
-    """Regression #91264: judge transport failure must stop the loop instead of
-    being coerced to continue via WAIT."""
-    def _failing_judge(*args, **kwargs):
-        # 5-tuple: verdict, reason, parse_failed, wait, transport_failed
-        return "wait", "judge transport unreachable", False, None, True
-
-    monkeypatch.setattr(goals, "judge_goal", _failing_judge)
-    turns = []
-
-    res = goals.run_kanban_goal_loop(
-        task_id="t1",
-        goal_text="do the thing",
-        run_turn=lambda p: turns.append(p) or "x",
-        task_status_fn=lambda: "running",
-        block_fn=lambda r: pytest.fail("should not block"),
-        first_response="first attempt",
-    )
-    assert res["outcome"] == "stopped"
-    assert "judge transport failure" in res["reason"]
-    assert turns == []
-
-
 def test_loop_stops_on_worker_failed_flag(monkeypatch):
     """Regression #91264: worker returning {'failed': True} stops the loop
     immediately with the failure reason."""
-    _patch_judge(monkeypatch, ["continue", "continue"])
-
     res = goals.run_kanban_goal_loop(
         task_id="t1",
         goal_text="do the thing",
@@ -176,8 +138,6 @@ def test_loop_stops_on_worker_failed_flag(monkeypatch):
 def test_loop_stops_on_worker_failed_flag_default_reason(monkeypatch):
     """Regression #91264: worker returning {'failed': True} without failure_reason
     uses 'unknown' as fallback."""
-    _patch_judge(monkeypatch, ["continue", "continue"])
-
     res = goals.run_kanban_goal_loop(
         task_id="t1",
         goal_text="do the thing",
@@ -196,6 +156,41 @@ def test_loop_stops_on_worker_failed_flag_default_reason(monkeypatch):
 
 
 
+
+
+def test_loop_keeps_asking_for_the_next_step_until_the_board_is_terminal(monkeypatch):
+    """No judge: the worker's kanban calls and the board status decide; the loop only nudges."""
+    statuses = iter(["running", "running", "done"])
+    turns = []
+
+    res = goals.run_kanban_goal_loop(
+        task_id="t1",
+        goal_text="do the thing",
+        run_turn=lambda p: turns.append(p) or "worked",
+        task_status_fn=lambda: next(statuses),
+        block_fn=lambda r: pytest.fail("should not block"),
+        first_response="first attempt",
+        max_turns=5,
+    )
+    assert res["outcome"] == "completed_by_worker"
+    assert len(turns) == 2
+    assert all("Continuing toward this kanban task" in t for t in turns)
+
+
+def test_loop_blocks_the_card_at_the_round_cap(monkeypatch):
+    blocks = []
+
+    res = goals.run_kanban_goal_loop(
+        task_id="t1",
+        goal_text="do the thing",
+        run_turn=lambda p: "worked",
+        task_status_fn=lambda: "running",
+        block_fn=blocks.append,
+        first_response="first attempt",
+        max_turns=2,
+    )
+    assert res["outcome"] == "blocked_budget"
+    assert blocks and "turn budget" in blocks[0]
 
 
 # ---------------------------------------------------------------------------
@@ -250,7 +245,7 @@ class TestCLIJudgeGate:
         # Match the real judge_goal contract:
         # (verdict, reason, parse_failed, wait_directive, transport_failed)
         monkeypatch.setattr(
-            "hermes_cli.goals.judge_goal",
+            "hermes_cli.aux_judge.judge_goal",
             lambda **kw: (verdict, reason, False, None, False),
         )
 

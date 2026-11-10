@@ -567,7 +567,7 @@ class LoopManager:
         # 2. Evidence-based --until judge (reuses the /goal judge; fail-open).
         if s.until and (last_response or "").strip():
             try:
-                from hermes_cli.goals import judge_goal
+                from hermes_cli.aux_judge import judge_goal
 
                 verdict, reason, _pf, _wait, _tf = judge_goal(s.until, last_response)
             except Exception as exc:

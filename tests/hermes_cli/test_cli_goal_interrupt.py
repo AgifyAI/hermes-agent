@@ -2,8 +2,9 @@
 
 Covers:
 - Ctrl+C during a /goal turn auto-pauses the goal (no more continuations).
-- Empty/whitespace-only responses skip the judge (no phantom continuations).
-- Clean response without interrupt still drives the judge + enqueues.
+- Empty/whitespace-only responses never produce a continuation.
+- A clean response without interrupt still enqueues the next goal round.
+- A goal the agent ended during the turn produces no continuation.
 
 These tests exercise ``_maybe_continue_goal_after_turn`` directly on a
 minimal ``HermesCLI`` stub (pattern used elsewhere in tests/cli).
@@ -71,17 +72,14 @@ class TestInterruptAutoPause:
         cli.conversation_history = [
             {"role": "assistant", "content": "partial"},
         ]
-        with patch("hermes_cli.goals.judge_goal"):
-            cli._maybe_continue_goal_after_turn()
+        cli._maybe_continue_goal_after_turn()
         assert mgr.state.status == "paused"
 
         mgr.resume()
         assert mgr.state.status == "active"
 
 class TestHealthyTurnStillRuns:
-    def test_clean_response_enqueues_continuation_when_judge_says_continue(
-        self, hermes_home,
-    ):
+    def test_clean_response_enqueues_the_next_goal_round(self, hermes_home):
         """Sanity check: the hook still works in the happy path."""
         sid = f"sid-healthy-{uuid.uuid4().hex}"
         cli, mgr = _make_cli_with_goal(sid)
@@ -91,12 +89,7 @@ class TestHealthyTurnStillRuns:
             {"role": "assistant", "content": "did some work, more to do"},
         ]
 
-        # Force the judge to say "continue" without touching the network.
-        with patch(
-            "hermes_cli.goals.judge_goal",
-            return_value=("continue", "needs more steps", False, None, False),
-        ):
-            cli._maybe_continue_goal_after_turn()
+        cli._maybe_continue_goal_after_turn()
 
         # Continuation prompt must be queued.
         assert not cli._pending_input.empty()
@@ -104,19 +97,20 @@ class TestHealthyTurnStillRuns:
         assert "Continuing toward your standing goal" in queued
         assert mgr.state.status == "active"
 
-    def test_clean_response_marks_done_when_judge_says_done(self, hermes_home):
+    def test_a_goal_ended_by_the_agent_produces_no_continuation(self, hermes_home):
+        """The turn called update_goal(complete): the boundary must not relaunch anything."""
         sid = f"sid-done-{uuid.uuid4().hex}"
         cli, mgr = _make_cli_with_goal(sid)
         cli._last_turn_interrupted = False
         cli.conversation_history = [
             {"role": "assistant", "content": "all finished, here's the result"},
         ]
+        # What the goal round looks like when the agent calls update_goal(complete).
+        mgr.reserve_round()
+        mgr.admit_round()
+        mgr.mark_complete_by_agent("delivered the result")
 
-        with patch(
-            "hermes_cli.goals.judge_goal",
-            return_value=("done", "goal satisfied", False, None, False),
-        ):
-            cli._maybe_continue_goal_after_turn()
+        cli._maybe_continue_goal_after_turn()
 
         assert cli._pending_input.empty()
-        assert mgr.state.status == "done"
+        assert mgr.state.phase == "complete"

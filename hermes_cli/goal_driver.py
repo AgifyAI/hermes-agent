@@ -127,6 +127,22 @@ def plan_after_turn(
     """
     state = mgr.state if mgr is not None else None
     if state is None or state.phase != "active":
+        if state is not None and state.phase == "complete":
+            return _inert(
+                {"status": "done", "phase": "complete", "should_continue": False,
+                 "continuation_prompt": None, "verdict": "complete",
+                 "reason": state.last_reason or "the agent marked the goal complete",
+                 "message": ""},
+                STOP_COMPLETE,
+            )
+        if state is not None and state.phase == "blocked":
+            return _inert(
+                {"status": "paused", "phase": "blocked", "should_continue": False,
+                 "continuation_prompt": None, "verdict": "blocked",
+                 "reason": (state.blocked_reason or {}).get("message") or "blocked",
+                 "message": ""},
+                STOP_BLOCKED,
+            )
         if state is not None and state.phase == "budget_limited":
             # The closing turn already ran (or is in flight): no background work is relaunched;
             # only a human resume grants a new allowance.
