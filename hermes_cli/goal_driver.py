@@ -1,0 +1,353 @@
+"""The one round driver every goal surface goes through.
+
+Before this module each surface carried its own copy of the post-turn logic (gateway FIFO hook, TUI
+chained turn, CLI pending-input queue, kanban loop) with slightly different stops. The driver owns
+the decisions; a surface only supplies how a continuation is dispatched.
+
+The contract (DeepSeek Harness' ``dsh-goal-round-driver`` shape):
+
+* A round is **reserved** before a continuation is offered and **admitted** only when that
+  continuation message really enters the session. A human message that wins the boundary releases
+  the reservation instead — no round is consumed by work that never started, and no round is
+  double-counted.
+* A continuation computed for a goal that was cleared, completed or replaced is dropped (the
+  reservation carries the goal identity, and admission re-checks it against fresh state).
+* ``armed`` is process memory (see :mod:`hermes_cli.goal_store`): a restart, a session resume, a fork
+  or an unload leaves the goal disarmed, so nothing relaunches by itself; only a human ``resume``
+  arms it again.
+* Clean stops are explicit decision outcomes: failed turn, interrupted turn, compression exhausted,
+  round cap, replaced goal.
+
+The driver never imports the surfaces. It is synchronous (the judge and gates block), so callers run
+it off their event loop.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
+
+from hermes_cli.goal_store import (
+    disarm_goal,
+    is_goal_armed,
+    load_goal,
+)
+
+logger = logging.getLogger(__name__)
+
+
+# Stop outcomes: why the driver chose not to continue. ``continued`` is the only one that carries a
+# Continuation; every other one is a terminal state for this turn boundary.
+STOP_COMPLETE = "complete"
+STOP_BLOCKED = "blocked"
+STOP_BUDGET = "budget-limited"
+STOP_INACTIVE = "inactive"
+STOP_DISARMED = "disarmed"
+STOP_FAILED_TURN = "failed-turn"
+STOP_INTERRUPTED = "interrupted"
+STOP_COMPRESSION = "compression-exhausted"
+STOP_HUMAN_PENDING = "human-preempted"
+STOP_REPLACED = "goal-replaced"
+STOP_ROUND_IN_FLIGHT = "round-in-flight"
+STOP_CONTINUED = "continued"
+
+
+@dataclass(frozen=True)
+class Continuation:
+    """A reserved continuation waiting for a surface to admit it."""
+
+    goal_id: str
+    revision: int
+    round_no: int
+    prompt: str
+
+
+def _inert(decision: dict[str, Any], stop: str) -> dict[str, Any]:
+    decision["stop"] = stop
+    decision["should_continue"] = False
+    decision["continuation_prompt"] = None
+    decision["continuation"] = None
+    return decision
+
+
+def plan_after_turn(
+    mgr,
+    response: str,
+    *,
+    surface: str,
+    background_processes: Optional[list[dict[str, Any]]] = None,
+    active_delegations: int = 0,
+    failed: bool = False,
+    interrupted: bool = False,
+    compression_exhausted: bool = False,
+) -> dict[str, Any]:
+    """Decide what happens after a turn: judge/gates, then reserve the next round if valid.
+
+    Returns the engine decision dict extended with ``stop``, ``goal_id``, ``revision`` and
+    ``continuation`` (a :class:`Continuation` the caller must admit or release). The caller owns
+    dispatch; the driver owns what is allowed to dispatch.
+    """
+    state = mgr.state if mgr is not None else None
+    if state is None or state.phase != "active":
+        return _inert(
+            {"status": state.status if state else None, "phase": state.phase if state else None,
+             "should_continue": False, "continuation_prompt": None, "verdict": "inactive",
+             "reason": "no active goal", "message": ""},
+            STOP_INACTIVE,
+        )
+
+    if not mgr.is_armed():
+        # Restart/resume/fork/unload disarm; nothing relaunches until a human resumes the goal.
+        return _inert(
+            {"status": "active", "phase": "active", "should_continue": False,
+             "continuation_prompt": None, "verdict": "disarmed", "message": "",
+             "reason": "goal is active but not armed in this process"},
+            STOP_DISARMED,
+        )
+
+    if failed:
+        return _inert(
+            {"status": "active", "phase": "active", "should_continue": False,
+             "continuation_prompt": None, "verdict": "failed-turn", "message": "",
+             "reason": "the turn failed before reaching the model"},
+            STOP_FAILED_TURN,
+        )
+    if interrupted:
+        # Judging a cancelled turn's partial output almost always says "continue" and would re-queue
+        # exactly what the user cancelled. Pausing is explicit and recoverable with /goal resume.
+        mgr.pause(reason="user-interrupted (Ctrl+C)")
+        return _inert(
+            {"status": "paused", "phase": "paused", "should_continue": False,
+             "continuation_prompt": None, "verdict": "interrupted", "message": "",
+             "reason": "turn interrupted by the user"},
+            STOP_INTERRUPTED,
+        )
+    decision = mgr.evaluate_after_turn(
+        response or "",
+        user_initiated=True,
+        background_processes=background_processes,
+        active_delegations=active_delegations,
+    )
+    decision["goal_id"] = state.goal_id
+    decision["revision"] = state.revision
+    decision["continuation"] = None
+
+    if decision.get("phase") == "complete" or decision.get("status") == "done":
+        return _inert(decision, STOP_COMPLETE)
+    if decision.get("phase") == "blocked":
+        return _inert(decision, STOP_BLOCKED)
+    if decision.get("phase") == "budget_limited":
+        return _inert(decision, STOP_BUDGET)
+    if decision.get("phase") == "paused":
+        return _inert(decision, decision.get("stop") or STOP_BUDGET)
+    if compression_exhausted:
+        # Compression failure is not goal progress: never judge it, never continue on it.
+        return _inert(decision, STOP_COMPRESSION)
+    if not decision.get("should_continue") or not decision.get("continuation_prompt"):
+        return _inert(decision, decision.get("stop") or STOP_INACTIVE)
+
+    # A round already reserved by an in-flight continuation (or a stale reservation from a dead
+    # process) must not be double-counted; the surface decides that one.
+    if state.reserved_round:
+        return _inert(decision, STOP_ROUND_IN_FLIGHT)
+
+    round_no = mgr.reserve_round()
+    if round_no is None:
+        return _inert(
+            dict(decision, status="paused", phase="budget_limited",
+                 message=(f"⏸ Goal paused — {state.rounds_started}/{state.max_rounds} rounds used. "
+                          "Use /goal resume to keep going, or /goal clear to stop."),
+                 reason="round budget exhausted"),
+            STOP_BUDGET,
+        )
+    fresh = mgr.state or state
+    decision["continuation"] = Continuation(
+        goal_id=fresh.goal_id,
+        revision=fresh.revision,
+        round_no=round_no,
+        prompt=decision["continuation_prompt"],
+    )
+    decision["stop"] = STOP_CONTINUED
+    logger.info(
+        "goal driver[%s]: continuation reserved for %s round %s/%s (goal %s)",
+        surface, mgr.session_id, round_no, fresh.max_rounds, fresh.goal_id,
+    )
+    return decision
+
+
+def plan_recovery(mgr, prompt: str, *, surface: str) -> Optional[Continuation]:
+    """Reserve a round for a surface-computed recovery continuation (compression retry).
+
+    The recovery prompt is not a judge verdict, but it still spends a turn: it goes through the same
+    armed/cap/reservation rules so it cannot bypass the round budget.
+    """
+    state = mgr.state if mgr is not None else None
+    if state is None or state.phase != "active" or not mgr.is_armed() or not prompt:
+        return None
+    if state.reserved_round:
+        return None
+    round_no = mgr.reserve_round()
+    if round_no is None:
+        return None
+    fresh = mgr.state or state
+    logger.info(
+        "goal driver[%s]: recovery continuation reserved for %s round %s/%s",
+        surface, mgr.session_id, round_no, fresh.max_rounds,
+    )
+    return Continuation(
+        goal_id=fresh.goal_id, revision=fresh.revision, round_no=round_no, prompt=prompt,
+    )
+
+
+def can_admit(mgr, continuation: Optional[Continuation], *, human_pending: bool = False) -> bool:
+    """Whether this reservation may still be dispatched; releases it when it may not.
+
+    Async surfaces (the gateway) call this before their own hand-off, then :func:`claim`.
+    """
+    if continuation is None or mgr is None:
+        return False
+    if human_pending:
+        release(mgr, continuation, reason="a user message won the boundary")
+        return False
+    fresh = load_goal(mgr.session_id, upgrade=False) or mgr.state
+    if (
+        fresh is None
+        or fresh.goal_id != continuation.goal_id
+        or fresh.revision != continuation.revision
+        or fresh.phase != "active"
+        or fresh.reserved_round not in (None, continuation.round_no)
+    ):
+        # Ghost relaunch guard: the goal was cleared, completed, rewritten (a preserving rewrite keeps
+        # the identity but bumps the revision), or the reservation belongs to another round. Nothing
+        # is dispatched and no round is consumed.
+        release(mgr, continuation, reason="goal changed before the continuation was admitted")
+        return False
+    return True
+
+
+def claim(mgr, continuation: Continuation) -> bool:
+    """Consume the reservation after the surface really handed the prompt to the session."""
+    if not mgr.admit_round():
+        release(mgr, continuation, reason="reservation lost before admission")
+        return False
+    return True
+
+
+def admit(
+    mgr,
+    continuation: Optional[Continuation],
+    dispatch: Callable[[str], bool],
+    *,
+    human_pending: bool = False,
+) -> bool:
+    """Claim the reserved round and hand the prompt to the surface.
+
+    ``dispatch`` returns True when the continuation message really entered the session (or its
+    ordered input queue). The reservation is admitted only then; every abort path releases it, so a
+    preempted or failed hand-off never consumes a round.
+    """
+    if continuation is None or mgr is None:
+        return False
+    if not can_admit(mgr, continuation, human_pending=human_pending):
+        return False
+    try:
+        accepted = bool(dispatch(continuation.prompt))
+    except Exception:  # health: allow BLE001 -- the surface's dispatch is third-party scheduling code
+        logger.warning("goal driver: continuation dispatch failed for %s", mgr.session_id, exc_info=True)
+        release(mgr, continuation, reason="dispatch failed")
+        return False
+    if not accepted:
+        release(mgr, continuation, reason="the surface refused the continuation")
+        return False
+    return claim(mgr, continuation)
+
+
+def release(mgr, continuation: Optional[Continuation], *, reason: str = "") -> bool:
+    """Release a reservation that will never be dispatched."""
+    if mgr is None:
+        return False
+    try:
+        released = mgr.release_round(reason=reason)
+    except Exception:  # health: allow BLE001 -- a dropped reservation must not break teardown
+        logger.debug("goal driver: release failed for %s", getattr(mgr, "session_id", "?"), exc_info=True)
+        return False
+    if released:
+        logger.info("goal driver: released round %s for %s (%s)",
+                    getattr(continuation, "round_no", "?"), mgr.session_id, reason or "no reason")
+    return released
+
+
+def finish_after_turn(
+    mgr,
+    response: str,
+    *,
+    surface: str,
+    dispatch: Callable[[str], bool],
+    background_processes: Optional[list[dict[str, Any]]] = None,
+    active_delegations: int = 0,
+    failed: bool = False,
+    interrupted: bool = False,
+    compression_exhausted: bool = False,
+    human_pending: bool = False,
+) -> dict[str, Any]:
+    """``plan_after_turn`` + ``admit`` in one call for surfaces whose dispatch is synchronous."""
+    decision = plan_after_turn(
+        mgr, response, surface=surface, background_processes=background_processes,
+        active_delegations=active_delegations, failed=failed, interrupted=interrupted,
+        compression_exhausted=compression_exhausted,
+    )
+    continuation = decision.get("continuation")
+    if continuation is not None:
+        admitted = admit(mgr, continuation, dispatch, human_pending=human_pending)
+        decision["admitted"] = admitted
+    return decision
+
+
+# ── Session lifecycle: armed is process memory only ──────────────────
+
+def disarm_on_session_open(session_id: Optional[str]) -> None:
+    """A session opened in this process starts disarmed (restart, resume, fork all go through it).
+
+    The durable goal stays readable; only an explicit human ``/goal resume`` arms it again.
+    """
+    if session_id:
+        disarm_goal(session_id)
+
+
+def disarm_on_session_unload(session_id: Optional[str], *, mgr=None) -> None:
+    """Unloading a session disarms it and drops any round that was reserved but never admitted."""
+    if not session_id:
+        return
+    disarm_goal(session_id)
+    if mgr is not None:
+        try:
+            mgr.release_round(reason="session unloaded")
+        except Exception:  # health: allow BLE001 -- teardown must not raise
+            logger.debug("goal driver: unload release failed for %s", session_id, exc_info=True)
+
+
+__all__ = [
+    "STOP_BLOCKED",
+    "STOP_BUDGET",
+    "STOP_COMPLETE",
+    "STOP_COMPRESSION",
+    "STOP_CONTINUED",
+    "STOP_DISARMED",
+    "STOP_FAILED_TURN",
+    "STOP_HUMAN_PENDING",
+    "STOP_INACTIVE",
+    "STOP_INTERRUPTED",
+    "STOP_REPLACED",
+    "STOP_ROUND_IN_FLIGHT",
+    "Continuation",
+    "admit",
+    "can_admit",
+    "claim",
+    "disarm_on_session_open",
+    "disarm_on_session_unload",
+    "finish_after_turn",
+    "plan_after_turn",
+    "plan_recovery",
+    "release",
+]

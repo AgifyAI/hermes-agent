@@ -146,6 +146,8 @@ class TestOneUnfinishedGoal:
         mgr.set("first objective", contract=goals.GoalContract(verification="tests pass"))
         mgr.add_subgoal("keep the API stable")
         mgr.add_gate("true")
+        mgr.reserve_round()
+        mgr.admit_round()
         with patch("hermes_cli.goals.judge_goal", return_value=("continue", "more", False, None, False)):
             mgr.evaluate_after_turn("worked")
             mgr.pause(reason="user-paused")
@@ -185,6 +187,8 @@ class TestPhases:
 
         mgr = goals.GoalManager("budget-sid", default_max_turns=1)
         mgr.set("small goal")
+        mgr.reserve_round()
+        mgr.admit_round()
         with patch("hermes_cli.goals.judge_goal", return_value=("continue", "more", False, None, False)):
             decision = mgr.evaluate_after_turn("step")
         assert decision["phase"] == "budget_limited"

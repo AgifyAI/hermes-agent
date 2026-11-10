@@ -96,6 +96,18 @@ class GatewayGoalManager(_Remote):
     next_continuation_prompt = _Local.next_continuation_prompt
     del _Local
 
+    def is_armed(self):
+        return bool(self._rpc("is_armed"))
+
+    def reserve_round(self):
+        return self._rpc("reserve_round")
+
+    def admit_round(self):
+        return bool(self._rpc("admit_round"))
+
+    def release_round(self, reason=""):
+        return bool(self._rpc("release_round", reason=reason))
+
     def set(self, goal, *, max_turns=None, contract=None, replace=False):
         kwargs = {"max_turns": max_turns} if max_turns is not None else {}
         if contract is not None:

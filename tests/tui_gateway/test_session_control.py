@@ -484,6 +484,10 @@ class TestUpdatePublication:
         snapshot AFTER the judge with the incremented count."""
         sid, key, entry = session
         _save_goal(key, turns_used=3)
+        # The turn boundary only drives a goal this process armed (a restart/resume leaves it
+        # disarmed); the test builds its row directly, so arm it as /goal set would have.
+        from hermes_cli.goals import arm_goal
+        arm_goal(key)
         emitted = self._capture(server, monkeypatch)
 
         class _InlineThread:

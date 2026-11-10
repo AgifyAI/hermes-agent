@@ -169,7 +169,7 @@ async def test_goal_verdict_budget_exhausted_sends_pause(hermes_home):
     assert len(adapter.sends) == 1
     content = adapter.sends[0]["content"]
     assert "paused" in content.lower()
-    assert "turns used" in content.lower()
+    assert "rounds used" in content.lower()
     # No continuation enqueued when budget is exhausted
     assert not adapter._pending_messages
 

@@ -254,6 +254,29 @@ class GatewayGoalsMixin:
                 "goal continuation: status send failed: %s", getattr(result, "error", "unknown error"),
             )
 
+    def _goal_continuation_may_start(self, session_id: Optional[str], session_key: Optional[str]) -> bool:
+        """A queued goal continuation is about to run: drop it if the goal moved, else consume its round."""
+        if not self._goal_still_active_for_session(session_id):
+            logger.info(
+                "Discarding stale goal continuation for session %s — goal is no longer active",
+                session_key or "?",
+            )
+            self._release_goal_round_for_key(session_key, "goal became inactive before the continuation ran")
+            return False
+        self._admit_goal_round_for_session(session_id)
+        return True
+
+    @staticmethod
+    def _admit_goal_round_for_session(session_id: Optional[str]) -> None:
+        """The queued continuation really starts now: consume its reserved round."""
+        if not session_id:
+            return
+        try:
+            from hermes_cli.goals import GoalManager
+            GoalManager(session_id=session_id).admit_round()
+        except Exception as exc:  # health: allow BLE001 -- accounting must not stop a queued turn
+            logger.debug("goal continuation: round admission failed: %s", exc)
+
     async def _defer_goal_status_notice_after_delivery(self, source: Any, message: str) -> None:
         """Send a /goal status line after the main response is delivered.
 
@@ -302,8 +325,13 @@ class GatewayGoalsMixin:
     async def _post_turn_goal_continuation(
         self, *, session_entry: Any, source: Any, final_response: str,
     ) -> None:
-        """Run the goal judge after a gateway turn (AFTER delivery) and, if still active, enqueue a
-        continuation through the adapter FIFO so a simultaneous real user message takes priority."""
+        """Run the goal round driver after a gateway turn and, if it reserved one, hand the
+        continuation to the adapter's FIFO so a simultaneous real user message takes priority.
+
+        The driver owns the stops (failed/interrupted turn, round cap, disarmed after a restart,
+        replaced goal) and the reservation; this method owns the hand-off and admits the round only
+        after the adapter really accepted the message.
+        """
         def _load():
             from hermes_cli.goals import GoalManager
             max_turns = self._goal_max_turns_from_config()
@@ -312,48 +340,65 @@ class GatewayGoalsMixin:
         mgr = await self._post_turn_manager(session_entry, "goal continuation", "goals", _load)
         if mgr is None or not mgr.is_active():
             return
-
+        session_id = getattr(session_entry, "session_id", None)
         _bg_procs, _active_deleg = None, 0
         with suppress(Exception):
             from hermes_cli.goals import count_active_delegations, gather_background_processes as _gather_bg
             # Only THIS session's processes (gateway turns register under turn_ctx.session_id):
             # subagents' pollers must not park the parent's goal.
-            _bg_procs = _gather_bg(owner_task_id=getattr(session_entry, "session_id", None) or None)
-            _active_deleg = count_active_delegations(getattr(session_entry, "session_id", None))
+            _bg_procs = _gather_bg(owner_task_id=session_id or None)
+            _active_deleg = count_active_delegations(session_id)
+
+        from hermes_cli import goal_driver
 
         # judge_goal() is a synchronous aux-LLM HTTP call (10-40 s; would block Discord heartbeats).
         # _run_in_executor_with_context carries the profile secret scope / aux runtime contextvars
         # without which aux credential resolution fails under multiplexing.
         decision = await self._run_in_executor_with_context(
-            lambda: mgr.evaluate_after_turn(
-                final_response or "", user_initiated=True, background_processes=_bg_procs,
-                active_delegations=_active_deleg,
+            lambda: goal_driver.plan_after_turn(
+                mgr, final_response or "", surface="gateway",
+                background_processes=_bg_procs, active_delegations=_active_deleg,
+                failed=self._turn_failed(),
             ),
         )
         msg = decision.get("message") or ""
         # Deferred until the visible final response is delivered, else "✓ Goal achieved" precedes it.
         if msg and source is not None:
             await self._defer_goal_status_notice_after_delivery(source, msg)
-        prompt = decision.get("continuation_prompt") or ""
-        if not decision.get("should_continue") or not prompt or source is None:
+        continuation = decision.get("continuation")
+        if continuation is None or source is None:
+            return
+
+        adapter = self._delivery_adapter_for(source)
+        quick_key = self._session_key_for_source(source)
+        human_pending = False
+        with suppress(Exception):
+            human_pending = bool(adapter and quick_key) and self._queue_depth(quick_key, adapter=adapter) > 0
+        if not await asyncio.to_thread(goal_driver.can_admit, mgr, continuation,
+                                       human_pending=human_pending):
             return
         if getattr(source, "platform", None) == Platform.LOCAL:
             # A local session's adapter FIFO has no reader: its turns are authority admissions.
-            # Commit the continuation there, as main's TUI chained it after the turn.
             from gateway.session_automation import admit_route_wake
             try:
-                await admit_route_wake(self, self._delivery_adapter_for(source), source, prompt, "goal-continuation")
-            except Exception:  # health: allow BLE001 -- best-effort like the FIFO enqueue below; traceback logged
+                await admit_route_wake(self, adapter, source, continuation.prompt, "goal-continuation")
+            except Exception:  # health: allow BLE001 -- best-effort; the round is released below
                 logger.debug("goal continuation: local admission failed", exc_info=True)
+                await asyncio.to_thread(goal_driver.release, mgr, continuation)
+                return
             return
         # Enqueue via the adapter's FIFO so a user message already in flight preempts naturally.
+        # The reservation is claimed when the queued turn really starts (``run_turn``), not here:
+        # a continuation cancelled or purged while queued must not consume a round.
         try:
-            adapter = self._delivery_adapter_for(source)
-            _quick_key = self._session_key_for_source(source)
-            if adapter and _quick_key:
-                self._enqueue_fifo(_quick_key, self._synthetic_prompt_event(source, prompt), adapter)
+            if adapter and quick_key:
+                self._enqueue_fifo(quick_key, self._synthetic_prompt_event(source, continuation.prompt), adapter)
+            else:
+                await asyncio.to_thread(goal_driver.release, mgr, continuation)
+                return
         except Exception as exc:
             logger.debug("goal continuation: enqueue failed: %s", exc)
+            await asyncio.to_thread(goal_driver.release, mgr, continuation)
 
     async def _run_post_turn_hooks(
         self, *, agent_result: Any, source: Any, is_internal: bool, event: Any = None,
