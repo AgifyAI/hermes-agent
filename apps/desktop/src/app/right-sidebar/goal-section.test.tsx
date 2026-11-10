@@ -240,6 +240,31 @@ describe('GoalSection', () => {
     expect(mockRunSessionControlAction).not.toHaveBeenCalled()
   })
 
+  it('shows the round history when opened and keeps it compact', async () => {
+    $sessionControlBySession.set({
+      [SID]: entry(
+        sampleSnapshot({
+          goal: sampleGoal({
+            history: [
+              { at: 1_700_000_000, event: 'goal_set' },
+              { at: 1_700_000_060, event: 'round_admitted', round: 2 },
+              { at: 1_700_000_120, event: 'gate_failed', command: 'npm run lint', exit_code: 1, reason: 'lint failed' },
+              { at: 1_700_000_180, event: 'tokens_used', tokens: 1200, total: 4200 }
+            ]
+          })
+        })
+      )
+    })
+    renderSection()
+    fireEvent.click(screen.getByRole('button', { name: /History \(4\)/ }))
+    expect(await screen.findByText('Goal set')).toBeTruthy()
+    expect(screen.getByText('Round started')).toBeTruthy()
+    expect(screen.getByText('Gate failed')).toBeTruthy()
+    expect(screen.getByText('$ npm run lint')).toBeTruthy()
+    expect(screen.getByText(/— lint failed/)).toBeTruthy()
+    expect(screen.getByText(/1,200 tokens/)).toBeTruthy()
+  })
+
   it('lists quality gates with their status and controls', () => {
     $sessionControlBySession.set({
       [SID]: entry(

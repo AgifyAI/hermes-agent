@@ -111,6 +111,33 @@ export interface RightSidebarTranslations {
   heartbeatCancel: string
   heartbeatPromptRequired: string
   heartbeatIntervalInvalid: string
+  historyTitle: (count: number) => string
+  historyTokens: (tokens: number) => string
+  historyRound: (round: number) => string
+  goalIndicatorRounds: (rounds: number) => string
+  goalIndicatorTokens: (used: number, budget: number) => string
+  historyEvent_goal_set: string
+  historyEvent_goal_rewritten: string
+  historyEvent_contract_set: string
+  historyEvent_paused: string
+  historyEvent_resumed: string
+  historyEvent_completed: string
+  historyEvent_cleared: string
+  historyEvent_migrated: string
+  historyEvent_blocked: string
+  historyEvent_budget_limited: string
+  historyEvent_gate_added: string
+  historyEvent_gate_passed: string
+  historyEvent_gate_failed: string
+  historyEvent_round_reserved: string
+  historyEvent_round_admitted: string
+  historyEvent_round_released: string
+  historyEvent_closing_issued: string
+  historyEvent_continuation_deferred: string
+  historyEvent_tokens_used: string
+  historyEvent_subgoal_added: string
+  historyEvent_item_removed: string
+  historyEvent_items_cleared: string
   pendingMemoryTitle: string
   pendingMemoryTextAria: string
   pendingMemoryLoading: string

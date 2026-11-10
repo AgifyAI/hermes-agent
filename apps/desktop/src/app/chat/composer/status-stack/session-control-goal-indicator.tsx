@@ -38,6 +38,9 @@ export function GoalPanelIndicator({ goal }: { goal: SessionControlGoal }) {
             ? labels.goalPhaseComplete
             : labels.goalPhasePaused
 
+  const rounds = goal.rounds_started ?? goal.turns_used
+  const hasBudget = typeof goal.token_budget === 'number' && goal.token_budget > 0
+
   return (
     <button
       aria-label={labels.goalOpenPanel}
@@ -48,6 +51,13 @@ export function GoalPanelIndicator({ goal }: { goal: SessionControlGoal }) {
       <span aria-hidden="true" className={cn('inline-block size-1.5 shrink-0 rounded-full', PHASE_DOT[phase])} />
       <span className="min-w-0 flex-1 truncate">
         {labels.goalTitle} · {stateLabel}
+        <span className="text-(--linear-text-quaternary)">
+          {' · '}
+          {labels.goalIndicatorRounds(rounds)}
+          {hasBudget
+            ? ` · ${labels.goalIndicatorTokens(goal.tokens_used ?? 0, goal.token_budget as number)}`
+            : ''}
+        </span>
       </span>
       <span className="shrink-0 text-[0.6875rem] text-(--linear-text-quaternary) group-hover/goal-indicator:text-(--linear-text-secondary)">
         {labels.goalOpenPanel}

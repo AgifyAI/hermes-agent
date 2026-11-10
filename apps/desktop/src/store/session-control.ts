@@ -51,6 +51,21 @@ export type SessionControlWaitBarrier =
   | (SessionControlDeferral & { target: string; type: 'session' })
   | (SessionControlDeferral & { target: number; type: 'pid' })
 
+export interface SessionControlGoalHistoryEvent {
+  at: number
+  cause?: string
+  code?: string
+  command?: string
+  event: string
+  exit_code?: number
+  goal?: string
+  phase?: string
+  reason?: string
+  round?: number
+  tokens?: number
+  total?: number
+}
+
 export interface SessionControlGoal {
   blocked_reason?: { code: string; message: string }
   closing_issued?: boolean
@@ -75,6 +90,7 @@ export interface SessionControlGoal {
   updated_at?: number
   wait_barrier?: SessionControlWaitBarrier
   created_at?: number
+  history?: SessionControlGoalHistoryEvent[]
 }
 
 export interface SessionControlLoop {
@@ -405,6 +421,137 @@ function parseBlockedReason(value: unknown): { code: string; message: string } |
     : null
 }
 
+const HISTORY_KEYS = new Set([
+  'at',
+  'event',
+  'phase',
+  'reason',
+  'round',
+  'tokens',
+  'total',
+  'command',
+  'exit_code',
+  'cause',
+  'code',
+  'goal'
+])
+
+/** Tolerant tail parser: one malformed journal entry must not hide the whole goal card. */
+function parseGoalHistory(value: unknown): SessionControlGoalHistoryEvent[] | null {
+  if (!Array.isArray(value)) {
+    return null
+  }
+
+  const history: SessionControlGoalHistoryEvent[] = []
+
+  for (const raw of value) {
+    if (!isRecord(raw) || !hasExactFields(raw, ['at', 'event'], [...HISTORY_KEYS].filter(key => key !== 'at' && key !== 'event'))) {
+      continue
+    }
+
+    if (!isFiniteNumber(raw.at) || typeof raw.event !== 'string' || !raw.event) {
+      continue
+    }
+
+    const entry: SessionControlGoalHistoryEvent = { at: raw.at, event: raw.event }
+    const strings = ['phase', 'reason', 'command', 'cause', 'code', 'goal'] as const
+    const integers = ['round', 'tokens', 'total', 'exit_code'] as const
+
+    if (strings.some(key => hasOwn(raw, key) && typeof raw[key] !== 'string')) {
+      continue
+    }
+
+    if (integers.some(key => hasOwn(raw, key) && !isInteger(raw[key]))) {
+      continue
+    }
+
+    for (const key of strings) {
+      if (hasOwn(raw, key)) {
+        entry[key] = raw[key] as string
+      }
+    }
+
+    for (const key of integers) {
+      if (hasOwn(raw, key)) {
+        entry[key] = raw[key] as number
+      }
+    }
+
+    history.push(entry)
+  }
+
+  return history
+}
+
+function fillGoalOptionalFields(goal: SessionControlGoal, value: UnknownRecord): boolean {
+  const waitBarrier = hasOwn(value, 'wait_barrier') ? parseWaitBarrier(value.wait_barrier) : undefined
+  if (hasOwn(value, 'created_at')) {
+    goal.created_at = value.created_at as number
+  }
+
+  if (hasOwn(value, 'updated_at')) {
+    goal.updated_at = value.updated_at as number
+  }
+
+  if (hasOwn(value, 'paused_reason')) {
+    goal.paused_reason = value.paused_reason as string
+  }
+
+  if (hasOwn(value, 'last_reason')) {
+    goal.last_reason = value.last_reason as string
+  }
+
+  if (hasOwn(value, 'last_verdict')) {
+    goal.last_verdict = value.last_verdict as SessionControlGoal['last_verdict']
+  }
+
+  if (waitBarrier) {
+    goal.wait_barrier = waitBarrier
+  }
+
+  if (hasOwn(value, 'phase')) {
+    goal.phase = value.phase as SessionControlGoalPhase
+  }
+
+  if (hasOwn(value, 'goal_id')) {
+    goal.goal_id = value.goal_id as string
+  }
+
+  for (const key of ['revision', 'rounds_started', 'max_rounds', 'token_budget', 'tokens_used'] as const) {
+    if (hasOwn(value, key)) {
+      goal[key] = value[key] as number
+    }
+  }
+
+  if (hasOwn(value, 'time_used_seconds')) {
+    goal.time_used_seconds = value.time_used_seconds as number
+  }
+
+  if (hasOwn(value, 'history')) {
+    const history = parseGoalHistory(value.history)
+
+    if (!history) {
+      return false
+    }
+
+    goal.history = history
+  }
+
+  if (hasOwn(value, 'closing_issued')) {
+    goal.closing_issued = value.closing_issued as boolean
+  }
+
+  if (hasOwn(value, 'blocked_reason')) {
+    const blocked = parseBlockedReason(value.blocked_reason)
+
+    if (blocked) {
+      goal.blocked_reason = blocked
+    }
+  }
+
+  return true
+}
+
 function parseGoal(value: unknown): SessionControlGoal | null {
   const required = ['title', 'status', 'turns_used', 'max_turns', 'contract', 'subgoals', 'gates']
   const optional = [
@@ -423,7 +570,8 @@ function parseGoal(value: unknown): SessionControlGoal | null {
     'token_budget',
     'tokens_used',
     'updated_at',
-    'wait_barrier'
+    'wait_barrier',
+    'history'
   ]
 
   if (!isRecord(value) || !hasExactFields(value, required, optional)) {
@@ -477,58 +625,8 @@ function parseGoal(value: unknown): SessionControlGoal | null {
     turns_used: value.turns_used
   }
 
-  if (hasOwn(value, 'created_at')) {
-    goal.created_at = value.created_at as number
-  }
-
-  if (hasOwn(value, 'updated_at')) {
-    goal.updated_at = value.updated_at as number
-  }
-
-  if (hasOwn(value, 'paused_reason')) {
-    goal.paused_reason = value.paused_reason as string
-  }
-
-  if (hasOwn(value, 'last_reason')) {
-    goal.last_reason = value.last_reason as string
-  }
-
-  if (hasOwn(value, 'last_verdict')) {
-    goal.last_verdict = value.last_verdict as SessionControlGoal['last_verdict']
-  }
-
-  if (waitBarrier) {
-    goal.wait_barrier = waitBarrier
-  }
-
-  if (hasOwn(value, 'phase')) {
-    goal.phase = value.phase as SessionControlGoalPhase
-  }
-
-  if (hasOwn(value, 'goal_id')) {
-    goal.goal_id = value.goal_id as string
-  }
-
-  for (const key of ['revision', 'rounds_started', 'max_rounds', 'token_budget', 'tokens_used'] as const) {
-    if (hasOwn(value, key)) {
-      goal[key] = value[key] as number
-    }
-  }
-
-  if (hasOwn(value, 'time_used_seconds')) {
-    goal.time_used_seconds = value.time_used_seconds as number
-  }
-
-  if (hasOwn(value, 'closing_issued')) {
-    goal.closing_issued = value.closing_issued as boolean
-  }
-
-  if (hasOwn(value, 'blocked_reason')) {
-    const blocked = parseBlockedReason(value.blocked_reason)
-
-    if (blocked) {
-      goal.blocked_reason = blocked
-    }
+  if (!fillGoalOptionalFields(goal, value)) {
+    return null
   }
 
   return goal

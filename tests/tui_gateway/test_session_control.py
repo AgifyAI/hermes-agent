@@ -775,3 +775,55 @@ class TestLoopAndHeartbeatEditing:
             response = _call(server, "session.control", session_id=sid, action="heartbeat.set", args=args)
             assert "error" in response, args
             assert needle in response["error"]["message"]
+
+
+class TestGoalHistory:
+    def test_snapshot_exposes_the_goal_journal_tail(self, server, session):
+        from hermes_cli.goals import GoalManager
+
+        sid, key, _ = session
+        _save_goal(key)
+        mgr = GoalManager(key)
+        mgr.add_subgoal("criterion")
+        mgr.pause("user-paused")
+
+        response = _call(server, "session.control.read", session_id=sid)
+        history = response["result"]["control"]["goal"]["history"]
+        events = [entry["event"] for entry in history]
+        assert events[-2:] == ["subgoal_added", "paused"]
+        assert history[-1]["reason"] == "user-paused"
+        assert all("ts" not in entry and "at" in entry for entry in history)
+
+    def test_history_is_bounded_and_scalar_only(self, server, session):
+        from hermes_cli.goals import GoalManager
+
+        sid, key, _ = session
+        _save_goal(key)
+        mgr = GoalManager(key)
+        for index in range(40):
+            mgr.add_subgoal(f"criterion {index}")
+
+        history = _call(server, "session.control.read", session_id=sid)["result"]["control"]["goal"]["history"]
+        assert len(history) == 30
+        assert history[-1]["event"] == "subgoal_added"
+        for entry in history:
+            assert set(entry) <= {"at", "event", "phase", "reason", "round", "tokens", "total", "command",
+                                  "exit_code", "cause", "code", "goal"}
+
+    def test_round_and_gate_events_carry_their_fields(self, server, session):
+        from hermes_cli.goals import GoalManager
+
+        sid, key, _ = session
+        _save_goal(key)
+        mgr = GoalManager(key)
+        mgr.reserve_round()
+        mgr.admit_round()
+        mgr.add_gate("false")
+        mgr._check_gates()
+
+        history = _call(server, "session.control.read", session_id=sid)["result"]["control"]["goal"]["history"]
+        events = {entry["event"]: entry for entry in history}
+        assert isinstance(events["round_admitted"]["round"], int)
+        assert events["round_admitted"]["round"] >= 1
+        assert events["gate_added"]["command"] == "false"
+        assert events["gate_failed"]["exit_code"] == 1
