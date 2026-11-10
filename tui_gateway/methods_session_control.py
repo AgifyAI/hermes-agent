@@ -55,6 +55,9 @@ _MANAGER_ACTIONS = frozenset({
     # Deferral management (GST-198): set/clear the one bounded waiting state.
     "wait.set",
     "wait.clear",
+    # Loop and heartbeat creation/editing from the panel (GST-205).
+    "loop.set",
+    "heartbeat.set",
 })
 
 # Actions whose input travels as ``args`` and is validated before any manager exists.
@@ -447,6 +450,36 @@ def _validated_wait_set(rid, args: dict):
     }, None
 
 
+def _validated_loop_set(rid, args: dict):
+    prompt = args.get("prompt")
+    if not isinstance(prompt, str) or not (prompt := prompt.strip()):
+        return None, _err(rid, 4004, "loop prompt is required")
+    if len(prompt) > _GOAL_TEXT_MAX:
+        return None, _err(rid, 4004, f"loop prompt is too long (max {_GOAL_TEXT_MAX})")
+    interval = args.get("interval_seconds")
+    if interval is not None and (type(interval) is not int or not 1 <= interval <= 86400):
+        return None, _err(rid, 4004, "interval_seconds must be an integer between 1 and 86400")
+    times = args.get("times")
+    if times is not None and (type(times) is not int or not 0 <= times <= 100000):
+        return None, _err(rid, 4004, "times must be an integer between 0 and 100000")
+    until = args.get("until", "")
+    if not isinstance(until, str) or len(until) > 200:
+        return None, _err(rid, 4004, "until must be a string up to 200 characters")
+    return {"interval_seconds": interval, "prompt": prompt, "times": times or 0, "until": until.strip()}, None
+
+
+def _validated_heartbeat_set(rid, args: dict):
+    prompt = args.get("prompt")
+    if not isinstance(prompt, str) or not (prompt := prompt.strip()):
+        return None, _err(rid, 4004, "heartbeat prompt is required")
+    if len(prompt) > _GOAL_TEXT_MAX:
+        return None, _err(rid, 4004, f"heartbeat prompt is too long (max {_GOAL_TEXT_MAX})")
+    interval = args.get("interval_seconds")
+    if type(interval) is not int or not 1 <= interval <= 604800:
+        return None, _err(rid, 4004, "interval_seconds must be an integer between 1 and 604800")
+    return {"interval_seconds": interval, "prompt": prompt}, None
+
+
 def _validate_action_args(rid, action: str, args: dict):
     """Validate the only actions with input before any manager is constructed."""
     if action == "gate.add":
@@ -456,31 +489,49 @@ def _validate_action_args(rid, action: str, args: dict):
         if type(index) is not int or index < 1:
             return None, _err(rid, 4004, "gate index must be >= 1")
         return {"index": index}, None
+    if action == "loop.set":
+        return _validated_loop_set(rid, args)
+    if action == "heartbeat.set":
+        return _validated_heartbeat_set(rid, args)
     if action == "wait.set":
         return _validated_wait_set(rid, args)
     if action in {"gate.clear", "wait.clear"}:
         return {}, None
     if action in {"goal.edit", "goal.set"}:
-        text = args.get("text")
-        if not isinstance(text, str) or not (text := text.strip()):
-            return None, _err(rid, 4004, "goal text is required")
-        if len(text) > _GOAL_TEXT_MAX:
-            return None, _err(rid, 4004, f"goal text is too long (max {_GOAL_TEXT_MAX})")
-        contract, err = _validated_contract(rid, args.get("contract"), partial=False)
-        if err:
-            return None, err
-        revision = args.get("revision")
-        if revision is not None and type(revision) is not int:
-            return None, _err(rid, 4004, "revision must be an integer")
-        return {"text": text, "contract": contract, "revision": revision}, None
+        return _validated_goal_text(rid, args)
     if action == "contract.set":
-        contract, err = _validated_contract(rid, args.get("contract"), partial=True)
-        if err:
-            return None, err
-        revision = args.get("revision")
-        if revision is not None and type(revision) is not int:
-            return None, _err(rid, 4004, "revision must be an integer")
-        return {"contract": contract, "revision": revision}, None
+        return _validated_contract_set(rid, args)
+    if action in {"subgoal.add", "subgoal.remove"}:
+        return _validated_subgoal(rid, action, args)
+    return {}, None
+
+
+def _validated_goal_text(rid, args: dict):
+    text = args.get("text")
+    if not isinstance(text, str) or not (text := text.strip()):
+        return None, _err(rid, 4004, "goal text is required")
+    if len(text) > _GOAL_TEXT_MAX:
+        return None, _err(rid, 4004, f"goal text is too long (max {_GOAL_TEXT_MAX})")
+    contract, err = _validated_contract(rid, args.get("contract"), partial=False)
+    if err:
+        return None, err
+    revision = args.get("revision")
+    if revision is not None and type(revision) is not int:
+        return None, _err(rid, 4004, "revision must be an integer")
+    return {"text": text, "contract": contract, "revision": revision}, None
+
+
+def _validated_contract_set(rid, args: dict):
+    contract, err = _validated_contract(rid, args.get("contract"), partial=True)
+    if err:
+        return None, err
+    revision = args.get("revision")
+    if revision is not None and type(revision) is not int:
+        return None, _err(rid, 4004, "revision must be an integer")
+    return {"contract": contract, "revision": revision}, None
+
+
+def _validated_subgoal(rid, action: str, args: dict):
     if action == "subgoal.add":
         text = args.get("text")
         if not isinstance(text, str) or not (text := text.strip()):
@@ -488,12 +539,10 @@ def _validate_action_args(rid, action: str, args: dict):
         if len(text) > 500:
             return None, _err(rid, 4004, "subgoal text is too long (max 500)")
         return {"text": text}, None
-    if action == "subgoal.remove":
-        index = args.get("index")
-        if type(index) is not int or index < 1:
-            return None, _err(rid, 4004, "subgoal index must be >= 1")
-        return {"index": index}, None
-    return {}, None
+    index = args.get("index")
+    if type(index) is not int or index < 1:
+        return None, _err(rid, 4004, "subgoal index must be >= 1")
+    return {"index": index}, None
 
 
 def _dispatch_command(rid, *, session_id: str, name: str, arg: str) -> dict:
@@ -558,7 +607,9 @@ def _execute_manager_action(session_key: str, action: str, args: dict) -> dict:
         return _execute_gate_action(session_key, action, args)
     if action.startswith("wait."):
         return _execute_wait_action(session_key, action, args)
-    return _execute_heartbeat_action(session_key, action)
+    if action.startswith("loop."):
+        return _execute_loop_action(session_key, action, args)
+    return _execute_heartbeat_action(session_key, action, args)
 
 
 def _execute_gate_action(session_key: str, action: str, args: dict) -> dict:
@@ -629,10 +680,29 @@ def _execute_subgoal_action(session_key: str, action: str, args: dict) -> dict:
     return {"result": {"type": "exec", "output": output}}
 
 
-def _execute_heartbeat_action(session_key: str, action: str) -> dict:
+def _execute_loop_action(session_key: str, action: str, args: dict) -> dict:
+    """Create or replace the session loop from the panel (pause/resume/stop go through /loop)."""
+    from hermes_cli.loops import LoopManager
+
+    manager = LoopManager(session_id=session_key)
+    state = manager.set(
+        args["prompt"],
+        interval_seconds=args["interval_seconds"],
+        times=args["times"],
+        until=args["until"],
+    )
+    cadence = state.cadence_label()
+    runs = f", {state.times} runs" if state.times else ""
+    return {"result": {"type": "exec", "output": f"↻ Loop set ({cadence}{runs}): {state.prompt}"}}
+
+
+def _execute_heartbeat_action(session_key: str, action: str, args: dict | None = None) -> dict:
     from hermes_cli.heartbeat import HeartbeatManager, format_interval
 
     manager = HeartbeatManager(session_id=session_key)
+    if action == "heartbeat.set":
+        state = manager.set(args["prompt"], args["interval_seconds"])
+        return {"result": {"type": "exec", "output": f"♥ Heartbeat set (every {format_interval(state.interval_seconds)}): {state.prompt}"}}
     if action == "heartbeat.pause":
         state = manager.pause()
         output = f"⏸ Heartbeat paused: {state.prompt}" if state else "No heartbeat set."

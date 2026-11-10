@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -37,8 +37,6 @@ import {
   $sessionControlBySession,
   type SessionControlEntry,
   type SessionControlGoal,
-  type SessionControlHeartbeat,
-  type SessionControlLoop,
   type SessionControlSnapshot
 } from '@/store/session-control'
 import { $sessionStates } from '@/store/session-states'
@@ -77,34 +75,6 @@ const sampleGoal = (overrides?: Partial<SessionControlGoal>): SessionControlGoal
   subgoals: ['First criterion', 'Second criterion'],
   title: 'Execute complete work order',
   turns_used: 3,
-  ...overrides
-})
-
-const sampleLoop = (overrides?: Partial<SessionControlLoop>): SessionControlLoop => ({
-  awaiting_response: false,
-  created_at: 1700000000,
-  current_delay: 120,
-  deferred_by_goal: false,
-  interval_seconds: 120,
-  last_fired_at: 1700000000,
-  max_ticks: 10,
-  mode: 'interval',
-  next_due_at: 1700000120,
-  prompt: 'Check pending reviews',
-  status: 'active',
-  ticks_fired: 3,
-  times: 10,
-  until: '',
-  ...overrides
-})
-
-const sampleHeartbeat = (overrides?: Partial<SessionControlHeartbeat>): SessionControlHeartbeat => ({
-  created_at: 1700000000,
-  fire_count: 4,
-  interval_seconds: 1800,
-  last_fired_at: 1700000000,
-  prompt: 'System health check',
-  status: 'active',
   ...overrides
 })
 
@@ -187,102 +157,5 @@ describe('ComposerStatusStack session-control UI', () => {
 
     expect(screen.queryByText('Structured Goal Title')).toBeNull()
     expect(screen.queryByRole('button', { name: /goal actions/i })).toBeNull()
-  })
-
-  // 11. loop pause/resume/stop calls exact action
-  it('calls loop.pause when pause loop is clicked', async () => {
-    mockRunSessionControlAction.mockResolvedValue({
-      type: 'exec',
-      output: 'Paused loop',
-      notice: null,
-      message: null,
-      display: null
-    })
-
-    $sessionControlBySession.set({
-      [SID]: mockEntry({
-        snapshot: sampleSnapshot({
-          goal: null,
-          loop: sampleLoop({ status: 'active' })
-        })
-      })
-    })
-
-    renderStack()
-
-    const loopMenuTrigger = screen.getByRole('button', { name: /loop actions/i })
-    fireEvent.click(loopMenuTrigger)
-
-    const pauseItem = await screen.findByRole('menuitem', { name: /pause loop/i })
-    fireEvent.click(pauseItem)
-
-    await waitFor(() => {
-      expect(mockRunSessionControlAction).toHaveBeenCalledWith(SID, 'loop.pause', undefined)
-    })
-  })
-
-  // 12. heartbeat interval/next/fire count and controls
-  it("shows a precise live countdown and makes an overdue heartbeat's idle wait explicit", () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(1_700_000_030_000))
-
-    try {
-      $sessionControlBySession.set({
-        [SID]: mockEntry({
-          snapshot: sampleSnapshot({
-            goal: null,
-            heartbeat: sampleHeartbeat({
-              created_at: 1_700_000_000,
-              fire_count: 0,
-              interval_seconds: 90,
-              last_fired_at: 0,
-              status: 'active'
-            })
-          })
-        })
-      })
-
-      renderStack()
-
-      expect(screen.getByText(/Heartbeat active · every 90s · next 00:01:00/)).toBeTruthy()
-
-      act(() => {
-        vi.advanceTimersByTime(60_000)
-      })
-
-      expect(screen.getByText(/Heartbeat active · every 90s · due — waiting for idle/)).toBeTruthy()
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-
-  // 12b. the loop's next-run label is a live countdown, not a value frozen at render time
-  it('counts a loop down to its next wakeup and makes an overdue one explicit', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(1_700_000_030_000))
-
-    try {
-      $sessionControlBySession.set({
-        [SID]: mockEntry({ snapshot: sampleSnapshot({ goal: null, loop: sampleLoop({ next_due_at: 1_700_002_730 }) }) })
-      })
-
-      renderStack()
-
-      expect(screen.getByText(/Loop active · Run 3\/10 · next 00:45:00/)).toBeTruthy()
-
-      act(() => {
-        vi.advanceTimersByTime(61_000)
-      })
-
-      expect(screen.getByText(/Loop active · Run 3\/10 · next 00:43:59/)).toBeTruthy()
-
-      act(() => {
-        vi.advanceTimersByTime(44 * 60_000)
-      })
-
-      expect(screen.getByText(/Loop active · Run 3\/10 · due — waiting for idle/)).toBeTruthy()
-    } finally {
-      vi.useRealTimers()
-    }
   })
 })

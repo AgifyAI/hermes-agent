@@ -7,8 +7,6 @@ import { useI18n } from '@/i18n'
 import type { SessionControlEntry } from '@/store/session-control'
 
 import { GoalPanelIndicator } from './session-control-goal-indicator'
-import { SessionControlHeartbeatSection } from './session-control-heartbeat'
-import { SessionControlLoopSection } from './session-control-loop'
 
 export interface SessionControlSectionsProps {
   entry: SessionControlEntry
@@ -81,22 +79,6 @@ export const SessionControlSections = memo(function SessionControlSections({
         </div>
       )}
       {snapshot?.goal && <GoalPanelIndicator goal={snapshot.goal} />}
-      {snapshot?.loop && (
-        <SessionControlLoopSection
-          loop={snapshot.loop}
-          onFeedback={handleFeedback}
-          pendingAction={entry.pendingAction}
-          sessionId={sessionId}
-        />
-      )}
-      {snapshot?.heartbeat && (
-        <SessionControlHeartbeatSection
-          heartbeat={snapshot.heartbeat}
-          onFeedback={handleFeedback}
-          pendingAction={entry.pendingAction}
-          sessionId={sessionId}
-        />
-      )}
     </>
   )
 })

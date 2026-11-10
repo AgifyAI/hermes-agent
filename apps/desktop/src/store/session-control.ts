@@ -115,6 +115,7 @@ export interface SessionControlSnapshot {
 
 export type SessionControlAction =
   | 'goal.clear'
+  | 'goal.edit'
   | 'goal.pause'
   | 'goal.resume'
   | 'goal.unwait'
@@ -123,11 +124,11 @@ export type SessionControlAction =
   | 'heartbeat.resume'
   | 'loop.pause'
   | 'loop.resume'
+  | 'loop.set'
   | 'loop.stop'
   | 'subgoal.add'
   | 'subgoal.clear'
   | 'subgoal.remove'
-  | 'goal.edit'
   | 'goal.set'
   | 'contract.set'
   | 'gate.add'
@@ -135,6 +136,7 @@ export type SessionControlAction =
   | 'gate.remove'
   | 'wait.clear'
   | 'wait.set'
+  | 'heartbeat.set'
 
 export interface SessionControlContractArgs {
   boundaries?: string
@@ -157,10 +159,24 @@ export interface SessionControlWaitArgs {
   session_id?: string
 }
 
+export interface SessionControlLoopArgs {
+  interval_seconds?: number
+  prompt: string
+  times?: number
+  until?: string
+}
+
+export interface SessionControlHeartbeatArgs {
+  interval_seconds: number
+  prompt: string
+}
+
 export type SessionControlActionArgs =
   | { contract: SessionControlContractArgs; revision?: number; text: string }
   | { contract: SessionControlContractArgs; revision?: number }
   | SessionControlGateArgs
+  | SessionControlHeartbeatArgs
+  | SessionControlLoopArgs
   | SessionControlWaitArgs
   | { index: number }
   | { text: string }
