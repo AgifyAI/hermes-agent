@@ -127,8 +127,23 @@ export type SessionControlAction =
   | 'subgoal.add'
   | 'subgoal.clear'
   | 'subgoal.remove'
+  | 'goal.edit'
+  | 'goal.set'
+  | 'contract.set'
 
-export type SessionControlActionArgs = { index: number } | { text: string }
+export interface SessionControlContractArgs {
+  boundaries?: string
+  constraints?: string
+  outcome?: string
+  stop_when?: string
+  verification?: string
+}
+
+export type SessionControlActionArgs =
+  | { contract: SessionControlContractArgs; revision?: number; text: string }
+  | { contract: SessionControlContractArgs; revision?: number }
+  | { index: number }
+  | { text: string }
 
 export interface SessionControlDispatch {
   display: string | null

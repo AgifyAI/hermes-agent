@@ -29,6 +29,25 @@ export interface RightSidebarTranslations {
   goalPhaseBudgetLimited: string
   goalPhaseComplete: string
   goalOpenPanel: string
+  goalEdit: string
+  goalSetGoal: string
+  goalFormObjective: string
+  goalFormObjectivePlaceholder: string
+  goalFormContractTitle: string
+  goalFormOutcome: string
+  goalFormVerification: string
+  goalFormConstraints: string
+  goalFormBoundaries: string
+  goalFormStopWhen: string
+  goalFormSave: string
+  goalFormCancel: string
+  goalFormObjectiveRequired: string
+  goalConfirmRewriteTitle: string
+  goalConfirmRewriteBody: string
+  goalConfirmRewrite: string
+  goalConfirmNewTitle: string
+  goalConfirmNewBody: string
+  goalConfirmNew: string
   pendingMemoryTitle: string
   pendingMemoryTextAria: string
   pendingMemoryLoading: string

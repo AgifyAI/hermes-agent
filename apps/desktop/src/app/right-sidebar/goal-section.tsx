@@ -13,6 +13,7 @@ import {
   runSessionControlAction,
   type SessionControlAction,
   type SessionControlActionArgs,
+  type SessionControlContractArgs,
   type SessionControlGoal,
   type SessionControlWaitBarrier
 } from '@/store/session-control'
@@ -53,6 +54,53 @@ function progressLabel(goal: SessionControlGoal, t: ReturnType<typeof useI18n>['
   return max > 0 ? labels.goalProgressRounds(started, max) : labels.goalProgressRounds(started, '∞')
 }
 
+interface GoalDraft {
+  boundaries: string
+  constraints: string
+  outcome: string
+  stopWhen: string
+  title: string
+  verification: string
+}
+
+const BLANK_DRAFT: GoalDraft = { boundaries: '', constraints: '', outcome: '', stopWhen: '', title: '', verification: '' }
+
+function draftFromGoal(goal: SessionControlGoal | null): GoalDraft {
+  if (!goal) {
+    return BLANK_DRAFT
+  }
+
+  return {
+    boundaries: goal.contract.boundaries,
+    constraints: goal.contract.constraints,
+    outcome: goal.contract.outcome,
+    stopWhen: goal.contract.stop_when,
+    title: goal.title,
+    verification: goal.contract.verification
+  }
+}
+
+function contractFromDraft(draft: GoalDraft): SessionControlContractArgs {
+  const contract: SessionControlContractArgs = {}
+  const pairs: [keyof SessionControlContractArgs, string][] = [
+    ['outcome', draft.outcome],
+    ['verification', draft.verification],
+    ['constraints', draft.constraints],
+    ['boundaries', draft.boundaries],
+    ['stop_when', draft.stopWhen]
+  ]
+
+  for (const [key, raw] of pairs) {
+    const value = raw.trim()
+
+    if (value) {
+      contract[key] = value
+    }
+  }
+
+  return contract
+}
+
 function waitLabel(barrier: SessionControlWaitBarrier, t: ReturnType<typeof useI18n>['t']): string {
   const cause = barrier.cause ?? barrier.type
   const remaining = barrier.remaining_seconds
@@ -83,6 +131,9 @@ export function GoalSection() {
   const [criterion, setCriterion] = useState('')
   const [feedback, setFeedback] = useState<Feedback>({})
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<GoalDraft>(BLANK_DRAFT)
+  const [formError, setFormError] = useState<string | null>(null)
 
   // "Open the goal card" from elsewhere (indicator, deep link) re-opens it.
   useEffect(() => {
@@ -97,12 +148,14 @@ export function GoalSection() {
   useEffect(() => {
     setFeedback({})
     setCriteriaOpen(false)
+    setEditing(false)
+    setFormError(null)
   }, [runtimeSessionId])
 
   const act = useCallback(
-    async (action: SessionControlAction, args?: SessionControlActionArgs) => {
+    async (action: SessionControlAction, args?: SessionControlActionArgs): Promise<boolean> => {
       if (!runtimeSessionId || busy) {
-        return
+        return false
       }
 
       setBusy(true)
@@ -115,7 +168,7 @@ export function GoalSection() {
           if (!dispatch.message) {
             setFeedback({ error: labels.goalContinuationFailed })
 
-            return
+            return false
           }
 
           const queued = queueKickoffIfSessionBusy({
@@ -128,7 +181,7 @@ export function GoalSection() {
           if (queued === 'busy') {
             setFeedback({ error: labels.goalContinuationFailed })
 
-            return
+            return false
           }
 
           if (queued === 'idle' && storedSessionId) {
@@ -137,14 +190,18 @@ export function GoalSection() {
             if (!sent) {
               setFeedback({ error: labels.goalContinuationFailed })
 
-              return
+              return false
             }
           }
         }
 
         setFeedback({ success: labels.goalActionDone })
+
+        return true
       } catch (error) {
         setFeedback({ error: error instanceof Error ? error.message : labels.goalActionFailed })
+
+        return false
       } finally {
         setBusy(false)
       }
@@ -175,6 +232,60 @@ export function GoalSection() {
     await act('subgoal.add', { text })
     setCriterion('')
   }, [act, criterion])
+
+  const startEditing = useCallback(() => {
+    setDraft(draftFromGoal(goal))
+    setFormError(null)
+    setFeedback({})
+    setEditing(true)
+  }, [goal])
+
+  const saveGoal = useCallback(async () => {
+    const title = draft.title.trim()
+
+    if (!title) {
+      setFormError(labels.goalFormObjectiveRequired)
+
+      return
+    }
+
+    const existing = goal !== null && phaseOf(goal) !== 'complete'
+
+    if (existing) {
+      const ok = await confirm({
+        confirmLabel: labels.goalConfirmRewrite,
+        description: labels.goalConfirmRewriteBody,
+        title: labels.goalConfirmRewriteTitle
+      })
+
+      if (!ok) {
+        return
+      }
+    } else if (goal) {
+      const ok = await confirm({
+        confirmLabel: labels.goalConfirmNew,
+        description: labels.goalConfirmNewBody,
+        title: labels.goalConfirmNewTitle
+      })
+
+      if (!ok) {
+        return
+      }
+    }
+
+    const contract = contractFromDraft(draft)
+    const args = {
+      ...(Object.keys(contract).length ? { contract } : {}),
+      ...(goal ? { revision: goal.revision } : {}),
+      text: title
+    }
+    const saved = await act(existing ? 'goal.edit' : 'goal.set', args)
+
+    if (saved) {
+      setEditing(false)
+      setDraft(BLANK_DRAFT)
+    }
+  }, [act, draft, goal, labels])
 
   const phase = goal ? phaseOf(goal) : null
   const pending = Boolean(entry?.pendingAction) || busy
@@ -215,8 +326,29 @@ export function GoalSection() {
       </SidebarSectionHeader>
       <SidebarSectionContent open={open}>
         <div className="flex flex-col gap-2 px-3 pb-2.5">
-          {!goal ? (
-            <p className="text-xs leading-relaxed text-(--linear-text-quaternary)">{labels.goalEmpty}</p>
+          {editing ? (
+            <GoalForm
+              busy={pending}
+              draft={draft}
+              error={formError ?? feedback.error ?? null}
+              labels={labels}
+              onCancel={() => {
+                setEditing(false)
+                setFormError(null)
+                setFeedback({})
+              }}
+              onChange={setDraft}
+              onSave={() => void saveGoal()}
+            />
+          ) : !goal ? (
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 flex-1 text-xs leading-relaxed text-(--linear-text-quaternary)">
+                {labels.goalEmpty}
+              </p>
+              <ActionButton disabled={pending} label={labels.goalSetGoal} onClick={startEditing}>
+                <Codicon name="add" size="0.75rem" />
+              </ActionButton>
+            </div>
           ) : (
             <>
               <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-(--linear-text-secondary)">
@@ -303,6 +435,9 @@ export function GoalSection() {
                 </form>
               ) : null}
               <div className="flex flex-wrap items-center gap-1">
+                <ActionButton disabled={pending} label={labels.goalEdit} onClick={startEditing}>
+                  <Codicon name="edit" size="0.75rem" />
+                </ActionButton>
                 {phase === 'active' && (
                   <ActionButton disabled={pending} label={labels.goalPause} onClick={() => void act('goal.pause')}>
                     <Pause className="size-3" />
@@ -329,6 +464,83 @@ export function GoalSection() {
         </div>
       </SidebarSectionContent>
     </section>
+  )
+}
+
+interface GoalFormProps {
+  busy: boolean
+  draft: GoalDraft
+  error: string | null
+  labels: ReturnType<typeof useI18n>['t']['rightSidebar']
+  onCancel: () => void
+  onChange: (draft: GoalDraft) => void
+  onSave: () => void
+}
+
+const CONTRACT_FORM_FIELDS: { key: keyof GoalDraft; label: keyof GoalFormProps['labels'] }[] = [
+  { key: 'outcome', label: 'goalFormOutcome' },
+  { key: 'verification', label: 'goalFormVerification' },
+  { key: 'constraints', label: 'goalFormConstraints' },
+  { key: 'boundaries', label: 'goalFormBoundaries' },
+  { key: 'stopWhen', label: 'goalFormStopWhen' }
+]
+
+function GoalForm({ busy, draft, error, labels, onCancel, onChange, onSave }: GoalFormProps) {
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={event => {
+        event.preventDefault()
+        onSave()
+      }}
+    >
+      <label className="flex flex-col gap-1">
+        <span className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{labels.goalFormObjective}</span>
+        <textarea
+          aria-label={labels.goalFormObjective}
+          className="min-h-20 w-full resize-y rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 py-1.5 text-xs leading-relaxed text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) focus:border-(--linear-border-secondary)"
+          onChange={event => onChange({ ...draft, title: event.target.value })}
+          placeholder={labels.goalFormObjectivePlaceholder}
+          value={draft.title}
+        />
+      </label>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[0.6875rem] font-medium text-(--linear-text-tertiary)">{labels.goalFormContractTitle}</span>
+        {CONTRACT_FORM_FIELDS.map(field => (
+          <label className="flex flex-col gap-0.5" key={field.key}>
+            <span className="text-[0.625rem] text-(--linear-text-quaternary)">{labels[field.label] as string}</span>
+            <input
+              aria-label={labels[field.label] as string}
+              className="h-6 w-full rounded-md border-[0.5px] border-(--linear-border-panel) bg-(--linear-bg-panel) px-2 text-[0.6875rem] text-(--linear-text-primary) outline-none placeholder:text-(--linear-text-quaternary) focus:border-(--linear-border-secondary)"
+              onChange={event => onChange({ ...draft, [field.key]: event.target.value })}
+              value={draft[field.key]}
+            />
+          </label>
+        ))}
+      </div>
+      {error && (
+        <p className="text-[0.6875rem] leading-relaxed text-(--linear-red)" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <button
+          className="h-6 rounded-md bg-(--linear-accent) px-2 text-[0.6875rem] font-medium text-(--linear-on-accent) disabled:opacity-50"
+          disabled={busy}
+          type="submit"
+        >
+          {labels.goalFormSave}
+        </button>
+        <button
+          className="h-6 rounded-md px-1.5 text-[0.6875rem] font-medium text-(--linear-text-tertiary) hover:text-(--linear-text-primary)"
+          disabled={busy}
+          onClick={onCancel}
+          type="button"
+        >
+          {labels.goalFormCancel}
+        </button>
+      </div>
+    </form>
   )
 }
 
