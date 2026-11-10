@@ -804,7 +804,8 @@ def _inside_tree(worktree_path: str):
 _SERVED_TREE_SQL = (
     "SELECT 1 FROM sessions s WHERE hermes_inside_tree(s.cwd) AND (s.ended_at IS NULL OR EXISTS ("
     "SELECT 1 FROM state_meta m WHERE m.key IN ('loop:'||s.id, 'heartbeat:'||s.id, 'goal:'||s.id) "
-    "AND (json_valid(m.value)=0 OR COALESCE(json_extract(m.value,'$.status'),'active')='active'))) LIMIT 1")
+    "AND (json_valid(m.value)=0 OR COALESCE(json_extract(m.value,'$.phase'),"
+    "json_extract(m.value,'$.status'),'active')='active'))) LIMIT 1")
 
 
 def _tree_still_served(db_path: str, worktree_path: str) -> Optional[str]:

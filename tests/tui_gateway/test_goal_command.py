@@ -510,7 +510,7 @@ def test_new_goal_does_not_inherit_previous_goal_recovery_attempt(server):
         status="error",
         raw="Context length exceeded.",
     )
-    mgr.set("replacement goal")
+    mgr.set("replacement goal", replace=True)
     replacement_prompt, replacement_notice = server._plan_goal_compression_recovery(
         session,
         _compression_failure(),

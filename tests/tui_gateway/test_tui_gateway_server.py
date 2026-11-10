@@ -14433,7 +14433,7 @@ def test_interrupt_drops_queued_prompt_for_session():
         server._sessions.pop("sid", None)
 
 
-def test_interrupt_before_agent_ready_prevents_late_turn_start(monkeypatch):
+def test_interrupt_before_agent_ready_prevents_late_turn_start(monkeypatch, deferred_turn):
     """Stop during lazy agent startup must not start the turn after init finishes."""
     threads = []
     calls = {"run_prompt": 0}
@@ -14477,14 +14477,14 @@ def test_interrupt_before_agent_ready_prevents_late_turn_start(monkeypatch):
         )
         assert submit.get("result"), f"got error: {submit.get('error')}"
         assert session["running"] is True
-        assert len(threads) == 1
+        assert len([t for t in threads if getattr(t.target, "__name__", "") != "_scan"]) == 1
 
         stop = server.handle_request(
             {"id": "2", "method": "session.interrupt", "params": {"session_id": "sid"}}
         )
         assert stop.get("result"), f"got error: {stop.get('error')}"
 
-        threads[0].target()
+        deferred_turn(threads).target()
 
         assert calls["run_prompt"] == 0
         assert session["running"] is False
@@ -14493,7 +14493,7 @@ def test_interrupt_before_agent_ready_prevents_late_turn_start(monkeypatch):
         server._sessions.pop("sid", None)
 
 
-def test_cancelled_turn_before_agent_ready_emits_error_event(monkeypatch):
+def test_cancelled_turn_before_agent_ready_emits_error_event(monkeypatch, deferred_turn):
     """A turn cancelled during lazy agent startup must surface an error event.
 
     Sibling of test_interrupt_before_agent_ready_prevents_late_turn_start: that
@@ -14557,7 +14557,7 @@ def test_cancelled_turn_before_agent_ready_emits_error_event(monkeypatch):
 
         # The deferred run thread now wakes up; without the emit it would bail
         # silently and the Desktop would never learn the turn was dropped.
-        threads[0].target()
+        deferred_turn(threads).target()
 
         assert calls["run_prompt"] == 0
         assert session["running"] is False
@@ -14571,7 +14571,7 @@ def test_cancelled_turn_before_agent_ready_emits_error_event(monkeypatch):
         server._sessions.pop("sid", None)
 
 
-def test_session_not_running_before_agent_ready_emits_error_event(monkeypatch):
+def test_session_not_running_before_agent_ready_emits_error_event(monkeypatch, deferred_turn):
     """When `running` is cleared by something other than an explicit interrupt
     (e.g. a concurrent session.create race that resets the flag), the deferred
     run thread must still emit an error event rather than disappearing silently.
@@ -14625,7 +14625,7 @@ def test_session_not_running_before_agent_ready_emits_error_event(monkeypatch):
         with session["history_lock"]:
             session["running"] = False
 
-        threads[0].target()
+        deferred_turn(threads).target()
 
         assert calls["run_prompt"] == 0
         assert session.get("inflight_turn") is None
@@ -14637,7 +14637,7 @@ def test_session_not_running_before_agent_ready_emits_error_event(monkeypatch):
         server._sessions.pop("sid", None)
 
 
-def test_slow_agent_build_delivers_prompt_instead_of_timing_out(monkeypatch):
+def test_slow_agent_build_delivers_prompt_instead_of_timing_out(monkeypatch, deferred_turn):
     """#63078 server-side half: a deferred build slower than the old 30s
     ``_wait_agent`` cliff must NOT eat the first message. The patient wait
     keeps the pending prompt attached and delivers it as soon as the
@@ -14704,7 +14704,7 @@ def test_slow_agent_build_delivers_prompt_instead_of_timing_out(monkeypatch):
         )
         assert submit.get("result"), f"got error: {submit.get('error')}"
 
-        threads[0].target()
+        deferred_turn(threads).target()
 
         # The message was DELIVERED, not dropped, and no error event fired.
         assert calls["run_prompt"] == 1
@@ -14714,7 +14714,7 @@ def test_slow_agent_build_delivers_prompt_instead_of_timing_out(monkeypatch):
         server._sessions.pop("sid", None)
 
 
-def test_slow_agent_build_emits_keyed_progress_notice(monkeypatch):
+def test_slow_agent_build_emits_keyed_progress_notice(monkeypatch, deferred_turn):
     """Past the slow threshold the patient wait must tell the user once
     (keyed notification.show) and clear the notice when the build lands —
     a long wait is acceptable, a silent one is not."""
@@ -14779,7 +14779,7 @@ def test_slow_agent_build_emits_keyed_progress_notice(monkeypatch):
         )
         assert submit.get("result"), f"got error: {submit.get('error')}"
 
-        threads[0].target()
+        deferred_turn(threads).target()
 
         assert calls["run_prompt"] == 1
         shows = [e for e in emitted if e and e[0] == "notification.show" and e[1] == "sid"]
@@ -14792,7 +14792,7 @@ def test_slow_agent_build_emits_keyed_progress_notice(monkeypatch):
         server._sessions.pop("sid", None)
 
 
-def test_agent_build_failure_surfaces_error_and_drops_turn(monkeypatch):
+def test_agent_build_failure_surfaces_error_and_drops_turn(monkeypatch, deferred_turn):
     """When the build itself FAILS (agent_error set when ready fires), the
     prompt must not run and the failure must reach the client as a visible
     error event — never a silent drop.
@@ -14851,7 +14851,7 @@ def test_agent_build_failure_surfaces_error_and_drops_turn(monkeypatch):
         )
         assert submit.get("result"), f"got error: {submit.get('error')}"
 
-        threads[0].target()
+        deferred_turn(threads).target()
 
         assert calls["run_prompt"] == 0
         assert session["running"] is False

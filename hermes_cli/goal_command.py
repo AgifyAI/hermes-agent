@@ -21,6 +21,11 @@ class GoalCommandResult:
     kickoff: bool = False
     clear_pending: str | None = None
     error: bool = False
+    # A goal is already in progress: the surface must ask the user before rewriting it. When the
+    # user confirms, the surface re-dispatches the same text as ``/goal edit <text>`` (a preserving
+    # rewrite that keeps rounds, criteria, gates and contract).
+    requires_confirmation: bool = False
+    proposed_goal: str | None = None
 
 
 def _english(key, default, **values):
@@ -105,7 +110,7 @@ _EXACT_HANDLERS = {
 # clear/stop/done stay out — guessing wrong would end a goal the user meant to keep.
 _BARE_CONTROL_VERBS = frozenset({"resume", "continue", "unpause", "pause", "status", "show", "unwait"})
 # First words that make a command goal control (the gateway busy path dispatches these).
-_CONTROL_FIRST_WORDS = _BARE_CONTROL_VERBS | {"wait", "gate"}
+_CONTROL_FIRST_WORDS = _BARE_CONTROL_VERBS | {"wait", "gate", "edit", "rewrite"}
 
 
 def _bare_control(mgr, verb, rest, render):
@@ -134,7 +139,7 @@ def _gate(mgr, arg, authorize_gate):
         return GoalCommandResult(f"/goal gate {operation}: {exc}", error=True)
 
 
-def _set(mgr, arg, *, drafting, last_user_message, render, progress):
+def _set(mgr, arg, *, drafting, last_user_message, render, progress, replace: bool = False):
     if drafting:
         if not arg:
             return GoalCommandResult("Usage: /goal draft <objective in plain language>", error=True)
@@ -150,11 +155,34 @@ def _set(mgr, arg, *, drafting, last_user_message, render, progress):
         headline, contract = goals.parse_contract(arg)
         contract = contract if not contract.is_empty() else None
     previous = mgr.state.goal if mgr.has_goal() else ""
-    state = mgr.set(headline or arg, contract=contract)
-    output = render("gateway.goal.set", "⊙ Goal set ({budget}-turn budget): {goal}",
-                    budget=state.max_turns, goal=state.goal)
+    if mgr.has_goal() and not replace:
+        # One unfinished goal per session: ask instead of silently discarding its rounds and criteria.
+        current = mgr.state
+        progress_bits = f"{current.rounds_started}/{current.max_rounds} rounds"
+        if current.token_budget:
+            progress_bits += f", {current.tokens_used}/{current.token_budget} tokens"
+        if current.subgoals:
+            progress_bits += f", {len(current.subgoals)} criteria"
+        if current.gates:
+            progress_bits += f", {len(current.gates)} gates"
+        return GoalCommandResult(
+            "⚠ A goal is already in progress — "
+            f"{progress_bits}:\n  {current.goal}\n\n"
+            "Nothing was changed. To rewrite it while keeping its rounds, criteria, gates and "
+            "contract, confirm with:\n  /goal edit <new objective>\n"
+            "To start over from zero: /goal clear, then /goal <new objective>.",
+            error=True,
+            requires_confirmation=True,
+            proposed_goal=headline or arg,
+        )
+    state = mgr.set(headline or arg, contract=contract, replace=replace)
+    if replace and previous:
+        output = f"✎ Goal rewritten in place ({state.rounds_started}/{state.max_rounds} rounds kept): {state.goal}"
+    else:
+        output = render("gateway.goal.set", "⊙ Goal set ({budget}-round budget): {goal}",
+                        budget=state.max_rounds, goal=state.goal)
     if previous and previous != state.goal:
-        output += f"\n(replaced the previous goal)\n  was: {previous}"
+        output += f"\n(previous objective was: {previous})"
     if state.has_contract():
         label = "Drafted completion contract:" if drafting else "Completion contract:"
         output += f"\n{label}\n{state.contract.render_block()}"
@@ -203,6 +231,11 @@ def dispatch_goal_command(
             return handler(mgr, "", render)
         if verb in _BARE_CONTROL_VERBS:
             return _bare_control(mgr, verb, rest, render)
+        if verb == "edit" or verb == "rewrite":
+            # An explicit preserving rewrite IS the confirmation: rounds, criteria, gates and
+            # contract stay, only the objective text changes.
+            return _set(mgr, rest, drafting=False, last_user_message=last_user_message,
+                        render=render, progress=progress, replace=True)
         if verb == "wait":
             prefix = "/goal wait"
             return _wait(mgr, rest)

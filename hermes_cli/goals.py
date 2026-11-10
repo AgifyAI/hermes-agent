@@ -8,20 +8,14 @@ failures are fail-OPEN (``continue``); the turn budget is the backstop.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
-import os
 import re
-import subprocess
-import threading
 import time
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone, UTC
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+import uuid
+from datetime import datetime, UTC
+from typing import Any, List, Optional
 
-from hermes_cli._subprocess_compat import noninteractive_git_env
 from hermes_time import safe_strftime
 
 logger = logging.getLogger(__name__)
@@ -29,7 +23,38 @@ logger = logging.getLogger(__name__)
 
 # ── Constants & defaults ──────────────────────────────────────────────
 
-DEFAULT_MAX_TURNS = 20
+# The durable model (phases, rounds, token budget, CAS store, event journal) lives in
+# hermes_cli/goal_store.py; this facade owns the engine and re-exports the model so every surface
+# keeps importing hermes_cli.goals.
+from hermes_cli.goal_store import (
+    _DB_CACHE,
+    _get_session_db,
+    _warn_dropped_write,
+    DEFAULT_GATE_MAX_RETRIES,
+    DEFAULT_GATE_TIMEOUT_SECONDS,
+    DEFAULT_MAX_ROUNDS,
+    GOAL_PHASES,
+    MAX_EVENTS,
+    TERMINAL_PHASES,
+    GoalAlreadyActive,
+    GoalContract,
+    GoalGate,
+    GoalStaleRevision,
+    GoalState,
+    arm_goal,
+    clear_goal,
+    disarm_goal,
+    gate_workspace as _gate_workspace,
+    is_goal_armed,
+    load_goal,
+    migrate_goal_to_session,
+    parse_contract,
+    render_extra_criteria as _render_extra_criteria,
+    run_gate,
+    save_goal,
+)
+
+DEFAULT_MAX_TURNS = DEFAULT_MAX_ROUNDS
 DEFAULT_JUDGE_TIMEOUT = 30.0
 # Judge output budget. Reasoning models burn hidden-reasoning tokens before the visible one-line
 # JSON verdict; 200 (the original) reliably truncated it and tripped the auto-pause. 4096 covers
@@ -39,22 +64,13 @@ DEFAULT_JUDGE_MAX_TOKENS = 4096
 _JUDGE_RESPONSE_SNIPPET_CHARS = 4000
 # Consecutive judge *parse* failures (empty / non-JSON) before the loop auto-pauses and points at
 # the goal_judge config. API/transport errors do NOT count — those are tracked separately below.
-# Guards against small models that cannot follow the strict JSON contract burning the whole budget.
 DEFAULT_MAX_CONSECUTIVE_PARSE_FAILURES = 3
 # Consecutive transport failures (401, timeout, DNS) before auto-pause: a broken API key returns
 # 401 every call and must not spend every turn on an unreachable judge.
 DEFAULT_MAX_CONSECUTIVE_TRANSPORT_FAILURES = 5
-
-# Quality gates: deterministic shell commands that must pass before the judge may declare DONE. A
-# failed gate short-circuits the judge — its output IS the continuation prompt, so the agent works
-# on concrete evidence instead of a vibe check.
-DEFAULT_GATE_TIMEOUT_SECONDS = 300
-DEFAULT_GATE_MAX_RETRIES = 3
 # Longest a pid/session wait barrier may hold the loop before judging resumes. Timed barriers
 # (``waiting_until``) carry their own deadline and are exempt.
 _MAX_BARRIER_WAIT_S = 30 * 60
-# Bounded tail of a failed gate's combined stdout/stderr fed back to the agent.
-_GATE_OUTPUT_TAIL_CHARS = 3000
 
 
 CONTINUATION_PROMPT_TEMPLATE = (
@@ -255,455 +271,6 @@ DRAFT_CONTRACT_SYSTEM_PROMPT = (
     '{"outcome": "...", "verification": "...", "constraints": "...", '
     '"boundaries": "...", "stop_when": "..."}'
 )
-
-
-# ── Completion contract ───────────────────────────────────────────────
-
-# The five contract fields, in display order (after OpenAI Codex's "strong goal" guidance: what
-# "done" means, how to prove it, what must not regress, what is in bounds, when to stop and ask).
-# A bare free-form goal stays fully supported — empty fields are omitted from every prompt.
-_CONTRACT_FIELDS = ("outcome", "verification", "constraints", "boundaries", "stop_when")
-
-_CONTRACT_LABELS = {
-    "outcome": "Outcome", "verification": "Verification", "constraints": "Constraints",
-    "boundaries": "Boundaries", "stop_when": "Stop when blocked",
-}
-
-# Inline-input aliases the user may type before a value (`verify: tests pass`, `done when: ...`).
-_CONTRACT_ALIASES = {
-    "outcome": "outcome", "goal": "outcome", "done": "outcome", "done when": "outcome",
-    "verification": "verification", "verify": "verification", "verified by": "verification",
-    "evidence": "verification", "proof": "verification",
-    "constraints": "constraints", "constraint": "constraints", "preserve": "constraints",
-    "must not": "constraints", "do not change": "constraints",
-    "boundaries": "boundaries", "boundary": "boundaries", "scope": "boundaries",
-    "allowed": "boundaries", "files": "boundaries",
-    "stop when": "stop_when", "stop_when": "stop_when", "blocked": "stop_when",
-    "stop if blocked": "stop_when", "give up when": "stop_when",
-}
-
-
-@dataclass
-class GoalContract:
-    """Optional structured completion contract; empty fields are omitted everywhere."""
-    outcome: str = ""
-    verification: str = ""
-    constraints: str = ""
-    boundaries: str = ""
-    stop_when: str = ""
-
-    def is_empty(self) -> bool:
-        return not any(getattr(self, f).strip() for f in _CONTRACT_FIELDS)
-
-    def to_dict(self) -> dict[str, str]:
-        return {f: getattr(self, f) for f in _CONTRACT_FIELDS}
-
-    @classmethod
-    def from_dict(cls, data: Optional[dict[str, Any]]) -> GoalContract:
-        if not isinstance(data, dict):
-            return cls()
-        return cls(**{f: str(data.get(f) or "").strip() for f in _CONTRACT_FIELDS})
-
-    def render_block(self) -> str:
-        """Non-empty fields as a labelled block; empty contract → empty string."""
-        return "\n".join(f"- {_CONTRACT_LABELS[f]}: {getattr(self, f).strip()}" for f in _CONTRACT_FIELDS if getattr(self, f).strip())
-
-
-def parse_contract(text: str) -> tuple[str, GoalContract]:
-    """Split user-typed goal text into a headline + contract from inline ``field: value`` lines.
-
-    A headline without an explicit ``outcome:`` IS the outcome — it is not duplicated into the
-    contract block (the goal text already carries it), so outcome stays empty in that case.
-    """
-    if not text:
-        return "", GoalContract()
-    headline_parts: list[str] = []
-    fields: dict[str, list[str]] = {f: [] for f in _CONTRACT_FIELDS}
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        if ":" in line:
-            prefix, _, value = line.partition(":")
-            key = _CONTRACT_ALIASES.get(prefix.strip().lower())
-            if key is not None and value.strip():
-                fields[key].append(value.strip())
-                continue
-        headline_parts.append(line)
-    contract = GoalContract(**{f: " ".join(v).strip() for f, v in fields.items()})
-    return " ".join(headline_parts).strip(), contract
-
-
-def _render_extra_criteria(subgoals: list[str]) -> str:
-    return "\n".join(f"- Extra criterion {i}: {text}" for i, text in enumerate(subgoals, start=1))
-
-
-# ── Quality gates ─────────────────────────────────────────────────────
-
-@dataclass
-class GoalGate:
-    """A deterministic shell command that must pass before a goal can be done.
-
-    Gates run at turn boundary BEFORE the LLM judge; a failing gate short-circuits judging and its
-    bounded output becomes the continuation prompt.
-    """
-    command: str
-    timeout_seconds: int = DEFAULT_GATE_TIMEOUT_SECONDS
-    max_retries: int = DEFAULT_GATE_MAX_RETRIES
-    attempts: int = 0
-    last_exit_code: Optional[int] = None
-    last_output_tail: str = ""
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, data: Optional[dict[str, Any]]) -> GoalGate:
-        if not isinstance(data, dict):
-            return cls(command="")
-        return cls(
-            command=str(data.get("command") or ""),
-            timeout_seconds=int(data.get("timeout_seconds") or DEFAULT_GATE_TIMEOUT_SECONDS),
-            max_retries=int(data.get("max_retries") or DEFAULT_GATE_MAX_RETRIES),
-            attempts=int(data.get("attempts") or 0),
-            last_exit_code=(int(data["last_exit_code"]) if data.get("last_exit_code") is not None else None),
-            last_output_tail=str(data.get("last_output_tail") or ""),
-        )
-
-
-def _gate_workspace() -> tuple[Optional[str], Optional[str]]:
-    """``(cwd, refusal)`` for this check's gates. A multi-session backend's process directory is not
-    the session's project, so gates run in the scoped session workspace (#125369). A declared
-    workspace that is not a directory on this host (deleted, remote, container) is a refusal: a
-    relative gate run anywhere else would check a different project and could pass a failing goal,
-    and no agent turn can fix it, so the caller pauses instead of retrying.
-    No declared workspace keeps the classic resolution (TERMINAL_CWD, else the launch directory)."""
-    from agent.runtime_cwd import resolve_agent_cwd, scoped_session_cwd
-
-    declared = scoped_session_cwd()
-    if declared:
-        path = Path(declared).expanduser()
-        if path.is_dir():
-            return str(path), None
-        return None, (f"the session workspace {declared} is not a directory on this host, "
-                      "and running gates anywhere else would check a different project")
-    try:
-        return str(resolve_agent_cwd()), None
-    except OSError:
-        return None, None  # deleted launch directory: subprocess reports it per gate
-
-
-def run_gate(gate: GoalGate, *, cwd: Optional[str] = None) -> tuple[bool, int, str]:
-    """Run one gate through the shell. Returns ``(passed, exit_code, output_tail)``; a timeout kills
-    the process and counts as exit code -1."""
-    try:
-        # utf-8/replace: operator-configured output is arbitrary bytes; strict codepage decoding of
-        # one unmappable byte (emoji/CJK on a non-UTF-8 Windows console) kills the reader thread and
-        # the tail the agent needs arrives empty.
-        proc = subprocess.run(
-            gate.command, shell=True, capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=max(1, int(gate.timeout_seconds)), cwd=cwd or None,
-            check=False,
-        )
-        combined = (proc.stdout or "") + (("\n" + proc.stderr) if proc.stderr else "")
-        return proc.returncode == 0, proc.returncode, combined[-_GATE_OUTPUT_TAIL_CHARS:]
-    except subprocess.TimeoutExpired as exc:
-        out = "".join(c if isinstance(c, str) else c.decode("utf-8", "replace") for c in (exc.stdout, exc.stderr) if c)
-        return False, -1, (out + f"\n[gate timed out after {gate.timeout_seconds}s]")[-_GATE_OUTPUT_TAIL_CHARS:]
-    except Exception as exc:
-        return False, -1, f"[gate could not run: {type(exc).__name__}: {exc}]"
-
-
-# ── Goal state ────────────────────────────────────────────────────────
-
-@dataclass
-class GoalState:
-    """Serializable goal state stored per session."""
-    goal: str
-    status: str = "active"          # active | paused | done | cleared
-    turns_used: int = 0
-    max_turns: int = DEFAULT_MAX_TURNS
-    created_at: float = 0.0
-    last_turn_at: float = 0.0
-    last_verdict: Optional[str] = None        # "done" | "blocked" | "continue" | "wait" | "skipped"
-    last_reason: Optional[str] = None
-    paused_reason: Optional[str] = None       # why we auto-paused (budget, etc.)
-    consecutive_parse_failures: int = 0       # judge-output parse failures in a row
-    # Tracked separately from parse failures: a broken API key returns 401 every call and must
-    # auto-pause instead of burning the budget on an unreachable judge.
-    consecutive_transport_failures: int = 0   # judge API/transport errors in a row
-    # User-added criteria (/subgoal). Both the judge and continuation prompts include them.
-    subgoals: list[str] = field(default_factory=list)
-    # Wait barrier (judge ``wait`` verdict or ``/goal wait``): parks the loop instead of re-poking the
-    # agent into busy-work. pid → until exit; session → until that process_registry session's OWN
-    # trigger fires (exit OR watch_patterns match — preferred for watchers that signal mid-run);
-    # until → wall-clock deadline. While ANY is active evaluate_after_turn returns
-    # should_continue=False without burning a turn; cleared lazily when satisfied or by unwait/pause/
-    # resume/clear. Defaults empty so old state_meta rows load unchanged.
-    waiting_on_pid: Optional[int] = None
-    waiting_on_session: Optional[str] = None
-    waiting_until: float = 0.0
-    # Live delegation batches when a timed WAIT was set because of them; the barrier lifts as soon
-    # as that count drops (a batch returned), not only when the timer runs out.
-    waiting_on_delegations: int = 0
-    waiting_reason: Optional[str] = None
-    waiting_since: float = 0.0
-    contract: GoalContract = field(default_factory=GoalContract)
-    # /goal gate add <cmd>: ALL must pass before the judge may declare done.
-    gates: list[GoalGate] = field(default_factory=list)
-
-    def to_json(self) -> str:
-        return json.dumps(asdict(self), ensure_ascii=False)
-
-    @classmethod
-    def from_json(cls, raw: str) -> GoalState:
-        data = json.loads(raw)
-        raw_subgoals = data.get("subgoals") or []
-        ints = {k: int(data.get(k) or 0) for k in ("turns_used", "consecutive_parse_failures", "consecutive_transport_failures", "waiting_on_delegations")}
-        floats = {k: float(data.get(k) or 0.0) for k in ("created_at", "last_turn_at", "waiting_until", "waiting_since")}
-        return cls(
-            goal=data.get("goal", ""),
-            status=data.get("status", "active"),
-            max_turns=int(data.get("max_turns") or DEFAULT_MAX_TURNS),
-            last_verdict=data.get("last_verdict"),
-            last_reason=data.get("last_reason"),
-            paused_reason=data.get("paused_reason"),
-            subgoals=[str(s).strip() for s in raw_subgoals if str(s).strip()] if isinstance(raw_subgoals, list) else [],
-            waiting_on_pid=(int(data["waiting_on_pid"]) if data.get("waiting_on_pid") else None),
-            waiting_on_session=(str(data["waiting_on_session"]) if data.get("waiting_on_session") else None),
-            waiting_reason=data.get("waiting_reason"),
-            contract=GoalContract.from_dict(data.get("contract")),
-            gates=[
-                GoalGate.from_dict(g) for g in (data.get("gates") or [])
-                if isinstance(g, dict) and str(g.get("command") or "").strip()
-            ],
-            **ints, **floats,
-        )
-
-    def has_contract(self) -> bool:
-        return self.contract is not None and not self.contract.is_empty()
-
-    def render_subgoals_block(self) -> str:
-        """Numbered ``- N. text`` block; empty when there are no subgoals."""
-        return "\n".join(f"- {i}. {text}" for i, text in enumerate(self.subgoals, start=1))
-
-    def clear_wait(self) -> None:
-        self.waiting_on_pid = None
-        self.waiting_on_session = None
-        self.waiting_until = 0.0
-        self.waiting_on_delegations = 0
-        self.waiting_reason = None
-        self.waiting_since = 0.0
-
-
-# ── Persistence (SessionDB state_meta) ────────────────────────────────
-
-def _meta_key(session_id: str) -> str:
-    return f"goal:{session_id}"
-
-
-_DB_CACHE: dict[str, Any] = {}
-_DB_BOOTSTRAP_LOCK = threading.Lock()
-_DB_BOOTSTRAP_INFLIGHT: dict[str, threading.Event] = {}
-
-# How long a loop-thread caller waits for an ALREADY-RUNNING bootstrap before degrading to None.
-# Normal SessionDB init is ~10-100ms so a mid-bootstrap call usually picks the cached instance up;
-# a contended init (locked state.db mid-migration) exceeds it and degrades. Far under the
-# watchdog's probe window.
-_DB_BOOTSTRAP_LOOP_WAIT_S = 0.25
-
-# The call that STARTS the bootstrap (cold cache) waits this long instead. A fresh state.db init
-# (schema DDL, FTS tables, first hermes_cli.config import) measures ~300ms warm and more on slow
-# CI — well past 0.25s, which used to drop the first /goal write ("Goal set" but nothing
-# persisted). Only the kick call pays this one-time stall; later calls keep the short window.
-_DB_BOOTSTRAP_INIT_WAIT_S = 1.5
-
-
-def _bootstrap_session_db(home: str, done: threading.Event) -> None:
-    """Construct SessionDB off-loop and populate the cache (worker thread)."""
-    try:
-        db = _acquire_session_db(home)
-    except Exception as exc:  # pragma: no cover
-        logger.debug("GoalManager: background SessionDB() raised (%s)", exc)
-        db = None
-    with _DB_BOOTSTRAP_LOCK:
-        if db is not None and home not in _DB_CACHE:
-            _DB_CACHE[home] = db
-            db = None
-        _DB_BOOTSTRAP_INFLIGHT.pop(home, None)
-    if db is not None:  # lost the race; drop our reference
-        _release_session_db(db)
-    done.set()
-
-
-def _get_session_db() -> Optional[Any]:
-    """Cached SessionDB per HERMES_HOME (profile switches pick the right DB); None on any failure.
-
-    Never constructs SessionDB on an event-loop thread: a cache miss there kicks a one-shot background
-    bootstrap and waits a bounded grace window (the kick call waits ``_DB_BOOTSTRAP_INIT_WAIT_S`` so a
-    healthy cold init completes and the first write isn't dropped).
-    """
-    try:
-        from hermes_constants import get_hermes_home
-
-        home = str(get_hermes_home())
-    except Exception as exc:  # pragma: no cover
-        logger.debug("GoalManager: SessionDB bootstrap failed (%s)", exc)
-        return None
-
-    cached = _DB_CACHE.get(home)
-    if cached is not None and _registry_tore_down(cached):
-        # ``hermes profile delete`` force-closes every handle under the profile home
-        # (``hermes_state_registry.close_all_under``) before rmtree; a same-name recreate in this
-        # process must acquire a fresh handle, not keep writing into the torn-down one.
-        with _DB_BOOTSTRAP_LOCK:
-            if _DB_CACHE.get(home) is cached:
-                del _DB_CACHE[home]
-        cached = None
-    if cached is not None:
-        return cached
-
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        on_loop_thread = False
-    else:
-        on_loop_thread = True
-
-    if on_loop_thread:
-        with _DB_BOOTSTRAP_LOCK:
-            # Re-check under the lock: a bootstrap may have finished since the unlocked read.
-            cached = _DB_CACHE.get(home)
-            if cached is not None:
-                return cached
-            done = _DB_BOOTSTRAP_INFLIGHT.get(home)
-            wait = _DB_BOOTSTRAP_LOOP_WAIT_S   # already running: brief grace window only
-            if done is None:
-                done = _DB_BOOTSTRAP_INFLIGHT[home] = threading.Event()
-                threading.Thread(target=_bootstrap_session_db, args=(home, done), name="goals-sessiondb-bootstrap", daemon=True).start()
-                wait = _DB_BOOTSTRAP_INIT_WAIT_S   # kick call pays the one-time init cost
-        done.wait(wait)
-        return _DB_CACHE.get(home)
-
-    try:
-        db = _acquire_session_db(home)
-    except Exception as exc:  # pragma: no cover
-        logger.debug("GoalManager: SessionDB() raised (%s)", exc)
-        return None
-    with _DB_BOOTSTRAP_LOCK:
-        existing = _DB_CACHE.get(home)
-        if existing is not None:
-            # A concurrent bootstrap won the race; drop our reference so connections don't leak.
-            _release_session_db(db)
-            return existing
-        _DB_CACHE[home] = db
-    return db
-
-
-def _acquire_session_db(home: str):
-    """The registry's shared handle for ``home/state.db``. A bare ``SessionDB()`` here was a SECOND
-    writer per profile beside the gateway's registry handle — its own token-writer thread and
-    close-time checkpoint (the #90837 corruption shape), doubled under multiplexing."""
-    from hermes_state_registry import acquire
-    return acquire(Path(home) / "state.db")
-
-
-def _release_session_db(db) -> None:
-    from hermes_state_registry import release_or_close
-    try:
-        release_or_close(db)
-    except Exception:
-        pass
-
-
-def _registry_tore_down(db) -> bool:
-    """True once the registry force-closed *db* (``close_all`` / ``close_all_under`` clear the
-    shared-owned flag at teardown); every handle cached here was acquired through the registry, so a
-    cleared flag means the connection is gone and the cache entry is stale."""
-    return getattr(db, "_shared_registry_owned", True) is False
-
-
-def _warn_dropped_write(manager: str, kind: str, session_id: str) -> None:
-    """WARN on a dropped state write — the reply already told the user the state was set. One shared
-    message keeps goal, loop and heartbeat logs greppable as one bug class."""
-    logger.warning(
-        "%s: %s for %s not persisted — session DB unavailable "
-        "(bootstrap window exceeded, in-memory state still active)",
-        manager, kind, session_id,
-    )
-
-
-def load_goal(session_id: str) -> Optional[GoalState]:
-    """Load the goal for a session, or None if none exists."""
-    if not session_id:
-        return None
-    db = _get_session_db()
-    if db is None:
-        return None
-    try:
-        raw = db.get_meta(_meta_key(session_id))
-    except Exception as exc:
-        logger.debug("GoalManager: get_meta failed: %s", exc)
-        return None
-    if not raw:
-        return None
-    try:
-        return GoalState.from_json(raw)
-    except Exception as exc:
-        logger.warning("GoalManager: could not parse stored goal for %s: %s", session_id, exc)
-        return None
-
-
-def save_goal(session_id: str, state: GoalState) -> None:
-    """Persist a goal to SessionDB. No-op if DB unavailable."""
-    if not session_id:
-        return
-    db = _get_session_db()
-    if db is None:
-        _warn_dropped_write("GoalManager", "goal", session_id)
-        return
-    try:
-        db.set_meta(_meta_key(session_id), state.to_json())
-    except Exception as exc:
-        logger.debug("GoalManager: set_meta failed: %s", exc)
-
-
-def clear_goal(session_id: str) -> None:
-    """Mark a goal cleared in the DB (preserved for audit, status=cleared)."""
-    state = load_goal(session_id)
-    if state is None:
-        return
-    state.status = "cleared"
-    save_goal(session_id, state)
-
-
-def migrate_goal_to_session(old_session_id: str, new_session_id: str, *, reason: str = "") -> bool:
-    """Carry a persistent /goal from a parent session to its continuation. Best-effort, never raises
-    (a failure here must not block compression). Returns True when a goal was migrated.
-
-    Context compression rotates ``session_id`` to a fresh child session, but ``load_goal`` does a flat
-    ``goal:<session_id>`` lookup with no parent-lineage walk — so an active goal silently dies at the
-    compaction boundary (#33618). Copy the goal onto the new session and archive the old row as ``cleared``
-    so exactly one active goal row exists per logical conversation (avoids the "two active goals" hazard of
-    a pure copy).
-    """
-    if not old_session_id or not new_session_id or old_session_id == new_session_id:
-        return False
-    try:
-        state = load_goal(old_session_id)
-        if state is None or state.status == "cleared":
-            return False
-        # Don't clobber a goal already set on the child (e.g. a resumed lineage).
-        if load_goal(new_session_id) is not None:
-            return False
-        save_goal(new_session_id, state)
-        # Archive the parent's row so it isn't double-counted as active.
-        clear_goal(old_session_id)
-        logger.debug("GoalManager: migrated goal %s -> %s (%s)", old_session_id, new_session_id, reason or "rotation")
-        return True
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.debug("GoalManager: goal migration failed: %s", exc)
-        return False
 
 
 # ── Judge ─────────────────────────────────────────────────────────────
@@ -1075,9 +642,15 @@ def draft_contract(objective: str, *, timeout: Optional[float] = None) -> Option
 
 # ── GoalManager — the orchestration surface CLI + gateway talk to ──────
 
-def _decision(status, should_continue: bool, prompt: Optional[str], verdict: str, reason: str, message: str) -> dict[str, Any]:
-    return {"status": status, "should_continue": should_continue, "continuation_prompt": prompt,
-            "verdict": verdict, "reason": reason, "message": message}
+def _decision(status, should_continue: bool, prompt: Optional[str], verdict: str, reason: str,
+              message: str, *, phase: Optional[str] = None) -> dict[str, Any]:
+    """One decision dict shared by every surface.
+
+    ``status`` keeps its historical names (done/paused) while ``phase`` carries the versioned model,
+    so a surface can migrate to phases without breaking an older reader.
+    """
+    return {"status": status, "phase": phase or status, "should_continue": should_continue,
+            "continuation_prompt": prompt, "verdict": verdict, "reason": reason, "message": message}
 
 
 _JUDGE_CONFIG_HINT = (
@@ -1098,10 +671,12 @@ class GoalManager:
         self.session_id = session_id
         self.default_max_turns = int(default_max_turns or DEFAULT_MAX_TURNS)
         self._state: Optional[GoalState] = load_goal(session_id)
+        self._revision: int = self._state.revision if self._state is not None else 0
 
     def refresh(self) -> None:
         """Re-read state from the DB (another writer, e.g. a tool, moved it)."""
         self._state = load_goal(self.session_id)
+        self._revision = self._state.revision if self._state is not None else 0
 
     # --- introspection ------------------------------------------------
 
@@ -1110,24 +685,26 @@ class GoalManager:
         return self._state
 
     def is_active(self) -> bool:
-        return self._state is not None and self._state.status == "active"
+        return self._state is not None and self._state.phase == "active"
 
     def has_goal(self) -> bool:
-        return self._state is not None and self._state.status in {"active", "paused"}
+        """True while a goal is unfinished: active, paused, blocked or budget-limited."""
+        return self._state is not None and self._state.is_unfinished()
 
     def has_contract(self) -> bool:
         return self._state is not None and self._state.has_contract()
 
     def status_line(self) -> str:
         s = self._state
-        if s is None or s.status == "cleared":
+        if s is None or s.phase == "cleared":
             return "No active goal. Set one with /goal <text>."
-        turns = f"{s.turns_used}/{s.max_turns} turns"
+        rounds = f"{s.rounds_started}/{s.max_rounds} rounds"
+        tokens = f", {s.tokens_used}/{s.token_budget} tokens" if s.token_budget else ""
         sub = f", {len(s.subgoals)} subgoal{'s' if len(s.subgoals) != 1 else ''}" if s.subgoals else ""
         con = ", contract" if self.has_contract() else ""
         gat = f", {len(s.gates)} gate{'s' if len(s.gates) != 1 else ''}" if s.gates else ""
-        meta = f"{turns}{sub}{con}{gat}"
-        if s.status == "active":
+        meta = f"{rounds}{tokens}{sub}{con}{gat}"
+        if s.phase == "active":
             if s.waiting_on_session and _session_waiting(s.waiting_on_session):
                 return f"⏳ Goal (parked on {s.waiting_reason or f'session {s.waiting_on_session}'}, {meta}): {s.goal}"
             if s.waiting_on_pid and _pid_alive(s.waiting_on_pid):
@@ -1137,17 +714,48 @@ class GoalManager:
                 wr = s.waiting_reason or f"{remaining}s"
                 return f"⏳ Goal (parked {remaining}s — {wr}, {meta}): {s.goal}"
             return f"⊙ Goal (active, {meta}): {s.goal}"
-        if s.status == "paused":
+        if s.phase == "blocked":
+            why = (s.blocked_reason or {}).get("message") or s.paused_reason or "blocked"
+            return f"🚫 Goal (blocked, {meta} — {why}): {s.goal}"
+        if s.phase == "budget_limited":
+            why = s.paused_reason or "budget exhausted"
+            return f"⏹ Goal (budget limited, {meta} — {why}): {s.goal}"
+        if s.phase == "paused":
             extra = f" — {s.paused_reason}" if s.paused_reason else ""
             return f"⏸ Goal (paused, {meta}{extra}): {s.goal}"
-        if s.status == "done":
+        if s.phase == "complete":
             return f"✓ Goal done ({meta}): {s.goal}"
-        return f"Goal ({s.status}, {meta}): {s.goal}"
+        return f"Goal ({s.phase}, {meta}): {s.goal}"
 
     # --- mutation -----------------------------------------------------
 
-    def _save(self) -> Optional[GoalState]:
-        save_goal(self.session_id, self._state)
+    def _save(self, event: Optional[str] = None, **detail: Any) -> Optional[GoalState]:
+        """Record one journal entry and persist with compare-and-set.
+
+        A stale revision means another surface wrote between our load and our save. We log it, adopt
+        the fresh revision and retry once with our own state — the local action (the user's click,
+        the turn boundary) is the newest intent and must not be lost; the CAS still guarantees the
+        window is detected instead of silently overwriting, and the second writer within that window
+        is the only one that can lose.
+        """
+        if self._state is None:
+            return None
+        if event:
+            self._state.record(event, **detail)
+        for attempt in (1, 2):
+            try:
+                save_goal(self.session_id, self._state, expected_revision=self._revision)
+                self._revision = self._state.revision
+                return self._state
+            except GoalStaleRevision:
+                fresh = load_goal(self.session_id, upgrade=False)
+                logger.warning(
+                    "goal %s: stale revision %s (now %s) on %s; reloading",
+                    self.session_id, self._revision, fresh.revision if fresh else 0, event or "write",
+                )
+                self._revision = fresh.revision if fresh else 0
+                if attempt == 2:
+                    raise
         return self._state
 
     def _require_goal(self) -> GoalState:
@@ -1156,69 +764,118 @@ class GoalManager:
         return self._state
 
     def _require_active(self) -> GoalState:
-        if self._state is None or self._state.status != "active":
+        if self._state is None or self._state.phase != "active":
             raise RuntimeError("no active goal to park")
         return self._state
 
-    def _pause_state(self, reason: str) -> None:
-        self._state.status = "paused"
+    def _pause_state(self, reason: str, *, phase: str = "paused", code: Optional[str] = None, event: str = "paused") -> None:
+        self._state.phase = phase
         self._state.paused_reason = reason
-        self._save()
+        self._state.blocked_reason = (
+            {"code": code or "blocked", "message": reason} if phase == "blocked" else None
+        )
+        # A blocked or budget-limited goal must not keep auto-running: only a human resume re-arms.
+        if phase in {"blocked", "budget_limited", "paused"}:
+            disarm_goal(self.session_id)
+        self._save(event=event, phase=phase, reason=reason, code=code)
 
-    def _pause_decision(self, paused_reason: str, verdict: str, reason: str, message: str) -> dict[str, Any]:
-        self._pause_state(paused_reason)
-        return _decision("paused", False, None, verdict, reason, message)
+    def _pause_decision(self, paused_reason: str, verdict: str, reason: str, message: str,
+                        *, phase: str = "paused", code: Optional[str] = None) -> dict[str, Any]:
+        self._pause_state(paused_reason, phase=phase, code=code,
+                          event="blocked" if phase == "blocked" else "paused")
+        return _decision("paused", False, None, verdict, reason, message, phase=phase)
 
-    def set(self, goal: str, *, max_turns: Optional[int] = None, contract: Optional[GoalContract] = None) -> GoalState:
+    def set(
+        self,
+        goal: str,
+        *,
+        max_turns: Optional[int] = None,
+        contract: Optional[GoalContract] = None,
+        replace: bool = False,
+    ) -> GoalState:
+        """Start a new goal, or (``replace=True``) rewrite the unfinished one in place.
+
+        One unfinished goal per session: a plain ``set`` while one is in progress raises
+        ``GoalAlreadyActive`` so a surface can ask for confirmation instead of silently discarding
+        the rounds, criteria, gates and contract the user already accumulated. ``replace`` keeps all
+        of those (a preserving rewrite) and only swaps the objective text.
+        """
         goal = (goal or "").strip()
         if not goal:
             raise ValueError("goal text is empty")
+        previous = self._state
+        if previous is not None and previous.is_unfinished():
+            if not replace:
+                raise GoalAlreadyActive(previous.goal)
+            previous.goal = goal
+            previous.phase = "active"
+            previous.paused_reason = None
+            previous.blocked_reason = None
+            previous.last_verdict = None
+            previous.last_reason = None
+            previous.clear_wait()
+            if contract is not None:
+                previous.contract = contract
+            if max_turns:
+                previous.max_rounds = int(max_turns)
+            self._state = previous
+            arm_goal(self.session_id)
+            return self._save(event="goal_rewritten", goal=goal)
         self._state = GoalState(
-            goal=goal, status="active", turns_used=0, created_at=time.time(), last_turn_at=0.0,
-            max_turns=int(max_turns) if max_turns else self.default_max_turns,
+            goal=goal, goal_id=uuid.uuid4().hex, phase="active", rounds_started=0,
+            created_at=time.time(), last_turn_at=0.0,
+            max_rounds=int(max_turns) if max_turns else self.default_max_turns,
             contract=contract if contract is not None else GoalContract(),
         )
-        return self._save()
+        arm_goal(self.session_id)
+        return self._save(event="goal_set", goal=goal)
 
     def set_contract(self, contract: GoalContract) -> Optional[GoalState]:
         """Attach or replace the completion contract on the active goal."""
         if self._state is None:
             return None
         self._state.contract = contract or GoalContract()
-        return self._save()
+        return self._save(event="contract_set")
 
     def pause(self, reason: str = "user-paused") -> Optional[GoalState]:
         if not self._state:
             return None
-        self._state.status = "paused"
+        self._state.phase = "paused"
         self._state.paused_reason = reason
         self._state.clear_wait()   # a wait barrier is meaningless once paused
-        return self._save()
+        disarm_goal(self.session_id)
+        return self._save(event="paused", reason=reason, source="user")
 
     def resume(self, *, reset_budget: bool = True) -> Optional[GoalState]:
+        """Human resume: the only action that re-arms the round driver after a restart."""
         if not self._state:
             return None
-        self._state.status = "active"
+        self._state.phase = "active"
         self._state.paused_reason = None
+        self._state.blocked_reason = None
         self._state.clear_wait()   # resuming starts fresh
         if reset_budget:
-            self._state.turns_used = 0
-        return self._save()
+            self._state.rounds_started = 0
+        arm_goal(self.session_id)
+        return self._save(event="resumed", reset_rounds=bool(reset_budget))
 
     def clear(self) -> None:
         if self._state is None:
             return
-        self._state.status = "cleared"
-        self._save()
+        self._state.phase = "cleared"
+        self._state.clear_wait()
+        disarm_goal(self.session_id)
+        self._save(event="cleared")
         self._state = None
 
     def mark_done(self, reason: str) -> None:
         if not self._state:
             return
-        self._state.status = "done"
+        self._state.phase = "complete"
         self._state.last_verdict = "done"
         self._state.last_reason = reason
-        self._save()
+        disarm_goal(self.session_id)
+        self._save(event="completed", reason=reason)
 
     # --- /subgoal user controls ---------------------------------------
 
@@ -1229,7 +886,7 @@ class GoalManager:
         if not text:
             raise ValueError("subgoal text is empty")
         state.subgoals.append(text)
-        self._save()
+        self._save(event="subgoal_added", text=text)
         return text
 
     def _pop_item(self, attr: str, index_1based: int):
@@ -1238,14 +895,14 @@ class GoalManager:
         if idx < 0 or idx >= len(items):
             raise IndexError(f"index out of range (1..{len(items)})")
         removed = items.pop(idx)
-        self._save()
+        self._save(event="item_removed", field=attr, index=int(index_1based))
         return removed
 
     def _clear_items(self, attr: str) -> int:
         state = self._require_goal()
         prev = len(getattr(state, attr))
         setattr(state, attr, [])
-        self._save()
+        self._save(event="items_cleared", field=attr, count=prev)
         return prev
 
     def remove_subgoal(self, index_1based: int) -> str:
@@ -1276,7 +933,7 @@ class GoalManager:
             max_retries=int(max_retries) if max_retries else DEFAULT_GATE_MAX_RETRIES,
         )
         state.gates.append(gate)
-        self._save()
+        self._save(event="gate_added", command=gate.command)
         return gate
 
     def remove_gate(self, index_1based: int) -> str:
@@ -1343,7 +1000,8 @@ class GoalManager:
                     f"then /goal resume.",
                 )
 
-            self._save()
+            self._save(event="gate_failed", command=gate.command, exit_code=exit_code,
+                       attempt=gate.attempts)
             prompt = CONTINUATION_PROMPT_GATE_FAILED_TEMPLATE.format(
                 goal=state.goal, command=gate.command, exit_code=exit_code, attempt=gate.attempts,
                 max_retries=gate.max_retries, output=tail or "(no output)",
@@ -1355,7 +1013,7 @@ class GoalManager:
                 f"attempt {gate.attempts}/{gate.max_retries}): $ {gate.command}",
             )
 
-        self._save()
+        self._save(event="gate_passed")
         return None
 
     # --- /goal wait barrier -------------------------------------------
@@ -1476,9 +1134,10 @@ class GoalManager:
 
     def _budget_pause(self, state: GoalState, verdict: str, reason: str, note: str = "") -> dict[str, Any]:
         return self._pause_decision(
-            f"turn budget exhausted ({state.turns_used}/{state.max_turns})", verdict, reason,
-            f"⏸ Goal paused — {state.turns_used}/{state.max_turns} turns used{note}. "
+            f"round budget exhausted ({state.rounds_started}/{state.max_rounds})", verdict, reason,
+            f"⏸ Goal paused — {state.rounds_started}/{state.max_rounds} rounds used{note}. "
             "Use /goal resume to keep going, or /goal clear to stop.",
+            phase="budget_limited", code="round-limit",
         )
 
     def evaluate_after_turn(
@@ -1490,15 +1149,17 @@ class GoalManager:
         ``continuation_prompt``, ``verdict``, ``reason``, ``message``). Both real user prompts and our
         own continuations increment ``turns_used`` — both consume model budget."""
         state = self._state
-        if state is None or state.status != "active":
-            return _decision(state.status if state else None, False, None, "inactive", "no active goal", "")
+        if state is None or state.phase != "active":
+            return _decision(state.status if state else None, False, None, "inactive", "no active goal", "",
+                             phase=state.phase if state else None)
 
         # Parked on a live process or an unexpired deadline: quiesce without burning a turn.
         if self.is_waiting():
             return self._waiting_decision(state)
 
-        state.turns_used += 1
+        state.rounds_started += 1
         state.last_turn_at = time.time()
+        state.record("round_started", round=state.rounds_started, max_rounds=state.max_rounds)
 
         # Gates run BEFORE the judge: a failing gate is deterministic evidence the goal is not done,
         # so the judge is skipped and the gate's output drives the next turn (same turn budget).
@@ -1533,12 +1194,14 @@ class GoalManager:
             return self._pause_decision(
                 f"judged unachievable: {reason}", "blocked", reason,
                 f"🚫 Goal judged unachievable — paused: {reason} Re-scope with /goal set, or override with /goal resume.",
+                phase="blocked", code="judge-blocked",
             )
 
         if verdict == "done":
-            state.status = "done"
-            self._save()
-            return _decision("done", False, None, "done", reason, f"✓ Goal achieved: {reason}")
+            state.phase = "complete"
+            disarm_goal(self.session_id)
+            self._save(event="completed", reason=reason, round=state.rounds_started)
+            return _decision("done", False, None, "done", reason, f"✓ Goal achieved: {reason}", phase="complete")
 
         # Persistent judge failures (API unreachable / unparseable output) auto-pause and point at the
         # goal_judge config so a broken judge can't burn the whole turn budget.
@@ -1562,14 +1225,15 @@ class GoalManager:
             return self._budget_pause(state, "continue", reason)
 
         self._save()
+        self._state.record("verdict", verdict=verdict, round=state.rounds_started)
         return _decision(
             "active", True, self.next_continuation_prompt(), "continue", reason,
-            f"↻ Continuing toward goal ({state.turns_used}/{state.max_turns}): {reason}",
+            f"↻ Continuing toward goal ({state.rounds_started}/{state.max_rounds}): {reason}",
         )
 
     def next_continuation_prompt(self) -> Optional[str]:
         s = self._state
-        if not s or s.status != "active":
+        if not s or s.phase != "active":
             return None
         # Contract first (it carries the verification surface); subgoals fold in as extra criteria.
         if s.has_contract():

@@ -96,10 +96,12 @@ class GatewayGoalManager(_Remote):
     next_continuation_prompt = _Local.next_continuation_prompt
     del _Local
 
-    def set(self, goal, *, max_turns=None, contract=None):
+    def set(self, goal, *, max_turns=None, contract=None, replace=False):
         kwargs = {"max_turns": max_turns} if max_turns is not None else {}
         if contract is not None:
             kwargs["contract"] = contract.to_dict()
+        if replace:
+            kwargs["replace"] = True
         return self._rpc("set", goal, **kwargs)
 
     def pause(self, reason="user-paused"):
