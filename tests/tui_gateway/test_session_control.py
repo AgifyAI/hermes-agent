@@ -704,3 +704,74 @@ class TestGatesAndWait:
             response = _call(server, "session.control", session_id=sid, action="wait.set", args=args)
             assert "error" in response, args
             assert needle in response["error"]["message"]
+
+
+class TestLoopAndHeartbeatEditing:
+    def test_loop_set_creates_and_replaces_from_the_panel(self, server, session):
+        sid, _key, _ = session
+
+        created = _call(server, "session.control", session_id=sid, action="loop.set",
+                        args={"prompt": "check the queue", "interval_seconds": 600, "times": 5})
+        assert "error" not in created, created
+        loop = created["result"]["control"]["loop"]
+        assert loop["prompt"] == "check the queue"
+        assert loop["status"] == "active"
+        assert loop["interval_seconds"] == 600
+        assert loop["times"] == 5
+        assert "↻ Loop set" in created["result"]["dispatch"]["output"]
+
+        replaced = _call(server, "session.control", session_id=sid, action="loop.set",
+                         args={"prompt": "check the queue every minute", "interval_seconds": 60})
+        assert "error" not in replaced, replaced
+        loop = replaced["result"]["control"]["loop"]
+        assert loop["prompt"] == "check the queue every minute"
+        assert loop["interval_seconds"] == 60
+
+    def test_loop_set_self_paced_when_interval_is_omitted(self, server, session):
+        sid, _, _ = session
+        response = _call(server, "session.control", session_id=sid, action="loop.set", args={"prompt": "keep going"})
+        assert "error" not in response, response
+        assert response["result"]["control"]["loop"]["mode"] == "self_paced"
+
+    def test_loop_set_validates_its_input(self, server, session):
+        sid, _, _ = session
+        for args, needle in (
+            ({}, "loop prompt is required"),
+            ({"prompt": "  "}, "loop prompt is required"),
+            ({"prompt": "x" * 4001}, "too long"),
+            ({"prompt": "ok", "interval_seconds": 0}, "interval_seconds"),
+            ({"prompt": "ok", "interval_seconds": 90000}, "interval_seconds"),
+            ({"prompt": "ok", "times": -1}, "times"),
+            ({"prompt": "ok", "until": "x" * 201}, "until"),
+        ):
+            response = _call(server, "session.control", session_id=sid, action="loop.set", args=args)
+            assert "error" in response, args
+            assert needle in response["error"]["message"]
+
+    def test_heartbeat_set_creates_and_replaces_from_the_panel(self, server, session):
+        sid, _, _ = session
+        created = _call(server, "session.control", session_id=sid, action="heartbeat.set",
+                        args={"prompt": "status check", "interval_seconds": 1800})
+        assert "error" not in created, created
+        heartbeat = created["result"]["control"]["heartbeat"]
+        assert heartbeat["prompt"] == "status check"
+        assert heartbeat["status"] == "active"
+        assert heartbeat["interval_seconds"] == 1800
+        assert "♥ Heartbeat set" in created["result"]["dispatch"]["output"]
+
+        replaced = _call(server, "session.control", session_id=sid, action="heartbeat.set",
+                         args={"prompt": "status check hourly", "interval_seconds": 3600})
+        assert "error" not in replaced, replaced
+        assert replaced["result"]["control"]["heartbeat"]["interval_seconds"] == 3600
+
+    def test_heartbeat_set_validates_its_input(self, server, session):
+        sid, _, _ = session
+        for args, needle in (
+            ({}, "heartbeat prompt is required"),
+            ({"prompt": "ok"}, "interval_seconds"),
+            ({"prompt": "ok", "interval_seconds": 0}, "interval_seconds"),
+            ({"prompt": "ok", "interval_seconds": 700000}, "interval_seconds"),
+        ):
+            response = _call(server, "session.control", session_id=sid, action="heartbeat.set", args=args)
+            assert "error" in response, args
+            assert needle in response["error"]["message"]

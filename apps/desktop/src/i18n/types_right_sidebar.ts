@@ -82,6 +82,35 @@ export interface RightSidebarTranslations {
   goalWaitValueRequired: string
   goalWaitSecondsInvalid: string
   goalWaitPidInvalid: string
+  loopTitle: string
+  loopEmpty: string
+  loopStart: string
+  loopEdit: string
+  loopStopAction: string
+  loopPromptField: string
+  loopPromptPlaceholder: string
+  loopIntervalField: string
+  loopIntervalPlaceholder: string
+  loopTimesField: string
+  loopTimesPlaceholder: string
+  loopSave: string
+  loopCancel: string
+  loopPromptRequired: string
+  loopIntervalInvalid: string
+  loopTimesInvalid: string
+  heartbeatTitle: string
+  heartbeatEmpty: string
+  heartbeatStart: string
+  heartbeatEdit: string
+  heartbeatClear: string
+  heartbeatPromptField: string
+  heartbeatPromptPlaceholder: string
+  heartbeatIntervalField: string
+  heartbeatIntervalPlaceholder: string
+  heartbeatSave: string
+  heartbeatCancel: string
+  heartbeatPromptRequired: string
+  heartbeatIntervalInvalid: string
   pendingMemoryTitle: string
   pendingMemoryTextAria: string
   pendingMemoryLoading: string

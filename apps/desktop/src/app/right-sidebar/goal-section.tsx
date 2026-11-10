@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react'
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { queueKickoffIfSessionBusy } from '@/app/session/hooks/use-prompt-actions/queue-if-busy'
 import { Codicon } from '@/components/ui/codicon'
@@ -21,6 +21,7 @@ import {
 
 import { requestComposerPromptSend } from '../chat/composer/prompt-send'
 
+import { ActionButton } from './card-parts'
 import {
   SIDEBAR_CARD_CLASS,
   SidebarSectionContent,
@@ -924,34 +925,5 @@ function GoalForm({ busy, draft, error, labels, onCancel, onChange, onSave }: Go
   )
 }
 
-function ActionButton({
-  children,
-  destructive,
-  disabled,
-  label,
-  onClick
-}: {
-  children: ReactNode
-  destructive?: boolean
-  disabled?: boolean
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <Tip label={label}>
-      <button
-        aria-label={label}
-        className={cn(
-          'flex h-6 items-center gap-1 rounded-md px-1.5 text-[0.6875rem] font-medium text-(--linear-text-tertiary) transition-colors hover:bg-(--linear-hover-sidebar-icon) hover:text-(--linear-text-primary) disabled:opacity-50',
-          destructive && 'hover:text-(--linear-red)'
-        )}
-        disabled={disabled}
-        onClick={onClick}
-        type="button"
-      >
-        {children}
-        <span className="truncate">{label}</span>
-      </button>
-    </Tip>
-  )
-}
+/** The Goal card of the Automations panel: state, objective, progress, wait and the
+ * controls the backend already exposes (pause/resume/clear/unwait/criteria). */
